@@ -1,0 +1,38 @@
+{
+    "$schema": "./scrapes.schema.json",
+    "scrapes": [
+        {
+            "id": "amazon",
+            "url": "https://amazon.de",
+            "steps": [
+                {
+                    "name": "Extract",
+                    "actions": [
+                        {
+                            "name": "extract",
+                            "action": "extract",
+                            "params": {
+                                "selector": "h2"
+                            }
+                        },
+                        {
+                            "name": "extractAll",
+                            "action": "extractAll",
+                            "params": {
+                                "selector": "h2"
+                            }
+                        },
+                        {
+                            "name": "wait",
+                            "action": "wait",
+                            "params": {
+                                "selector": 0
+                            }
+                            
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,66 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "definitions": {
+        "ActionName": {
+            "enum": [
+                "extract",
+                "extractAll",
+                "wait"
+            ],
+            "type": "string"
+        },
+        "Scrape": {
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "steps": {
+                    "items": {
+                        "$ref": "#/definitions/ScrapeStep"
+                    },
+                    "type": "array"
+                },
+                "url": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "ScrapeAction<unknown>": {
+            "properties": {
+                "action": {
+                    "$ref": "#/definitions/ActionName"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "params": {}
+            },
+            "type": "object"
+        },
+        "ScrapeStep": {
+            "properties": {
+                "actions": {
+                    "items": {
+                        "$ref": "#/definitions/ScrapeAction<unknown>"
+                    },
+                    "type": "array"
+                },
+                "name": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        }
+    },
+    "properties": {
+        "scrapes": {
+            "items": {
+                "$ref": "#/definitions/Scrape"
+            },
+            "type": "array"
+        }
+    },
+    "type": "object"
+}
+
