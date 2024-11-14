@@ -3,8 +3,15 @@
     "definitions": {
         "ActionName": {
             "enum": [
+                "click",
                 "extract",
                 "extractAll",
+                "keyboardPress",
+                "logger",
+                "loop",
+                "navigate",
+                "screenshot",
+                "type",
                 "wait"
             ],
             "type": "string"
@@ -19,9 +26,6 @@
                         "$ref": "#/definitions/ScrapeStep"
                     },
                     "type": "array"
-                },
-                "url": {
-                    "type": "string"
                 }
             },
             "type": "object"

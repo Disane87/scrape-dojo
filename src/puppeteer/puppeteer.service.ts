@@ -122,6 +122,11 @@ export class PuppeteerService implements OnModuleInit, OnModuleDestroy {
         }
 
         this.currentPage = await this.browser.newPage();
+        await this.currentPage.setViewport({
+            width: 1920,
+            height: 1080,
+            deviceScaleFactor: 1,
+          });
         this.currentPage.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
         this.logger.log('Creating new page');
         return this.currentPage;

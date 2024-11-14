@@ -3,32 +3,76 @@
     "scrapes": [
         {
             "id": "amazon",
-            "url": "https://amazon.de",
             "steps": [
                 {
-                    "name": "Extract",
+                    "name": "Login",
                     "actions": [
                         {
-                            "name": "extract",
-                            "action": "extract",
+                            "action": "navigate",
                             "params": {
-                                "selector": "h2"
+                                "url": "https://www.amazon.de/ap/signin?openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Fwww.amazon.de%2F%3Fref_%3Dnav_signin%26openid.identity%3Dhttp%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select%26openid.assoc_handle%3Ddeflex%26openid.mode%3Dcheckid_setup%26openid.claimed_id%3Dhttp%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select%26openid.ns%3Dhttp%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.assoc_handle=deflex&openid.mode=checkid_setup&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0"
                             }
                         },
                         {
-                            "name": "extractAll",
+                            "name": "Type email",
+                            "action": "type",
+                            "params": {
+                                "selector": "#ap_email",
+                                "text": "disane@icloud.com",
+                                "pressEnter": true
+                            }
+                        },
+                        {
+                            "name": "Type password",
+                            "action": "type",
+                            "params": {
+                                "selector": "#ap_password",
+                                "text": "Uo$fww",
+                                "pressEnter": true
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Get possible years",
+                    "actions": [
+                        {
+                            "name": "Navigate to order history",
+                            "action": "navigate",
+                            "params": {
+                                "url": "https://www.amazon.de/your-orders/orders?timeFilter=year-{{year}}&ref_=ppx_yo2ov_dt_b_filter_all_y{{year}}"
+                            }
+                        },
+                        {
                             "action": "extractAll",
+                            "name": "extractYears",
                             "params": {
-                                "selector": "h2"
+                                "selector": "select[name='timeFilter'] option[value^='year-']"
                             }
                         },
                         {
-                            "name": "wait",
-                            "action": "wait",
+                            "action": "loop",
+                            "name": "yearLoop",
                             "params": {
-                                "selector": 0
+                                "elementKey": "extractYears",
+                                "actions": [
+                                    {
+                                        "action": "extractAll",
+                                        "name": "extractOrders",
+                                        "params": {
+                                            "selector": ".order-card.js-order-card"
+                                        }
+                                    },
+                                    {
+                                       "action": "logger",
+                                       "params": {
+                                           "message": "Year {{currentData}}",
+                                           "level": "log"
+                                        }
+                                           
+                                    }
+                                ]
                             }
-                            
                         }
                     ]
                 }

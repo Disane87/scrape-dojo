@@ -2,20 +2,17 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { getAllActions, RegisteredAction } from './decorators/action.decorator';
 import { PuppeteerService } from 'src/puppeteer/puppeteer.service';
 import { Page } from 'puppeteer';
-import ExtractAction from './actions/extract.action';
-import ExtractAllAction from './actions/extractAll.action';
 import { BaseAction } from './actions/bases/base.action';
-import { WaitAction } from './actions/wait.actions';
-
-const actionsMapping = {
-    'extract': ExtractAction,
-    'extractAll': ExtractAllAction,
-    'wait': WaitAction,
-}
+import { actionsMapping } from './actions/actions.mapping'
+import { PreviousData } from './types/previous-data.type';
+import { ScrapeAction } from 'src/scrape/types/scrape-action.interface';
+import LoopAction from './actions/loop.action';
 
 @Injectable()
 export class ActionHandlerService implements OnModuleInit {
     private actions: Array<RegisteredAction> = getAllActions();
+
+    private actionsMapping = actionsMapping;
 
     private readonly logger = new Logger(ActionHandlerService.name);
 
@@ -23,26 +20,37 @@ export class ActionHandlerService implements OnModuleInit {
 
     onModuleInit() {
         this.actions.forEach((action: RegisteredAction) => {
-            this.logger.log(`Action "${action.name}" registered`);
+            this.logger.debug(` ✅ Action "${action.name}" registered`);
         });
     }
 
-    async handleAction(action: string, url: string, params: unknown): Promise<any> {
+    async handleAction(scrapeAction: ScrapeAction<unknown>, previousData: PreviousData, data?: object): Promise<any> {
+
+        this.logger.log(`🚀 Handling action ${scrapeAction}`);
+        this.logger.debug(`🚀 Params: ${JSON.stringify(scrapeAction.params)}`);
+        this.logger.debug(`🚀 Previous data: ${JSON.stringify(previousData)}`);
+        
         // Hier wird der Code für das Scrapen implementiert
-        const actionInstance = this.getAction(action);
+        const actionInstance = this.getAction(scrapeAction.action);
         if (!actionInstance) {
             return null;
         }
 
         // Übergib die Page beim Erstellen der Instanz
-        const page = await this.puppeteerService.newPage();
-        await page.goto(url, { waitUntil: 'domcontentloaded' });
+        const page = await this.puppeteerService.currentPage;
 
-        const instance = new (actionInstance.actionClass as new (page: Page) => BaseAction<unknown>)(page);
-        const result = await instance.run(params);
-        this.logger.log(`Action "${action}" returned: ${result}`);
+        const instance = new (actionInstance.actionClass as new 
+            (   
+                page: Page, 
+                scrapeAction: ScrapeAction<unknown>, 
+                actionHandlerService: ActionHandlerService,
+                data?: object
+            ) 
+            => BaseAction<unknown>)(page, scrapeAction, this, data);
 
-        await page.close();
+        const result = await instance.run(previousData);
+
+        // await page.close();
         return result;
     }
 

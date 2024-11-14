@@ -1,1 +1,0 @@
-export type ActionName = 'extract' | 'extractAll' | 'wait'

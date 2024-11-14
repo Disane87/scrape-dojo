@@ -9,6 +9,7 @@ import { ActionHandlerService } from 'src/action-handler/action-handler.service'
 export class ScrapeService implements OnModuleInit {
     private readonly logger = new Logger(ScrapeService.name);
     private scrapeDefinitions: Array<Scrape> = [];
+    private scrapeResults: Map<string, Map<string, Map<string, any>>> = new Map();
 
     constructor(private actionsHandlerService: ActionHandlerService, private puppeteerService: PuppeteerService) {}
 
@@ -26,7 +27,6 @@ export class ScrapeService implements OnModuleInit {
         const directoryPath = path.join(rootDirectory, 'config');
         const filePath = path.join(directoryPath, 'scrapes.json');
 
-        // Überprüfen, ob das Verzeichnis existiert, und falls nicht, erstellen
         if (!fs.existsSync(directoryPath)) {
             fs.mkdirSync(directoryPath, { recursive: true });
             this.logger.log('Config directory created successfully.');
@@ -34,9 +34,8 @@ export class ScrapeService implements OnModuleInit {
             this.logger.log('Config directory already exists.');
         }
 
-        // Überprüfen, ob die Datei existiert, und falls nicht, erstellen
         if (!fs.existsSync(filePath)) {
-            fs.writeFileSync(filePath, '[]'); // Eine leere JSON-Datei erzeugen
+            fs.writeFileSync(filePath, '[]');
             this.logger.log('File "scrapes.json" created successfully.');
         } else {
             this.logger.log('File "scrapes.json" already exists.');
@@ -49,26 +48,48 @@ export class ScrapeService implements OnModuleInit {
         for (const scrape of this.scrapeDefinitions) {
             this.logger.log(`Scrape definition: ${JSON.stringify(scrape)}`);
             this.logger.log(`Scrape ID: ${scrapeId}`);
-    
+
+            const stepMap = new Map<string, Map<string, any>>();
+            this.scrapeResults.set(scrape.id, stepMap);
+
             for (const step of scrape.steps) {
                 this.logger.log(`Running step: ${step.name}`);
-    
+
+                const actionMap = new Map<string, any>();
+                stepMap.set(step.name, actionMap);
+
                 for (const action of step.actions) {
                     this.logger.log(`Running action: ${action.action} with params: ${JSON.stringify(action.params)}`);
-                    
-                    // Warte auf den Abschluss der Aktion
-                    const ret = await this.actionsHandlerService.handleAction(action.action, scrape.url, action.params);
-                    // this.logger.log(`Action returned: ${ret}`);
-    
-                    // Timer für 1 Sekunde
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+
+                    const ret = await this.actionsHandlerService.handleAction(action, actionMap);
+                    if (ret !== undefined && ret !== null) {
+                        this.logger.log(`Action "${action.name}" returned: ${ret}`);
+                        actionMap.set(action.name, ret);
+                    }
+
+                    this.logger.log(`Action "${action.name}" completed`);
+                }
+                this.logger.log(`Step "${step.name}" completed`);
+            }
+
+            this.logger.log(`Scrape "${scrape.id}" completed`);
+        }
+
+        // Konvertiere die Map in ein serialisierbares JSON-Objekt und gib es zurück
+        return this.convertScrapeResultsToJson();
+    }
+
+    private convertScrapeResultsToJson(): any {
+        const result: any = {};
+        for (const [scrapeName, steps] of this.scrapeResults) {
+            result[scrapeName] = {};
+            for (const [stepName, actions] of steps) {
+                result[scrapeName][stepName] = {};
+                for (const [actionName, returnValue] of actions) {
+                    result[scrapeName][stepName][actionName] = returnValue;
                 }
             }
         }
-    
-        // Browser schließen, falls erforderlich
-        // await this.puppeteerService.closeBrowser();
-        return scrapeId;
+        return result;
     }
-    
 }
