@@ -6,6 +6,7 @@
                 "click",
                 "extract",
                 "extractAll",
+                "get",
                 "getAll",
                 "keyboardPress",
                 "logger",
@@ -41,6 +42,10 @@
                 "data": {
                     "properties": {
                         "currentData": {
+                            "additionalProperties": {},
+                            "type": "object"
+                        },
+                        "storedData": {
                             "additionalProperties": {},
                             "type": "object"
                         }

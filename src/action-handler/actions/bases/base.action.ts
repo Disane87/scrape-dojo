@@ -7,6 +7,7 @@ import { PreviousData } from "src/action-handler/types/previous-data.type";
 import { ActionHandlerService } from "src/action-handler/action-handler.service";
 import Handlebars from "../_helpers/handlebars.helper";
 import { ScrapeActionData } from "src/scrape/types/scrape-action-data.interface";
+import { PuppeteerService } from "src/puppeteer/puppeteer.service";
 
 export abstract class BaseAction<TParams extends Record<string, any>> implements ScrapeAction<TParams> {
     protected readonly logger: Logger;
@@ -17,6 +18,8 @@ export abstract class BaseAction<TParams extends Record<string, any>> implements
 
     protected previousData: PreviousData;
 
+    protected readonly puppeteerService: PuppeteerService;
+
     storedData: object;
     params: TParams; // Dynamisch aufgelöste Parameter, jetzt schreibbar
 
@@ -25,11 +28,19 @@ export abstract class BaseAction<TParams extends Record<string, any>> implements
         storedData: {}
     };
 
-    constructor(page: Page, previousData: PreviousData, scrapeAction: ScrapeAction<TParams>, actionHandlerService: ActionHandlerService, data?: ScrapeActionData) {
+    constructor(
+        page: Page,
+        previousData: PreviousData,
+        scrapeAction: ScrapeAction<TParams>,
+        actionHandlerService: ActionHandlerService,
+        puppeteerService: PuppeteerService,
+        data?: ScrapeActionData
+    ) {
         this.page = page;
         this.name = scrapeAction.name;
         this.previousData = previousData;
         this.scrapeAction = scrapeAction;
+        this.puppeteerService = puppeteerService;
 
         this.originalParams = { ...scrapeAction.params }; // Kopiere die Original-Parameter
         this.params = { ...scrapeAction.params }; // Initiale Kopie der Parameter
@@ -43,11 +54,11 @@ export abstract class BaseAction<TParams extends Record<string, any>> implements
 
         // this.params = this.compileDeep(this.originalParams, previousActions, this.data, this.logger);
         for (const [key, value] of Object.entries(this.params)) {
-            if(typeof value === "string"){
-                this.logger.log(`Parameter ${key}: ${value}`);    
+            if (typeof value === "string") {
+                this.logger.log(`Parameter ${key}: ${value}`);
                 const previousDataObject = Object.fromEntries(previousData);
                 (this.params as any)[key] = Handlebars.compile(value)({ previousData: previousDataObject, ...this.data });
-            }       
+            }
         };
 
     }

@@ -11,6 +11,8 @@ import LoggerAction from "./logger.action";
 import TransformAction from "./transform.action";
 import GetAllElementsAction from "./getAll.action";
 import StoreDataAction from "./store-data.action";
+import GetElementAction from "./get.action";
+import DownloadAction from "./download.actions";
 
 export type ActionName = keyof typeof actionsMapping;
 export const actionsMapping = {
@@ -26,5 +28,7 @@ export const actionsMapping = {
     'logger': LoggerAction,
     'transform': TransformAction,
     'getAll': GetAllElementsAction,
-    'storeData': StoreDataAction
+    'storeData': StoreDataAction,
+    'get': GetElementAction,
+    'download': DownloadAction,
 }

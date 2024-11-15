@@ -9,7 +9,7 @@ import * as path from 'path';
 export class PuppeteerService implements OnModuleInit, OnModuleDestroy {
     private readonly logger = new Logger(PuppeteerService.name);
 
-    private browser: Browser;
+    public browser: Browser;
     private debug: boolean;
     private inDocker: boolean;
     private arguments: string[];
@@ -127,7 +127,7 @@ export class PuppeteerService implements OnModuleInit, OnModuleDestroy {
             width: 1920,
             height: 1080,
             deviceScaleFactor: 1,
-          });
+        });
         this.currentPage.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
         return this.currentPage;
     }

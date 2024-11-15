@@ -1,253 +1,260 @@
 {
-    "$schema": "./scrapes.schema.json",
-    "scrapes": [
+  "$schema": "./scrapes.schema.json",
+  "scrapes": [
+    {
+      "id": "amazon",
+      "steps": [
         {
-            "id": "amazon",
-            "steps": [
-                {
-                    "name": "Login",
-                    "actions": [
+          "name": "Login",
+          "actions": [
+            {
+              "action": "navigate",
+              "params": {
+                "url": "https://www.amazon.de/ap/signin?openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Fwww.amazon.de%2F%3Fref_%3Dnav_signin%26openid.identity%3Dhttp%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select%26openid.assoc_handle%3Ddeflex%26openid.mode%3Dcheckid_setup%26openid.claimed_id%3Dhttp%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select%26openid.ns%3Dhttp%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.assoc_handle=deflex&openid.mode=checkid_setup&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0"
+              }
+            },
+            {
+              "name": "Type email",
+              "action": "type",
+              "params": {
+                "selector": "#ap_email",
+                "text": "disane@icloud.com",
+                "pressEnter": true
+              }
+            },
+            {
+              "name": "Type password",
+              "action": "type",
+              "params": {
+                "selector": "#ap_password",
+                "text": "Uo$fww",
+                "pressEnter": true
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get possible years",
+          "actions": [
+            {
+              "name": "Navigate to order history",
+              "action": "navigate",
+              "params": {
+                "url": "https://www.amazon.de/your-orders/orders?orderFilter=year-{{year}}&startIndex=0"
+              }
+            },
+            {
+              "action": "extractAll",
+              "name": "extractYears",
+              "params": {
+                "selector": "select[name='orderFilter'] option[value^='year-']"
+              }
+            },
+            {
+              "action": "loop",
+              "name": "yearLoop",
+              "params": {
+                "elementKey": "extractYears",
+                "actions": [
+                  {
+                    "name": "Navigate first page of year",
+                    "action": "navigate",
+                    "params": {
+                      "url": "https://www.amazon.de/your-orders/orders?orderFilter=year-{{currentData.yearLoop.value}}&startIndex=0"
+                    }
+                  },
+                  {
+                    "action": "extract",
+                    "name": "lastPage",
+                    "params": {
+                      "selector": "ul.a-pagination li.a-normal:nth-last-child(2) a"
+                    }
+                  },
+                  {
+                    "action": "transform",
+                    "name": "getPages",
+                    "params": {
+                      "previousDataKey": "lastPage",
+                      "expression": "$map([0..($number(lastPage) - 1)], function($v, $i, $a) { $i })"
+                    }
+                  },
+                  {
+                    "action": "loop",
+                    "name": "pageLoop",
+                    "params": {
+                      "elementKey": "getPages",
+                      "actions": [
                         {
-                            "action": "navigate",
-                            "params": {
-                                "url": "https://www.amazon.de/ap/signin?openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Fwww.amazon.de%2F%3Fref_%3Dnav_signin%26openid.identity%3Dhttp%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select%26openid.assoc_handle%3Ddeflex%26openid.mode%3Dcheckid_setup%26openid.claimed_id%3Dhttp%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select%26openid.ns%3Dhttp%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.assoc_handle=deflex&openid.mode=checkid_setup&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0"
-                            }
+                          "action": "getAll",
+                          "name": "extractOrders",
+                          "params": {
+                            "selector": "div.order.js-order-card"
+                          }
                         },
                         {
-                            "name": "Type email",
-                            "action": "type",
-                            "params": {
-                                "selector": "#ap_email",
-                                "text": "disane@icloud.com",
-                                "pressEnter": true
-                            }
-                        },
-                        {
-                            "name": "Type password",
-                            "action": "type",
-                            "params": {
-                                "selector": "#ap_password",
-                                "text": "Uo$fww",
-                                "pressEnter": true
-                            }
-                        }
-                    ]
-                },
-                {
-                    "name": "Get possible years",
-                    "actions": [
-                        {
-                            "name": "Navigate to order history",
-                            "action": "navigate",
-                            "params": {
-                                "url": "https://www.amazon.de/your-orders/orders?orderFilter=year-{{year}}&startIndex=0"
-                            }
-                        },
-                        {
-                            "action": "extractAll",
-                            "name": "extractYears",
-                            "params": {
-                                "selector": "select[name='orderFilter'] option[value^='year-']"
-                            }
-                        },
-                        {
-                            "action": "loop",
-                            "name": "yearLoop",
-                            "params": {
-                                "elementKey": "extractYears",
-                                "actions": [
+                          "action": "loop",
+                          "name": "orderLoop",
+                          "params": {
+                            "elementKey": "extractOrders",
+                            "actions": [
+                              {
+                                "action": "extract",
+                                "name": "extractOrderNo",
+                                "params": {
+                                  "element": "currentData.orderLoop.value",
+                                  "selector": ".yohtmlc-order-id span:nth-last-child(1) bdi"
+                                }
+                              },
+                              {
+                                "action": "extract",
+                                "name": "extractorderDate",
+                                "params": {
+                                  "element": "currentData.orderLoop.value",
+                                  "selector": ".a-column .a-row:nth-last-child(1) span"
+                                }
+                              },
+                              {
+                                "action": "logger",
+                                "params": {
+                                  "message": "📥 Got order '{{ previousData.extractOrderNo }}' from '{{ previousData.extractorderDate }}'",
+                                  "level": "log"
+                                }
+                              },
+                              {
+                                "action": "click",
+                                "params": {
+                                  "element": "currentData.orderLoop.value",
+                                  "selector": "span.a-declarative[data-action='a-popover'][data-a-popover*='invoice.html']"
+                                }
+                              },
+                              {
+                                "action": "get",
+                                "name": "getInvoiceList",
+                                "params": {
+                                  "selector": "div.a-popover div#a-popover-content-{{add currentData.orderLoop.index 1}} ul.invoice-list"
+                                }
+                              },
+                              {
+                                "action": "extractAll",
+                                "name": "extractInvoiceLinks",
+                                "params": {
+                                  "element": "getInvoiceList",
+                                  "selector": "a[href*='invoice.pdf']",
+                                  "property": "href"
+                                }
+                              },
+                              {
+                                "action": "loop",
+                                "name": "invoiceLinkLoop",
+                                "params": {
+                                  "elementKey": "extractInvoiceLinks",
+                                  "actions": [
                                     {
-                                        "name": "Navigate first page of year",
-                                        "action": "navigate",
-                                        "params": {
-                                            "url": "https://www.amazon.de/your-orders/orders?orderFilter=year-{{currentData.yearLoop}}&startIndex=0"
-                                        }
+                                      "action": "logger",
+                                      "params": {
+                                        "message": "📥 Got invoice '{{ currentData.invoiceLinkLoop.value }}'",
+                                        "level": "log"
+                                      }
                                     },
                                     {
-                                        "action": "extract",
-                                        "name": "lastPage",
-                                        "params": {
-                                            "selector": "ul.a-pagination li.a-normal:nth-last-child(2) a"
-                                        }
-                                    },
-                                    {
-                                        "action": "transform",
-                                        "name": "getPages",
-                                        "params": {
-                                            "previousDataKey": "lastPage",
-                                            "expression": "$map([0..($number(lastPage) - 1)], function($v, $i, $a) { $i })"
-                                        }
-                                    },
-                                    {
-                                        "action": "loop",
-                                        "name": "pageLoop",
-                                        "params": {
-                                            "elementKey": "getPages",
-                                            "actions": [
-                                                {
-                                                    "action": "getAll",
-                                                    "name": "extractOrders",
-                                                    "params": {
-                                                        "selector": "div.order.js-order-card"
-                                                    }
-                                                },
-                                                {
-                                                    "action": "loop",
-                                                    "name": "orderLoop",
-                                                    "params": {
-                                                        "elementKey": "extractOrders",
-                                                        "actions": [
-                                                            {
-                                                                "action": "extract",
-                                                                "name": "extractOrderNo",
-                                                                "params": {
-                                                                    "element": "currentData.orderLoop",
-                                                                    "selector": ".yohtmlc-order-id span:nth-last-child(1) bdi"
-                                                                }
-                                                            },
-                                                            {
-                                                                "action": "extract",
-                                                                "name": "extractorderDate",
-                                                                "params": {
-                                                                    "element": "currentData.orderLoop",
-                                                                    "selector": ".a-column .a-row:nth-last-child(1) span"
-                                                                }
-                                                            },
-                                                            {
-                                                                "action": "logger",
-                                                                "params": {
-                                                                    "message": "📥 Got order '{{ previousData.extractOrderNo }}' from '{{ previousData.extractorderDate }}'",
-                                                                    "level": "log"
-                                                                }
-                                                            },
-                                                            {
-                                                                "action": "click",
-                                                                "params": {
-                                                                    "element": "currentData.orderLoop",
-                                                                    "selector": "span.a-declarative[data-action='a-popover'][data-a-popover*='invoice.html']"
-                                                                }
-                                                            },
-                                                            {
-                                                                "action": "getAll",
-                                                                "name": "extractInvoices",
-                                                                "params": {
-                                                                    "selector": "div.a-popover-inner a"
-                                                                }
-                                                            },
-                                                            {
-                                                                "action": "loop",
-                                                                "name": "invoiceLoop",
-                                                                "params": {
-                                                                    "elementKey": "extractInvoices",
-                                                                    "actions": [
-                                                                        {
-                                                                            "action": "extract",
-                                                                            "name": "extractInvoiceLink",
-                                                                            "params": {
-                                                                                "element": "currentData.invoiceLoop",
-                                                                                "selector": "[href*='invoice.pdf']",
-                                                                                "property": "href"
-                                                                            }
-                                                                            
-                                                                        },
-                                                                        {
-                                                                            "action": "logger",
-                                                                            "params": {
-                                                                                "message": "📥 Got invoice '{{ currentData.invoiceLoop }}'",
-                                                                                "level": "log"
-                                                                            }
-                                                                        }
-                                                                    ]
-                                                                }
-                                                            }
-                                                        ]
-                                                    }
-                                                },
-                                                // {
-                                                //     "action": "extractAll",
-                                                //     "name": "getAllorderNumbers",
-                                                //     "params": {
-                                                //         "element": "extractOrders",
-                                                //         "selector": ".yohtmlc-order-id span:nth-last-child(1) bdi"
-                                                //     }
-                                                // },
-                                                // {
-                                                //     "action": "getAll",
-                                                //     "name": "getAllOrderElements",
-                                                //     "params": {
-                                                //         "selector": "span[data-action='a-popover'] a.a-link-normal[href*='invoice.html']"
-                                                //     }
-                                                // },
-                                                // {   
-                                                //     "action": "storeData",
-                                                //     "name": "storeOrderNumber",
-                                                //     "params": {
-                                                //         "data": {
-                                                //             "orderNumber": "{{ getAllOrderElements }}"
-                                                //         }
-                                                //     }
-                                                // },
-                                                // {
-                                                //     "action": "loop",
-                                                //     "name": "orderLoop",
-                                                //     "params": {
-                                                //         "elementKey": "getAllOrderElements",
-                                                //         "actions": [
-                                                //             {
-                                                //                 "action": "click",
-                                                //                 "params": {
-                                                //                     "element": "currentData.orderLoop"
-                                                //                 }
-                                                //             },
-                                                //             {
-                                                //                 "action": "getAll",
-                                                //                 "name": "extractInvoices",
-                                                //                 "params": {
-                                                //                     // "element": "currentData.orderLoop",
-                                                //                     "selector": "div.a-popover-inner a[href*='invoice.pdf']"
-                                                //                 }
-                                                //             }
-                                                //             // {
-                                                //             //     "action": "logger",
-                                                //             //     "params": {
-                                                //             //         "message": "📥 Order ",
-                                                //             //         "level": "log"
-                                                //             //     }
-                                                //             // }
-                                                //         ]
-                                                //     }
-                                                // },
-                                                // {
-                                                //     "action": "extractAll",
-                                                //     "name": "extractOrders",
-                                                //     "params": {
-                                                //         "selector": ".order-card.js-order-card .yohtmlc-order-id span:nth-last-child(1)"
-                                                //     }
-                                                // },
-                                                // 
-                                                {
-                                                    "action": "logger",
-                                                    "params": {
-                                                        "message": "Pageloop done Year {{currentData.yearLoop}} / Page {{currentData.pageLoop}}",
-                                                        "level": "log"
-                                                    }
-                                                },
-                                                {
-                                                    "name": "Navigate next page",
-                                                    "action": "navigate",
-                                                    "params": {
-                                                        "url": "https://www.amazon.de/your-orders/orders?orderFilter=year-{{currentData.yearLoop}}&startIndex={{multiply currentData.pageLoop 10}}"
-                                                    }
-                                                }
-                                            ]
-                                        }
+                                      "action": "download",
+                                      "params": {
+                                        "url": "{{ currentData.invoiceLinkLoop.value }}",
+                                        "filename": "invoice-{{ previousData.extractOrderNo }}-{{ currentData.invoiceLinkLoop.index }}.pdf",
+                                        "path": "./documents"
+                                      }
                                     }
-                                ]
-                            }
+                                  ]
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        // {
+                        //     "action": "extractAll",
+                        //     "name": "getAllorderNumbers",
+                        //     "params": {
+                        //         "element": "extractOrders",
+                        //         "selector": ".yohtmlc-order-id span:nth-last-child(1) bdi"
+                        //     }
+                        // },
+                        // {
+                        //     "action": "getAll",
+                        //     "name": "getAllOrderElements",
+                        //     "params": {
+                        //         "selector": "span[data-action='a-popover'] a.a-link-normal[href*='invoice.html']"
+                        //     }
+                        // },
+                        // {
+                        //     "action": "storeData",
+                        //     "name": "storeOrderNumber",
+                        //     "params": {
+                        //         "data": {
+                        //             "orderNumber": "{{ getAllOrderElements }}"
+                        //         }
+                        //     }
+                        // },
+                        // {
+                        //     "action": "loop",
+                        //     "name": "orderLoop",
+                        //     "params": {
+                        //         "elementKey": "getAllOrderElements",
+                        //         "actions": [
+                        //             {
+                        //                 "action": "click",
+                        //                 "params": {
+                        //                     "element": "currentData.orderLoop"
+                        //                 }
+                        //             },
+                        //             {
+                        //                 "action": "getAll",
+                        //                 "name": "extractInvoices",
+                        //                 "params": {
+                        //                     // "element": "currentData.orderLoop",
+                        //                     "selector": "div.a-popover-inner a[href*='invoice.pdf']"
+                        //                 }
+                        //             }
+                        //             // {
+                        //             //     "action": "logger",
+                        //             //     "params": {
+                        //             //         "message": "📥 Order ",
+                        //             //         "level": "log"
+                        //             //     }
+                        //             // }
+                        //         ]
+                        //     }
+                        // },
+                        // {
+                        //     "action": "extractAll",
+                        //     "name": "extractOrders",
+                        //     "params": {
+                        //         "selector": ".order-card.js-order-card .yohtmlc-order-id span:nth-last-child(1)"
+                        //     }
+                        // },
+                        //
+                        {
+                          "action": "logger",
+                          "params": {
+                            "message": "Pageloop done Year {{currentData.yearLoop.value}} / Page {{currentData.pageLoop.value}}",
+                            "level": "log"
+                          }
+                        },
+                        {
+                          "name": "Navigate next page",
+                          "action": "navigate",
+                          "params": {
+                            "url": "https://www.amazon.de/your-orders/orders?orderFilter=year-{{currentData.yearLoop.value}}&startIndex={{multiply currentData.pageLoop.value 10}}"
+                          }
                         }
-                    ]
-                }
-            ]
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
         }
-    ]
+      ]
+    }
+  ]
 }

@@ -16,7 +16,7 @@ export class ActionHandlerService implements OnModuleInit {
 
     private readonly logger = new Logger(ActionHandlerService.name);
 
-    constructor(private puppeteerService: PuppeteerService) {}
+    constructor(private puppeteerService: PuppeteerService) { }
 
     onModuleInit() {
         this.actions.forEach((action: RegisteredAction) => {
@@ -31,7 +31,7 @@ export class ActionHandlerService implements OnModuleInit {
         this.logger.debug(`🚀 Previous data: ${JSON.stringify(previousData)}`);
         this.logger.debug(`🚀 Data: ${JSON.stringify(data)}`);
         this.logger.debug(`🚀 Stored data: ${JSON.stringify(storedData)}`);
-        
+
         // Hier wird der Code für das Scrapen implementiert
         const actionInstance = this.getAction(scrapeAction.action);
         if (!actionInstance) {
@@ -41,16 +41,17 @@ export class ActionHandlerService implements OnModuleInit {
         // Übergib die Page beim Erstellen der Instanz
         const page = await this.puppeteerService.currentPage;
 
-        const instance = new (actionInstance.actionClass as new 
-            (   
-                page: Page, 
+        const instance = new (actionInstance.actionClass as new
+            (
+                page: Page,
                 pveiousData: PreviousData,
-                scrapeAction: ScrapeAction<unknown>, 
+                scrapeAction: ScrapeAction<unknown>,
                 actionHandlerService: ActionHandlerService,
+                puppeteerService: PuppeteerService,
                 data?: object,
                 storedData?: ScrapeActionData
-            ) 
-            => BaseAction<unknown>)(page, previousData, scrapeAction, this, data, storedData);
+            )
+            => BaseAction<unknown>)(page, previousData, scrapeAction, this, this.puppeteerService, data, storedData);
 
         const result = await instance.run();
 
@@ -60,5 +61,5 @@ export class ActionHandlerService implements OnModuleInit {
 
     getAction(action: string) {
         return this.actions.find(a => a.name === action);
-    }   
+    }
 }

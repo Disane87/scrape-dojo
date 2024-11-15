@@ -5,6 +5,7 @@ import { ScrapeAction } from "src/scrape/types/scrape-action.interface";
 import { ActionHandlerService } from "../action-handler.service";
 import { Action } from "../_decorators/action.decorator";
 import { ScrapeActionData } from "src/scrape/types/scrape-action-data.interface";
+import { PuppeteerService } from "src/puppeteer/puppeteer.service";
 
 // Typdefinition für die Parameter der LoopAction
 export type LoopActionParams = {
@@ -14,8 +15,15 @@ export type LoopActionParams = {
 
 @Action('loop')
 export class LoopAction extends BaseAction<LoopActionParams> {
-    constructor(page: Page, previousData: PreviousData, scrapeAction: ScrapeAction<LoopActionParams>, private actionsHandlerService: ActionHandlerService, data?: ScrapeActionData) {
-        super(page, previousData, scrapeAction, actionsHandlerService, data);
+    constructor(
+        page: Page,
+        previousData: PreviousData,
+        scrapeAction: ScrapeAction<LoopActionParams>,
+        protected actionsHandlerService: ActionHandlerService,
+        protected puppeteerService: PuppeteerService,
+        data?: ScrapeActionData
+    ) {
+        super(page, previousData, scrapeAction, actionsHandlerService, puppeteerService, data);
     }
 
     async run(): Promise<void> {
@@ -26,7 +34,7 @@ export class LoopAction extends BaseAction<LoopActionParams> {
             return;
         }
 
-        if(!Array.isArray(elements)) {
+        if (!Array.isArray(elements)) {
             this.logger.warn(`Elements for key ${this.params.elementKey} are not an array`);
             elements = [elements];
         }
@@ -35,8 +43,9 @@ export class LoopAction extends BaseAction<LoopActionParams> {
         for (const element of elements) {
 
             this.logger.log(`Element: ${element}`);
+            const content = await this.page.evaluate((el: HTMLElement) => el.innerHTML, element);
 
-            if(!this.params.actions) {
+            if (!this.params.actions) {
                 this.logger.warn(`No actions provided for loop`);
                 return;
             }
@@ -55,9 +64,9 @@ export class LoopAction extends BaseAction<LoopActionParams> {
                 //       [this.name]: element
                 //     },
                 //   };
-                  
-                  
-                this.data.currentData[this.name] = element;
+
+
+                this.data.currentData[this.name] = { value: element, index: elements.indexOf(element) };
                 // this.data.storedData[this.name] = {
                 //     [element as string]: {}
                 //   };
@@ -71,7 +80,7 @@ export class LoopAction extends BaseAction<LoopActionParams> {
                     this.data,
                     // storedLoopData
                 );
-                
+
 
                 // Logge das Ergebnis, wenn vorhanden
                 if (ret !== undefined && ret !== null) {

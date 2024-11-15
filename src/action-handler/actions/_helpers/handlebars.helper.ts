@@ -12,6 +12,11 @@ Handlebars.registerHelper("subtract", (value: number, number: number) => {
     return value - number;
 });
 
+Handlebars.registerHelper("add", (value: number, number: number) => {
+    return value + number;
+});
+
+
 // Register the "subtract" helper
 Handlebars.registerHelper("multiply", (value: number, number: number) => {
     return value * number;
