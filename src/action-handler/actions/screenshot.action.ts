@@ -1,11 +1,12 @@
 import { Page } from "puppeteer";
-import { Action } from "../decorators/action.decorator";
 import { BaseAction } from "./bases/base.action";
 import * as fs from 'fs';
+import { Action } from "../_decorators/action.decorator";
+import { PreviousData } from "../types/previous-data.type";
 
 @Action('screenshot')
 export class ScreenshotAction extends BaseAction<VideoDecoder> {
-    async run(params): Promise<string> {
+    async run(): Promise<string> {
         if (!fs.existsSync('./screenshots')) {
             fs.mkdirSync('./screenshots', { recursive: true });
             this.logger.log('Screenshot directory created successfully.');

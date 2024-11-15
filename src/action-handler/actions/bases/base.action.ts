@@ -3,51 +3,88 @@ import { Page } from "puppeteer";
 import { ScrapeAction } from "src/scrape/types/scrape-action.interface";
 import { ActionName } from "../actions.mapping";
 
-import Handlebars from "handlebars";
 import { PreviousData } from "src/action-handler/types/previous-data.type";
 import { ActionHandlerService } from "src/action-handler/action-handler.service";
+import Handlebars from "../_helpers/handlebars.helper";
+import { ScrapeActionData } from "src/scrape/types/scrape-action-data.interface";
 
-Handlebars.registerHelper('year', () => {
-    // Return the current year dynamically
-    return new Date().getFullYear();
-});
-
-export abstract class BaseAction<TParams> implements ScrapeAction<TParams> {
+export abstract class BaseAction<TParams extends Record<string, any>> implements ScrapeAction<TParams> {
     protected readonly logger: Logger;
     protected page: Page;
-    readonly params: TParams;
 
-    protected data: object;
+    protected scrapeAction: ScrapeAction<TParams>;
+    readonly originalParams: TParams; // Original, unveränderte Parameter
 
-    constructor(page: Page, scrapeAction: ScrapeAction<TParams>, actionHandlerService: ActionHandlerService, data?: object) {
+    protected previousData: PreviousData;
+
+    storedData: object;
+    params: TParams; // Dynamisch aufgelöste Parameter, jetzt schreibbar
+
+    data: ScrapeActionData = {
+        currentData: {},
+        storedData: {}
+    };
+
+    constructor(page: Page, previousData: PreviousData, scrapeAction: ScrapeAction<TParams>, actionHandlerService: ActionHandlerService, data?: ScrapeActionData) {
         this.page = page;
-        this.params = scrapeAction.params;
         this.name = scrapeAction.name;
+        this.previousData = previousData;
+        this.scrapeAction = scrapeAction;
 
-        if(data) {
+        this.originalParams = { ...scrapeAction.params }; // Kopiere die Original-Parameter
+        this.params = { ...scrapeAction.params }; // Initiale Kopie der Parameter
+
+        if (data) {
             this.data = data;
         }
 
-        this.logger = new Logger(this.constructor.name)
-
+        this.logger = new Logger(this.name ? `${this.constructor.name}|${this.name}` : this.constructor.name);
         this.logger.log(`⭐️ Action ${this.constructor.name} created`);
+
+        // this.params = this.compileDeep(this.originalParams, previousActions, this.data, this.logger);
+        for (const [key, value] of Object.entries(this.params)) {
+            if(typeof value === "string"){
+                this.logger.log(`Parameter ${key}: ${value}`);    
+                const previousDataObject = Object.fromEntries(previousData);
+                (this.params as any)[key] = Handlebars.compile(value)({ previousData: previousDataObject, ...this.data });
+            }       
+        };
+
     }
 
     name: string;
     action: ActionName;
 
-    // Die Methode kann flexibel eine beliebige Anzahl von Parametern akzeptieren
-    run(previousActions: PreviousData): Promise<any> {
-        
-        Object.entries(this.params).forEach(([key, value]) => {
-            this.logger.log(`Parameter ${key}: ${value}`);
-            value = Handlebars.compile(value)({ previousData: previousActions, ...this.data });
+    // Methode zur dynamischen Auflösung der Parameter
+    abstract run(): Promise<any>;
 
-            this.params[key] = value;
-        });
-
-        return Promise.resolve();
-        
+    // Rekursive Funktion zur Kompilierung der Parameter
+    compileDeep(
+        data: any,
+        previousData: any,
+        currentData: any,
+        logger?: Logger
+    ): TParams {
+        if (typeof data === "object" && data !== null) {
+            // Falls das aktuelle `data` ein Objekt oder Array ist, rekursiv über alle Schlüssel/Werte iterieren
+            const compiledObject: any = Array.isArray(data) ? [] : {};
+            Object.entries(data).forEach(([key, value]) => {
+                if (logger) {
+                    logger.debug(`Compiling parameter ${key}: ${value}`);
+                }
+                compiledObject[key] = this.compileDeep(value, previousData, currentData, logger);
+            });
+            return compiledObject;
+        } else if (typeof data === "string") {
+            // Falls `data` ein String ist, versuche, ihn als Handlebars-Template zu kompilieren
+            return Handlebars.compile(data)({
+                previousData,
+                ...currentData,
+            }) as TParams[keyof TParams];
+        } else {
+            // Falls `data` ein primitiver Wert (z.B. number, boolean) ist, gib ihn direkt zurück
+            return data;
+        }
     }
-}
 
+}

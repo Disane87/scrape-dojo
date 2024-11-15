@@ -1,12 +1,12 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { getAllActions, RegisteredAction } from './decorators/action.decorator';
 import { PuppeteerService } from 'src/puppeteer/puppeteer.service';
 import { Page } from 'puppeteer';
 import { BaseAction } from './actions/bases/base.action';
 import { actionsMapping } from './actions/actions.mapping'
 import { PreviousData } from './types/previous-data.type';
 import { ScrapeAction } from 'src/scrape/types/scrape-action.interface';
-import LoopAction from './actions/loop.action';
+import { getAllActions, RegisteredAction } from './_decorators/action.decorator';
+import { ScrapeActionData } from 'src/scrape/types/scrape-action-data.interface';
 
 @Injectable()
 export class ActionHandlerService implements OnModuleInit {
@@ -24,11 +24,13 @@ export class ActionHandlerService implements OnModuleInit {
         });
     }
 
-    async handleAction(scrapeAction: ScrapeAction<unknown>, previousData: PreviousData, data?: object): Promise<any> {
+    async handleAction(scrapeAction: ScrapeAction<unknown>, previousData: PreviousData, data?: object, storedData?: ScrapeActionData): Promise<any> {
 
-        this.logger.log(`🚀 Handling action ${scrapeAction}`);
+        this.logger.log(`🚀 Handling action ${JSON.stringify(scrapeAction)}`);
         this.logger.debug(`🚀 Params: ${JSON.stringify(scrapeAction.params)}`);
         this.logger.debug(`🚀 Previous data: ${JSON.stringify(previousData)}`);
+        this.logger.debug(`🚀 Data: ${JSON.stringify(data)}`);
+        this.logger.debug(`🚀 Stored data: ${JSON.stringify(storedData)}`);
         
         // Hier wird der Code für das Scrapen implementiert
         const actionInstance = this.getAction(scrapeAction.action);
@@ -42,13 +44,15 @@ export class ActionHandlerService implements OnModuleInit {
         const instance = new (actionInstance.actionClass as new 
             (   
                 page: Page, 
+                pveiousData: PreviousData,
                 scrapeAction: ScrapeAction<unknown>, 
                 actionHandlerService: ActionHandlerService,
-                data?: object
+                data?: object,
+                storedData?: ScrapeActionData
             ) 
-            => BaseAction<unknown>)(page, scrapeAction, this, data);
+            => BaseAction<unknown>)(page, previousData, scrapeAction, this, data, storedData);
 
-        const result = await instance.run(previousData);
+        const result = await instance.run();
 
         // await page.close();
         return result;

@@ -1,9 +1,10 @@
 import { Page } from "puppeteer";
-import { Action } from "../decorators/action.decorator";
 import { BaseAction } from "./bases/base.action";
 import { PreviousData } from "../types/previous-data.type";
 import { ScrapeAction } from "src/scrape/types/scrape-action.interface";
 import { ActionHandlerService } from "../action-handler.service";
+import { Action } from "../_decorators/action.decorator";
+import { ScrapeActionData } from "src/scrape/types/scrape-action-data.interface";
 
 // Typdefinition für die Parameter der LoopAction
 export type LoopActionParams = {
@@ -13,14 +14,13 @@ export type LoopActionParams = {
 
 @Action('loop')
 export class LoopAction extends BaseAction<LoopActionParams> {
-    constructor(page: Page, scrapeAction: ScrapeAction<LoopActionParams>, private actionsHandlerService: ActionHandlerService) {
-        super(page, scrapeAction, actionsHandlerService);
+    constructor(page: Page, previousData: PreviousData, scrapeAction: ScrapeAction<LoopActionParams>, private actionsHandlerService: ActionHandlerService, data?: ScrapeActionData) {
+        super(page, previousData, scrapeAction, actionsHandlerService, data);
     }
 
-    async run(previousData: PreviousData): Promise<void> {
-        // super.run(previousData);
+    async run(): Promise<void> {
         // Hole die Elemente aus dem actionMap mithilfe des angegebenen Schlüssels
-        let elements: unknown[] = previousData.get(this.params.elementKey);
+        let elements: unknown[] = this.previousData.get(this.params.elementKey);
         if (!elements || elements.length === 0) {
             this.logger.warn(`No elements found for key: ${this.params.elementKey}`);
             return;
@@ -40,28 +40,49 @@ export class LoopAction extends BaseAction<LoopActionParams> {
                 this.logger.warn(`No actions provided for loop`);
                 return;
             }
+            this.logger.log(`Starting loop`);
 
             // Führe jede Aktion für das aktuelle Element aus
             for (const actionConfig of this.params.actions) {
                 // this.currentLoopElement = element as object;
                 this.logger.log(`Executing action: ${actionConfig.action} on ${element}`);
 
-                // previousData.set(`loop-${this.name}`, element);
+                // // previousData.set(`loop-${this.name}`, element);
+                // this.data = {
+                //     currentData: {
+                //         [this.name]: element
+                //         ...this.data?.currentData, // Verwende den Spread-Operator korrekt
+                //       [this.name]: element
+                //     },
+                //   };
+                  
+                  
+                this.data.currentData[this.name] = element;
+                // this.data.storedData[this.name] = {
+                //     [element as string]: {}
+                //   };
+
+                // const storedLoopData = this.data.storedData[this.name][element as string];
 
                 // Verwende actionsHandlerService, um die Aktion auszuführen, und übergebe actionMap
                 const ret = await this.actionsHandlerService.handleAction(
                     actionConfig,
-                    previousData,
-
-                    { currentData: element }
+                    this.previousData,
+                    this.data,
+                    // storedLoopData
                 );
                 
 
                 // Logge das Ergebnis, wenn vorhanden
                 if (ret !== undefined && ret !== null) {
-                    // this.logger.log(`Action "${actionConfig.action}" returned: ${ret}`);
+                    this.logger.log(`Action "${actionConfig.action}" returned: ${ret}`);
+                    this.previousData.set(actionConfig.name, ret);
                 }
+
+                this.data.currentData[this.name] = null;
             }
+
+            this.logger.log(`Loop completed`);
         }
 
         return;

@@ -6,11 +6,14 @@
                 "click",
                 "extract",
                 "extractAll",
+                "getAll",
                 "keyboardPress",
                 "logger",
                 "loop",
                 "navigate",
                 "screenshot",
+                "storeData",
+                "transform",
                 "type",
                 "wait"
             ],
@@ -34,6 +37,15 @@
             "properties": {
                 "action": {
                     "$ref": "#/definitions/ActionName"
+                },
+                "data": {
+                    "properties": {
+                        "currentData": {
+                            "additionalProperties": {},
+                            "type": "object"
+                        }
+                    },
+                    "type": "object"
                 },
                 "name": {
                     "type": "string"

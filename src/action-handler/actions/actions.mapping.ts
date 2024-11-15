@@ -8,6 +8,9 @@ import ScreenshotAction from "./screenshot.action";
 import LoopAction from "./loop.action";
 import KeyboardPressAction from "./keyboard-press.action";
 import LoggerAction from "./logger.action";
+import TransformAction from "./transform.action";
+import GetAllElementsAction from "./getAll.action";
+import StoreDataAction from "./store-data.action";
 
 export type ActionName = keyof typeof actionsMapping;
 export const actionsMapping = {
@@ -20,5 +23,8 @@ export const actionsMapping = {
     'screenshot': ScreenshotAction,
     'loop': LoopAction,
     'keyboardPress': KeyboardPressAction,
-    'logger': LoggerAction
+    'logger': LoggerAction,
+    'transform': TransformAction,
+    'getAll': GetAllElementsAction,
+    'storeData': StoreDataAction
 }

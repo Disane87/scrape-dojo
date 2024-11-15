@@ -4,6 +4,7 @@ import * as path from 'path';
 import { PuppeteerService } from 'src/puppeteer/puppeteer.service';
 import { Scrape, Scrapes } from './types/scrape.interface';
 import { ActionHandlerService } from 'src/action-handler/action-handler.service';
+import { parse } from 'comment-json';
 
 @Injectable()
 export class ScrapeService implements OnModuleInit {
@@ -17,36 +18,40 @@ export class ScrapeService implements OnModuleInit {
         const rootDirectory = process.cwd();
         const filePath = path.join(rootDirectory, 'config', 'scrapes.json');
         const fileContent = fs.readFileSync(filePath, 'utf-8');
-        return (JSON.parse(fileContent) as Scrapes).scrapes;
+
+        const scrapeDefinitions = parse(fileContent, null, true);
+
+        return (scrapeDefinitions as unknown as Scrapes).scrapes;
     }
 
     onModuleInit() {
         const rootDirectory = process.cwd();
-        this.logger.log(`Root directory ${rootDirectory}`);
+        this.logger.debug(`🫚 Root directory ${rootDirectory}`);
 
         const directoryPath = path.join(rootDirectory, 'config');
         const filePath = path.join(directoryPath, 'scrapes.json');
 
         if (!fs.existsSync(directoryPath)) {
             fs.mkdirSync(directoryPath, { recursive: true });
-            this.logger.log('Config directory created successfully.');
+            this.logger.debug('📂 Config directory created successfully.');
         } else {
-            this.logger.log('Config directory already exists.');
+            this.logger.debug('📁 Config directory already exists.');
         }
 
         if (!fs.existsSync(filePath)) {
             fs.writeFileSync(filePath, '[]');
-            this.logger.log('File "scrapes.json" created successfully.');
+            this.logger.debug('📂 File "scrapes.json" created successfully.');
         } else {
-            this.logger.log('File "scrapes.json" already exists.');
+            this.logger.debug('📁 File "scrapes.json" already exists.');
         }
 
-        this.scrapeDefinitions = this.getScrapeDefinitions();
     }
 
     async scrape(scrapeId: string | null) {
+        this.scrapeDefinitions = this.getScrapeDefinitions();
+
         for (const scrape of this.scrapeDefinitions) {
-            this.logger.log(`Scrape definition: ${JSON.stringify(scrape)}`);
+            this.logger.debug(`Scrape definition: ${JSON.stringify(scrape)}`);
             this.logger.log(`Scrape ID: ${scrapeId}`);
 
             const stepMap = new Map<string, Map<string, any>>();
@@ -62,8 +67,9 @@ export class ScrapeService implements OnModuleInit {
                     this.logger.log(`Running action: ${action.action} with params: ${JSON.stringify(action.params)}`);
 
                     const ret = await this.actionsHandlerService.handleAction(action, actionMap);
+
                     if (ret !== undefined && ret !== null) {
-                        this.logger.log(`Action "${action.name}" returned: ${ret}`);
+                        this.logger.debug(`Action "${action.name}" returned: ${ret}`);
                         actionMap.set(action.name, ret);
                     }
 

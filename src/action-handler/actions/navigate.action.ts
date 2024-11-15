@@ -1,7 +1,7 @@
 import { Page } from "puppeteer";
-import { Action } from "../decorators/action.decorator";
 import { BaseAction } from "./bases/base.action";
 import { PreviousData } from "../types/previous-data.type";
+import { Action } from "../_decorators/action.decorator";
 
 export type NavigateActionParams = {
     url: string;
@@ -10,8 +10,7 @@ export type NavigateActionParams = {
 @Action('navigate')
 export class NavigateAction extends BaseAction<NavigateActionParams> {
 
-    async run(previousData: PreviousData): Promise<void> {
-        super.run(previousData);
+    async run(): Promise<void> {
         await this.page.goto(this.params.url);
         // await this.page.waitForNavigation();
     }

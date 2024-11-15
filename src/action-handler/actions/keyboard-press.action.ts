@@ -1,7 +1,7 @@
 import { KeyInput, Page } from "puppeteer";
-import { Action } from "../decorators/action.decorator";
 import { BaseAction } from "./bases/base.action";
 import { PreviousData } from "../types/previous-data.type";
+import { Action } from "../_decorators/action.decorator";
 
 // Typdefinition für die Parameter der KeyboardPressAction
 export type KeyboardPressActionParams = {
@@ -11,7 +11,7 @@ export type KeyboardPressActionParams = {
 @Action('keyboardPress')
 export class KeyboardPressAction extends BaseAction<KeyboardPressActionParams> {
 
-    async run(previousData: PreviousData): Promise<void> {
+    async run(): Promise<void> {
         if (!this.params.key) {
             throw new Error('No key provided for KeyboardPressAction');
         }

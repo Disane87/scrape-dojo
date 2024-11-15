@@ -56,13 +56,13 @@ export class PuppeteerService implements OnModuleInit, OnModuleDestroy {
 
     private getExecutablePath(): string {
         const chromePath = this.locateChrome();
-        this.logger.log(`Chrome path: ${path.normalize(chromePath)}`);
+        this.logger.debug(`🌍 Chrome path: ${path.normalize(chromePath)}`);
         return;
     }
 
     private locateChrome(): string {
         let paths: string[];
-        this.logger.log(`Platform: ${process.platform}`);
+        this.logger.debug(`💻 Platform: ${process.platform}`);
 
         switch (process.platform) {
             case 'darwin':
@@ -121,6 +121,7 @@ export class PuppeteerService implements OnModuleInit, OnModuleDestroy {
             throw new Error('Browser is not initialized. Call setup() first.');
         }
 
+        this.logger.log('📃 Creating new page');
         this.currentPage = await this.browser.newPage();
         await this.currentPage.setViewport({
             width: 1920,
@@ -128,7 +129,6 @@ export class PuppeteerService implements OnModuleInit, OnModuleDestroy {
             deviceScaleFactor: 1,
           });
         this.currentPage.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
-        this.logger.log('Creating new page');
         return this.currentPage;
     }
 }

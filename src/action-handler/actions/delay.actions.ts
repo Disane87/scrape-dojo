@@ -1,15 +1,15 @@
 import { Logger } from "@nestjs/common";
 import { Page } from "puppeteer";
-import { Action } from "../decorators/action.decorator";
 import { lastValueFrom, timer } from "rxjs";
 import { BaseAction } from "./bases/base.action";
 import { PreviousData } from "../types/previous-data.type";
+import { Action } from "../_decorators/action.decorator";
 
 @Action('delay')
 export class Delay extends BaseAction<{ time: number }> {
 
     // Die `params`-Eigenschaft ist jetzt typisiert
-    async run(previousData: PreviousData): Promise<void> {
+    async run(): Promise<void> {
         if (isNaN(this.params.time)) {
             throw new Error('Invalid time value');
         }

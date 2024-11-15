@@ -1,18 +1,37 @@
-import { Page } from "puppeteer";
-import { Action } from "../decorators/action.decorator";
 import { BaseAction } from "./bases/base.action";
-import { PreviousData } from "../types/previous-data.type";
+import { Action } from "../_decorators/action.decorator";
+import { getValueFromPath } from "./_helpers/get-value-from-path.helper";
+import { ElementHandle } from "puppeteer";
 
 export type ExtractActionParams = {
     selector: string;
+    element: string;
+    property: string;
 }
 
 @Action('extract')
 export class ExtractAction extends BaseAction<ExtractActionParams> {
 
-    // Verwende den `params`-Typ aus `BaseAction` ohne ihn erneut zu definieren
-    async run(previousData: PreviousData): Promise<string | null> {
-        return await this.page.$eval(this.params.selector, el => el.textContent);
+    // Verwende den params-Typ aus BaseAction ohne ihn erneut zu definieren
+    async run(): Promise<string | null> {
+        const pageOrElement = getValueFromPath<ElementHandle<Element>>(this.data, this.params.element) || this.page;
+
+        if (!this.params?.property) {
+            this.params.property = 'textContent';
+        }
+
+        try {
+            const value = await pageOrElement.$eval(
+                this.params.selector,
+                (el: Element, property: string) => el[property].trim(),
+                this.params.property
+            );
+            return value;
+
+        } catch (ex) {
+            this.logger.error(`Error while extracting data: ${ex.message}`);
+            return null;
+        }
     }
 }
 

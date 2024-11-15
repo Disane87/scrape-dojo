@@ -35,7 +35,7 @@ import {
         path: httpAdapter.getRequestUrl(ctx.getRequest()),
       };
 
-      this.logger.error(`⚠️ Exception: ${exception.toString()} - HTTP code: ${responseBody.statusCode} `);
+      this.logger.error(`⚠️ Exception: ${exception.toString()} - ${responseBody.statusCode} `);
   
       httpAdapter.reply(ctx.getResponse(), responseBody, httpStatus);
     }
