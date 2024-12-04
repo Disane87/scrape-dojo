@@ -1,6 +1,9 @@
 import Handlebars from "handlebars";
 import jsonata from "jsonata";
 
+import * as fs from 'fs';
+import * as path from 'path';
+
 // Register the "year" helper
 Handlebars.registerHelper('year', () => {
     // Return the current year dynamically
@@ -8,20 +11,26 @@ Handlebars.registerHelper('year', () => {
 });
 
 // Register the "subtract" helper
-Handlebars.registerHelper("subtract", (value: number, number: number) => {
+Handlebars.registerHelper("subtract", (value: number, number: number): number => {
     return value - number;
 });
 
-Handlebars.registerHelper("add", (value: number, number: number) => {
+Handlebars.registerHelper("add", (value: number, number: number): number => {
     return value + number;
 });
 
-
-// Register the "subtract" helper
-Handlebars.registerHelper("multiply", (value: number, number: number) => {
-    return value * number;
+Handlebars.registerHelper("hasValue", (value: any): boolean => {
+    return !!(value !== undefined && value !== null);
 });
 
+Handlebars.registerHelper("hasNoValue", (value: any): boolean => {
+    return !!(value === undefined || value === null);
+});
+
+// Register the "subtract" helper
+Handlebars.registerHelper("multiply", (value: number, number: number): number => {
+    return value * number;
+});
 
 // Registriere den JSONata-Helper
 Handlebars.registerHelper("jsonata", (data: any, expression: string) => {

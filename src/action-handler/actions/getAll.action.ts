@@ -23,15 +23,7 @@ export class GetAllElementsAction extends BaseAction<GetAllElementsActionParams>
             this.logger.error(`Selector ${this.params.selector} not found`);
             return [];
         }
-
-        // Hole alle Elemente für den gegebenen Selektor
         const elements = await pageOrElement.$$(this.params.selector);
-
-        // // Erstelle ein Array von Elementobjekten mit dem Selektor und Index
-        // const elementObjects: ElementObject[] = elements.map((_, index) => ({
-        //     selector: this.params.selector,
-        //     index: index
-        // }));
 
         this.logger.log(`Found ${elements.length} elements for selector: ${this.params.selector}`);
         return elements.map((element, index) => element);

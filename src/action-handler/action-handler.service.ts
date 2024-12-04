@@ -24,7 +24,7 @@ export class ActionHandlerService implements OnModuleInit {
         });
     }
 
-    async handleAction(scrapeAction: ScrapeAction<unknown>, previousData: PreviousData, data?: object, storedData?: ScrapeActionData): Promise<any> {
+    async handleAction(scrapeAction: ScrapeAction<unknown>, previousData: PreviousData, data?: object, storedData?: object): Promise<any> {
 
         this.logger.log(`🚀 Handling action ${JSON.stringify(scrapeAction)}`);
         this.logger.debug(`🚀 Params: ${JSON.stringify(scrapeAction.params)}`);
@@ -44,12 +44,12 @@ export class ActionHandlerService implements OnModuleInit {
         const instance = new (actionInstance.actionClass as new
             (
                 page: Page,
-                pveiousData: PreviousData,
+                previousData: PreviousData,
                 scrapeAction: ScrapeAction<unknown>,
                 actionHandlerService: ActionHandlerService,
                 puppeteerService: PuppeteerService,
                 data?: object,
-                storedData?: ScrapeActionData
+                storedData?: object
             )
             => BaseAction<unknown>)(page, previousData, scrapeAction, this, this.puppeteerService, data, storedData);
 

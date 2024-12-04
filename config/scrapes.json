@@ -43,17 +43,26 @@
                 "url": "https://www.amazon.de/your-orders/orders?orderFilter=year-{{year}}&startIndex=0"
               }
             },
+            // {
+            //   "action": "extractAll",
+            //   "name": "extractYears",
+            //   "params": {
+            //     "selector": "select[name='orderFilter'] option[value^='year-']"
+            //   }
+            // },
             {
-              "action": "extractAll",
+              "action": "transform",
               "name": "extractYears",
               "params": {
-                "selector": "select[name='orderFilter'] option[value^='year-']"
+                // "previousDataKey": "lastPage",
+                "expression": "[2024]"
               }
             },
             {
               "action": "loop",
               "name": "yearLoop",
               "params": {
+                "reverse": "{{ hasNoValue storedData.LAST_ORDER_NUMBER }}",
                 "elementKey": "extractYears",
                 "actions": [
                   {
@@ -71,6 +80,13 @@
                     }
                   },
                   {
+                    "name": "Navigate last page of year",
+                    "action": "navigate",
+                    "params": {
+                      "url": "https://www.amazon.de/your-orders/orders?orderFilter=year-{{currentData.yearLoop.value}}&startIndex={{ multiply (subtract previousData.lastPage 1) 10 }}"
+                    }
+                  },
+                  {
                     "action": "transform",
                     "name": "getPages",
                     "params": {
@@ -78,10 +94,12 @@
                       "expression": "$map([0..($number(lastPage) - 1)], function($v, $i, $a) { $i })"
                     }
                   },
+                 
                   {
                     "action": "loop",
                     "name": "pageLoop",
                     "params": {
+                      "reverse": "{{ hasNoValue storedData.LAST_ORDER_NUMBER }}",
                       "elementKey": "getPages",
                       "actions": [
                         {
@@ -95,14 +113,29 @@
                           "action": "loop",
                           "name": "orderLoop",
                           "params": {
+                            "reverse": "{{ hasNoValue storedData.LAST_ORDER_NUMBER }}",
                             "elementKey": "extractOrders",
                             "actions": [
+                              
                               {
                                 "action": "extract",
                                 "name": "extractOrderNo",
                                 "params": {
                                   "element": "currentData.orderLoop.value",
                                   "selector": ".yohtmlc-order-id span:nth-last-child(1) bdi"
+                                }
+                              },
+                              {
+                                "action": "break",
+                                "params": {
+                                  "condition": "'{{previousData.extractOrderNo}}' === '{{ storedData.LAST_ORDER_NUMBER }}'"
+                                }
+                              },
+                              {
+                                "action": "storeData",
+                                "params": {
+                                  "key": "LAST_ORDER_NUMBER",
+                                  "value": "{{previousData.extractOrderNo}}"
                                 }
                               },
                               {
@@ -131,7 +164,7 @@
                                 "action": "get",
                                 "name": "getInvoiceList",
                                 "params": {
-                                  "selector": "div.a-popover div#a-popover-content-{{add currentData.orderLoop.index 1}} ul.invoice-list"
+                                  "selector": "div.a-popover div#a-popover-content-{{add currentData.orderLoop.value 1}} ul.invoice-list"
                                 }
                               },
                               {

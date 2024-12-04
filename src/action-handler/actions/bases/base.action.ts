@@ -18,9 +18,10 @@ export abstract class BaseAction<TParams extends Record<string, any>> implements
 
     protected previousData: PreviousData;
 
+
     protected readonly puppeteerService: PuppeteerService;
 
-    storedData: object;
+    protected storedData: object;
     params: TParams; // Dynamisch aufgelöste Parameter, jetzt schreibbar
 
     data: ScrapeActionData = {
@@ -34,11 +35,13 @@ export abstract class BaseAction<TParams extends Record<string, any>> implements
         scrapeAction: ScrapeAction<TParams>,
         actionHandlerService: ActionHandlerService,
         puppeteerService: PuppeteerService,
-        data?: ScrapeActionData
+        data?: ScrapeActionData,
+        storedData?: object
     ) {
         this.page = page;
         this.name = scrapeAction.name;
         this.previousData = previousData;
+        this.storedData = storedData;
         this.scrapeAction = scrapeAction;
         this.puppeteerService = puppeteerService;
 
@@ -57,10 +60,27 @@ export abstract class BaseAction<TParams extends Record<string, any>> implements
             if (typeof value === "string") {
                 this.logger.log(`Parameter ${key}: ${value}`);
                 const previousDataObject = Object.fromEntries(previousData);
-                (this.params as any)[key] = Handlebars.compile(value)({ previousData: previousDataObject, ...this.data });
+        
+                // Kompilieren des Templates und Ausführen
+                const templateResult = Handlebars.compile(value)({
+                    previousData: previousDataObject,
+                    ...this.data,
+                    storedData: this.storedData,
+                });
+        
+                // Prüfung, ob die Rückgabe true/false ist und ggf. Konvertierung
+                if (typeof templateResult === "string") {
+                    const lowerResult = templateResult.toLowerCase();
+                    if (lowerResult === "true" || lowerResult === "false") {
+                        (this.params as any)[key] = lowerResult === "true";
+                    } else {
+                        (this.params as any)[key] = templateResult;
+                    }
+                } else {
+                    (this.params as any)[key] = Boolean(templateResult);
+                }
             }
-        };
-
+        }
     }
 
     name: string;
@@ -70,32 +90,34 @@ export abstract class BaseAction<TParams extends Record<string, any>> implements
     abstract run(): Promise<any>;
 
     // Rekursive Funktion zur Kompilierung der Parameter
-    compileDeep(
-        data: any,
-        previousData: any,
-        currentData: any,
-        logger?: Logger
-    ): TParams {
-        if (typeof data === "object" && data !== null) {
-            // Falls das aktuelle `data` ein Objekt oder Array ist, rekursiv über alle Schlüssel/Werte iterieren
-            const compiledObject: any = Array.isArray(data) ? [] : {};
-            Object.entries(data).forEach(([key, value]) => {
-                if (logger) {
-                    logger.debug(`Compiling parameter ${key}: ${value}`);
-                }
-                compiledObject[key] = this.compileDeep(value, previousData, currentData, logger);
-            });
-            return compiledObject;
-        } else if (typeof data === "string") {
-            // Falls `data` ein String ist, versuche, ihn als Handlebars-Template zu kompilieren
-            return Handlebars.compile(data)({
-                previousData,
-                ...currentData,
-            }) as TParams[keyof TParams];
-        } else {
-            // Falls `data` ein primitiver Wert (z.B. number, boolean) ist, gib ihn direkt zurück
-            return data;
-        }
-    }
+    // compileDeep(
+    //     data: any,
+    //     previousData: any,
+    //     currentData: any,
+    //     storedData: any,
+    //     logger?: Logger
+    // ): TParams {
+    //     if (typeof data === "object" && data !== null) {
+    //         // Falls das aktuelle `data` ein Objekt oder Array ist, rekursiv über alle Schlüssel/Werte iterieren
+    //         const compiledObject: any = Array.isArray(data) ? [] : {};
+    //         Object.entries(data).forEach(([key, value]) => {
+    //             if (logger) {
+    //                 logger.debug(`Compiling parameter ${key}: ${value}`);
+    //             }
+    //             compiledObject[key] = this.compileDeep(value, previousData, currentData, storedData, logger);
+    //         });
+    //         return compiledObject;
+    //     } else if (typeof data === "string") {
+    //         // Falls `data` ein String ist, versuche, ihn als Handlebars-Template zu kompilieren
+    //         return Handlebars.compile(data)({
+    //             previousData,
+    //             storedData,
+    //             ...currentData,
+    //         }) as TParams[keyof TParams];
+    //     } else {
+    //         // Falls `data` ein primitiver Wert (z.B. number, boolean) ist, gib ihn direkt zurück
+    //         return data;
+    //     }
+    // }
 
 }

@@ -1,6 +1,5 @@
 import { BaseAction } from "./bases/base.action";
 import { Action } from "../_decorators/action.decorator";
-import { PreviousData } from "../types/previous-data.type";
 
 // Typdefinition für die Parameter der TransformAction
 export type TransformActionParams = {
@@ -13,16 +12,19 @@ export class TransformAction extends BaseAction<TransformActionParams> {
 
     async run(): Promise<void> {
         // Überprüfe, ob der Schlüssel vorhanden ist
-        if (!this.params.previousDataKey) {
-            throw new Error('Missing required parameter: previousDataKey');
-        }
+        // if (!this.params.previousDataKey) {
+        //     throw new Error('Missing required parameter: previousDataKey');
+        // }
 
         if(!this.params.expression) {
             throw new Error('Missing required parameter: expression');
         }
 
-        const data = { 
-            [this.params.previousDataKey]: this.previousData.get(this.params.previousDataKey)
+        let data = {}
+        if(this.params.previousDataKey){
+            data = { 
+                [this.params.previousDataKey]: this.previousData.get(this.params.previousDataKey)
+            }
         }
 
         // Wende den JSONata-Ausdruck an

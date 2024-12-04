@@ -10,9 +10,10 @@ import KeyboardPressAction from "./keyboard-press.action";
 import LoggerAction from "./logger.action";
 import TransformAction from "./transform.action";
 import GetAllElementsAction from "./getAll.action";
-import StoreDataAction from "./store-data.action";
 import GetElementAction from "./get.action";
 import DownloadAction from "./download.actions";
+import { StoreDataAction } from "./store-data.action";
+import { BreakAction } from "./break.action";
 
 export type ActionName = keyof typeof actionsMapping;
 export const actionsMapping = {
@@ -31,4 +32,5 @@ export const actionsMapping = {
     'storeData': StoreDataAction,
     'get': GetElementAction,
     'download': DownloadAction,
+    'break': BreakAction
 }

@@ -50,6 +50,16 @@ export class ScrapeService implements OnModuleInit {
     async scrape(scrapeId: string | null) {
         this.scrapeDefinitions = this.getScrapeDefinitions();
 
+        const getStoredData = () => {
+            const filePath = path.join(process.cwd(), 'config', 'stored-data.json');
+            if (fs.existsSync(filePath)) {
+                const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+                return data ?? null;
+            }
+        }
+        // return null;
+        const storedData = getStoredData();
+
         for (const scrape of this.scrapeDefinitions) {
             this.logger.debug(`Scrape definition: ${JSON.stringify(scrape)}`);
             this.logger.log(`Scrape ID: ${scrapeId}`);
@@ -66,7 +76,7 @@ export class ScrapeService implements OnModuleInit {
                 for (const action of step.actions) {
                     this.logger.log(`Running action: ${action.action} with params: ${JSON.stringify(action.params)}`);
 
-                    const ret = await this.actionsHandlerService.handleAction(action, actionMap);
+                    const ret = await this.actionsHandlerService.handleAction(action, actionMap, null, storedData);
 
                     if (ret !== undefined && ret !== null) {
                         this.logger.debug(`Action "${action.name}" returned: ${ret}`);

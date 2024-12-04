@@ -1,30 +1,42 @@
-import { BaseAction } from "./bases/base.action";
-import { Action } from "../_decorators/action.decorator";
-import { PreviousData } from "../types/previous-data.type";
-
-// Typdefinition für die Parameter der StoreDataAction
-export type StoreDataActionParams = {
-    data: { [key: string]: any }; // Ein Objekt mit mehreren Schlüssel-Wert-Paaren
-}
+import { Page } from 'puppeteer';
+import * as fs from 'fs';
+import * as path from 'path';
+import { compile } from 'handlebars';
+import { BaseAction } from './bases/base.action';
+import { Action } from '../_decorators/action.decorator';
 
 @Action('storeData')
-export class StoreDataAction extends BaseAction<StoreDataActionParams> {
+export class StoreDataAction extends BaseAction<{ key: string; value: string }> {
+    private static storageFilePath = path.join(process.cwd(), 'config', 'stored-data.json');
+
     async run(): Promise<void> {
+        const keyTemplate = compile(this.params.key);
+        const valueTemplate = compile(this.params.value);
 
-        if (typeof this.params.data !== 'object' || this.params.data === null) {
-            throw new Error("Invalid data provided for StoreDataAction. Expected an object.");
+        // Ersetze die Templates mit den aktuellen Werten aus `previousData`
+        const key = keyTemplate({ previousData: this.previousData });
+        const value = valueTemplate({ previousData: this.previousData });
+
+        // Lade bestehende Daten
+        const existingData = StoreDataAction.loadStoredData();
+
+        // Speichere die neuen Werte
+        existingData[key] = value;
+
+        // Schreibe die aktualisierten Daten zurück
+        fs.writeFileSync(StoreDataAction.storageFilePath, JSON.stringify(existingData, null, 2));
+
+        this.logger.log(`Stored data: ${key} = ${value}`);
+    }
+
+    /**
+     * Lädt die gespeicherten Daten aus der JSON-Datei.
+     */
+    private static loadStoredData(): Record<string, any> {
+        if (!fs.existsSync(StoreDataAction.storageFilePath)) {
+            return {};
         }
-
-        // Speichere alle Schlüssel-Wert-Paare in this.data.currentData
-        Object.entries(this.params.data).forEach(([key, value]) => {
-            if (!key || key.trim() === "") {
-                this.logger.warn(`Skipped storing data for an invalid key: "${key}"`);
-                return;
-            }
-            this.storedData[key] = value ;
-            this.logger.log(`📦 Stored data under key: ${key}`);
-        });
+        const fileContent = fs.readFileSync(StoreDataAction.storageFilePath, 'utf-8');
+        return JSON.parse(fileContent);
     }
 }
-
-export default StoreDataAction;
