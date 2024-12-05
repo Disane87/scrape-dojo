@@ -44,7 +44,7 @@ export class LoopAction extends BaseAction<LoopActionParams> {
             elements = [elements];
         }
 
-        if(this.params.reverse) {   
+        if(this.params.reverse == true) {   
             elements = elements.reverse();
             this.logger.log(`🔙 Looping in reversed order`);
         }
@@ -99,8 +99,8 @@ export class LoopAction extends BaseAction<LoopActionParams> {
     
                 } catch(error) {
                     if (error.message === 'BreakLoop') {
-                        this.logger.warn(`BreakLoop exception caught`);
-                        break;
+                        this.logger.warn(`Breaking loop "${this.name}"`);
+                        throw error;
                     }
                     this.logger.error(`Error executing action: ${actionConfig.action}`);
                     throw new Error(error);

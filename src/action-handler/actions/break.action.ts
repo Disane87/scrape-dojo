@@ -8,35 +8,36 @@ export class BreakAction extends BaseAction<{ condition: string }> {
         this.logger.log(`Evaluating break condition: ${this.params.condition}`);
 
         // Kompiliere die Bedingung als Handlebars-Template
-        const conditionTemplate = compile(this.params.condition);
+        // const conditionTemplate = compile(this.params.condition);
 
         // Ersetze Variablen in der Bedingung
-        const condition = conditionTemplate({
-            previousData: this.previousData,
+        const conditionData = {
+            previousData: Object.fromEntries(this.previousData),
             currentData: this.data?.currentData,
             storedData: this.storedData,
-        });
+        };
 
-        this.logger.log(`Evaluated condition: ${condition}`);
+        // this.logger.log(`Break condition: ${this.params.condition}`);
 
         // Evaluiere die Bedingung (True/Falsy-Wert)
-        if (this.evaluateCondition(condition)) {
+        if (await this.evaluateCondition(this.params.condition, conditionData)) {
             this.logger.warn(`Break condition met: ${this.params.condition}`);
             throw new Error('BreakLoop'); // Spezielle Ausnahme, um den Loop zu beenden
         }
     }
 
-    /**
-     * Evaluiert die aufgelöste Bedingung sicher.
-     * Handelt sich um einen boolean-Ausdruck (z. B. "true", "false").
-     */
-    private evaluateCondition(condition: string): boolean {
+    private async evaluateCondition(condition: string, data: object): Promise<boolean> {
+        // Wende den JSONata-Ausdruck an
         try {
-            // Sicherstellen, dass nur logische Werte evaluiert werden
-            return JSON.parse(condition.toLowerCase());
-        } catch {
-            this.logger.error(`Invalid break condition: ${condition}`);
-            return false;
+            const jsonata = require('jsonata');
+            const expression = jsonata(condition);
+            const expressionResult = await expression.evaluate(data) as boolean;
+
+            this.logger.log(`Should break ${expressionResult}`);
+            return expressionResult;
+        } catch (error) {
+            this.logger.error(`Error during data transformation: ${error.message}`);
+            throw error;
         }
-    }
+     }
 }

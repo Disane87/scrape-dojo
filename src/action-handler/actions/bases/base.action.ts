@@ -21,7 +21,7 @@ export abstract class BaseAction<TParams extends Record<string, any>> implements
 
     protected readonly puppeteerService: PuppeteerService;
 
-    protected storedData: object;
+    protected storedData: object = {};
     params: TParams; // Dynamisch aufgelöste Parameter, jetzt schreibbar
 
     data: ScrapeActionData = {

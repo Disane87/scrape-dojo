@@ -62,7 +62,7 @@
               "action": "loop",
               "name": "yearLoop",
               "params": {
-                "reverse": "{{ hasNoValue storedData.LAST_ORDER_NUMBER }}",
+                "reverse": "{{ previousData.firstRun }}",
                 "elementKey": "extractYears",
                 "actions": [
                   {
@@ -79,13 +79,13 @@
                       "selector": "ul.a-pagination li.a-normal:nth-last-child(2) a"
                     }
                   },
-                  {
-                    "name": "Navigate last page of year",
-                    "action": "navigate",
-                    "params": {
-                      "url": "https://www.amazon.de/your-orders/orders?orderFilter=year-{{currentData.yearLoop.value}}&startIndex={{ multiply (subtract previousData.lastPage 1) 10 }}"
-                    }
-                  },
+                  // {
+                  //   "name": "Navigate last page of year",
+                  //   "action": "navigate",
+                  //   "params": {
+                  //     "url": "https://www.amazon.de/your-orders/orders?orderFilter=year-{{currentData.yearLoop.value}}&startIndex={{ multiply (subtract previousData.lastPage 1) 10 }}"
+                  //   }
+                  // },
                   {
                     "action": "transform",
                     "name": "getPages",
@@ -99,7 +99,7 @@
                     "action": "loop",
                     "name": "pageLoop",
                     "params": {
-                      "reverse": "{{ hasNoValue storedData.LAST_ORDER_NUMBER }}",
+                      "reverse": "{{ previousData.firstRun }}",
                       "elementKey": "getPages",
                       "actions": [
                         {
@@ -113,7 +113,7 @@
                           "action": "loop",
                           "name": "orderLoop",
                           "params": {
-                            "reverse": "{{ hasNoValue storedData.LAST_ORDER_NUMBER }}",
+                            "reverse": "{{ previousData.firstRun }}",
                             "elementKey": "extractOrders",
                             "actions": [
                               
@@ -126,18 +126,19 @@
                                 }
                               },
                               {
-                                "action": "break",
-                                "params": {
-                                  "condition": "'{{previousData.extractOrderNo}}' === '{{ storedData.LAST_ORDER_NUMBER }}'"
-                                }
-                              },
-                              {
                                 "action": "storeData",
                                 "params": {
                                   "key": "LAST_ORDER_NUMBER",
                                   "value": "{{previousData.extractOrderNo}}"
                                 }
                               },
+                              {
+                                "action": "break",
+                                "params": {
+                                  "condition": "previousData.extractOrderNo = storedData.LAST_ORDER_NUMBER and previousData.firstRun = false"
+                                }
+                              },
+                             
                               {
                                 "action": "extract",
                                 "name": "extractorderDate",
@@ -203,68 +204,7 @@
                             ]
                           }
                         },
-                        // {
-                        //     "action": "extractAll",
-                        //     "name": "getAllorderNumbers",
-                        //     "params": {
-                        //         "element": "extractOrders",
-                        //         "selector": ".yohtmlc-order-id span:nth-last-child(1) bdi"
-                        //     }
-                        // },
-                        // {
-                        //     "action": "getAll",
-                        //     "name": "getAllOrderElements",
-                        //     "params": {
-                        //         "selector": "span[data-action='a-popover'] a.a-link-normal[href*='invoice.html']"
-                        //     }
-                        // },
-                        // {
-                        //     "action": "storeData",
-                        //     "name": "storeOrderNumber",
-                        //     "params": {
-                        //         "data": {
-                        //             "orderNumber": "{{ getAllOrderElements }}"
-                        //         }
-                        //     }
-                        // },
-                        // {
-                        //     "action": "loop",
-                        //     "name": "orderLoop",
-                        //     "params": {
-                        //         "elementKey": "getAllOrderElements",
-                        //         "actions": [
-                        //             {
-                        //                 "action": "click",
-                        //                 "params": {
-                        //                     "element": "currentData.orderLoop"
-                        //                 }
-                        //             },
-                        //             {
-                        //                 "action": "getAll",
-                        //                 "name": "extractInvoices",
-                        //                 "params": {
-                        //                     // "element": "currentData.orderLoop",
-                        //                     "selector": "div.a-popover-inner a[href*='invoice.pdf']"
-                        //                 }
-                        //             }
-                        //             // {
-                        //             //     "action": "logger",
-                        //             //     "params": {
-                        //             //         "message": "📥 Order ",
-                        //             //         "level": "log"
-                        //             //     }
-                        //             // }
-                        //         ]
-                        //     }
-                        // },
-                        // {
-                        //     "action": "extractAll",
-                        //     "name": "extractOrders",
-                        //     "params": {
-                        //         "selector": ".order-card.js-order-card .yohtmlc-order-id span:nth-last-child(1)"
-                        //     }
-                        // },
-                        //
+                       
                         {
                           "action": "logger",
                           "params": {

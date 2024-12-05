@@ -32,6 +32,12 @@ Handlebars.registerHelper("multiply", (value: number, number: number): number =>
     return value * number;
 });
 
+// Register the "subtract" helper
+Handlebars.registerHelper("not", (value: boolean): boolean => {
+    return !value;
+});
+
+
 // Registriere den JSONata-Helper
 Handlebars.registerHelper("jsonata", (data: any, expression: string) => {
     try {
