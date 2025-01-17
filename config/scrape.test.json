@@ -10,7 +10,7 @@
                         {
                             "action": "navigate",
                             "params": {
-                                "url": "file:///C:/Workspace/scrape-dojo/test/files/index.html?page={{currentData.page}}&itemsPerPage={{currentData.itemsPerPage}}"
+                                "url": "file:///C:/Workspace/scrape-dojo/test/files/index.html?page=0&itemsPerPage=10"
                             }
                         }
                     ]
@@ -41,7 +41,7 @@
                                         "action": "download",
                                         "params": {
                                             "url": "{{ currentData.pdfLoop.value }}",
-                                            "filename": "{{ basename currentData.pdfLoop.value }}",
+                                            "filename": "{{ currentData.pdfLoop.value }}",
                                             "path": "./downloads"
                                         }
                                     }
