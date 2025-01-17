@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Liste mit Pagination</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 p-6">
+    <div class="max-w-2xl mx-auto bg-white p-4 shadow-md rounded-lg">
+        <h1 class="text-2xl font-bold mb-4">PDF Download Links</h1>
+
+        <ul id="pdf-list" class="space-y-2">
+            <!-- PDF Links werden hier dynamisch eingefügt -->
+        </ul>
+
+        <div class="flex justify-between mt-4">
+            <button id="prev" class="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50"
+                disabled>Vorherige</button>
+            <span id="page-number" class="text-lg">Seite 1</span>
+            <button id="next" class="bg-blue-500 text-white px-4 py-2 rounded">Nächste</button>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        let currentPage = parseInt(urlParams.get("page")) || 1;
+        const itemsPerPage = parseInt(urlParams.get("itemsPerPage")) || 10;
+
+        const pdfs = Array.from({ length: 20 }, (_, i) => `pdf/document_${(i + 1).toString().padStart(3, '0')}.pdf`);
+
+        function renderPage(page) {
+            const start = (page - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const list = document.getElementById("pdf-list");
+            list.innerHTML = "";
+
+            pdfs.slice(start, end).forEach(pdf => {
+                const li = document.createElement("li");
+                li.innerHTML = `<a target="_blank" href="${pdf}" class="text-blue-600 hover:underline">${pdf}</a>`;
+                list.appendChild(li);
+            });
+
+            document.getElementById("page-number").textContent = `Seite ${page}`;
+            document.getElementById("prev").disabled = page === 1;
+            document.getElementById("next").disabled = page === Math.ceil(pdfs.length / itemsPerPage);
+        }
+
+        document.getElementById("prev").addEventListener("click", () => {
+            if (currentPage > 1) {
+                currentPage--;
+                window.location.search = `?page=${currentPage}&itemsPerPage=${itemsPerPage}`;
+            }
+        });
+
+        document.getElementById("next").addEventListener("click", () => {
+            if (currentPage < Math.ceil(pdfs.length / itemsPerPage)) {
+                currentPage++;
+                window.location.search = `?page=${currentPage}&itemsPerPage=${itemsPerPage}`;
+            }
+        });
+
+        renderPage(currentPage);
+    </script>
+</body>
+
+</html>

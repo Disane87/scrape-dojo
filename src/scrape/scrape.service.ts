@@ -12,13 +12,18 @@ export class ScrapeService implements OnModuleInit {
     private scrapeDefinitions: Array<Scrape> = [];
     private scrapeResults: Map<string, Map<string, Map<string, any>>> = new Map();
 
+    private rootDirectory = process.cwd();
+
+    private fileName = (process.env.NODE_ENV ?? 'development') === 'development' ? 'scrape.test.json' : 'scrapes.json';
+
+    private configDirectory = path.join(this.rootDirectory, 'config');
+
+    private filePath = path.join(this.configDirectory, this.fileName)
+
     constructor(private actionsHandlerService: ActionHandlerService, private puppeteerService: PuppeteerService) { }
 
     getScrapeDefinitions(): Array<Scrape> {
-        const rootDirectory = process.cwd();
-        const filePath = path.join(rootDirectory, 'config', 'scrapes.json');
-        const fileContent = fs.readFileSync(filePath, 'utf-8');
-
+        const fileContent = fs.readFileSync(this.filePath, 'utf-8');
         const scrapeDefinitions = parse(fileContent, null, true);
 
         return (scrapeDefinitions as unknown as Scrapes).scrapes;
@@ -28,21 +33,18 @@ export class ScrapeService implements OnModuleInit {
         const rootDirectory = process.cwd();
         this.logger.debug(`🫚 Root directory ${rootDirectory}`);
 
-        const directoryPath = path.join(rootDirectory, 'config');
-        const filePath = path.join(directoryPath, 'scrapes.json');
-
-        if (!fs.existsSync(directoryPath)) {
-            fs.mkdirSync(directoryPath, { recursive: true });
+        if (!fs.existsSync(this.configDirectory)) {
+            fs.mkdirSync(this.configDirectory, { recursive: true });
             this.logger.debug('📂 Config directory created successfully.');
         } else {
             this.logger.debug('📁 Config directory already exists.');
         }
 
-        if (!fs.existsSync(filePath)) {
-            fs.writeFileSync(filePath, '[]');
-            this.logger.debug('📂 File "scrapes.json" created successfully.');
+        if (!fs.existsSync(this.filePath)) {
+            fs.writeFileSync(this.filePath, '[]');
+            this.logger.debug(`📂 File "${this.fileName}" created successfully.`);
         } else {
-            this.logger.debug('📁 File "scrapes.json" already exists.');
+            this.logger.debug(`📁 File "${this.fileName}" already exists.`);
         }
 
     }
@@ -78,7 +80,7 @@ export class ScrapeService implements OnModuleInit {
                             this.logger.debug(`Action "${action.name}" returned: ${ret}`);
                             previousData.set(action.name, ret);
                         }
-                        
+
                     } catch (error) {
                         if (error.message === 'BreakLoop') {
                             this.logger.warn(`Exiting scrape because of break on action "${action.name}"`);

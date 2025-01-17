@@ -1,0 +1,83 @@
+{
+    "$schema": "./scrapes.schema.json",
+    "scrapes": [
+        {
+            "id": "pdf_scraper",
+            "steps": [
+                {
+                    "name": "Navigate to PDF list",
+                    "actions": [
+                        {
+                            "action": "navigate",
+                            "params": {
+                                "url": "file:///C:/Workspace/scrape-dojo/test/files/index.html?page={{currentData.page}}&itemsPerPage={{currentData.itemsPerPage}}"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Extract PDF Links",
+                    "actions": [
+                        {
+                            "action": "extractAll",
+                            "name": "extractPDFs",
+                            "params": {
+                                "selector": "ul#pdf-list li a",
+                                "property": "href"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Download PDFs",
+                    "actions": [
+                        {
+                            "action": "loop",
+                            "name": "pdfLoop",
+                            "params": {
+                                "elementKey": "extractPDFs",
+                                "actions": [
+                                    {
+                                        "action": "download",
+                                        "params": {
+                                            "url": "{{ currentData.pdfLoop.value }}",
+                                            "filename": "{{ basename currentData.pdfLoop.value }}",
+                                            "path": "./downloads"
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Handle Pagination",
+                    "actions": [
+                        {
+                            "action": "extract",
+                            "name": "extractNextPage",
+                            "params": {
+                                "selector": "button#next",
+                                "property": "data-page"
+                            }
+                        },
+                        //   {
+                        //     "action": "condition",
+                        //     "params": {
+                        //       "condition": "currentData.extractNextPage != null",
+                        //       "then": [
+                        //         {
+                        //           "action": "navigate",
+                        //           "params": {
+                        //             "url": "file:///C:/Workspace/scrape-dojo/test/files/index.html?page={{currentData.extractNextPage}}&itemsPerPage={{currentData.itemsPerPage}}"
+                        //           }
+                        //         }
+                        //       ]
+                        //     }
+                        //   }
+                    ]
+                }
+            ]
+        }
+    ]
+}
