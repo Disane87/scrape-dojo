@@ -23,7 +23,7 @@
     "watch:actions": "nodemon --watch src/action-handler/actions --ext ts --exec \"npm run generate-types\""
   },
   "dependencies": {
-    "@nestjs/common": "^10.0.0",
+    "@nestjs/common": "^11.0.16",
     "@nestjs/config": "^3.3.0",
     "@nestjs/core": "^10.0.0",
     "@nestjs/platform-express": "^10.0.0",
