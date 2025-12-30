@@ -1,7 +1,7 @@
 <div class="flex flex-col h-screen bg-dojo-bg text-dojo-text overflow-hidden">
   <!-- Top Navigation -->
   <app-top-nav (showApiDocs)="showApiDocs.set(true)" (showSecrets)="showSecrets.set(true)"
-    (showVariables)="showVariables.set(true)" (showStatus)="showStatus.set(true)" />
+    (showVariables)="showVariables.set(true)" (showStatus)="showStatus.set(true)" (showSettings)="showSettings.set(true)" />
 
   <!-- Main Content Area - flex-1 takes remaining space, minus log panel height -->
   <div class="flex flex-1 overflow-hidden" [style.margin-bottom.px]="showServerLogs() ? serverLogsHeight() : 36">
@@ -89,6 +89,9 @@
 
   <!-- API Docs Modal -->
   <app-api-docs-modal [(isOpen)]="showApiDocs" />
+
+  <!-- Settings Modal -->
+  <app-settings-modal [(isOpen)]="showSettings" />
 
   <!-- Status Modal -->
   <app-status-modal [(isOpen)]="showStatus" />

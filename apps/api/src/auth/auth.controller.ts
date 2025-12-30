@@ -10,8 +10,9 @@ import {
     UseGuards,
     Logger,
     BadRequestException,
+    Req,
 } from '@nestjs/common';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import {
     ApiTags,
     ApiOperation,
@@ -62,9 +63,11 @@ export class AuthController {
     @ApiResponse({ status: 200, description: 'Login successful', type: TokenResponseDto })
     @ApiResponse({ status: 200, description: 'MFA required/setup required', type: MfaChallengeResponseDto })
     @ApiResponse({ status: 401, description: 'Invalid credentials' })
-    async login(@Body() dto: LoginDto): Promise<TokenResponseDto | MfaChallengeResponseDto> {
+    async login(@Body() dto: LoginDto, @Req() req: Request): Promise<TokenResponseDto | MfaChallengeResponseDto> {
         this.logger.log(`Login attempt for: ${dto.email}`);
-        return this.authService.login(dto);
+        const userAgent = req.headers['user-agent'] || '';
+        const ipAddress = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || '';
+        return this.authService.login(dto, userAgent, ipAddress);
     }
 
     @Public()
@@ -127,8 +130,10 @@ export class AuthController {
     @ApiOperation({ summary: 'Complete MFA (verify code, enable if needed, mint tokens)' })
     @ApiBody({ type: MfaCompleteRequestDto })
     @ApiResponse({ status: 200, description: 'Tokens', type: TokenResponseDto })
-    async mfaComplete(@Body() dto: MfaCompleteRequestDto): Promise<TokenResponseDto> {
-        return this.authService.completeMfaFromChallenge(dto.mfaChallengeToken, dto.code);
+    async mfaComplete(@Body() dto: MfaCompleteRequestDto, @Req() req: Request): Promise<TokenResponseDto> {
+        const userAgent = req.headers['user-agent'] || '';
+        const ipAddress = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || '';
+        return this.authService.completeMfaFromChallenge(dto.mfaChallengeToken, dto.code, dto.deviceFingerprint, userAgent, ipAddress);
     }
 
     // ==================== OIDC Endpoints ====================

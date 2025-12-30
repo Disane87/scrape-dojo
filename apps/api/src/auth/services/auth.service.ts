@@ -8,6 +8,7 @@ import { UserEntity } from '../entities/user.entity';
 import { UserService } from './user.service';
 import { LoginDto, RegisterDto, TokenResponseDto } from '../dto';
 import { MfaService, type MfaChallengeResponse } from './mfa.service';
+import { DeviceService } from './device.service';
 
 export interface JwtPayload {
     sub: string;
@@ -35,6 +36,7 @@ export class AuthService {
         private readonly jwtService: JwtService,
         private readonly configService: ConfigService,
         private readonly mfaService: MfaService,
+        private readonly deviceService: DeviceService,
     ) {
         this.accessTokenExpiry = this.configService.get<string>('SCRAPE_DOJO_AUTH_ACCESS_TOKEN_EXPIRY', '15m');
         this.refreshTokenExpiry = this.configService.get<string>('SCRAPE_DOJO_AUTH_REFRESH_TOKEN_EXPIRY', '7d');
@@ -47,7 +49,7 @@ export class AuthService {
     /**
      * Login with local credentials
      */
-    async login(dto: LoginDto): Promise<TokenResponseDto | MfaChallengeResponse> {
+    async login(dto: LoginDto, userAgent?: string, ipAddress?: string): Promise<TokenResponseDto | MfaChallengeResponse> {
         const user = await this.userService.validateLocalUser(dto.email, dto.password);
 
         if (!this.isMfaRequired()) {
@@ -56,6 +58,18 @@ export class AuthService {
 
         if (!user.mfaEnabled) {
             return this.createMfaChallenge(user, { setupRequired: true });
+        }
+
+        // Check if device is trusted
+        // Prefer deviceFingerprint from client, fallback to server-generated fingerprint
+        const deviceFingerprint = dto.deviceFingerprint || (userAgent && ipAddress ? this.deviceService.generateFingerprint(userAgent, ipAddress) : null);
+        const isDeviceTrusted = deviceFingerprint ? await this.deviceService.isDeviceTrusted(user.id, deviceFingerprint) : false;
+
+        // If device is trusted, skip MFA
+        if (isDeviceTrusted && deviceFingerprint && userAgent && ipAddress) {
+            this.logger.log(`Device is trusted for user ${user.id}, skipping MFA`);
+            await this.deviceService.updateDeviceLastUsed(user.id, deviceFingerprint, ipAddress);
+            return this.generateTokenResponse(user, { mfaVerified: true });
         }
 
         if (!dto.mfaCode) {
@@ -71,6 +85,15 @@ export class AuthService {
         const ok = this.mfaService.verifyTotp(dto.mfaCode, secret);
         if (!ok) {
             throw new UnauthorizedException('Invalid MFA code');
+        }
+
+        // After successful MFA, trust the device
+        // Use the deviceFingerprint from client if available
+        const finalFingerprint = dto.deviceFingerprint || (userAgent && ipAddress ? this.deviceService.generateFingerprint(userAgent, ipAddress) : null);
+        if (finalFingerprint && userAgent && ipAddress) {
+            const deviceName = this.deviceService.parseDeviceName(userAgent);
+            await this.deviceService.trustDevice(user.id, finalFingerprint, deviceName, ipAddress);
+            this.logger.log(`Trusted new device for user ${user.id}`);
         }
 
         return this.generateTokenResponse(user, { mfaVerified: true });
@@ -255,7 +278,7 @@ export class AuthService {
         }
     }
 
-    async completeMfaFromChallenge(challengeToken: string, code: string): Promise<TokenResponseDto> {
+    async completeMfaFromChallenge(challengeToken: string, code: string, deviceFingerprint?: string, userAgent?: string, ipAddress?: string): Promise<TokenResponseDto> {
         const payload = this.mfaService.verifyChallengeToken(challengeToken);
         const user = await this.userService.findById(payload.sub);
         if (!user || !user.isActive) {
@@ -274,6 +297,14 @@ export class AuthService {
 
         if (!user.mfaEnabled) {
             await this.userService.setMfaEnabled(user.id, true);
+        }
+
+        // Trust the device after successful MFA
+        const finalFingerprint = deviceFingerprint || (userAgent && ipAddress ? this.deviceService.generateFingerprint(userAgent, ipAddress) : null);
+        if (finalFingerprint && userAgent && ipAddress) {
+            const deviceName = this.deviceService.parseDeviceName(userAgent);
+            await this.deviceService.trustDevice(user.id, finalFingerprint, deviceName, ipAddress);
+            this.logger.log(`Trusted new device for user ${user.id} after MFA completion`);
         }
 
         return this.generateTokenResponse(user, { mfaVerified: true });

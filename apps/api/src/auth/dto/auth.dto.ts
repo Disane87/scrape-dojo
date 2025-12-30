@@ -16,6 +16,11 @@ export class LoginDto {
     @IsOptional()
     @IsString()
     mfaCode?: string;
+
+    @ApiPropertyOptional({ description: 'Device fingerprint for device tracking' })
+    @IsOptional()
+    @IsString()
+    deviceFingerprint?: string;
 }
 
 export class RegisterDto {
@@ -37,6 +42,11 @@ export class RegisterDto {
     @IsOptional()
     @IsString()
     displayName?: string;
+
+    @ApiPropertyOptional({ description: 'Device fingerprint for device tracking' })
+    @IsOptional()
+    @IsString()
+    deviceFingerprint?: string;
 }
 
 export class RefreshTokenDto {
@@ -98,6 +108,11 @@ export class MfaCompleteRequestDto {
     @ApiProperty({ description: 'TOTP code' })
     @IsString()
     code: string;
+
+    @ApiPropertyOptional({ description: 'Device fingerprint for device tracking' })
+    @IsOptional()
+    @IsString()
+    deviceFingerprint?: string;
 }
 
 export class UserResponseDto {

@@ -63,6 +63,13 @@ export const appRoutes: Route[] = [
     component: DashboardComponent,
     canActivate: [authGuard]
   },
+
+  // Settings Routes
+  {
+    path: 'settings',
+    loadChildren: () => import('./settings/settings.routes').then(m => m.settingsRoutes),
+    canActivate: [authGuard]
+  },
   
   // Fallback
   { path: '**', redirectTo: '' }

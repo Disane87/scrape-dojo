@@ -15,6 +15,7 @@ import {
     ChangePasswordRequest,
     SetupStatus,
 } from '../models';
+import { generateDeviceFingerprint, clearDeviceFingerprintCache } from '../utils/device-fingerprint';
 
 const TOKEN_KEY = 'scrape_dojo_access_token';
 const REFRESH_TOKEN_KEY = 'scrape_dojo_refresh_token';
@@ -142,7 +143,13 @@ export class AuthService {
         this._isLoading.set(true);
         this._error.set(null);
 
-        return this.http.post<TokenResponse | MfaChallengeResponse>('/api/auth/login', credentials).pipe(
+        // Add device fingerprint if not provided
+        const loginData = {
+            ...credentials,
+            deviceFingerprint: credentials.deviceFingerprint || generateDeviceFingerprint(),
+        };
+
+        return this.http.post<TokenResponse | MfaChallengeResponse>('/api/auth/login', loginData).pipe(
             switchMap((response) => this.handleAuthOrMfaChallenge(response)),
             catchError((err) => this.handleAuthError(err)),
             finalize(() => this._isLoading.set(false))
@@ -156,7 +163,13 @@ export class AuthService {
         this._isLoading.set(true);
         this._error.set(null);
 
-        return this.http.post<TokenResponse | MfaChallengeResponse>('/api/auth/register', data).pipe(
+        // Add device fingerprint if not provided
+        const registerData = {
+            ...data,
+            deviceFingerprint: data.deviceFingerprint || generateDeviceFingerprint(),
+        };
+
+        return this.http.post<TokenResponse | MfaChallengeResponse>('/api/auth/register', registerData).pipe(
             switchMap((response) => this.handleAuthOrMfaChallenge(response)),
             catchError((err) => this.handleAuthError(err)),
             finalize(() => this._isLoading.set(false))
@@ -209,6 +222,7 @@ export class AuthService {
      */
     private completeLogout(): void {
         this.clearStorage();
+        clearDeviceFingerprintCache(); // Clear device fingerprint cache on logout
         this._user.set(null);
         this._error.set(null);
         this._sessionValidated.set(false);

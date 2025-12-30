@@ -186,25 +186,14 @@ import 'iconify-icon';
                         <div class="h-px bg-[var(--dojo-border)] my-1"></div>
                     }
 
-                    <a
-                        routerLink="/profile"
-                        (click)="closeMenu()"
-                        class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-[var(--dojo-text)] hover:bg-[var(--dojo-surface-2)] transition"
+                    <button
+                        type="button"
+                        (click)="openSettings()"
+                        class="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-[var(--dojo-text)] hover:bg-[var(--dojo-surface-2)] transition"
                     >
-                        <iconify-icon icon="mdi:account" class="text-lg text-[var(--dojo-accent)]"></iconify-icon>
-                        <span>{{ 'auth.menu.profile' | transloco }}</span>
-                    </a>
-
-                    @if (authService.user()?.provider === 'local') {
-                        <a
-                            routerLink="/change-password"
-                            (click)="closeMenu()"
-                            class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-[var(--dojo-text)] hover:bg-[var(--dojo-surface-2)] transition"
-                        >
-                            <iconify-icon icon="mdi:key" class="text-lg text-[var(--dojo-accent)]"></iconify-icon>
-                            <span>{{ 'auth.menu.changePassword' | transloco }}</span>
-                        </a>
-                    }
+                        <iconify-icon icon="mdi:cog" class="text-lg text-[var(--dojo-accent)]"></iconify-icon>
+                        <span>{{ 'auth.menu.settings' | transloco }}</span>
+                    </button>
 
                     <div class="h-px bg-[var(--dojo-border)] my-1"></div>
 
@@ -237,6 +226,7 @@ export class UserMenuComponent {
 
     showApiDocs = output<void>();
     showStatus = output<void>();
+    showSettings = output<void>();
 
     @ViewChild('menu') private menu?: ElementRef<HTMLDetailsElement>;
 
@@ -284,6 +274,11 @@ export class UserMenuComponent {
     openApiDocs(): void {
         this.closeMenu();
         this.showApiDocs.emit();
+    }
+
+    openSettings(): void {
+        this.closeMenu();
+        this.showSettings.emit();
     }
 
     cycleTheme(): void {

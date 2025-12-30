@@ -9,6 +9,8 @@ Scrape Dojo uses a modern, state-of-the-art authentication system with JWT token
 - 👤 **User Management** - Role-based access control (User/Admin)
 - 🔑 **API Key Support** - For headless/service access
 - 🛡️ **PKCE Flow** - Secure OAuth2 code exchange
+- 📱 **MFA/TOTP** - Two-factor authentication with device tracking
+- 🖥️ **Trusted Devices** - MFA only required for unknown devices
 
 ## Quick Start
 
@@ -229,6 +231,53 @@ AUTH_ENABLED=false
 3. **Rotate secrets** - Regularly rotate JWT secrets
 4. **Short token expiry** - Keep access tokens short-lived (15m default)
 5. **Secure cookies** - If using cookies, set `HttpOnly`, `Secure`, `SameSite`
+6. **Enable MFA** - Require two-factor authentication for sensitive environments
+7. **Monitor devices** - Review and remove trusted devices regularly
+
+## Trusted Device Management
+
+When MFA is enabled, the system tracks trusted devices to provide a better user experience:
+
+### How It Works
+
+1. **First Login** - User logs in and completes MFA verification
+2. **Device Fingerprinting** - System generates a unique device fingerprint based on:
+   - User-Agent (browser/OS information)
+   - IP address
+   - Screen resolution
+   - Timezone
+   - Browser capabilities
+3. **Device Trusted** - After successful MFA, the device is marked as trusted
+4. **Subsequent Logins** - On trusted devices, MFA is skipped automatically
+5. **New Device** - If fingerprint doesn't match, MFA is required again
+
+### Device Fingerprint Components
+
+The device fingerprint is generated from:
+- User-Agent string
+- IP address (from `X-Forwarded-For` header or socket)
+- Client-side browser properties (screen resolution, timezone, etc.)
+
+### Managing Trusted Devices
+
+Users can view and remove trusted devices through their profile settings:
+
+```bash
+# List trusted devices (requires authentication)
+curl http://localhost:3000/users/me/devices \
+  -H "Authorization: Bearer ${ACCESS_TOKEN}"
+
+# Remove a trusted device
+curl -X DELETE http://localhost:3000/users/me/devices/{deviceId} \
+  -H "Authorization: Bearer ${ACCESS_TOKEN}"
+```
+
+### Security Considerations
+
+- Devices are identified by a hash of their fingerprint for privacy
+- IP address changes don't invalidate trust (only fingerprint hash matters)
+- Clearing browser data or changing browsers will require MFA again
+- Admins can clear all trusted devices for a user if compromise is suspected
 
 ## Frontend Integration
 

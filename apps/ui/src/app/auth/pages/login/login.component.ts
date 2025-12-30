@@ -164,6 +164,11 @@ export class LoginComponent implements OnInit {
     ngOnInit(): void {
         // Get return URL from query params
         this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
+        
+        // Ensure OIDC config is loaded
+        if (!this.authService.oidcConfig()) {
+            this.authService.loadOidcConfig();
+        }
     }
 
     isValid(): boolean {

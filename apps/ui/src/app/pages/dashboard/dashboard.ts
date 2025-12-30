@@ -18,6 +18,7 @@ import { WorkflowHistoryComponent, StatusFilter } from '../../components/workflo
 import { WorkflowVisualizerComponent } from '../../components/workflow-visualizer/workflow-visualizer';
 import { RunDebugViewComponent } from '../../components/run-debug-view/run-debug-view';
 import { ApiDocsModalComponent } from '../../components/api-docs-modal/api-docs-modal';
+import { SettingsModalComponent } from '../../components/settings-modal/settings-modal';
 import { OtpModalComponent } from '../../components/otp-modal/otp-modal';
 import { RunDialogComponent, WorkflowVariable, RunDialogResult } from '../../components/run-dialog/run-dialog';
 import { SecretsManagerComponent } from '../../components/secrets-manager/secrets-manager';
@@ -46,6 +47,7 @@ import 'iconify-icon';
     WorkflowVisualizerComponent,
     RunDebugViewComponent,
     ApiDocsModalComponent,
+    SettingsModalComponent,
     OtpModalComponent,
     RunDialogComponent,
     SecretsManagerComponent,
@@ -84,6 +86,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   showSecrets = signal(false);
   showVariables = signal(false);
   showStatus = signal(false);
+  showSettings = signal(false);
   showServerLogs = signal(true);
   serverLogsHeight = signal(200);
 

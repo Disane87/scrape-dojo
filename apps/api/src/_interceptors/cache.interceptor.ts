@@ -52,7 +52,8 @@ export class HttpCacheInterceptor implements NestInterceptor {
         const ifNoneMatch = request.headers['if-none-match'];
         if (typeof ifNoneMatch === 'string' && ifNoneMatch === etag) {
           response.status(304);
-          response.end();
+          // End wird automatisch von NestJS gehandhabt
+          // response.end() führt zu "Cannot set headers after they are sent"
         }
       }),
     );

@@ -17,6 +17,7 @@ export class TopNavComponent implements OnInit {
     showSecrets = output<void>();
     showVariables = output<void>();
     showStatus = output<void>();
+    showSettings = output<void>();
 
     ngOnInit(): void {
         // no-op
@@ -36,6 +37,10 @@ export class TopNavComponent implements OnInit {
 
     openStatus(): void {
         this.showStatus.emit();
+    }
+
+    openSettings(): void {
+        this.showSettings.emit();
     }
 
     toggleNotifications(): void {

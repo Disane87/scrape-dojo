@@ -30,6 +30,8 @@ export interface LoginRequest {
     password: string;
     /** Optional: future inline MFA code support */
     mfaCode?: string;
+    /** Optional: device fingerprint for device tracking */
+    deviceFingerprint?: string;
 }
 
 export interface RegisterRequest {
@@ -37,6 +39,8 @@ export interface RegisterRequest {
     password: string;
     username?: string;
     displayName?: string;
+    /** Optional: device fingerprint for device tracking */
+    deviceFingerprint?: string;
 }
 
 export interface TokenResponse {
@@ -65,6 +69,8 @@ export interface MfaSetupResponse {
 export interface MfaCompleteRequest {
     mfaChallengeToken: string;
     code: string;
+    /** Optional: device fingerprint for device tracking */
+    deviceFingerprint?: string;
 }
 
 export type AuthFlowResult =

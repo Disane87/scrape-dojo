@@ -6,12 +6,14 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 // Entities
 import { UserEntity } from './entities/user.entity';
+import { TrustedDeviceEntity } from './entities/trusted-device.entity';
 
 // Services
 import { AuthService } from './services/auth.service';
 import { UserService } from './services/user.service';
 import { OidcService } from './services/oidc.service';
 import { MfaService } from './services/mfa.service';
+import { DeviceService } from './services/device.service';
 
 // Strategies
 import { JwtStrategy } from './strategies/jwt.strategy';
@@ -30,7 +32,7 @@ import type { StringValue } from 'ms';
 @Global()
 @Module({
     imports: [
-        TypeOrmModule.forFeature([UserEntity]),
+        TypeOrmModule.forFeature([UserEntity, TrustedDeviceEntity]),
         PassportModule.register({ defaultStrategy: 'jwt' }),
         JwtModule.registerAsync({
             imports: [ConfigModule],
@@ -58,6 +60,7 @@ import type { StringValue } from 'ms';
         UserService,
         OidcService,
         MfaService,
+        DeviceService,
         // Strategies
         JwtStrategy,
         LocalStrategy,
@@ -71,6 +74,7 @@ import type { StringValue } from 'ms';
         UserService,
         OidcService,
         MfaService,
+        DeviceService,
         JwtAuthGuard,
         RolesGuard,
         ApiKeyGuard,

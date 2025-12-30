@@ -8,6 +8,7 @@ import { AuthService } from '../../services/auth.service';
 import { MfaSetupResponse, TokenResponse } from '../../models';
 import { timeout, catchError, finalize } from 'rxjs/operators';
 import { EMPTY } from 'rxjs';
+import { generateDeviceFingerprint } from '../../utils/device-fingerprint';
 import 'iconify-icon';
 
 @Component({
@@ -40,9 +41,19 @@ import 'iconify-icon';
                     </p>
 
                     @if (errorMessage) {
-                        <div class="flex items-center gap-3 bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-6">
-                            <iconify-icon icon="mdi:alert-circle" class="text-xl text-red-400 flex-shrink-0"></iconify-icon>
-                            <span class="text-red-300 text-sm flex-1">{{ errorMessage }}</span>
+                        <div class="mb-6 p-4 bg-red-500/10 border-2 border-red-500 rounded-xl flex items-start gap-3 animate-shake">
+                            <iconify-icon icon="mdi:alert-circle" class="text-red-500 text-2xl flex-shrink-0 mt-0.5"></iconify-icon>
+                            <div class="flex-1">
+                                <div class="font-semibold text-red-500 mb-1">{{ 'auth.mfa.error_title' | transloco }}</div>
+                                <div class="text-sm text-red-400">{{ errorMessage }}</div>
+                            </div>
+                            <button
+                                type="button"
+                                (click)="errorMessage = ''"
+                                class="text-red-500 hover:text-red-400 transition-colors"
+                            >
+                                <iconify-icon icon="mdi:close" class="text-xl"></iconify-icon>
+                            </button>
                         </div>
                     }
 
@@ -82,13 +93,12 @@ import 'iconify-icon';
                                 type="text"
                                 [(ngModel)]="code"
                                 name="code"
-                                class="w-full px-4 py-3 bg-[var(--dojo-surface-2)] border border-[var(--dojo-border)] rounded-xl text-[var(--dojo-text)] placeholder-[var(--dojo-text-subtle)]
-                                       focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 focus:bg-[var(--dojo-surface-2)]
-                                       transition-all duration-300"
+                                [class]="getInputClass()"
                                 placeholder="123456"
                                 inputmode="numeric"
                                 autocomplete="one-time-code"
                                 [disabled]="isLoading"
+                                (input)="onCodeInput()"
                                 required
                             />
                         </div>
@@ -180,7 +190,24 @@ export class MfaComponent implements OnInit {
 
     isCodeValid(): boolean {
         const normalized = (this.code || '').replace(/\s+/g, '');
-        return normalized.length >= 6;
+        return normalized.length === 6 && /^\d{6}$/.test(normalized);
+    }
+
+    getInputClass(): string {
+        const baseClasses = 'w-full px-4 py-3 rounded-xl text-[var(--dojo-text)] placeholder-[var(--dojo-text-subtle)] focus:outline-none transition-all duration-300';
+        
+        if (this.errorMessage && this.code) {
+            return `${baseClasses} bg-red-500/10 border-2 border-red-500 focus:ring-2 focus:ring-red-500/50 focus:border-red-500`;
+        }
+        
+        return `${baseClasses} bg-[var(--dojo-surface-2)] border border-[var(--dojo-border)] focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 focus:bg-[var(--dojo-surface-2)]`;
+    }
+
+    onCodeInput(): void {
+        // Clear error when user starts typing
+        if (this.errorMessage) {
+            this.errorMessage = '';
+        }
     }
 
     private loadSetup(): void {
@@ -240,6 +267,7 @@ export class MfaComponent implements OnInit {
             .post<TokenResponse>('/api/auth/mfa/complete', {
                 mfaChallengeToken: this.mfaChallengeToken,
                 code: normalized,
+                deviceFingerprint: generateDeviceFingerprint(),
             })
             .subscribe({
                 next: (tokens) => {
@@ -266,10 +294,36 @@ export class MfaComponent implements OnInit {
                         return;
                     }
 
-                    this.errorMessage = message || this.transloco.translate('auth.mfa.verify_failed');
+                    this.errorMessage = this.getDetailedErrorMessage(err);
                     this.isLoading = false;
+                    this.code = ''; // Clear the code on error
                 },
             });
+    }
+
+    private getDetailedErrorMessage(err: any): string {
+        const message = err?.error?.message || err?.message || '';
+        const statusCode = err?.status;
+
+        // Map specific error messages to user-friendly translations
+        if (message.toLowerCase().includes('invalid mfa code')) {
+            return this.transloco.translate('auth.mfa.error_invalid_code');
+        }
+        if (message.toLowerCase().includes('expired')) {
+            return this.transloco.translate('auth.mfa.error_expired');
+        }
+        if (message.toLowerCase().includes('mfa setup required')) {
+            return this.transloco.translate('auth.mfa.error_setup_required');
+        }
+        if (statusCode === 401) {
+            return this.transloco.translate('auth.mfa.error_unauthorized');
+        }
+        if (statusCode === 429) {
+            return this.transloco.translate('auth.mfa.error_rate_limit');
+        }
+        
+        // Fallback to generic error message
+        return message || this.transloco.translate('auth.mfa.verify_failed');
     }
 
     backToLogin(): void {

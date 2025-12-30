@@ -511,14 +511,72 @@
       "submit": "Bestätigen",
       "back_to_login": "Zurück zur Anmeldung",
       "setup_failed": "MFA-Einrichtung fehlgeschlagen",
-      "verify_failed": "MFA-Verifizierung fehlgeschlagen"
+      "verify_failed": "MFA-Verifizierung fehlgeschlagen",
+      "error_title": "MFA-Fehler",
+      "error_invalid_code": "Der eingegebene Code ist ungültig. Bitte versuche es erneut.",
+      "error_expired": "Der Code ist abgelaufen. Bitte verwende einen aktuellen Code aus deiner Authenticator-App.",
+      "error_unauthorized": "Nicht autorisiert. Bitte melde dich erneut an.",
+      "error_rate_limit": "Zu viele Versuche. Bitte warte einen Moment und versuche es dann erneut.",
+      "error_setup_required": "MFA muss zuerst eingerichtet werden. Bitte scanne den QR-Code."
     },
     "menu": {
       "login": "Anmelden",
       "logout": "Abmelden",
       "profile": "Profil",
       "changePassword": "Passwort ändern",
-      "users": "Benutzerverwaltung"
+      "users": "Benutzerverwaltung",
+      "settings": "Einstellungen"
+    }
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "subtitle": "Verwalte dein Profil, Sicherheit und Geräte",
+    "profile": {
+      "title": "Profil",
+      "email": "E-Mail",
+      "email_readonly": "Die E-Mail-Adresse kann nicht geändert werden",
+      "username": "Benutzername",
+      "display_name": "Anzeigename",
+      "role": "Rolle",
+      "provider": "Anmeldeart",
+      "save": "Speichern",
+      "save_success": "Profil erfolgreich aktualisiert",
+      "save_error": "Profil konnte nicht aktualisiert werden",
+      "load_error": "Profil konnte nicht geladen werden"
+    },
+    "security": {
+      "title": "Sicherheit",
+      "change_password": "Passwort ändern",
+      "current_password": "Aktuelles Passwort",
+      "new_password": "Neues Passwort",
+      "confirm_password": "Passwort bestätigen",
+      "password_min_length": "Passwort muss mindestens 8 Zeichen lang sein",
+      "password_mismatch": "Passwörter stimmen nicht überein",
+      "update_password": "Passwort aktualisieren",
+      "password_changed": "Passwort erfolgreich geändert",
+      "password_error": "Passwort konnte nicht geändert werden"
+    },
+    "devices": {
+      "title": "Vertrauenswürdige Geräte",
+      "subtitle": "Geräte, die für MFA vertrauenswürdig sind",
+      "no_devices": "Keine vertrauenswürdigen Geräte",
+      "last_used": "Zuletzt verwendet",
+      "added": "Hinzugefügt",
+      "remove": "Entfernen",
+      "remove_all": "Alle entfernen",
+      "confirm_remove": "Möchtest du dieses Gerät wirklich entfernen?",
+      "confirm_remove_all": "Möchtest du alle anderen Geräte wirklich entfernen? Du bleibst auf diesem Gerät angemeldet.",
+      "remove_success": "Gerät erfolgreich entfernt",
+      "remove_error": "Gerät konnte nicht entfernt werden",
+      "remove_all_success": "Alle Geräte erfolgreich entfernt",
+      "remove_all_error": "Geräte konnten nicht entfernt werden",
+      "load_error": "Geräte konnten nicht geladen werden",
+      "just_now": "Gerade eben",
+      "minutes_ago": "vor {{minutes}} Minuten",
+      "hour_ago": "vor einer Stunde",
+      "hours_ago": "vor {{hours}} Stunden",
+      "yesterday": "Gestern",
+      "days_ago": "vor {{days}} Tagen"
     }
   }
 }
