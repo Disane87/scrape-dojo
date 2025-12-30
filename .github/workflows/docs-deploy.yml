@@ -37,10 +37,10 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install --filter docs --no-frozen-lockfile
 
       - name: Build Docs
-        run: pnpm nx build docs
+        run: pnpm nx build docs --skip-nx-cache
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
