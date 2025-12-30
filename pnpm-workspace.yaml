@@ -1,3 +1,7 @@
+packages:
+  - 'apps/*'
+  - 'libs/*'
+
 ignoredBuiltDependencies:
   - '@swc/core'
   - nx
