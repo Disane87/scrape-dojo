@@ -10,8 +10,11 @@ const config = {
   tagline: 'Web Scraping Framework Documentation',
   favicon: 'img/favicon.ico',
 
-  url: 'https://your-docusaurus-test-site.com',
-  baseUrl: '/',
+  // Passe diese URLs an dein GitHub Repository an:
+  // Für User/Organization Pages: https://<username>.github.io
+  // Für Project Pages: https://<username>.github.io/<repository-name>
+  url: 'https://disane87.github.io',
+  baseUrl: '/scrape-dojo/', // Passe den Repository-Namen an
 
   organizationName: 'scrape-dojo',
   projectName: 'scrape-dojo',
