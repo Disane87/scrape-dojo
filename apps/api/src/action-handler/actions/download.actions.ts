@@ -24,7 +24,9 @@ export class DownloadAction extends BaseAction<DownloadActionParams> {
         const { url, path: downloadPath, filename } = this.params;
 
         try {
-            this.logger.log(`📥 Downloading: ${url}`);
+            const resolvedUrl = await this.resolveDownloadUrl(url);
+
+            this.logger.log(`📥 Downloading: ${resolvedUrl}`);
             this.logger.debug(`📁 Target path: ${downloadPath}`);
             this.logger.debug(`📄 Filename: ${filename}`);
 
@@ -92,18 +94,46 @@ export class DownloadAction extends BaseAction<DownloadActionParams> {
 
             const fullPath = path.join(absolutePath, cleanFilename);
 
-            // Prüfe ob es eine lokale Datei ist (file://)
-            if (url.startsWith('file://')) {
-                return await this.downloadLocalFile(url, fullPath);
+            // Check for local file URL (file://)
+            if (resolvedUrl.startsWith('file://')) {
+                return await this.downloadLocalFile(resolvedUrl, fullPath);
             }
 
-            // Für HTTP(S) URLs: Verwende fetch im Browser-Kontext
-            return await this.downloadRemoteFile(url, fullPath, cleanFilename);
+            // For HTTP(S) URLs: Use fetch in the browser context
+            return await this.downloadRemoteFile(resolvedUrl, fullPath, cleanFilename);
 
         } catch (error) {
             this.logger.error(`❌ Error while downloading file from URL: ${url}. Error: ${error.message}`);
             return null;
         }
+    }
+
+    /**
+     * Resolves relative / scheme-relative URLs against the current page URL.
+     * This makes downloads robust when scrapers extract relative hrefs.
+     */
+    private async resolveDownloadUrl(rawUrl: string): Promise<string> {
+        if (!rawUrl || typeof rawUrl !== 'string') return rawUrl;
+
+        // Already absolute (or special) URL
+        if (
+            rawUrl.startsWith('http://') ||
+            rawUrl.startsWith('https://') ||
+            rawUrl.startsWith('file://')
+        ) {
+            return rawUrl;
+        }
+
+        // Scheme-relative URLs like //example.com/path
+        if (rawUrl.startsWith('//')) {
+            const base = await this.page.url();
+            const baseUrl = new URL(base);
+            return `${baseUrl.protocol}${rawUrl}`;
+        }
+
+        // Relative URLs
+        const base = await this.page.url();
+        return new URL(rawUrl, base).toString();
     }
 
     /**

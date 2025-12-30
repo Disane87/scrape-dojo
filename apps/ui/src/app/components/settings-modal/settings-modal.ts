@@ -40,7 +40,7 @@ type SettingsTab = 'profile' | 'security' | 'devices';
             [icon]="'mdi:cog'"
         >
             <!-- Tabs -->
-            <div class="flex gap-1 p-1 bg-[var(--dojo-surface-2)] rounded-xl mb-6">
+            <div class="flex gap-1 p-1 bg-dojo-surface-2 rounded-xl mb-6">
                 <button
                     type="button"
                     (click)="activeTab.set('profile')"
@@ -79,45 +79,45 @@ type SettingsTab = 'profile' | 'security' | 'devices';
                     <div class="space-y-4">
                         @if (loadingProfile()) {
                             <div class="flex justify-center py-8">
-                                <svg class="animate-spin h-8 w-8 text-[var(--dojo-accent)]" viewBox="0 0 24 24">
+                                <svg class="animate-spin h-8 w-8 text-dojo-accent" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
                             </div>
                         } @else if (profile()) {
                             <div>
-                                <label class="block text-sm font-medium text-[var(--dojo-text)] mb-2">
+                                <label class="block text-sm font-medium text-dojo-text mb-2">
                                     {{ 'settings.profile.email' | transloco }}
                                 </label>
                                 <input
                                     type="email"
                                     [value]="profile()!.email"
                                     disabled
-                                    class="w-full px-4 py-2.5 bg-[var(--dojo-surface-2)] border border-[var(--dojo-border)] rounded-lg text-[var(--dojo-text-muted)] cursor-not-allowed"
+                                    class="w-full px-4 py-2.5 bg-dojo-surface-2 border border-dojo-border rounded-lg text-dojo-text-muted cursor-not-allowed"
                                 />
-                                <p class="mt-1 text-xs text-[var(--dojo-text-subtle)]">{{ 'settings.profile.email_readonly' | transloco }}</p>
+                                <p class="mt-1 text-xs text-dojo-text-subtle">{{ 'settings.profile.email_readonly' | transloco }}</p>
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-[var(--dojo-text)] mb-2">
+                                <label class="block text-sm font-medium text-dojo-text mb-2">
                                     {{ 'settings.profile.username' | transloco }}
                                 </label>
                                 <input
                                     type="text"
                                     [(ngModel)]="profileForm.username"
-                                    class="w-full px-4 py-2.5 bg-[var(--dojo-surface-2)] border border-[var(--dojo-border)] rounded-lg text-[var(--dojo-text)]
+                                    class="w-full px-4 py-2.5 bg-dojo-surface-2 border border-dojo-border rounded-lg text-dojo-text
                                            focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50"
                                 />
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-[var(--dojo-text)] mb-2">
+                                <label class="block text-sm font-medium text-dojo-text mb-2">
                                     {{ 'settings.profile.display_name' | transloco }}
                                 </label>
                                 <input
                                     type="text"
                                     [(ngModel)]="profileForm.displayName"
-                                    class="w-full px-4 py-2.5 bg-[var(--dojo-surface-2)] border border-[var(--dojo-border)] rounded-lg text-[var(--dojo-text)]
+                                    class="w-full px-4 py-2.5 bg-dojo-surface-2 border border-dojo-border rounded-lg text-dojo-text
                                            focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50"
                                 />
                             </div>
@@ -135,28 +135,28 @@ type SettingsTab = 'profile' | 'security' | 'devices';
                                 </div>
                             </div>
                         } @else {
-                            <h3 class="text-lg font-semibold text-[var(--dojo-text)] mb-4">{{ 'settings.security.change_password' | transloco }}</h3>
+                            <h3 class="text-lg font-semibold text-dojo-text mb-4">{{ 'settings.security.change_password' | transloco }}</h3>
 
                             <div>
-                                <label class="block text-sm font-medium text-[var(--dojo-text)] mb-2">
+                                <label class="block text-sm font-medium text-dojo-text mb-2">
                                     {{ 'settings.security.current_password' | transloco }}
                                 </label>
                                 <input
                                     type="password"
                                     [(ngModel)]="passwordForm.currentPassword"
-                                    class="w-full px-4 py-2.5 bg-[var(--dojo-surface-2)] border border-[var(--dojo-border)] rounded-lg text-[var(--dojo-text)]
+                                    class="w-full px-4 py-2.5 bg-dojo-surface-2 border border-dojo-border rounded-lg text-dojo-text
                                            focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50"
                                 />
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-[var(--dojo-text)] mb-2">
+                                <label class="block text-sm font-medium text-dojo-text mb-2">
                                     {{ 'settings.security.new_password' | transloco }}
                                 </label>
                                 <input
                                     type="password"
                                     [(ngModel)]="passwordForm.newPassword"
-                                    class="w-full px-4 py-2.5 bg-[var(--dojo-surface-2)] border border-[var(--dojo-border)] rounded-lg text-[var(--dojo-text)]
+                                    class="w-full px-4 py-2.5 bg-dojo-surface-2 border border-dojo-border rounded-lg text-dojo-text
                                            focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50"
                                 />
                                 @if (passwordForm.newPassword && passwordForm.newPassword.length < 8) {
@@ -165,13 +165,13 @@ type SettingsTab = 'profile' | 'security' | 'devices';
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-[var(--dojo-text)] mb-2">
+                                <label class="block text-sm font-medium text-dojo-text mb-2">
                                     {{ 'settings.security.confirm_password' | transloco }}
                                 </label>
                                 <input
                                     type="password"
                                     [(ngModel)]="passwordForm.confirmPassword"
-                                    class="w-full px-4 py-2.5 bg-[var(--dojo-surface-2)] border border-[var(--dojo-border)] rounded-lg text-[var(--dojo-text)]
+                                    class="w-full px-4 py-2.5 bg-dojo-surface-2 border border-dojo-border rounded-lg text-dojo-text
                                            focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50"
                                 />
                                 @if (passwordForm.confirmPassword && passwordForm.newPassword !== passwordForm.confirmPassword) {
@@ -186,8 +186,8 @@ type SettingsTab = 'profile' | 'security' | 'devices';
                     <div class="space-y-4">
                         <div class="flex items-center justify-between mb-4">
                             <div>
-                                <h3 class="text-lg font-semibold text-[var(--dojo-text)]">{{ 'settings.devices.title' | transloco }}</h3>
-                                <p class="text-sm text-[var(--dojo-text-muted)]">{{ 'settings.devices.subtitle' | transloco }}</p>
+                                <h3 class="text-lg font-semibold text-dojo-text">{{ 'settings.devices.title' | transloco }}</h3>
+                                <p class="text-sm text-dojo-text-muted">{{ 'settings.devices.subtitle' | transloco }}</p>
                             </div>
                             @if (devices().length > 1) {
                                 <button
@@ -203,25 +203,25 @@ type SettingsTab = 'profile' | 'security' | 'devices';
 
                         @if (loadingDevices()) {
                             <div class="flex justify-center py-8">
-                                <svg class="animate-spin h-8 w-8 text-[var(--dojo-accent)]" viewBox="0 0 24 24">
+                                <svg class="animate-spin h-8 w-8 text-dojo-accent" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
                             </div>
                         } @else if (devices().length === 0) {
-                            <div class="text-center py-8 text-[var(--dojo-text-muted)]">
+                            <div class="text-center py-8 text-dojo-text-muted">
                                 <iconify-icon icon="mdi:devices" class="text-4xl mb-2"></iconify-icon>
                                 <p>{{ 'settings.devices.no_devices' | transloco }}</p>
                             </div>
                         } @else {
                             <div class="space-y-2">
                                 @for (device of devices(); track device.id) {
-                                    <div class="flex items-center justify-between p-4 bg-[var(--dojo-surface-2)] border border-[var(--dojo-border)] rounded-lg">
+                                    <div class="flex items-center justify-between p-4 bg-dojo-surface-2 border border-dojo-border rounded-lg">
                                         <div class="flex items-center gap-3 flex-1">
-                                            <iconify-icon [icon]="getDeviceIcon(device.deviceName)" class="text-2xl text-[var(--dojo-accent)]"></iconify-icon>
+                                            <iconify-icon [icon]="getDeviceIcon(device.deviceName)" class="text-2xl text-dojo-accent"></iconify-icon>
                                             <div class="flex-1">
-                                                <div class="font-medium text-[var(--dojo-text)]">{{ device.deviceName }}</div>
-                                                <div class="text-xs text-[var(--dojo-text-muted)]">
+                                                <div class="font-medium text-dojo-text">{{ device.deviceName }}</div>
+                                                <div class="text-xs text-dojo-text-muted">
                                                     {{ device.lastIpAddress }} • {{ formatDate(device.lastUsedAt) }}
                                                 </div>
                                             </div>
@@ -249,7 +249,7 @@ type SettingsTab = 'profile' | 'security' | 'devices';
                         type="button"
                         (click)="saveProfile()"
                         [disabled]="savingProfile()"
-                        class="flex-1 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400
+                        class="flex-1 px-4 py-2.5 bg-linear-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400
                                text-white font-semibold rounded-lg shadow-lg
                                disabled:opacity-50 disabled:cursor-not-allowed
                                transition-all duration-300 flex items-center justify-center gap-2"
@@ -270,7 +270,7 @@ type SettingsTab = 'profile' | 'security' | 'devices';
                         type="button"
                         (click)="changePassword()"
                         [disabled]="!isPasswordFormValid() || changingPassword()"
-                        class="flex-1 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400
+                        class="flex-1 px-4 py-2.5 bg-linear-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400
                                text-white font-semibold rounded-lg shadow-lg
                                disabled:opacity-50 disabled:cursor-not-allowed
                                transition-all duration-300 flex items-center justify-center gap-2"
@@ -327,9 +327,9 @@ export class SettingsModalComponent implements OnInit {
         const isActive = this.activeTab() === tab;
         
         if (isActive) {
-            return `${base} bg-[var(--dojo-surface)] text-[var(--dojo-text)] shadow-sm`;
+            return `${base} bg-dojo-surface text-dojo-text shadow-sm`;
         }
-        return `${base} text-[var(--dojo-text-muted)] hover:text-[var(--dojo-text)]`;
+        return `${base} text-dojo-text-muted hover:text-dojo-text`;
     }
 
     // Profile methods

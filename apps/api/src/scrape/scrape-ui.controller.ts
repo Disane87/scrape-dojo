@@ -67,6 +67,12 @@ export class ScrapeUIController {
         }
     }
 
+    @Post('scrapes/reload')
+    async reloadScrapes() {
+        await this.scrapeService.reloadScrapeDefinitions();
+        return { success: true };
+    }
+
     private mapRunStatus(status: string): 'running' | 'completed' | 'failed' {
         switch (status) {
             case 'running': return 'running';

@@ -1,5 +1,5 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, BehaviorSubject, of, throwError } from 'rxjs';
 import { tap, catchError, map, switchMap, finalize } from 'rxjs/operators';
@@ -43,13 +43,11 @@ export class AuthService {
 
     /**
      * Becomes true once we successfully validated the stored session against the API.
-     * Prevents app-start API calls with stale tokens (e.g. after server restart / secret rotation).
+     * Used as a health signal for the stored session (e.g. after server restart / secret rotation).
      */
     readonly isSessionValidated = this._sessionValidated.asReadonly();
 
-    readonly isAuthenticated = computed(
-        () => this._sessionValidated() && !!this._user() && !!this.getAccessToken()
-    );
+    readonly isAuthenticated = computed(() => !!this._user() && !!this.getAccessToken());
     readonly isAdmin = computed(() => this._user()?.role === 'admin');
     readonly displayName = computed(() => {
         const user = this._user();
@@ -88,7 +86,7 @@ export class AuthService {
 
             this.loadUserProfile().subscribe({
                 next: () => this._sessionValidated.set(true),
-                error: () => this.completeLogout(),
+                error: (err) => this.handleStoredSessionValidationError(err),
             });
         });
 
@@ -243,10 +241,27 @@ export class AuthService {
                 this.storeTokens(response);
             }),
             catchError((err) => {
-                this.completeLogout();
+                const status = err instanceof HttpErrorResponse ? err.status : (err as any)?.status;
+                if (status === 401 || status === 403) {
+                    this.completeLogout();
+                }
                 return throwError(() => err);
             })
         );
+    }
+
+    private handleStoredSessionValidationError(err: unknown): void {
+        const status = err instanceof HttpErrorResponse ? err.status : (err as any)?.status;
+
+        // Only clear the session if the API explicitly rejected the credentials.
+        // If the API is temporarily unavailable (restart, network error, 5xx), keep the stored tokens.
+        if (status === 401 || status === 403) {
+            this.completeLogout();
+            return;
+        }
+
+        console.warn('[AuthService] Stored session validation failed; keeping local session.', err);
+        this._sessionValidated.set(false);
     }
 
     /**

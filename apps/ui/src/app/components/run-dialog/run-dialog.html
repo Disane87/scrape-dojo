@@ -19,7 +19,9 @@
             </div>
             <button
                 class="p-1.5 hover:bg-dojo-surface-2 rounded text-dojo-text-muted hover:text-dojo-text transition-colors"
-                (click)="cancel()">
+                (click)="cancel()"
+                [attr.aria-label]="'common.close' | transloco"
+                [attr.title]="'common.close' | transloco">
                 <iconify-icon icon="lucide:x" class="w-5 h-5"></iconify-icon>
             </button>
         </div>
@@ -99,6 +101,8 @@
                     <!-- Select dropdown -->
                     <select [ngModel]="variableValues()[variable.name]"
                         (ngModelChange)="updateValue(variable.name, $event)"
+                        [attr.aria-label]="variable.label || variable.name"
+                        [attr.title]="variable.label || variable.name"
                         class="w-full px-3 py-2 bg-dojo-bg border border-dojo-border rounded-md text-dojo-text focus:outline-none focus:border-dojo-accent focus:ring-1 focus:ring-dojo-accent">
                         <option value="" disabled>{{ 'workflow.run_dialog.please_select' | transloco }}</option>
                         @for (opt of variable.options; track opt.value) {
@@ -109,6 +113,8 @@
                     <!-- Text/Number/Email/URL/Password input -->
                     <input [type]="getInputType(variable.type)" [ngModel]="variableValues()[variable.name]"
                         (ngModelChange)="updateValue(variable.name, $event)" [placeholder]="getPlaceholder(variable)"
+                        [attr.aria-label]="variable.label || variable.name"
+                        [attr.title]="variable.label || variable.name"
                         class="w-full px-3 py-2 bg-dojo-bg border border-dojo-border rounded-md text-dojo-text placeholder-dojo-text-subtle/50 focus:outline-none focus:border-dojo-accent focus:ring-1 focus:ring-dojo-accent"
                         [class.font-mono]="variable.type === 'password'" />
                     }

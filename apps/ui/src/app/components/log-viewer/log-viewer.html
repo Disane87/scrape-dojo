@@ -49,16 +49,18 @@
                     ? 'bg-dojo-accent/20 border-dojo-accent text-dojo-accent' 
                     : 'bg-dojo-surface-2 border-dojo-border text-dojo-text-muted hover:text-dojo-text hover:border-dojo-text-muted'" 
                 (click)="toggleGrouping()"
-                [title]="groupByContext() ? 'Disable grouping' : 'Group by context'">
+                [title]="groupByContext() ? ('log_viewer.disable_grouping' | transloco) : ('log_viewer.enable_grouping' | transloco)"
+                [attr.aria-label]="groupByContext() ? ('log_viewer.disable_grouping' | transloco) : ('log_viewer.enable_grouping' | transloco)">
                 <iconify-icon [icon]="groupByContext() ? 'lucide:list-tree' : 'lucide:list'" class="w-3 h-3"></iconify-icon>
-                <span>{{ groupByContext() ? 'Grouped' : 'Flat' }}</span>
+                <span>{{ groupByContext() ? ('log_viewer.grouped' | transloco) : ('log_viewer.flat' | transloco) }}</span>
             </button>
 
             <!-- Expand/Collapse All (nur wenn gruppiert) -->
             @if (groupByContext() && groupedLogs()?.length) {
             <button class="text-xs px-2 py-1 bg-dojo-surface-2 border border-dojo-border rounded text-dojo-text-muted hover:text-dojo-text hover:border-dojo-text-muted transition-colors"
                 (click)="collapsedGroups().size > 0 ? expandAllGroups() : collapseAllGroups()"
-                [title]="collapsedGroups().size > 0 ? 'Expand all' : 'Collapse all'">
+                [title]="collapsedGroups().size > 0 ? ('log_viewer.expand_all' | transloco) : ('log_viewer.collapse_all' | transloco)"
+                [attr.aria-label]="collapsedGroups().size > 0 ? ('log_viewer.expand_all' | transloco) : ('log_viewer.collapse_all' | transloco)">
                 <iconify-icon [icon]="collapsedGroups().size > 0 ? 'lucide:chevrons-down-up' : 'lucide:chevrons-up-down'" class="w-3 h-3"></iconify-icon>
             </button>
             }
@@ -110,9 +112,9 @@
                     </span>
                     <span class="text-xs text-dojo-text-subtle">{{ group.startTime | date:'HH:mm:ss' }}</span>
                     @if (group.hasErrors) {
-                    <span class="w-1.5 h-1.5 rounded-full bg-dojo-danger" title="Contains errors"></span>
+                    <span class="w-1.5 h-1.5 rounded-full bg-dojo-danger" [title]="'log_viewer.contains_errors' | transloco"></span>
                     } @else if (group.hasWarnings) {
-                    <span class="w-1.5 h-1.5 rounded-full bg-dojo-warning" title="Contains warnings"></span>
+                    <span class="w-1.5 h-1.5 rounded-full bg-dojo-warning" [title]="'log_viewer.contains_warnings' | transloco"></span>
                     }
                 </div>
                 
@@ -165,7 +167,7 @@
         }
         
         @if (!groupByContext()) {
-        <span class="shrink-0 px-1 py-0 text-xs rounded mr-2 min-w-[80px] leading-5"
+        <span class="shrink-0 px-1 py-0 text-xs rounded mr-2 min-w-20 leading-5"
             [class]="getLogLevelColor(log.logLevel)">
             {{ log.logContext || 'App' }}
         </span>

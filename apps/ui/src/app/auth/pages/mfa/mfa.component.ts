@@ -17,15 +17,15 @@ import 'iconify-icon';
     imports: [CommonModule, FormsModule, TranslocoModule],
     schemas: [CUSTOM_ELEMENTS_SCHEMA],
     template: `
-        <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-[var(--dojo-bg)] via-[var(--dojo-surface)] to-[var(--dojo-bg)] px-4 py-8 relative overflow-hidden text-[var(--dojo-text)]">
+        <div class="min-h-screen flex items-center justify-center bg-linear-to-br from-dojo-bg via-dojo-surface to-dojo-bg px-4 py-8 relative overflow-hidden text-dojo-text">
             <div class="absolute inset-0 overflow-hidden pointer-events-none">
                 <div class="absolute -top-40 -right-40 w-96 h-96 bg-orange-500/15 rounded-full blur-3xl motion-safe:animate-float"></div>
                 <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-red-500/10 rounded-full blur-3xl motion-safe:animate-float-reverse"></div>
-                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-orange-600/5 rounded-full blur-3xl motion-safe:animate-pulse-slow"></div>
+                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 bg-orange-600/5 rounded-full blur-3xl motion-safe:animate-pulse-slow"></div>
             </div>
 
             <div class="relative w-full max-w-md motion-safe:animate-[fadeInUp_0.5s_ease-out]">
-                <div class="bg-[var(--dojo-surface)] backdrop-blur-xl rounded-2xl shadow-2xl shadow-black/50 border border-[var(--dojo-border)] p-8">
+                <div class="bg-dojo-surface backdrop-blur-xl rounded-2xl shadow-2xl shadow-black/50 border border-dojo-border p-8">
                     <div class="flex justify-center mb-6">
                         <div class="relative">
                             <div class="absolute inset-0 bg-orange-500/30 blur-2xl rounded-full scale-150"></div>
@@ -33,16 +33,16 @@ import 'iconify-icon';
                         </div>
                     </div>
 
-                    <h2 class="text-center text-2xl font-bold bg-gradient-to-r from-orange-400 via-red-500 to-orange-400 bg-clip-text text-transparent mb-2">
+                    <h2 class="text-center text-2xl font-bold bg-linear-to-r from-orange-400 via-red-500 to-orange-400 bg-clip-text text-transparent mb-2">
                         {{ (setupRequired ? 'auth.mfa.title_setup' : 'auth.mfa.title_verify') | transloco }}
                     </h2>
-                    <p class="text-center text-[var(--dojo-text-muted)] text-sm mb-6">
+                    <p class="text-center text-dojo-text-muted text-sm mb-6">
                         {{ (setupRequired ? 'auth.mfa.subtitle_setup' : 'auth.mfa.subtitle_verify') | transloco }}
                     </p>
 
                     @if (errorMessage) {
                         <div class="mb-6 p-4 bg-red-500/10 border-2 border-red-500 rounded-xl flex items-start gap-3 animate-shake">
-                            <iconify-icon icon="mdi:alert-circle" class="text-red-500 text-2xl flex-shrink-0 mt-0.5"></iconify-icon>
+                            <iconify-icon icon="mdi:alert-circle" class="text-red-500 text-2xl shrink-0 mt-0.5"></iconify-icon>
                             <div class="flex-1">
                                 <div class="font-semibold text-red-500 mb-1">{{ 'auth.mfa.error_title' | transloco }}</div>
                                 <div class="text-sm text-red-400">{{ errorMessage }}</div>
@@ -65,7 +65,7 @@ import 'iconify-icon';
                                 </div>
                             </div>
                         } @else if (isLoading) {
-                            <div class="flex items-center justify-center gap-3 text-[var(--dojo-text-muted)] mb-6">
+                            <div class="flex items-center justify-center gap-3 text-dojo-text-muted mb-6">
                                 <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -75,9 +75,9 @@ import 'iconify-icon';
                         }
 
                         @if (secret) {
-                            <div class="w-full bg-[var(--dojo-surface-2)] border border-[var(--dojo-border)] rounded-xl p-3 mb-6">
-                                <div class="text-xs text-[var(--dojo-text-subtle)] mb-1">{{ 'auth.mfa.secret_label' | transloco }}</div>
-                                <div class="text-sm break-all text-[var(--dojo-text)]">{{ secret }}</div>
+                            <div class="w-full bg-dojo-surface-2 border border-dojo-border rounded-xl p-3 mb-6">
+                                <div class="text-xs text-dojo-text-subtle mb-1">{{ 'auth.mfa.secret_label' | transloco }}</div>
+                                <div class="text-sm break-all text-dojo-text">{{ secret }}</div>
                             </div>
                         }
                     }
@@ -85,7 +85,7 @@ import 'iconify-icon';
                     @if (!setupRequired || qrCodeDataUrl || secret) {
                         <form (ngSubmit)="onSubmit()" class="space-y-4">
                         <div class="space-y-2">
-                            <label class="flex items-center gap-2 text-sm font-medium text-[var(--dojo-text)]">
+                            <label class="flex items-center gap-2 text-sm font-medium text-dojo-text">
                                 <iconify-icon icon="mdi:shield-key-outline" class="text-orange-400"></iconify-icon>
                                 <span>{{ 'auth.mfa.code_label' | transloco }}</span>
                             </label>
@@ -105,7 +105,7 @@ import 'iconify-icon';
 
                         <button
                             type="submit"
-                            class="w-full mt-4 px-6 py-3.5 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400
+                            class="w-full mt-4 px-6 py-3.5 bg-linear-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400
                                    text-white font-semibold rounded-xl shadow-lg shadow-orange-500/25
                                    hover:shadow-xl hover:shadow-orange-500/30 hover:scale-[1.02] active:scale-[0.98]
                                    disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100
@@ -125,9 +125,9 @@ import 'iconify-icon';
                         </form>
                     }
 
-                    <div class="text-center mt-6 pt-6 border-t border-[var(--dojo-border)]">
+                    <div class="text-center mt-6 pt-6 border-t border-dojo-border">
                         <a
-                            class="text-sm text-[var(--dojo-text-muted)] hover:text-[var(--dojo-text)] transition-colors"
+                            class="text-sm text-dojo-text-muted hover:text-dojo-text transition-colors"
                             (click)="backToLogin()"
                         >
                             {{ 'auth.mfa.back_to_login' | transloco }}
@@ -194,13 +194,13 @@ export class MfaComponent implements OnInit {
     }
 
     getInputClass(): string {
-        const baseClasses = 'w-full px-4 py-3 rounded-xl text-[var(--dojo-text)] placeholder-[var(--dojo-text-subtle)] focus:outline-none transition-all duration-300';
+        const baseClasses = 'w-full px-4 py-3 rounded-xl text-dojo-text placeholder-dojo-text-subtle focus:outline-none transition-all duration-300';
         
         if (this.errorMessage && this.code) {
             return `${baseClasses} bg-red-500/10 border-2 border-red-500 focus:ring-2 focus:ring-red-500/50 focus:border-red-500`;
         }
         
-        return `${baseClasses} bg-[var(--dojo-surface-2)] border border-[var(--dojo-border)] focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 focus:bg-[var(--dojo-surface-2)]`;
+        return `${baseClasses} bg-dojo-surface-2 border border-dojo-border focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 focus:bg-dojo-surface-2`;
     }
 
     onCodeInput(): void {

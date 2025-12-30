@@ -67,7 +67,11 @@ declare const monaco: typeof import('monaco-editor');
                     <!-- Raw Debug Data Section -->
                     <div class="space-y-3">
                         <h3 class="text-sm font-semibold text-dojo-text-muted uppercase tracking-wide">Raw Debug Data</h3>
-                        <div id="run-debug-editor" class="min-h-[400px] border border-dojo-border rounded"></div>
+                        @if (monacoLoaded()) {
+                        <div id="run-debug-editor" class="min-h-100 border border-dojo-border rounded"></div>
+                        } @else {
+                        <pre class="min-h-100 border border-dojo-border rounded bg-dojo-surface p-3 text-xs text-dojo-text overflow-auto whitespace-pre-wrap wrap-break-word">{{ rawDebugText() }}</pre>
+                        }
                     </div>
                 </div>
                 }
@@ -87,7 +91,9 @@ export class RunDebugViewComponent implements AfterViewInit, OnDestroy {
     private scrapeService = inject(ScrapeService);
     private store = inject(StoreService);
     private editor: import('monaco-editor').editor.IStandaloneCodeEditor | null = null;
-    private monacoLoaded = signal(false);
+    monacoLoaded = signal(false);
+    private monacoFailed = signal(false);
+    rawDebugText = signal('{}');
     isLoading = signal(false);
     private lastLoadedRunId: string | null = null;
     
@@ -105,10 +111,10 @@ export class RunDebugViewComponent implements AfterViewInit, OnDestroy {
     constructor() {
         effect(() => {
             const currentRun = this.run();
-            const isMonacoReady = this.monacoLoaded();
-            console.log('🔍 Debug view effect:', { runId: currentRun?.id, isMonacoReady, lastLoaded: this.lastLoadedRunId });
+            const isViewerReady = this.monacoLoaded() || this.monacoFailed();
+            console.log('🔍 Debug view effect:', { runId: currentRun?.id, isViewerReady, lastLoaded: this.lastLoadedRunId });
             
-            if (currentRun && isMonacoReady) {
+            if (currentRun && isViewerReady) {
                 // Nur laden wenn es ein anderer Run ist
                 if (this.lastLoadedRunId !== currentRun.id) {
                     this.lastLoadedRunId = currentRun.id;
@@ -120,9 +126,15 @@ export class RunDebugViewComponent implements AfterViewInit, OnDestroy {
     }
     
     async ngAfterViewInit() {
-        await this.loadMonaco();
-        this.initEditor();
-        this.monacoLoaded.set(true);
+        try {
+            await this.loadMonaco();
+            this.initEditor();
+            this.monacoLoaded.set(!!this.editor);
+        } catch (error) {
+            console.warn('⚠️ Monaco could not be loaded, falling back to plain text viewer.', error);
+            this.monacoFailed.set(true);
+            this.monacoLoaded.set(false);
+        }
         
         if (this.run()) {
             this.loadDebugData(this.run()!);
@@ -189,7 +201,7 @@ export class RunDebugViewComponent implements AfterViewInit, OnDestroy {
     }
     
     private loadDebugData(run: RunHistoryItem) {
-        if (!this.editor || !run.id) return;
+        if (!run.id) return;
         
         // Prüfe ob Debug-Daten bereits gecacht sind
         const cachedDebugData = this.store.runs.getDebugData(run.id);
@@ -218,7 +230,7 @@ export class RunDebugViewComponent implements AfterViewInit, OnDestroy {
             },
             error: (err) => {
                 console.error('Failed to load debug data:', err);
-                this.editor!.setValue('{}');
+                this.displayDebugData({});
                 this.isLoading.set(false);
             }
         });
@@ -252,17 +264,17 @@ export class RunDebugViewComponent implements AfterViewInit, OnDestroy {
     }
 
     private displayDebugData(debugData: any): void {
-        if (!this.editor) return;
-        
-        // Show raw JSON in editor (artifacts are loaded separately now)
-        const formattedJson = JSON.stringify(debugData, null, 2);
-        this.editor.setValue(formattedJson);
+        const formattedJson = JSON.stringify(debugData ?? {}, null, 2);
+        this.rawDebugText.set(formattedJson);
+
+        if (this.editor) {
+            // Show raw JSON in editor (artifacts are loaded separately now)
+            this.editor.setValue(formattedJson);
+        }
     }
     
     async copyToClipboard() {
-        if (!this.editor) return;
-        
-        const content = this.editor.getValue();
+        const content = this.editor ? this.editor.getValue() : this.rawDebugText();
         try {
             await navigator.clipboard.writeText(content);
         } catch (err) {

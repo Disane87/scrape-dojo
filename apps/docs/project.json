@@ -1,40 +1,43 @@
 {
     "name": "docs",
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
-    "sourceRoot": "apps/docs",
+    "sourceRoot": "apps/docs/src",
     "projectType": "application",
+    "tags": [
+        "type:app",
+        "scope:docs"
+    ],
     "targets": {
+        "build": {
+            "executor": "nx:run-commands",
+            "outputs": [
+                "{workspaceRoot}/apps/docs/dist"
+            ],
+            "options": {
+                "command": "pnpm astro build",
+                "cwd": "apps/docs"
+            }
+        },
         "serve": {
             "executor": "nx:run-commands",
             "options": {
-                "command": "docusaurus start --port 3001",
+                "command": "pnpm astro dev",
                 "cwd": "apps/docs"
             }
         },
-        "build": {
+        "preview": {
             "executor": "nx:run-commands",
             "options": {
-                "command": "docusaurus build",
-                "cwd": "apps/docs",
-                "outputs": [
-                    "{projectRoot}/build"
-                ]
-            }
-        },
-        "clear": {
-            "executor": "nx:run-commands",
-            "options": {
-                "command": "docusaurus clear",
+                "command": "pnpm astro preview",
                 "cwd": "apps/docs"
             }
         },
-        "deploy": {
+        "lint": {
             "executor": "nx:run-commands",
             "options": {
-                "command": "docusaurus deploy",
+                "command": "pnpm astro check",
                 "cwd": "apps/docs"
             }
         }
-    },
-    "tags": []
+    }
 }

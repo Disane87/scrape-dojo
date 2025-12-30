@@ -11,20 +11,20 @@ import 'iconify-icon';
     imports: [CommonModule, RouterModule, TranslocoModule],
     schemas: [CUSTOM_ELEMENTS_SCHEMA],
     template: `
-        <div class="min-h-screen bg-[var(--dojo-bg)]">
+        <div class="min-h-screen bg-dojo-bg">
             <!-- Header -->
-            <div class="bg-[var(--dojo-surface)] border-b border-[var(--dojo-border)]">
+            <div class="bg-dojo-surface border-b border-dojo-border">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-4">
-                            <a routerLink="/" class="text-[var(--dojo-text-muted)] hover:text-[var(--dojo-text)] transition-colors">
+                            <a routerLink="/" class="text-dojo-text-muted hover:text-dojo-text transition-colors">
                                 <iconify-icon icon="mdi:arrow-left" class="text-2xl"></iconify-icon>
                             </a>
                             <div>
-                                <h1 class="text-2xl font-bold text-[var(--dojo-text)]">
+                                <h1 class="text-2xl font-bold text-dojo-text">
                                     {{ 'settings.title' | transloco }}
                                 </h1>
-                                <p class="text-sm text-[var(--dojo-text-muted)] mt-1">
+                                <p class="text-sm text-dojo-text-muted mt-1">
                                     {{ 'settings.subtitle' | transloco }}
                                 </p>
                             </div>
@@ -42,7 +42,7 @@ import 'iconify-icon';
                             <a
                                 routerLink="/settings/profile"
                                 routerLinkActive="bg-orange-500/10 text-orange-500 border-orange-500"
-                                class="flex items-center gap-3 px-4 py-3 text-[var(--dojo-text)] hover:bg-[var(--dojo-surface)] rounded-lg border border-transparent transition-all"
+                                class="flex items-center gap-3 px-4 py-3 text-dojo-text hover:bg-dojo-surface rounded-lg border border-transparent transition-all"
                             >
                                 <iconify-icon icon="mdi:account" class="text-xl"></iconify-icon>
                                 <span>{{ 'settings.profile.title' | transloco }}</span>
@@ -51,7 +51,7 @@ import 'iconify-icon';
                             <a
                                 routerLink="/settings/security"
                                 routerLinkActive="bg-orange-500/10 text-orange-500 border-orange-500"
-                                class="flex items-center gap-3 px-4 py-3 text-[var(--dojo-text)] hover:bg-[var(--dojo-surface)] rounded-lg border border-transparent transition-all"
+                                class="flex items-center gap-3 px-4 py-3 text-dojo-text hover:bg-dojo-surface rounded-lg border border-transparent transition-all"
                             >
                                 <iconify-icon icon="mdi:shield-lock" class="text-xl"></iconify-icon>
                                 <span>{{ 'settings.security.title' | transloco }}</span>
@@ -60,7 +60,7 @@ import 'iconify-icon';
                             <a
                                 routerLink="/settings/devices"
                                 routerLinkActive="bg-orange-500/10 text-orange-500 border-orange-500"
-                                class="flex items-center gap-3 px-4 py-3 text-[var(--dojo-text)] hover:bg-[var(--dojo-surface)] rounded-lg border border-transparent transition-all"
+                                class="flex items-center gap-3 px-4 py-3 text-dojo-text hover:bg-dojo-surface rounded-lg border border-transparent transition-all"
                             >
                                 <iconify-icon icon="mdi:devices" class="text-xl"></iconify-icon>
                                 <span>{{ 'settings.devices.title' | transloco }}</span>

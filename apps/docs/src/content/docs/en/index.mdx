@@ -1,0 +1,145 @@
+---
+title: Welcome to Scrape Dojo!
+description: Your Web Scraping Framework - flexible, declarative, powerful
+template: splash
+hero:
+  tagline: Web Scraping and Automation with JSON-based Workflows. No more hundreds of lines of Puppeteer code!
+  actions:
+    - text: Quick Start →
+      link: /getting-started/quickstart/
+      icon: right-arrow
+      variant: primary
+    - text: View Examples
+      link: /examples/simple-scrape/
+      icon: open-book
+    - text: GitHub
+      link: https://github.com/disane87/scrape-dojo
+      icon: external
+---
+
+import { Card, CardGrid, Aside } from '@astrojs/starlight/components';
+
+## The Problem
+
+Have you ever spent hours writing Puppeteer code just to scrape data from a single website? Or had to duplicate and modify the same code for ten different sites? 😅
+
+**Scrape Dojo** is here to make your life easier. Imagine being able to describe your web scraping workflows in JSON - just like defining infrastructure as code!
+
+## The Solution
+
+Hundreds of lines of Puppeteer code become:
+
+```json
+{
+  "id": "my-scrape",
+  "steps": [
+    {
+      "name": "Login",
+      "actions": [
+        {"action": "navigate", "params": {"url": "https://example.com"}},
+        {"action": "type", "params": {"selector": "#email", "text": "{{secrets.email}}"}},
+        {"action": "type", "params": {"selector": "#password", "text": "{{secrets.password}}"}},
+        {"action": "click", "params": {"selector": "button[type=submit]"}}
+      ]
+    },
+    {
+      "name": "Extract",
+      "actions": [
+        {
+          "action": "extract",
+          "params": {
+            "selector": ".item",
+            "extractAll": true,
+            "properties": {
+              "title": ".title",
+              "price": ".price"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+**That's it!** 🎉 Secrets are encrypted, logging is automatic, the UI shows everything in real-time!
+
+## Main Features
+
+<CardGrid stagger>
+  <Card title="🎯 JSON-based" icon="seti:json">
+    Define your scrapes declaratively without repetitive code. You say WHAT, not HOW!
+  </Card>
+  <Card title="🔄 Powerful Data Flow" icon="setting">
+    Use Handlebars templates, JSONata transformations, and variables for flexible workflows
+  </Card>
+  <Card title="🤖 Automation" icon="rocket">
+    Schedule and automate your web tasks with built-in scheduling
+  </Card>
+  <Card title="📊 Data Extraction" icon="document">
+    Extract structured data from websites - from simple to complex
+  </Card>
+  <Card title="🛠️ Extensible" icon="puzzle">
+    Loops, conditions, transformations - all included!
+  </Card>
+  <Card title="🎨 Modern UI" icon="laptop">
+    Intuitive Angular-based user interface with live monitoring
+  </Card>
+  <Card title="🔐 Security First" icon="shield">
+    AES-256-GCM encryption, JWT, OIDC/SSO, MFA/TOTP
+  </Card>
+  <Card title="🐳 Production Ready" icon="rocket">
+    Docker support, Multi-DB (SQLite, PostgreSQL, MySQL, MSSQL), Multi-User
+  </Card>
+</CardGrid>
+
+## What Can You Do With It?
+
+### 📄 Automatically Download Invoices
+Collect PDFs from various portals every month? Let Scrape Dojo do it!
+
+### 📊 Monitor Prices
+Watch products and get alerts on price changes.
+
+### 🔍 Aggregate Data
+Collect and consolidate information from multiple sources.
+
+### 🤖 E2E Tests
+Use Scrape Dojo for automated browser testing!
+
+## Who Is Scrape Dojo For?
+
+### ✅ Perfect for you if you...
+
+- 📊 Regularly need to collect data from websites
+- 📄 Want to automate document downloads
+- 🔄 Need to automate repetitive browser tasks
+- 🎯 Don't want to copy-paste Puppeteer code
+- 🏢 Are looking for a team tool for web scraping
+
+<Aside type="caution" title="Responsibility">
+⚠️ Scrape Dojo automates real browser interactions. Please respect:
+- Website Terms of Service
+- robots.txt
+- Rate limits
+- Privacy laws (GDPR, etc.)
+
+With great power comes great responsibility! 🦸
+</Aside>
+
+## Getting Started! 🚀
+
+Ready to start your first scraping project?
+
+1. 📦 **[Installation](./getting-started/installation)** - Docker or local
+2. 🎯 **[Quick Start](./getting-started/quickstart)** - Your first scrape in 5 minutes
+3. 📚 **[Deep Dive](./getting-started/first-scrape)** - Understand the concepts
+4. 💡 **[Examples](./examples/simple-scrape)** - Learn from real use cases
+
+## Need Help?
+
+- 📖 **These Docs** - Everything you need to know
+- 🐛 **[GitHub Issues](https://github.com/disane87/scrape-dojo/issues)** - Found a bug?
+- 💬 **[Discussions](https://github.com/disane87/scrape-dojo/discussions)** - Questions? Ideas?
+- 📧 **[Email](mailto:mfranke87@icloud.com)** - Direct contact
+

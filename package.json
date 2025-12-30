@@ -23,6 +23,7 @@
     "start:ui": "nx serve ui",
     "start:api:debug": "nx serve api --configuration=development -- --inspect",
     "start:prod": "node dist/apps/api/main.js",
+    "start:docs": "nx serve docs",
     "lint": "nx run-many -t lint",
     "lint:fix": "nx run-many -t lint -- --fix",
     "test": "nx run-many -t test",

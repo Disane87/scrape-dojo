@@ -86,7 +86,7 @@
 
                     <!-- Number -->
                     <span
-                        class="text-[10px] px-1.5 py-0.5 rounded bg-dojo-surface-2 text-dojo-text-muted font-mono min-w-[36px] text-center">
+                        class="text-[10px] px-1.5 py-0.5 rounded bg-dojo-surface-2 text-dojo-text-muted font-mono min-w-9 text-center">
                         #{{ iteration.index + 1 }}
                     </span>
 
@@ -180,7 +180,7 @@
         <!-- Result Preview -->
         <div class="flex items-center gap-2 text-xs shrink-0">
             @if (hasActionData(action)) {
-            <span class="px-2 py-0.5 rounded bg-dojo-surface-2 text-dojo-text-muted max-w-[150px] truncate"
+            <span class="px-2 py-0.5 rounded bg-dojo-surface-2 text-dojo-text-muted max-w-37.5 truncate"
                 [title]="getResultPreview(action.result)">
                 @if (isFilePath(action.result)) {
                 <span class="text-dojo-accent">📄 {{ getResultPreview(action.result) }}</span>

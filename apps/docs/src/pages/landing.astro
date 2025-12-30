@@ -1,0 +1,486 @@
+---
+import { getEntry } from 'astro:content';
+
+const title = 'Scrape Dojo';
+const description = 'Define your scrapes with JSON configurations, use dynamic templates, and automate web tasks!';
+---
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title} - Web Scraping Framework</title>
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/scrape-dojo/favicon.svg" />
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    
+    <!-- Iconify -->
+    <script type="module" src="https://cdn.jsdelivr.net/npm/iconify-icon@2.2.0/dist/iconify-icon.min.js"></script>
+    
+    <style>
+        /* CSS Variables für Theme */
+        :root {
+            --dojo-bg: #fafaf9;
+            --dojo-surface: #f5f5f4;
+            --dojo-surface-2: #e7e5e4;
+            --dojo-surface-3: #d6d3d1;
+            --dojo-border: #d6d3d1;
+            --dojo-border-muted: #e7e5e4;
+            --dojo-text: #1c1917;
+            --dojo-text-muted: #57534e;
+            --dojo-text-subtle: #78716c;
+            --dojo-accent: #ea580c;
+            --dojo-accent-muted: #c2410c;
+            --dojo-success: #16a34a;
+            --dojo-warning: #ca8a04;
+            --dojo-danger: #dc2626;
+            --dojo-orange: #f97316;
+            --dojo-red: #ef4444;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--dojo-bg);
+            color: var(--dojo-text);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+        
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-bg {
+            position: absolute;
+            inset: 0;
+            background: 
+                radial-gradient(1200px circle at 20% 10%, rgba(249, 115, 22, 0.15), transparent 55%),
+                radial-gradient(900px circle at 80% 20%, rgba(239, 68, 68, 0.12), transparent 60%);
+            pointer-events: none;
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, var(--dojo-text) 0%, var(--dojo-orange) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--dojo-text-muted);
+            margin-bottom: 2rem;
+            max-width: 600px;
+        }
+        
+        /* Buttons */
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.875rem 1.75rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            font-size: 1rem;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+        }
+        
+        .btn-primary {
+            background: var(--dojo-accent);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--dojo-accent-muted);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px -12px rgba(234, 88, 12, 0.5);
+        }
+        
+        .btn-secondary {
+            background: var(--dojo-surface-2);
+            color: var(--dojo-text);
+            border-color: var(--dojo-border);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--dojo-surface-3);
+            border-color: var(--dojo-accent);
+        }
+        
+        /* Features Section */
+        .features {
+            padding: 6rem 0;
+            background: var(--dojo-surface);
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        
+        .section-subtitle {
+            text-align: center;
+            font-size: 1.125rem;
+            color: var(--dojo-text-muted);
+            margin-bottom: 4rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .feature-card {
+            background: var(--dojo-bg);
+            border: 1px solid var(--dojo-border);
+            border-radius: 1rem;
+            padding: 2rem;
+            transition: all 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            border-color: var(--dojo-accent);
+            transform: translateY(-4px);
+            box-shadow: 0 10px 40px -15px rgba(234, 88, 12, 0.3);
+        }
+        
+        .feature-icon {
+            width: 3rem;
+            height: 3rem;
+            background: var(--dojo-accent);
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            color: white;
+        }
+        
+        .feature-card h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+        
+        .feature-card p {
+            color: var(--dojo-text-muted);
+            line-height: 1.7;
+        }
+        
+        /* Code Example Section */
+        .code-section {
+            padding: 6rem 0;
+        }
+        
+        .code-wrapper {
+            background: var(--dojo-surface-2);
+            border: 1px solid var(--dojo-border);
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+        
+        .code-header {
+            padding: 1rem 1.5rem;
+            background: var(--dojo-surface-3);
+            border-bottom: 1px solid var(--dojo-border);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .code-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--dojo-danger);
+        }
+        
+        .code-dot:nth-child(2) {
+            background: var(--dojo-warning);
+        }
+        
+        .code-dot:nth-child(3) {
+            background: var(--dojo-success);
+        }
+        
+        pre {
+            margin: 0;
+            padding: 2rem 1.5rem;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            line-height: 1.7;
+        }
+        
+        code {
+            color: var(--dojo-text);
+        }
+        
+        /* CTA Section */
+        .cta {
+            padding: 6rem 0;
+            background: var(--dojo-surface);
+            text-align: center;
+        }
+        
+        .cta h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+        
+        .cta p {
+            font-size: 1.125rem;
+            color: var(--dojo-text-muted);
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        /* Footer */
+        footer {
+            padding: 3rem 0;
+            border-top: 1px solid var(--dojo-border);
+            text-align: center;
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .footer-links a {
+            color: var(--dojo-text-muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        
+        .footer-links a:hover {
+            color: var(--dojo-accent);
+        }
+        
+        .copyright {
+            color: var(--dojo-text-subtle);
+            font-size: 0.875rem;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+            
+            .cta h2 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-bg"></div>
+        <div class="container">
+            <div class="hero-content">
+                <h1>🥋 Scrape Dojo</h1>
+                <p>{description}</p>
+                <div class="button-group">
+                    <a href="/scrape-dojo/" class="btn btn-primary">
+                        <iconify-icon icon="lucide:book-open"></iconify-icon>
+                        Zur Dokumentation
+                    </a>
+                    <a href="https://github.com/disane87/scrape-dojo" class="btn btn-secondary" target="_blank" rel="noopener">
+                        <iconify-icon icon="lucide:github"></iconify-icon>
+                        GitHub
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="container">
+            <h2 class="section-title">Warum Scrape Dojo?</h2>
+            <p class="section-subtitle">
+                Ein modernes Web Scraping Framework mit Fokus auf Einfachheit und Flexibilität
+            </p>
+            
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <iconify-icon icon="lucide:file-json" width="24"></iconify-icon>
+                    </div>
+                    <h3>JSON Konfiguration</h3>
+                    <p>Definiere deine Scraping-Workflows mit einfachen JSON-Dateien. Keine komplexe Programmierung notwendig.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <iconify-icon icon="lucide:code" width="24"></iconify-icon>
+                    </div>
+                    <h3>Dynamic Templates</h3>
+                    <p>Nutze Handlebars-Templates für dynamische Inhalte und flexible Datenextraktion.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <iconify-icon icon="lucide:workflow" width="24"></iconify-icon>
+                    </div>
+                    <h3>Action System</h3>
+                    <p>Umfangreiche Bibliothek von Actions für Navigation, Datenextraktion, Screenshots und mehr.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <iconify-icon icon="lucide:shield-check" width="24"></iconify-icon>
+                    </div>
+                    <h3>Authentifizierung</h3>
+                    <p>Integrierte Unterstützung für Login-Flows, JWT, OAuth und Session-Management.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <iconify-icon icon="lucide:clock" width="24"></iconify-icon>
+                    </div>
+                    <h3>Scheduling</h3>
+                    <p>Plane deine Scrapes mit Cron-Expressions und lass sie automatisch ausführen.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <iconify-icon icon="lucide:database" width="24"></iconify-icon>
+                    </div>
+                    <h3>Daten Export</h3>
+                    <p>Exportiere deine Daten in JSON, CSV, PDF oder nutze Custom Exports mit Handlebars.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Code Example Section -->
+    <section class="code-section">
+        <div class="container">
+            <h2 class="section-title">Einfach zu verwenden</h2>
+            <p class="section-subtitle">
+                Erstelle leistungsstarke Scraping-Workflows in wenigen Zeilen
+            </p>
+            
+            <div class="code-wrapper">
+                <div class="code-header">
+                    <span class="code-dot"></span>
+                    <span class="code-dot"></span>
+                    <span class="code-dot"></span>
+                </div>
+                <pre><code>{`{
+  "name": "Example Scrape",
+  "description": "Extract product data",
+  "actions": [
+    {
+      "type": "navigate",
+      "url": "https://example.com/products"
+    },
+    {
+      "type": "click",
+      "selector": ".product-card"
+    },
+    {
+      "type": "extract",
+      "selector": {
+        "title": "h1.product-title",
+        "price": ".product-price",
+        "description": ".product-desc"
+      }
+    }
+  ]
+}`}</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="container">
+            <h2>Bereit loszulegen?</h2>
+            <p>Starte jetzt mit Scrape Dojo und automatisiere deine Web Scraping Tasks</p>
+            <div class="button-group" style="justify-content: center;">
+                <a href="/scrape-dojo/getting-started/quickstart/" class="btn btn-primary">
+                    <iconify-icon icon="lucide:rocket"></iconify-icon>
+                    Quick Start Guide
+                </a>
+                <a href="/scrape-dojo/" class="btn btn-secondary">
+                    <iconify-icon icon="lucide:book-open"></iconify-icon>
+                    Dokumentation
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-links">
+                <a href="/scrape-dojo/">Dokumentation</a>
+                <a href="/scrape-dojo/blog/">Blog</a>
+                <a href="https://github.com/disane87/scrape-dojo" target="_blank" rel="noopener">GitHub</a>
+                <a href="https://github.com/disane87/scrape-dojo/issues" target="_blank" rel="noopener">Issues</a>
+            </div>
+            <p class="copyright">
+                © 2025 Scrape Dojo. MIT License.
+            </p>
+        </div>
+    </footer>
+</body>
+</html>

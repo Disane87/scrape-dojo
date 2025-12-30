@@ -12,8 +12,8 @@ import 'iconify-icon';
     imports: [CommonModule, FormsModule, TranslocoModule],
     schemas: [CUSTOM_ELEMENTS_SCHEMA],
     template: `
-        <div class="bg-[var(--dojo-surface)] rounded-lg border border-[var(--dojo-border)] p-6">
-            <h2 class="text-xl font-bold text-[var(--dojo-text)] mb-6">
+        <div class="bg-dojo-surface rounded-lg border border-dojo-border p-6">
+            <h2 class="text-xl font-bold text-dojo-text mb-6">
                 {{ 'settings.profile.title' | transloco }}
             </h2>
 
@@ -34,54 +34,54 @@ import 'iconify-icon';
             <form (ngSubmit)="saveProfile()" class="space-y-6">
                 <!-- Email (readonly) -->
                 <div>
-                    <label class="block text-sm font-medium text-[var(--dojo-text)] mb-2">
+                    <label class="block text-sm font-medium text-dojo-text mb-2">
                         {{ 'settings.profile.email' | transloco }}
                     </label>
                     <input
                         type="email"
                         [value]="profile?.email || ''"
                         disabled
-                        class="w-full px-4 py-3 bg-[var(--dojo-bg)] border border-[var(--dojo-border)] rounded-lg text-[var(--dojo-text-muted)] cursor-not-allowed"
+                        class="w-full px-4 py-3 bg-dojo-bg border border-dojo-border rounded-lg text-dojo-text-muted cursor-not-allowed"
                     />
-                    <p class="text-xs text-[var(--dojo-text-muted)] mt-1">
+                    <p class="text-xs text-dojo-text-muted mt-1">
                         {{ 'settings.profile.email_readonly' | transloco }}
                     </p>
                 </div>
 
                 <!-- Username -->
                 <div>
-                    <label class="block text-sm font-medium text-[var(--dojo-text)] mb-2">
+                    <label class="block text-sm font-medium text-dojo-text mb-2">
                         {{ 'settings.profile.username' | transloco }}
                     </label>
                     <input
                         type="text"
                         [(ngModel)]="username"
                         name="username"
-                        class="w-full px-4 py-3 bg-[var(--dojo-bg)] border border-[var(--dojo-border)] rounded-lg text-[var(--dojo-text)] focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
+                        class="w-full px-4 py-3 bg-dojo-bg border border-dojo-border rounded-lg text-dojo-text focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
                         placeholder="johndoe"
                     />
                 </div>
 
                 <!-- Display Name -->
                 <div>
-                    <label class="block text-sm font-medium text-[var(--dojo-text)] mb-2">
+                    <label class="block text-sm font-medium text-dojo-text mb-2">
                         {{ 'settings.profile.display_name' | transloco }}
                     </label>
                     <input
                         type="text"
                         [(ngModel)]="displayName"
                         name="displayName"
-                        class="w-full px-4 py-3 bg-[var(--dojo-bg)] border border-[var(--dojo-border)] rounded-lg text-[var(--dojo-text)] focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
+                        class="w-full px-4 py-3 bg-dojo-bg border border-dojo-border rounded-lg text-dojo-text focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
                         placeholder="John Doe"
                     />
                 </div>
 
                 <!-- Role (readonly) -->
                 <div>
-                    <label class="block text-sm font-medium text-[var(--dojo-text)] mb-2">
+                    <label class="block text-sm font-medium text-dojo-text mb-2">
                         {{ 'settings.profile.role' | transloco }}
                     </label>
-                    <div class="px-4 py-3 bg-[var(--dojo-bg)] border border-[var(--dojo-border)] rounded-lg">
+                    <div class="px-4 py-3 bg-dojo-bg border border-dojo-border rounded-lg">
                         <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium"
                               [class.bg-orange-500/20]="profile?.role === 'admin'"
                               [class.text-orange-500]="profile?.role === 'admin'"
@@ -95,11 +95,11 @@ import 'iconify-icon';
 
                 <!-- Provider (readonly) -->
                 <div>
-                    <label class="block text-sm font-medium text-[var(--dojo-text)] mb-2">
+                    <label class="block text-sm font-medium text-dojo-text mb-2">
                         {{ 'settings.profile.provider' | transloco }}
                     </label>
-                    <div class="px-4 py-3 bg-[var(--dojo-bg)] border border-[var(--dojo-border)] rounded-lg">
-                        <span class="inline-flex items-center gap-2 text-[var(--dojo-text)]">
+                    <div class="px-4 py-3 bg-dojo-bg border border-dojo-border rounded-lg">
+                        <span class="inline-flex items-center gap-2 text-dojo-text">
                             <iconify-icon [icon]="profile?.provider === 'oidc' ? 'mdi:cloud-lock' : 'mdi:account-key'"></iconify-icon>
                             {{ profile?.provider === 'oidc' ? 'SSO / OIDC' : 'Local' }}
                         </span>
@@ -111,7 +111,7 @@ import 'iconify-icon';
                     <button
                         type="submit"
                         [disabled]="isLoading"
-                        class="flex-1 px-6 py-3 bg-gradient-to-r from-orange-500 to-red-600 text-white font-medium rounded-lg hover:from-orange-600 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                        class="flex-1 px-6 py-3 bg-linear-to-r from-orange-500 to-red-600 text-white font-medium rounded-lg hover:from-orange-600 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
                     >
                         @if (isLoading) {
                             <iconify-icon icon="mdi:loading" class="text-lg animate-spin"></iconify-icon>

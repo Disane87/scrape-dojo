@@ -11,8 +11,8 @@ import 'iconify-icon';
   imports: [CommonModule, TranslocoModule],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   template: `
-    <div class="min-h-screen bg-gradient-to-br from-[var(--dojo-bg)] via-[var(--dojo-surface)] to-[var(--dojo-bg)] flex items-center justify-center text-[var(--dojo-text)]">
-      <div class="bg-[var(--dojo-surface)] backdrop-blur-xl rounded-2xl shadow-2xl shadow-black/50 border border-[var(--dojo-border)] p-8 max-w-md w-full mx-4">
+    <div class="min-h-screen bg-linear-to-br from-dojo-bg via-dojo-surface to-dojo-bg flex items-center justify-center text-dojo-text">
+      <div class="bg-dojo-surface backdrop-blur-xl rounded-2xl shadow-2xl shadow-black/50 border border-dojo-border p-8 max-w-md w-full mx-4">
         <div class="text-center">
           <!-- Logo -->
           <div class="flex justify-center mb-6">
@@ -29,8 +29,8 @@ import 'iconify-icon';
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              <h2 class="text-lg font-semibold text-[var(--dojo-text)]">{{ 'auth.oidc_callback.processing_title' | transloco }}</h2>
-              <p class="text-[var(--dojo-text-muted)] text-sm">{{ 'auth.oidc_callback.processing_subtitle' | transloco }}</p>
+              <h2 class="text-lg font-semibold text-dojo-text">{{ 'auth.oidc_callback.processing_title' | transloco }}</h2>
+              <p class="text-dojo-text-muted text-sm">{{ 'auth.oidc_callback.processing_subtitle' | transloco }}</p>
             </div>
           }
 

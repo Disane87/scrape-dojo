@@ -114,7 +114,10 @@ function handle401Error(
             }),
             catchError((err) => {
                 isRefreshing = false;
-                authService.logout();
+                const status = err instanceof HttpErrorResponse ? err.status : (err as any)?.status;
+                if (status === 401 || status === 403) {
+                    authService.logout();
+                }
                 return throwError(() => err);
             }),
             finalize(() => {

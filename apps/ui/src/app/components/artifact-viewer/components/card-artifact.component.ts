@@ -1,4 +1,4 @@
-import { Component, CUSTOM_ELEMENTS_SCHEMA, AfterViewChecked, ElementRef, inject } from '@angular/core';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, AfterViewChecked, AfterViewInit, ElementRef, inject, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { BaseArtifactComponent } from './base-artifact.component';
@@ -12,9 +12,9 @@ import { FilesService } from '../../../services/files.service';
   template: `
     @if (artifact().flush) {
     <!-- Flush/Compact List Style -->
-    <div class="border border-dojo-border rounded-lg overflow-hidden">
+    <div class="overflow-hidden">
       @for (item of getCardItems(); track $index) {
-      <div class="bg-dojo-surface-2 hover:bg-dojo-surface transition-colors p-2" [class.border-t]="$index > 0" [class.border-dojo-border]="$index > 0">
+      <div class="bg-dojo-surface-2 hover:bg-dojo-surface transition-colors p-2" [class.border-b]="!$last" [class.border-dojo-border]="!$last">
         <div [innerHTML]="getSafeHtml(item)" class="flush-card"></div>
       </div>
       }
@@ -44,31 +44,50 @@ export class CardArtifactComponent extends BaseArtifactComponent implements Afte
   private filesService = inject(FilesService);
   private elementRef = inject(ElementRef);
   private sanitizer = inject(DomSanitizer);
-  private handlersAttached = false;
+  private clickHandler: ((event: Event) => void) | null = null;
 
-  ngAfterViewChecked() {
-    // Nur einmal Event-Handler anhängen
-    if (!this.handlersAttached) {
-      const buttons = this.elementRef.nativeElement.querySelectorAll('[data-download]');
-      if (buttons.length > 0) {
-        // Verwende Event-Delegation auf dem Container-Element
-        this.elementRef.nativeElement.addEventListener('click', (event: Event) => {
-          const target = event.target as HTMLElement;
-          // Finde den nächsten Button mit data-download Attribut
-          const button = target.closest('[data-download]') as HTMLElement;
-          if (button) {
-            const path = button.getAttribute('data-download');
-            if (path) {
-              event.preventDefault();
-              event.stopPropagation();
-              this.filesService.downloadFile(path);
-            }
-          }
-        });
-        
-        this.handlersAttached = true;
+  ngAfterViewInit(): void {
+    if (this.clickHandler) return;
+
+    this.clickHandler = (event: Event) => {
+      const path = this.findDownloadPath(event);
+      if (!path) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      this.filesService.downloadFile(path);
+    };
+
+    this.elementRef.nativeElement.addEventListener('click', this.clickHandler);
+  }
+
+  ngOnDestroy(): void {
+    if (!this.clickHandler) return;
+    this.elementRef.nativeElement.removeEventListener('click', this.clickHandler);
+    this.clickHandler = null;
+  }
+
+  private findDownloadPath(event: Event): string | null {
+    const anyEvent = event as any;
+    const composedPath: unknown[] | undefined = typeof anyEvent.composedPath === 'function' ? anyEvent.composedPath() : undefined;
+
+    if (Array.isArray(composedPath)) {
+      for (const node of composedPath) {
+        if (!(node instanceof HTMLElement)) continue;
+        const value = node.getAttribute('data-download');
+        if (value) return value;
       }
     }
+
+    const target = event.target as HTMLElement | null;
+    const button = target?.closest?.('[data-download]') as HTMLElement | null;
+    return button?.getAttribute('data-download') || null;
+  }
+
+  // Backwards compatibility: previously this component attached in ngAfterViewChecked.
+  // Keep the interface but do nothing here now.
+  ngAfterViewChecked(): void {
+    // no-op
   }
   getCardItems(): any[] {
     const data = this.artifact().data;

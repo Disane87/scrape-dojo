@@ -1,18 +1,18 @@
 @if (isOffline()) {
-<div class="api-offline-overlay fixed inset-0 z-[9999] flex items-center justify-center px-4 py-8 relative overflow-hidden text-[var(--dojo-text)]">
-    <div class="absolute inset-0 bg-gradient-to-br from-[var(--dojo-bg)] via-[var(--dojo-surface)] to-[var(--dojo-bg)]"></div>
+<div class="api-offline-overlay fixed inset-0 z-9999 flex items-center justify-center px-4 py-8 overflow-hidden text-dojo-text">
+    <div class="absolute inset-0 bg-linear-to-br from-dojo-bg via-dojo-surface to-dojo-bg"></div>
 
     <!-- Decorative background elements (same language as Login) -->
     <div class="absolute inset-0 overflow-hidden pointer-events-none">
         <div class="absolute -top-40 -right-40 w-96 h-96 bg-orange-500/15 rounded-full blur-3xl api-offline-float"></div>
         <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-red-500/10 rounded-full blur-3xl api-offline-float-reverse"></div>
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-orange-600/5 rounded-full blur-3xl api-offline-pulse-slow"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 bg-orange-600/5 rounded-full blur-3xl api-offline-pulse-slow"></div>
     </div>
 
     <div class="relative w-full max-w-md motion-safe:animate-[fadeInUp_0.5s_ease-out]">
-        <div class="bg-[var(--dojo-surface)] backdrop-blur-xl rounded-2xl shadow-2xl shadow-black/10 dark:shadow-black/50 border border-[var(--dojo-border)] overflow-hidden">
+        <div class="bg-dojo-surface backdrop-blur-xl rounded-2xl shadow-2xl shadow-black/10 dark:shadow-black/50 border border-dojo-border overflow-hidden">
             <!-- Status header -->
-            <div class="relative flex items-center justify-center pt-10 pb-8 bg-gradient-to-b from-dojo-danger/10 to-transparent">
+            <div class="relative flex items-center justify-center pt-10 pb-8 bg-linear-to-b from-dojo-danger/10 to-transparent">
                 <div class="relative flex items-center justify-center">
                     <div class="pulse-ring text-dojo-danger/40"></div>
                     <div class="pulse-ring text-dojo-danger/40 api-offline-delay-1"></div>
@@ -27,30 +27,30 @@
             </div>
 
             <div class="px-8 pb-8 text-center">
-                <h2 class="text-3xl font-bold bg-gradient-to-r from-orange-400 via-red-500 to-orange-400 bg-clip-text text-transparent mb-2">
+                <h2 class="text-3xl font-bold bg-linear-to-r from-orange-400 via-red-500 to-orange-400 bg-clip-text text-transparent mb-2">
                     {{ 'api_offline.title' | transloco }}
                 </h2>
-                <p class="text-[var(--dojo-text-muted)] text-sm mb-8">{{ 'api_offline.subtitle' | transloco }}</p>
+                <p class="text-dojo-text-muted text-sm mb-8">{{ 'api_offline.subtitle' | transloco }}</p>
 
                 <div class="bg-dojo-danger/10 border border-dojo-danger/30 rounded-xl p-4 mb-6">
-                    <div class="text-[var(--dojo-danger)] text-xs font-mono break-words">{{ errorMessage() }}</div>
+                    <div class="text-dojo-danger text-xs font-mono wrap-break-word">{{ errorMessage() }}</div>
                 </div>
 
-                <div class="bg-[var(--dojo-surface-2)] border border-[var(--dojo-border)] rounded-2xl p-5 mb-8">
+                <div class="bg-dojo-surface-2 border border-dojo-border rounded-2xl p-5 mb-8">
                     <div class="flex items-center justify-center gap-2 mb-3">
                         <div class="spinner-dot w-2.5 h-2.5 bg-dojo-danger rounded-full"></div>
                         <div class="spinner-dot w-2.5 h-2.5 bg-dojo-danger rounded-full"></div>
                         <div class="spinner-dot w-2.5 h-2.5 bg-dojo-danger rounded-full"></div>
                     </div>
-                    <p class="text-[var(--dojo-text)] text-sm font-medium mb-1">{{ 'api_offline.reconnecting' | transloco }}</p>
-                    <p class="text-[var(--dojo-text-subtle)] text-xs font-mono">{{ 'api_offline.last_check' | transloco }}: {{ lastChecked() | date:'HH:mm:ss' }}</p>
+                    <p class="text-dojo-text text-sm font-medium mb-1">{{ 'api_offline.reconnecting' | transloco }}</p>
+                    <p class="text-dojo-text-subtle text-xs font-mono">{{ 'api_offline.last_check' | transloco }}: {{ lastChecked() | date:'HH:mm:ss' }}</p>
                 </div>
 
                 <div class="text-left">
-                    <div class="text-[var(--dojo-text)] font-semibold text-sm mb-3">{{ 'api_offline.help_title' | transloco }}</div>
-                    <div class="space-y-3 text-sm text-[var(--dojo-text-muted)]">
+                    <div class="text-dojo-text font-semibold text-sm mb-3">{{ 'api_offline.help_title' | transloco }}</div>
+                    <div class="space-y-3 text-sm text-dojo-text-muted">
                         <div class="flex gap-3 items-start">
-                            <svg class="w-4 h-4 mt-0.5 text-dojo-danger/80 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                            <svg class="w-4 h-4 mt-0.5 text-dojo-danger/80 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
                                 stroke="currentColor" stroke-width="2">
                                 <polyline points="9 11 12 14 22 4"></polyline>
                                 <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
@@ -58,7 +58,7 @@
                             <span class="leading-relaxed" [innerHTML]="'api_offline.help_start_server' | transloco"></span>
                         </div>
                         <div class="flex gap-3 items-start">
-                            <svg class="w-4 h-4 mt-0.5 text-dojo-danger/80 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                            <svg class="w-4 h-4 mt-0.5 text-dojo-danger/80 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
                                 stroke="currentColor" stroke-width="2">
                                 <circle cx="12" cy="12" r="10"></circle>
                                 <polyline points="12 6 12 12 16 14"></polyline>
@@ -66,7 +66,7 @@
                             <span class="leading-relaxed">{{ 'api_offline.help_wait' | transloco }}</span>
                         </div>
                         <div class="flex gap-3 items-start">
-                            <svg class="w-4 h-4 mt-0.5 text-dojo-danger/80 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                            <svg class="w-4 h-4 mt-0.5 text-dojo-danger/80 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
                                 stroke="currentColor" stroke-width="2">
                                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                                 <polyline points="14 2 14 8 20 8"></polyline>

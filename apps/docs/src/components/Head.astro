@@ -1,0 +1,28 @@
+---
+import type { Props } from '@astrojs/starlight/props';
+---
+
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<link rel="icon" type="image/svg+xml" href="/scrape-dojo/favicon.svg" />
+	<meta name="generator" content={Astro.generator} />
+	
+	<!-- Fonts -->
+	<link rel="preconnect" href="https://fonts.googleapis.com" />
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+	
+	<!-- Iconify Icon Web Component (matching UI) -->
+	<script type="module" src="https://cdn.jsdelivr.net/npm/iconify-icon@2.2.0/dist/iconify-icon.min.js"></script>
+	
+	<style is:inline>
+		:root {
+			font-family: 'Inter', system-ui, sans-serif;
+			--sl-font: 'Inter', system-ui, sans-serif;
+			--sl-font-system: 'Inter', system-ui, sans-serif;
+			--sl-font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+		}
+	</style>
+</head>
+

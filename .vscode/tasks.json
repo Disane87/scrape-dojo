@@ -128,7 +128,7 @@
             "problemMatcher": []
         },
         // ═══════════════════════════════════════════════════════════
-        // Docs Tasks
+        // Docs Tasks (Astro + Starlight)
         // ═══════════════════════════════════════════════════════════
         {
             "label": "Start Docs Dev Server",
@@ -142,22 +142,30 @@
                 },
                 "background": {
                     "activeOnStart": true,
-                    "beginsPattern": "Starting the development server",
-                    "endsPattern": "Docusaurus website is running at|compiled successfully"
+                    "beginsPattern": "astro",
+                    "endsPattern": "Local.*http://localhost"
                 }
             },
-            "presentation": {
-                "reveal": "always",
-                "panel": "new",
-                "group": "servers"
-            }
+            "regexp": "^(.*)$"
         },
-        {
-            "label": "Build Docs",
-            "type": "shell",
-            "command": "pnpm nx build docs",
-            "group": "build",
-            "problemMatcher": []
+        "background": {
+            "activeOnStart": true,
+            "beginsPattern": "Starting the development server",
+            "endsPattern": "Docusaurus website is running at|compiled successfully"
         }
-    ]
+    },
+    "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "group": "servers"
+    }
+},
+{
+    "label": "Build Docs",
+    "type": "shell",
+    "command": "pnpm nx build docs",
+    "group": "build",
+    "problemMatcher": []
+}
+]
 }

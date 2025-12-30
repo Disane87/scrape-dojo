@@ -31,5 +31,10 @@
     "[typescript]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
-    "angular.enable-strict-mode-prompt": false
+    "angular.enable-strict-mode-prompt": false,
+    // CSS/SCSS lint noise reduction (Tailwind v4 directives + modern properties)
+    "css.lint.unknownAtRules": "ignore",
+    "scss.lint.unknownAtRules": "ignore",
+    "css.lint.compatibility": "ignore",
+    "scss.lint.compatibility": "ignore"
 }

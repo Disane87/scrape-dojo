@@ -18,13 +18,13 @@ interface TrustedDevice {
     imports: [CommonModule, TranslocoModule],
     schemas: [CUSTOM_ELEMENTS_SCHEMA],
     template: `
-        <div class="bg-[var(--dojo-surface)] rounded-lg border border-[var(--dojo-border)] p-6">
+        <div class="bg-dojo-surface rounded-lg border border-dojo-border p-6">
             <div class="flex items-center justify-between mb-6">
                 <div>
-                    <h2 class="text-xl font-bold text-[var(--dojo-text)]">
+                    <h2 class="text-xl font-bold text-dojo-text">
                         {{ 'settings.devices.title' | transloco }}
                     </h2>
-                    <p class="text-sm text-[var(--dojo-text-muted)] mt-1">
+                    <p class="text-sm text-dojo-text-muted mt-1">
                         {{ 'settings.devices.subtitle' | transloco }}
                     </p>
                 </div>
@@ -61,15 +61,15 @@ interface TrustedDevice {
                 </div>
             } @else if (devices.length === 0) {
                 <div class="text-center py-12">
-                    <iconify-icon icon="mdi:devices" class="text-6xl text-[var(--dojo-text-muted)] mb-4"></iconify-icon>
-                    <p class="text-[var(--dojo-text-muted)]">
+                    <iconify-icon icon="mdi:devices" class="text-6xl text-dojo-text-muted mb-4"></iconify-icon>
+                    <p class="text-dojo-text-muted">
                         {{ 'settings.devices.no_devices' | transloco }}
                     </p>
                 </div>
             } @else {
                 <div class="space-y-4">
                     @for (device of devices; track device.id) {
-                        <div class="bg-[var(--dojo-bg)] border border-[var(--dojo-border)] rounded-lg p-4 hover:border-orange-500/50 transition-all">
+                        <div class="bg-dojo-bg border border-dojo-border rounded-lg p-4 hover:border-orange-500/50 transition-all">
                             <div class="flex items-start justify-between">
                                 <div class="flex items-start gap-4 flex-1">
                                     <div class="mt-1">
@@ -79,10 +79,10 @@ interface TrustedDevice {
                                         </iconify-icon>
                                     </div>
                                     <div class="flex-1">
-                                        <h3 class="font-medium text-[var(--dojo-text)] mb-1">
+                                        <h3 class="font-medium text-dojo-text mb-1">
                                             {{ device.deviceName }}
                                         </h3>
-                                        <div class="space-y-1 text-sm text-[var(--dojo-text-muted)]">
+                                        <div class="space-y-1 text-sm text-dojo-text-muted">
                                             <div class="flex items-center gap-2">
                                                 <iconify-icon icon="mdi:ip-network"></iconify-icon>
                                                 <span>{{ device.lastIpAddress }}</span>

@@ -11,8 +11,8 @@ import 'iconify-icon';
     imports: [CommonModule, FormsModule, TranslocoModule],
     schemas: [CUSTOM_ELEMENTS_SCHEMA],
     template: `
-        <div class="bg-[var(--dojo-surface)] rounded-lg border border-[var(--dojo-border)] p-6">
-            <h2 class="text-xl font-bold text-[var(--dojo-text)] mb-6">
+        <div class="bg-dojo-surface rounded-lg border border-dojo-border p-6">
+            <h2 class="text-xl font-bold text-dojo-text mb-6">
                 {{ 'settings.security.title' | transloco }}
             </h2>
 
@@ -32,7 +32,7 @@ import 'iconify-icon';
 
             <!-- Change Password Section -->
             <div class="mb-8">
-                <h3 class="text-lg font-semibold text-[var(--dojo-text)] mb-4 flex items-center gap-2">
+                <h3 class="text-lg font-semibold text-dojo-text mb-4 flex items-center gap-2">
                     <iconify-icon icon="mdi:lock-reset"></iconify-icon>
                     {{ 'settings.security.change_password' | transloco }}
                 </h3>
@@ -40,7 +40,7 @@ import 'iconify-icon';
                 <form (ngSubmit)="changePassword()" class="space-y-4">
                     <!-- Current Password -->
                     <div>
-                        <label class="block text-sm font-medium text-[var(--dojo-text)] mb-2">
+                        <label class="block text-sm font-medium text-dojo-text mb-2">
                             {{ 'settings.security.current_password' | transloco }}
                         </label>
                         <div class="relative">
@@ -49,12 +49,12 @@ import 'iconify-icon';
                                 [(ngModel)]="currentPassword"
                                 name="currentPassword"
                                 required
-                                class="w-full px-4 py-3 pr-12 bg-[var(--dojo-bg)] border border-[var(--dojo-border)] rounded-lg text-[var(--dojo-text)] focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
+                                class="w-full px-4 py-3 pr-12 bg-dojo-bg border border-dojo-border rounded-lg text-dojo-text focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
                             />
                             <button
                                 type="button"
                                 (click)="showCurrentPassword = !showCurrentPassword"
-                                class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--dojo-text-muted)] hover:text-[var(--dojo-text)]"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-dojo-text-muted hover:text-dojo-text"
                             >
                                 <iconify-icon [icon]="showCurrentPassword ? 'mdi:eye-off' : 'mdi:eye'" class="text-xl"></iconify-icon>
                             </button>
@@ -63,7 +63,7 @@ import 'iconify-icon';
 
                     <!-- New Password -->
                     <div>
-                        <label class="block text-sm font-medium text-[var(--dojo-text)] mb-2">
+                        <label class="block text-sm font-medium text-dojo-text mb-2">
                             {{ 'settings.security.new_password' | transloco }}
                         </label>
                         <div class="relative">
@@ -73,12 +73,12 @@ import 'iconify-icon';
                                 name="newPassword"
                                 required
                                 minlength="8"
-                                class="w-full px-4 py-3 pr-12 bg-[var(--dojo-bg)] border border-[var(--dojo-border)] rounded-lg text-[var(--dojo-text)] focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
+                                class="w-full px-4 py-3 pr-12 bg-dojo-bg border border-dojo-border rounded-lg text-dojo-text focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
                             />
                             <button
                                 type="button"
                                 (click)="showNewPassword = !showNewPassword"
-                                class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--dojo-text-muted)] hover:text-[var(--dojo-text)]"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-dojo-text-muted hover:text-dojo-text"
                             >
                                 <iconify-icon [icon]="showNewPassword ? 'mdi:eye-off' : 'mdi:eye'" class="text-xl"></iconify-icon>
                             </button>
@@ -92,7 +92,7 @@ import 'iconify-icon';
 
                     <!-- Confirm Password -->
                     <div>
-                        <label class="block text-sm font-medium text-[var(--dojo-text)] mb-2">
+                        <label class="block text-sm font-medium text-dojo-text mb-2">
                             {{ 'settings.security.confirm_password' | transloco }}
                         </label>
                         <div class="relative">
@@ -101,12 +101,12 @@ import 'iconify-icon';
                                 [(ngModel)]="confirmPassword"
                                 name="confirmPassword"
                                 required
-                                class="w-full px-4 py-3 pr-12 bg-[var(--dojo-bg)] border border-[var(--dojo-border)] rounded-lg text-[var(--dojo-text)] focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
+                                class="w-full px-4 py-3 pr-12 bg-dojo-bg border border-dojo-border rounded-lg text-dojo-text focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
                             />
                             <button
                                 type="button"
                                 (click)="showConfirmPassword = !showConfirmPassword"
-                                class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--dojo-text-muted)] hover:text-[var(--dojo-text)]"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-dojo-text-muted hover:text-dojo-text"
                             >
                                 <iconify-icon [icon]="showConfirmPassword ? 'mdi:eye-off' : 'mdi:eye'" class="text-xl"></iconify-icon>
                             </button>
@@ -122,7 +122,7 @@ import 'iconify-icon';
                     <button
                         type="submit"
                         [disabled]="!isPasswordFormValid() || isLoading"
-                        class="w-full px-6 py-3 bg-gradient-to-r from-orange-500 to-red-600 text-white font-medium rounded-lg hover:from-orange-600 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                        class="w-full px-6 py-3 bg-linear-to-r from-orange-500 to-red-600 text-white font-medium rounded-lg hover:from-orange-600 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
                     >
                         @if (isLoading) {
                             <iconify-icon icon="mdi:loading" class="text-lg animate-spin"></iconify-icon>

@@ -12,15 +12,15 @@ import 'iconify-icon';
     imports: [CommonModule, FormsModule, TranslocoModule],
     schemas: [CUSTOM_ELEMENTS_SCHEMA],
     template: `
-        <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-[var(--dojo-bg)] via-[var(--dojo-surface)] to-[var(--dojo-bg)] px-4 py-8 relative overflow-hidden text-[var(--dojo-text)]">
+        <div class="min-h-screen flex items-center justify-center bg-linear-to-br from-dojo-bg via-dojo-surface to-dojo-bg px-4 py-8 relative overflow-hidden text-dojo-text">
             <div class="absolute inset-0 overflow-hidden pointer-events-none">
                 <div class="absolute -top-40 -right-40 w-96 h-96 bg-orange-500/15 rounded-full blur-3xl motion-safe:animate-float"></div>
                 <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-red-500/10 rounded-full blur-3xl motion-safe:animate-float-reverse"></div>
-                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-orange-600/5 rounded-full blur-3xl motion-safe:animate-pulse-slow"></div>
+                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 bg-orange-600/5 rounded-full blur-3xl motion-safe:animate-pulse-slow"></div>
             </div>
 
             <div class="relative w-full max-w-md motion-safe:animate-[fadeInUp_0.5s_ease-out]">
-                <div class="bg-[var(--dojo-surface)] backdrop-blur-xl rounded-2xl shadow-2xl shadow-black/50 border border-[var(--dojo-border)] p-8">
+                <div class="bg-dojo-surface backdrop-blur-xl rounded-2xl shadow-2xl shadow-black/50 border border-dojo-border p-8">
                     <div class="flex justify-center mb-6">
                         <div class="relative">
                             <div class="absolute inset-0 bg-orange-500/30 blur-2xl rounded-full scale-150"></div>
@@ -28,16 +28,16 @@ import 'iconify-icon';
                         </div>
                     </div>
 
-                    <h2 class="text-center text-3xl font-bold bg-gradient-to-r from-orange-400 via-red-500 to-orange-400 bg-clip-text text-transparent mb-2" transloco="auth.setup.title">
+                    <h2 class="text-center text-3xl font-bold bg-linear-to-r from-orange-400 via-red-500 to-orange-400 bg-clip-text text-transparent mb-2" transloco="auth.setup.title">
                         Ersteinrichtung
                     </h2>
-                    <p class="text-center text-[var(--dojo-text-muted)] text-sm mb-8" transloco="auth.setup.description">
+                    <p class="text-center text-dojo-text-muted text-sm mb-8" transloco="auth.setup.description">
                         Erstelle das erste Administrator-Konto
                     </p>
 
                     @if (authService.error()) {
                         <div class="flex items-center gap-3 bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-6 motion-safe:animate-[shake_0.3s_ease-in-out]">
-                            <iconify-icon icon="mdi:alert-circle" class="text-xl text-red-400 flex-shrink-0"></iconify-icon>
+                            <iconify-icon icon="mdi:alert-circle" class="text-xl text-red-400 shrink-0"></iconify-icon>
                             <span class="text-red-300 text-sm flex-1">{{ authService.error() }}</span>
                             <button
                                 class="text-red-400 hover:text-red-300 transition-colors p-1 rounded-lg hover:bg-red-500/20"
@@ -50,7 +50,7 @@ import 'iconify-icon';
 
                     <form (ngSubmit)="onSubmit()" class="space-y-4">
                         <div class="space-y-2">
-                            <label class="flex items-center gap-2 text-sm font-medium text-[var(--dojo-text)]">
+                            <label class="flex items-center gap-2 text-sm font-medium text-dojo-text">
                                 <iconify-icon icon="mdi:email-outline" class="text-orange-400"></iconify-icon>
                                 <span transloco="auth.setup.email"></span>
                             </label>
@@ -58,8 +58,8 @@ import 'iconify-icon';
                                 type="email"
                                 [(ngModel)]="email"
                                 name="email"
-                                class="w-full px-4 py-3 bg-[var(--dojo-surface-2)] border border-[var(--dojo-border)] rounded-xl text-[var(--dojo-text)] placeholder-[var(--dojo-text-subtle)]
-                                       focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 focus:bg-[var(--dojo-surface-2)]
+                                class="w-full px-4 py-3 bg-dojo-surface-2 border border-dojo-border rounded-xl text-dojo-text placeholder-dojo-text-subtle
+                                       focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 focus:bg-dojo-surface-2
                                        transition-all duration-300"
                                     [placeholder]="'auth.setup.emailPlaceholder' | transloco"
                                 required
@@ -68,7 +68,7 @@ import 'iconify-icon';
                         </div>
 
                         <div class="space-y-2">
-                            <label class="flex items-center gap-2 text-sm font-medium text-[var(--dojo-text)]">
+                            <label class="flex items-center gap-2 text-sm font-medium text-dojo-text">
                                 <iconify-icon icon="mdi:account-outline" class="text-orange-400"></iconify-icon>
                                 <span transloco="auth.setup.displayName"></span>
                             </label>
@@ -76,8 +76,8 @@ import 'iconify-icon';
                                 type="text"
                                 [(ngModel)]="displayName"
                                 name="displayName"
-                                class="w-full px-4 py-3 bg-[var(--dojo-surface-2)] border border-[var(--dojo-border)] rounded-xl text-[var(--dojo-text)] placeholder-[var(--dojo-text-subtle)]
-                                       focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 focus:bg-[var(--dojo-surface-2)]
+                                class="w-full px-4 py-3 bg-dojo-surface-2 border border-dojo-border rounded-xl text-dojo-text placeholder-dojo-text-subtle
+                                       focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 focus:bg-dojo-surface-2
                                        transition-all duration-300"
                                     [placeholder]="'auth.setup.displayNamePlaceholder' | transloco"
                                 autocomplete="name"
@@ -85,7 +85,7 @@ import 'iconify-icon';
                         </div>
 
                         <div class="space-y-2">
-                            <label class="flex items-center gap-2 text-sm font-medium text-[var(--dojo-text)]">
+                            <label class="flex items-center gap-2 text-sm font-medium text-dojo-text">
                                 <iconify-icon icon="mdi:lock-outline" class="text-orange-400"></iconify-icon>
                                 <span transloco="auth.setup.password"></span>
                             </label>
@@ -93,22 +93,22 @@ import 'iconify-icon';
                                 type="password"
                                 [(ngModel)]="password"
                                 name="password"
-                                class="w-full px-4 py-3 bg-[var(--dojo-surface-2)] border border-[var(--dojo-border)] rounded-xl text-[var(--dojo-text)] placeholder-[var(--dojo-text-subtle)]
-                                       focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 focus:bg-[var(--dojo-surface-2)]
+                                class="w-full px-4 py-3 bg-dojo-surface-2 border border-dojo-border rounded-xl text-dojo-text placeholder-dojo-text-subtle
+                                       focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 focus:bg-dojo-surface-2
                                        transition-all duration-300"
                                 placeholder="••••••••"
                                 required
                                 minlength="8"
                                 autocomplete="new-password"
                             />
-                            <div class="flex items-center gap-1.5 text-xs text-[var(--dojo-text-subtle)]">
+                            <div class="flex items-center gap-1.5 text-xs text-dojo-text-subtle">
                                 <iconify-icon icon="mdi:information-outline"></iconify-icon>
                                 <span transloco="auth.setup.passwordHint"></span>
                             </div>
                         </div>
 
                         <div class="space-y-2">
-                            <label class="flex items-center gap-2 text-sm font-medium text-[var(--dojo-text)]">
+                            <label class="flex items-center gap-2 text-sm font-medium text-dojo-text">
                                 <iconify-icon icon="mdi:lock-check-outline" class="text-orange-400"></iconify-icon>
                                 <span transloco="auth.setup.confirmPassword"></span>
                             </label>
@@ -116,10 +116,10 @@ import 'iconify-icon';
                                 type="password"
                                 [(ngModel)]="confirmPassword"
                                 name="confirmPassword"
-                                class="w-full px-4 py-3 bg-[var(--dojo-surface-2)] rounded-xl text-[var(--dojo-text)] placeholder-[var(--dojo-text-subtle)]
-                                       focus:outline-none focus:ring-2 focus:bg-[var(--dojo-surface-2)] transition-all duration-300"
+                                class="w-full px-4 py-3 bg-dojo-surface-2 rounded-xl text-dojo-text placeholder-dojo-text-subtle
+                                       focus:outline-none focus:ring-2 focus:bg-dojo-surface-2 transition-all duration-300"
                                 [class]="confirmPassword.length === 0
-                                    ? 'border border-[var(--dojo-border)] focus:ring-orange-500/50 focus:border-orange-500/50'
+                                    ? 'border border-dojo-border focus:ring-orange-500/50 focus:border-orange-500/50'
                                     : password === confirmPassword
                                         ? 'border border-emerald-500/50 focus:ring-emerald-500/50 focus:border-emerald-500/50'
                                         : 'border border-red-500/50 focus:ring-red-500/50 focus:border-red-500/50'"
@@ -131,7 +131,7 @@ import 'iconify-icon';
 
                         <button
                             type="submit"
-                            class="w-full mt-4 px-6 py-3.5 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400
+                            class="w-full mt-4 px-6 py-3.5 bg-linear-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400
                                    text-white font-semibold rounded-xl shadow-lg shadow-orange-500/25
                                    hover:shadow-xl hover:shadow-orange-500/30 hover:scale-[1.02] active:scale-[0.98]
                                    disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100
@@ -152,7 +152,7 @@ import 'iconify-icon';
 
                     <div class="mt-6 bg-orange-500/10 border border-orange-500/25 rounded-xl p-4 text-left">
                         <div class="flex items-start gap-3">
-                            <iconify-icon icon="mdi:information" class="text-xl text-orange-400 flex-shrink-0"></iconify-icon>
+                            <iconify-icon icon="mdi:information" class="text-xl text-orange-400 shrink-0"></iconify-icon>
                             <span class="text-orange-200 text-sm" transloco="auth.setup.info"></span>
                         </div>
                     </div>

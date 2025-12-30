@@ -6,11 +6,109 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PDF Liste mit Pagination</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .order-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            background: #ffffff;
+            padding: 16px;
+        }
+
+        .order-card:hover {
+            border-color: #cbd5e1;
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            padding-bottom: 12px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #eef2f7;
+        }
+
+        .order-meta {
+            display: grid;
+            gap: 4px;
+        }
+
+        .label {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .value {
+            font-size: 14px;
+            color: #0f172a;
+            font-weight: 600;
+            word-break: break-word;
+        }
+
+        .links {
+            display: grid;
+            gap: 8px;
+        }
+
+        .doc-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        .doc-link:hover {
+            text-decoration: underline;
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: #f1f5f9;
+            color: #0f172a;
+            border: 1px solid #e2e8f0;
+        }
+
+        .pager {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 40px;
+            height: 36px;
+            padding: 0 12px;
+            border-radius: 10px;
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: #334155;
+            font-size: 14px;
+        }
+
+        .pager:hover {
+            background: #0f172a;
+            border-color: #0f172a;
+            color: #ffffff;
+        }
+
+        .pager[disabled] {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pager--active {
+            background: #0f172a;
+            border-color: #0f172a;
+            color: #ffffff;
+        }
+    </style>
 </head>
 
 <body class="bg-gray-100 p-6">
     <div class="max-w-2xl mx-auto bg-white p-4 shadow-md rounded-lg">
-        <h1 class="text-2xl font-bold mb-4">PDF Download Links</h1>
+        <h1 class="text-2xl font-bold mb-4">Bestellungen (Order Cards) – Testseite</h1>
 
         <!-- Jahr-Selectbox -->
         <div class="mb-4">
@@ -24,9 +122,9 @@
             </select>
         </div>
 
-        <ul id="pdf-list" class="space-y-2">
-            <!-- PDF Links werden hier dynamisch eingefügt -->
-        </ul>
+        <div id="orders-container" class="space-y-3">
+            <!-- Order Cards werden hier dynamisch eingefügt -->
+        </div>
 
         <div class="flex justify-center mt-6">
             <div class="flex space-x-1" id="pagination">
@@ -41,37 +139,101 @@
         let currentYear = urlParams.get("year") || "2025";
         const itemsPerPage = parseInt(urlParams.get("itemsPerPage")) || 10;
 
-        // 20 PDF-Links für Pagination-Tests (wiederholen die 5 echten PDFs)
-        const allPdfs = Array.from({ length: 20 }, (_, i) => {
-            const pdfNum = (i % 5) + 1; // Rotiert durch 1-5
-            return `pdf/document_${pdfNum.toString().padStart(3, '0')}.pdf`;
-        });
+        function randomSuffix(len = 7) {
+            return Math.random().toString(36).slice(2, 2 + len);
+        }
+
+        function randomGermanDate(year) {
+            const months = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+            const day = Math.floor(Math.random() * 28) + 1;
+            const month = months[Math.floor(Math.random() * months.length)];
+            return `${day}. ${month} ${year}`;
+        }
+
+        function generateOrders(year, count) {
+            const orders = [];
+            for (let i = 0; i < count; i++) {
+                const orderNum = String(i + 1).padStart(3, '0');
+                const orderId = `305-${year}${orderNum}-${randomSuffix(7)}`;
+                orders.push({
+                    id: orderId,
+                    date: randomGermanDate(year),
+                    docs: [
+                        `pdf/${year}/rechnung_${orderNum}.pdf`,
+                        `pdf/${year}/lieferschein_${orderNum}.pdf`
+                    ]
+                });
+            }
+            return orders;
+        }
+
+        const ordersByYear = {
+            "2021": generateOrders(2021, 25),
+            "2022": generateOrders(2022, 30),
+            "2023": generateOrders(2023, 28),
+            "2024": generateOrders(2024, 32),
+            "2025": generateOrders(2025, 20)
+        };
 
         function renderPage(page, year) {
-            const pdfs = allPdfs;
+            const orders = ordersByYear[year] || [];
             const start = (page - 1) * itemsPerPage;
             const end = start + itemsPerPage;
-            const list = document.getElementById("pdf-list");
-            list.innerHTML = "";
+            const container = document.getElementById("orders-container");
+            container.innerHTML = "";
 
-            pdfs.slice(start, end).forEach(pdf => {
-                const li = document.createElement("li");
-                li.innerHTML = `<a target="_blank" href="${pdf}" class="text-blue-600 hover:underline">${pdf}</a>`;
-                list.appendChild(li);
+            orders.slice(start, end).forEach(order => {
+                // Wichtig für den Test-Scraper:
+                // - `.order-card.js-order-card` als Container
+                // - `.order-header ...` für Datum
+                // - `a[href*='/invoice/popover']` mit `orderId=...`
+                const card = document.createElement("div");
+                card.className = "order-card js-order-card";
+                card.dataset.orderId = order.id;
+
+                const invoiceHref = `/invoice/popover?orderId=${encodeURIComponent(order.id)}&ref=ppx_yo_dt_b_invoice`;
+
+                card.innerHTML = `
+                    <div class="order-header">
+                        <div class="order-meta">
+                            <div class="label">Bestellung</div>
+                            <div class="value">${order.id}</div>
+                        </div>
+                        <div class="order-meta" style="text-align:right">
+                            <div class="label">Bestellung aufgegeben</div>
+                            <div class="a-size-base a-color-secondary aok-break-word">${order.date}</div>
+                        </div>
+                    </div>
+
+                    <div class="links">
+                        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                            <span class="tag">orderId in href</span>
+                            <a class="doc-link" href="${invoiceHref}" target="_blank" rel="noopener">Invoice Popover</a>
+                        </div>
+
+                        <div class="label" style="margin-top:4px;">Dokumente</div>
+                        ${order.docs.map(doc => {
+                            const name = doc.split('/').pop();
+                            return `<a class="doc-link" href="${doc}" target="_blank" rel="noopener">${name}</a>`;
+                        }).join('')}
+                    </div>
+                `;
+
+                container.appendChild(card);
             });
 
             renderPagination(page, year);
         }
 
         function renderPagination(page, year) {
-            const pdfs = allPdfs;
-            const totalPages = Math.ceil(pdfs.length / itemsPerPage);
+            const orders = ordersByYear[year] || [];
+            const totalPages = Math.max(1, Math.ceil(orders.length / itemsPerPage));
             const pagination = document.getElementById("pagination");
             pagination.innerHTML = "";
 
             // Prev Button
             const prevBtn = document.createElement("button");
-            prevBtn.className = "rounded-md border border-slate-300 py-2 px-3 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none ml-2";
+            prevBtn.className = "pager";
             prevBtn.textContent = "Prev";
             prevBtn.disabled = page === 1;
             prevBtn.addEventListener("click", () => {
@@ -84,11 +246,7 @@
             // Page Number Buttons
             for (let i = 1; i <= totalPages; i++) {
                 const pageBtn = document.createElement("button");
-                if (i === page) {
-                    pageBtn.className = "min-w-9 rounded-md bg-slate-800 py-2 px-3 border border-transparent text-center text-sm text-white transition-all shadow-md hover:shadow-lg focus:bg-slate-700 focus:shadow-none active:bg-slate-700 hover:bg-slate-700 active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none ml-2";
-                } else {
-                    pageBtn.className = "min-w-9 rounded-md border border-slate-300 py-2 px-3 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none ml-2";
-                }
+                pageBtn.className = i === page ? "pager pager--active" : "pager";
                 pageBtn.textContent = i;
                 pageBtn.addEventListener("click", () => {
                     window.location.search = `?page=${i}&year=${year}&itemsPerPage=${itemsPerPage}`;
@@ -98,7 +256,7 @@
 
             // Next Button
             const nextBtn = document.createElement("button");
-            nextBtn.className = "rounded-md border border-slate-300 py-2 px-3 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none ml-2";
+            nextBtn.className = "pager";
             nextBtn.textContent = "Next";
             nextBtn.disabled = page === totalPages;
             nextBtn.addEventListener("click", () => {

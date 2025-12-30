@@ -1,39 +1,49 @@
-# Scrape Dojo Documentation
+# Starlight Starter Kit: Basics
 
-Willkommen zur Dokumentation von Scrape Dojo! 🥋
+[![Built with Starlight](https://astro.badg.es/v2/built-with-starlight/tiny.svg)](https://starlight.astro.build)
 
-Diese Website wurde mit [Docusaurus](https://docusaurus.io/) erstellt.
-
-## Lokale Vorschau
-
-```bash
-pnpm start:docs
-# oder im docs-Verzeichnis
-pnpm start
+```
+pnpm create astro@latest -- --template starlight
 ```
 
-Öffne http://localhost:3001
+> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
 
-## Build
+## 🚀 Project Structure
 
-```bash
-yarn build
+Inside of your Astro + Starlight project, you'll see the following folders and files:
+
+```
+.
+├── public/
+├── src/
+│   ├── assets/
+│   ├── content/
+│   │   └── docs/
+│   └── content.config.ts
+├── astro.config.mjs
+├── package.json
+└── tsconfig.json
 ```
 
-This command generates static content into the `build` directory and can be served using any static contents hosting service.
+Starlight looks for `.md` or `.mdx` files in the `src/content/docs/` directory. Each file is exposed as a route based on its file name.
 
-## Deployment
+Images can be added to `src/assets/` and embedded in Markdown with a relative link.
 
-Using SSH:
+Static assets, like favicons, can be placed in the `public/` directory.
 
-```bash
-USE_SSH=true yarn deploy
-```
+## 🧞 Commands
 
-Not using SSH:
+All commands are run from the root of the project, from a terminal:
 
-```bash
-GIT_USER=<Your GitHub username> yarn deploy
-```
+| Command                   | Action                                           |
+| :------------------------ | :----------------------------------------------- |
+| `pnpm install`             | Installs dependencies                            |
+| `pnpm dev`             | Starts local dev server at `localhost:4321`      |
+| `pnpm build`           | Build your production site to `./dist/`          |
+| `pnpm preview`         | Preview your build locally, before deploying     |
+| `pnpm astro ...`       | Run CLI commands like `astro add`, `astro check` |
+| `pnpm astro -- --help` | Get help using the Astro CLI                     |
 
-If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.
+## 👀 Want to learn more?
+
+Check out [Starlight’s docs](https://starlight.astro.build/), read [the Astro documentation](https://docs.astro.build), or jump into the [Astro Discord server](https://astro.build/chat).

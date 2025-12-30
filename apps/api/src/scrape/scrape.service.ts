@@ -43,6 +43,22 @@ export class ScrapeService implements OnModuleInit, OnModuleDestroy {
         return this.scrapeDefinitions;
     }
 
+    /**
+     * Reloads all scrape definitions from disk and re-syncs variables/secrets.
+     * Useful when file watching misses events (e.g. on Windows) or when running in containers.
+     */
+    async reloadScrapeDefinitions(): Promise<void> {
+        this.logger.log('🔄 Manual reload requested: reloading scrape definitions...');
+        this.scrapeDefinitions = [];
+        await this.initializeScrapeDefinitions();
+
+        this.scrapeEventsService.emit({
+            type: 'config-reload',
+            scrapeId: '__system__',
+            message: 'Scrape configuration files have been reloaded'
+        });
+    }
+
     onModuleInit() {
         this.logger.debug(`🫚 Root directory ${process.cwd()}`);
         this.ensureConfigDirectories();
