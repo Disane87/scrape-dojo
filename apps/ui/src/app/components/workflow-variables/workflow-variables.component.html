@@ -1,0 +1,221 @@
+<div class="workflow-variables">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h3 class="text-lg font-semibold text-dojo-text mb-1">{{ 'workflow.variables.title' | transloco }}</h3>
+            <p class="text-sm text-dojo-text-muted">{{ 'workflow.variables.override_info' | transloco }}</p>
+        </div>
+        <app-button variant="secondary" icon="Plus" (click)="openCreateDialog()">
+            {{ 'variables.create_button' | transloco }}
+        </app-button>
+    </div>
+
+    <!-- Empty State -->
+    @if (workflowVariables().length === 0 && workflowDefinitions().length === 0) {
+    <app-empty-state icon="Settings2" [title]="'workflow.variables.empty_state' | transloco"
+        [description]="'workflow.variables.empty_state_description' | transloco" [bordered]="true" size="lg">
+        <app-button action variant="secondary" (click)="openCreateDialog()">
+            {{ 'variables.create_button' | transloco }}
+        </app-button>
+    </app-empty-state>
+    }
+
+    <!-- Variables List -->
+    @if (workflowVariables().length > 0) {
+    <div class="border border-dojo-border rounded-md overflow-hidden mb-6">
+        <table class="w-full">
+            <thead class="bg-dojo-surface">
+                <tr class="text-left text-xs text-dojo-text-muted uppercase tracking-wider">
+                    <th class="px-4 py-3 font-medium">{{ 'variables.table.name' | transloco }}</th>
+                    <th class="px-4 py-3 font-medium">{{ 'variables.table.value' | transloco }}</th>
+                    <th class="px-4 py-3 font-medium">{{ 'variables.table.description' | transloco }}</th>
+                    <th class="px-4 py-3 font-medium">{{ 'variables.table.updated' | transloco }}</th>
+                    <th class="px-4 py-3 font-medium text-right">{{ 'variables.table.actions' | transloco }}</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-dojo-border">
+                @for (variable of workflowVariables(); track variable.id) {
+                <tr class="hover:bg-dojo-surface transition-colors">
+                    <td class="px-4 py-3">
+                        <div class="flex items-center gap-2">
+                            <iconify-icon icon="lucide:variable" class="w-4 h-4 text-dojo-accent"></iconify-icon>
+                            <span class="font-mono text-sm text-dojo-text">{{ variable.name }}</span>
+                            @if (getSecretRef(variable.name)) {
+                            <div class="inline-flex items-center gap-1 px-2 py-0.5 bg-dojo-orange/10 border border-dojo-orange/20 rounded text-xs text-dojo-orange"
+                                [title]="('secrets.linked_to_secret' | transloco) + ': ' + getSecretRef(variable.name)">
+                                <iconify-icon icon="lucide:key-round" class="w-3 h-3"></iconify-icon>
+                                <span>{{ getSecretRef(variable.name) }}</span>
+                            </div>
+                            }
+                        </div>
+                    </td>
+                    <td class="px-4 py-3">
+                        <code class="px-2 py-1 bg-dojo-surface-2 text-dojo-text-muted text-xs rounded">
+                            {{ variable.value }}
+                        </code>
+                    </td>
+                    <td class="px-4 py-3 text-sm text-dojo-text-muted">
+                        {{ variable.description || '–' }}
+                    </td>
+                    <td class="px-4 py-3 text-sm text-dojo-text-muted">
+                        {{ formatDate(variable.updatedAt) }}
+                    </td>
+                    <td class="px-4 py-3 text-right">
+                        <div class="flex items-center justify-end gap-2">
+                            <app-icon-button icon="Pencil" size="sm" [title]="'common.edit' | transloco"
+                                (click)="editVariable(variable)" />
+
+                            @if (deletingId() === variable.id) {
+                            <div class="flex items-center gap-1">
+                                <app-button size="xs" variant="danger" (click)="deleteVariable(variable.id)">
+                                    {{ 'common.delete' | transloco }}
+                                </app-button>
+                                <app-button size="xs" variant="secondary" (click)="cancelDelete()">
+                                    {{ 'common.cancel' | transloco }}
+                                </app-button>
+                            </div>
+                            } @else {
+                            <app-icon-button icon="Trash2" size="sm" variant="danger"
+                                [title]="'common.delete' | transloco" (click)="confirmDelete(variable.id)" />
+                            }
+                        </div>
+                    </td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    }
+
+    <!-- Workflow-Definitionen anzeigen -->
+    @if (workflowDefinitions().length > 0) {
+    <div>
+        <h3 class="text-sm font-medium text-dojo-text mb-3 flex items-center gap-2">
+            <iconify-icon icon="lucide:file-code" class="w-4 h-4 text-dojo-text-muted"></iconify-icon>
+            {{ 'workflow.variables.definitions_title' | transloco }}
+        </h3>
+        <div class="border border-dojo-border rounded-md overflow-hidden">
+            <table class="w-full">
+                <thead class="bg-dojo-surface-2">
+                    <tr class="text-left text-xs text-dojo-text-muted uppercase tracking-wider">
+                        <th class="px-4 py-3 font-medium">{{ 'variables.table.name' | transloco }}</th>
+                        <th class="px-4 py-3 font-medium">{{ 'workflow.variables.label' | transloco }}</th>
+                        <th class="px-4 py-3 font-medium">{{ 'workflow.variables.type' | transloco }}</th>
+                        <th class="px-4 py-3 font-medium">{{ 'workflow.variables.default' | transloco }}</th>
+                        <th class="px-4 py-3 font-medium">{{ 'variables.table.description' | transloco }}</th>
+                        <th class="px-4 py-3 font-medium text-right">{{ 'workflow.variables.action' | transloco }}</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-dojo-border">
+                    @for (varDef of workflowDefinitions(); track varDef.name) {
+                    <tr class="bg-dojo-surface-2/30">
+                        <td class="px-4 py-3">
+                            <div class="flex items-center gap-2">
+                                <iconify-icon icon="lucide:file-text"
+                                    class="w-4 h-4 text-dojo-text-subtle"></iconify-icon>
+                                <span class="font-mono text-sm text-dojo-text-subtle">{{ varDef.name }}</span>
+                                @if (varDef.secretRef) {
+                                <div class="inline-flex items-center gap-1 px-2 py-0.5 bg-dojo-orange/10 border border-dojo-orange/20 rounded text-xs text-dojo-orange"
+                                    [title]="('secrets.linked_to_secret' | transloco) + ': ' + varDef.secretRef">
+                                    <iconify-icon icon="lucide:key-round" class="w-3 h-3"></iconify-icon>
+                                    <span>{{ varDef.secretRef }}</span>
+                                </div>
+                                }
+                            </div>
+                        </td>
+                        <td class="px-4 py-3 text-sm text-dojo-text-subtle">
+                            {{ varDef.label }}
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="px-2 py-0.5 bg-dojo-surface text-dojo-text-subtle text-xs rounded">
+                                {{ varDef.type }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3">
+                            @if (varDef.default !== undefined) {
+                            <code class="px-2 py-1 bg-dojo-bg text-dojo-text-subtle text-xs rounded">
+                                {{ varDef.default }}
+                            </code>
+                            } @else {
+                            <span class="text-dojo-text-subtle">–</span>
+                            }
+                        </td>
+                        <td class="px-4 py-3 text-sm text-dojo-text-subtle">
+                            {{ varDef.description || '–' }}
+                        </td>
+                        <td class="px-4 py-3 text-right">
+                            @if (!hasVariableInDB(varDef.name)) {
+                            <app-button size="xs" variant="secondary" (click)="createFromDefinition(varDef)">
+                                <iconify-icon icon="lucide:plus" class="w-3 h-3"></iconify-icon>
+                                {{ 'workflow.variables.set_value' | transloco }}
+                            </app-button>
+                            } @else {
+                            <span class="text-xs text-dojo-text-muted">✓ {{ 'workflow.variables.value_set' | transloco
+                                }}</span>
+                            }
+                        </td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <p class="mt-2 text-xs text-dojo-text-muted flex items-center gap-1">
+            <iconify-icon icon="lucide:info" class="w-3 h-3"></iconify-icon>
+            {{ 'workflow.variables.definitions_info' | transloco }}
+        </p>
+    </div>
+    }
+</div>
+
+<!-- Create/Edit Modal -->
+<app-modal [isOpen]="showDialog()"
+    [title]="editingVariable() ? ('variables.edit_title' | transloco) : ('variables.create_title' | transloco)"
+    icon="Settings2" (closed)="closeDialog()">
+    <div class="space-y-3">
+        <!-- Error -->
+        @if (formError()) {
+        <app-alert variant="error">
+            {{ formError() }}
+        </app-alert>
+        }
+
+        <!-- Name -->
+        <div>
+            <label class="block text-sm font-medium text-dojo-text mb-1.5">{{ 'variables.form.name' | transloco }}
+                *</label>
+            <input type="text" [ngModel]="formData().name" (ngModelChange)="updateFormData('name', $event)"
+                [disabled]="!!editingVariable()"
+                class="w-full px-3 py-2 bg-dojo-bg border border-dojo-border rounded-md text-dojo-text placeholder-dojo-text-subtle/50 focus:outline-none focus:border-dojo-accent focus:ring-1 focus:ring-dojo-accent disabled:bg-dojo-surface disabled:cursor-not-allowed"
+                [placeholder]="'variables.form.name_placeholder' | transloco" />
+        </div>
+
+        <!-- Wert -->
+        <div>
+            <label class="block text-sm font-medium text-dojo-text mb-1.5">{{ 'variables.form.value' | transloco }}
+                *</label>
+            <textarea [ngModel]="formData().value" (ngModelChange)="updateFormData('value', $event)" rows="3"
+                class="w-full px-3 py-2 bg-dojo-bg border border-dojo-border rounded-md text-dojo-text placeholder-dojo-text-muted focus:outline-none focus:border-dojo-accent focus:ring-1 focus:ring-dojo-accent resize-none"
+                [placeholder]="'variables.form.value_placeholder' | transloco"></textarea>
+        </div>
+
+        <!-- Beschreibung -->
+        <div>
+            <label class="block text-sm font-medium text-dojo-text mb-1.5">{{ 'variables.form.description' | transloco
+                }}</label>
+            <input type="text" [ngModel]="formData().description"
+                (ngModelChange)="updateFormData('description', $event)"
+                class="w-full px-3 py-2 bg-dojo-bg border border-dojo-border rounded-md text-dojo-text placeholder-dojo-text-muted focus:outline-none focus:border-dojo-accent focus:ring-1 focus:ring-dojo-accent"
+                [placeholder]="'variables.form.description_placeholder' | transloco" />
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <ng-container modal-footer>
+        <app-button variant="ghost" (click)="closeDialog()">
+            {{ 'common.cancel' | transloco }}
+        </app-button>
+        <app-button [loading]="saving()" [disabled]="saving()" (click)="saveVariable()">
+            {{ editingVariable() ? ('common.save' | transloco) : ('common.create' | transloco) }}
+        </app-button>
+    </ng-container>
+</app-modal>

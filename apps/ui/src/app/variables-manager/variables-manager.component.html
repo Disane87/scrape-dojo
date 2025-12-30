@@ -1,0 +1,129 @@
+<div class="variables-manager">
+    <!-- Empty State -->
+    @if (store.variables.global().length === 0) {
+    <app-empty-state icon="Settings2" [title]="'variables.no_global' | transloco"
+        [description]="'variables.global_description' | transloco" [bordered]="true">
+        <app-button action variant="secondary" (click)="openCreateDialog()">
+            {{ 'variables.create' | transloco }}
+        </app-button>
+    </app-empty-state>
+    }
+
+    <!-- Variables List -->
+    @if (store.variables.global().length > 0) {
+    <div class="border border-dojo-border rounded-md overflow-hidden">
+        <table class="w-full">
+            <thead class="bg-dojo-surface">
+                <tr class="text-left text-xs text-dojo-text-muted uppercase tracking-wider">
+                    <th class="px-4 py-3 font-medium">{{ 'variables.name' | transloco }}</th>
+                    <th class="px-4 py-3 font-medium">{{ 'variables.value' | transloco }}</th>
+                    <th class="px-4 py-3 font-medium">{{ 'variables.description' | transloco }}</th>
+                    <th class="px-4 py-3 font-medium">{{ 'variables.updated' | transloco }}</th>
+                    <th class="px-4 py-3 font-medium text-right">{{ 'common.actions' | transloco }}</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-dojo-border">
+                @for (variable of store.variables.global(); track variable.id) {
+                <tr class="hover:bg-dojo-surface transition-colors">
+                    <td class="px-4 py-3">
+                        <div class="flex items-center gap-2">
+                            <iconify-icon icon="lucide:variable" class="w-4 h-4 text-dojo-accent"></iconify-icon>
+                            <span class="font-mono text-sm text-dojo-text">{{ variable.name }}</span>
+                            @if (getSecretRefForVariable(variable.name)) {
+                            <div class="inline-flex items-center gap-1 px-2 py-0.5 bg-dojo-orange/10 border border-dojo-orange/20 rounded text-xs text-dojo-orange"
+                                [title]="('secrets.linked_to_secret' | transloco) + ': ' + getSecretRefForVariable(variable.name)">
+                                <iconify-icon icon="lucide:key-round" class="w-3 h-3"></iconify-icon>
+                                <span>{{ getSecretRefForVariable(variable.name) }}</span>
+                            </div>
+                            }
+                        </div>
+                    </td>
+                    <td class="px-4 py-3">
+                        <code class="px-2 py-1 bg-dojo-surface-2 text-dojo-text-muted text-xs rounded">
+                                        {{ variable.value }}
+                                    </code>
+                    </td>
+                    <td class="px-4 py-3 text-sm text-dojo-text-muted">
+                        {{ variable.description || '–' }}
+                    </td>
+                    <td class="px-4 py-3 text-sm text-dojo-text-muted">
+                        {{ formatDate(variable.updatedAt) }}
+                    </td>
+                    <td class="px-4 py-3 text-right">
+                        <div class="flex items-center justify-end gap-2">
+                            <app-icon-button icon="Pencil" size="sm" [title]="'common.edit' | transloco"
+                                (click)="editVariable(variable)" />
+
+                            @if (deletingId() === variable.id) {
+                            <div class="flex items-center gap-1">
+                                <app-button size="xs" variant="danger" (click)="deleteVariable(variable.id)">
+                                    {{ 'common.delete' | transloco }}
+                                </app-button>
+                                <app-button size="xs" variant="secondary" (click)="cancelDelete()">
+                                    {{ 'common.cancel' | transloco }}
+                                </app-button>
+                            </div>
+                            } @else {
+                            <app-icon-button icon="Trash2" size="sm" variant="danger"
+                                [title]="'common.delete' | transloco" (click)="confirmDelete(variable.id)" />
+                            }
+                        </div>
+                    </td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    }
+</div>
+
+<!-- Create/Edit Modal -->
+<app-modal [isOpen]="showDialog()"
+    [title]="(editingVariable() ? 'variables.edit_title' : 'variables.create') | transloco" icon="Settings2"
+    (closed)="closeDialog()">
+    <div class="space-y-3">
+        <!-- Error -->
+        @if (formError()) {
+        <app-alert variant="error">
+            {{ formError() }}
+        </app-alert>
+        }
+
+        <!-- Name -->
+        <div>
+            <label class="block text-sm font-medium text-dojo-text mb-1.5">{{ 'variables.name' | transloco }} *</label>
+            <input type="text" [ngModel]="formData().name" (ngModelChange)="updateFormData('name', $event)"
+                [disabled]="!!editingVariable()"
+                class="w-full px-3 py-2 bg-dojo-bg border border-dojo-border rounded-md text-dojo-text placeholder-dojo-text-subtle/50 focus:outline-none focus:border-dojo-accent focus:ring-1 focus:ring-dojo-accent disabled:bg-dojo-surface disabled:cursor-not-allowed"
+                [placeholder]="'variables_manager.key_placeholder' | transloco" />
+        </div>
+
+        <!-- Value -->
+        <div>
+            <label class="block text-sm font-medium text-dojo-text mb-1.5">{{ 'variables.value' | transloco }} *</label>
+            <textarea [ngModel]="formData().value" (ngModelChange)="updateFormData('value', $event)" rows="2"
+                class="w-full px-3 py-2 bg-dojo-bg border border-dojo-border rounded-md text-dojo-text placeholder-dojo-text-subtle/50 focus:outline-none focus:border-dojo-accent focus:ring-1 focus:ring-dojo-accent resize-none font-mono"
+                [placeholder]="'variables_manager.value_placeholder' | transloco"></textarea>
+        </div>
+
+        <!-- Description -->
+        <div>
+            <label class="block text-sm font-medium text-dojo-text mb-1.5">{{ 'variables.description' | transloco
+                }}</label>
+            <textarea [ngModel]="formData().description" (ngModelChange)="updateFormData('description', $event)"
+                rows="2"
+                class="w-full px-3 py-2 bg-dojo-bg border border-dojo-border rounded-md text-dojo-text placeholder-dojo-text-subtle/50 focus:outline-none focus:border-dojo-accent focus:ring-1 focus:ring-dojo-accent resize-none"
+                placeholder="{{ 'variables.description' | transloco }}"></textarea>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <ng-container modal-footer>
+        <app-button variant="ghost" (click)="closeDialog()">
+            {{ 'common.cancel' | transloco }}
+        </app-button>
+        <app-button [loading]="saving()" [disabled]="saving()" (click)="saveVariable()">
+            {{ editingVariable() ? ('common.save' | transloco) : ('variables.create' | transloco) }}
+        </app-button>
+    </ng-container>
+</app-modal>

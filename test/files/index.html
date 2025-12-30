@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Liste mit Pagination</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 p-6">
+    <div class="max-w-2xl mx-auto bg-white p-4 shadow-md rounded-lg">
+        <h1 class="text-2xl font-bold mb-4">PDF Download Links</h1>
+
+        <!-- Jahr-Selectbox -->
+        <div class="mb-4">
+            <label for="year-select" class="block text-sm font-medium text-gray-700 mb-2">Jahr auswählen:</label>
+            <select id="year-select" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                <option value="2021">2021</option>
+                <option value="2022">2022</option>
+                <option value="2023">2023</option>
+                <option value="2024">2024</option>
+                <option value="2025" selected>2025</option>
+            </select>
+        </div>
+
+        <ul id="pdf-list" class="space-y-2">
+            <!-- PDF Links werden hier dynamisch eingefügt -->
+        </ul>
+
+        <div class="flex justify-center mt-6">
+            <div class="flex space-x-1" id="pagination">
+                <!-- Pagination wird hier dynamisch eingefügt -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        let currentPage = parseInt(urlParams.get("page")) || 1;
+        let currentYear = urlParams.get("year") || "2025";
+        const itemsPerPage = parseInt(urlParams.get("itemsPerPage")) || 10;
+
+        // 20 PDF-Links für Pagination-Tests (wiederholen die 5 echten PDFs)
+        const allPdfs = Array.from({ length: 20 }, (_, i) => {
+            const pdfNum = (i % 5) + 1; // Rotiert durch 1-5
+            return `pdf/document_${pdfNum.toString().padStart(3, '0')}.pdf`;
+        });
+
+        function renderPage(page, year) {
+            const pdfs = allPdfs;
+            const start = (page - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const list = document.getElementById("pdf-list");
+            list.innerHTML = "";
+
+            pdfs.slice(start, end).forEach(pdf => {
+                const li = document.createElement("li");
+                li.innerHTML = `<a target="_blank" href="${pdf}" class="text-blue-600 hover:underline">${pdf}</a>`;
+                list.appendChild(li);
+            });
+
+            renderPagination(page, year);
+        }
+
+        function renderPagination(page, year) {
+            const pdfs = allPdfs;
+            const totalPages = Math.ceil(pdfs.length / itemsPerPage);
+            const pagination = document.getElementById("pagination");
+            pagination.innerHTML = "";
+
+            // Prev Button
+            const prevBtn = document.createElement("button");
+            prevBtn.className = "rounded-md border border-slate-300 py-2 px-3 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none ml-2";
+            prevBtn.textContent = "Prev";
+            prevBtn.disabled = page === 1;
+            prevBtn.addEventListener("click", () => {
+                if (page > 1) {
+                    window.location.search = `?page=${page - 1}&year=${year}&itemsPerPage=${itemsPerPage}`;
+                }
+            });
+            pagination.appendChild(prevBtn);
+
+            // Page Number Buttons
+            for (let i = 1; i <= totalPages; i++) {
+                const pageBtn = document.createElement("button");
+                if (i === page) {
+                    pageBtn.className = "min-w-9 rounded-md bg-slate-800 py-2 px-3 border border-transparent text-center text-sm text-white transition-all shadow-md hover:shadow-lg focus:bg-slate-700 focus:shadow-none active:bg-slate-700 hover:bg-slate-700 active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none ml-2";
+                } else {
+                    pageBtn.className = "min-w-9 rounded-md border border-slate-300 py-2 px-3 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none ml-2";
+                }
+                pageBtn.textContent = i;
+                pageBtn.addEventListener("click", () => {
+                    window.location.search = `?page=${i}&year=${year}&itemsPerPage=${itemsPerPage}`;
+                });
+                pagination.appendChild(pageBtn);
+            }
+
+            // Next Button
+            const nextBtn = document.createElement("button");
+            nextBtn.className = "rounded-md border border-slate-300 py-2 px-3 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none ml-2";
+            nextBtn.textContent = "Next";
+            nextBtn.disabled = page === totalPages;
+            nextBtn.addEventListener("click", () => {
+                if (page < totalPages) {
+                    window.location.search = `?page=${page + 1}&year=${year}&itemsPerPage=${itemsPerPage}`;
+                }
+            });
+            pagination.appendChild(nextBtn);
+        }
+
+        // Jahr-Selectbox initialisieren
+        document.getElementById("year-select").value = currentYear;
+        document.getElementById("year-select").addEventListener("change", (e) => {
+            currentYear = e.target.value;
+            currentPage = 1; // Bei Jahreswechsel zurück auf Seite 1
+            window.location.search = `?page=${currentPage}&year=${currentYear}&itemsPerPage=${itemsPerPage}`;
+        });
+
+        renderPage(currentPage, currentYear);
+    </script>
+</body>
+
+</html>

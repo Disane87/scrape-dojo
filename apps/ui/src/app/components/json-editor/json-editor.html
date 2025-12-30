@@ -1,0 +1,128 @@
+<div class="json-editor-wrapper flex flex-col h-full border border-dojo-border rounded-md overflow-hidden bg-dojo-bg">
+    <!-- Toolbar -->
+    <div class="flex items-center justify-between px-3 py-2 bg-dojo-surface border-b border-dojo-border">
+        <div class="flex items-center gap-3">
+            <!-- File info -->
+            <div class="flex items-center gap-2 text-sm">
+                <iconify-icon icon="lucide:file-code" class="w-4 h-4 text-dojo-orange"></iconify-icon>
+                <span class="text-dojo-text font-medium">{{ fileName }}</span>
+                @if (hasChanges()) {
+                <span class="w-2 h-2 rounded-full bg-dojo-orange"
+                    [title]="'json_editor.unsaved_changes' | transloco"></span>
+                }
+            </div>
+
+            <!-- Divider -->
+            <div class="w-px h-4 bg-dojo-border"></div>
+
+            <!-- Fold controls -->
+            <div class="flex items-center gap-1">
+                <button
+                    class="text-xs px-2 py-1 rounded hover:bg-dojo-surface-2 text-dojo-text-muted hover:text-dojo-text transition-colors flex items-center gap-1"
+                    (click)="expandAll()" [title]="'json_editor.expand_all' | transloco">
+                    <iconify-icon icon="lucide:chevron-down" class="w-3.5 h-3.5"></iconify-icon>
+                </button>
+                <button
+                    class="text-xs px-2 py-1 rounded hover:bg-dojo-surface-2 text-dojo-text-muted hover:text-dojo-text transition-colors flex items-center gap-1"
+                    (click)="collapseAll()" [title]="'json_editor.collapse_all' | transloco">
+                    <iconify-icon icon="lucide:chevron-right" class="w-3.5 h-3.5"></iconify-icon>
+                </button>
+            </div>
+
+            <!-- Divider -->
+            <div class="w-px h-4 bg-dojo-border"></div>
+
+            <!-- Editor actions -->
+            <div class="flex items-center gap-1">
+                <button
+                    class="text-xs px-2 py-1 rounded hover:bg-dojo-surface-2 text-dojo-text-muted hover:text-dojo-text transition-colors"
+                    (click)="formatDocument()" [title]="'json_editor.format_document' | transloco">
+                    <iconify-icon icon="lucide:align-left" class="w-3.5 h-3.5"></iconify-icon>
+                </button>
+                <button class="text-xs px-2 py-1 rounded transition-colors" [class.bg-dojo-surface-2]="wordWrap()"
+                    [class.text-dojo-text]="wordWrap()" [class.text-dojo-text-muted]="!wordWrap()"
+                    [class.hover:bg-dojo-surface-2]="!wordWrap()" [class.hover:text-dojo-text]="!wordWrap()"
+                    (click)="toggleWordWrap()" [title]="'json_editor.toggle_word_wrap' | transloco">
+                    <iconify-icon icon="lucide:wrap-text" class="w-3.5 h-3.5"></iconify-icon>
+                </button>
+                <button
+                    class="text-xs px-2 py-1 rounded hover:bg-dojo-surface-2 text-dojo-text-muted hover:text-dojo-text transition-colors"
+                    (click)="search()" [title]="'json_editor.search' | transloco">
+                    <iconify-icon icon="lucide:search" class="w-3.5 h-3.5"></iconify-icon>
+                </button>
+                <button
+                    class="text-xs px-2 py-1 rounded hover:bg-dojo-surface-2 text-dojo-text-muted hover:text-dojo-text transition-colors"
+                    (click)="goToLine()" [title]="'json_editor.go_to_line' | transloco">
+                    <iconify-icon icon="lucide:hash" class="w-3.5 h-3.5"></iconify-icon>
+                </button>
+            </div>
+        </div>
+
+        <!-- Right side actions -->
+        <div class="flex items-center gap-2">
+            <!-- Error indicator -->
+            @if (error()) {
+            <div class="flex items-center gap-1 text-dojo-danger text-xs">
+                <iconify-icon icon="lucide:alert-triangle" class="w-3.5 h-3.5"></iconify-icon>
+                <span>{{ 'json_editor.syntax_error' | transloco }}</span>
+            </div>
+            }
+
+            <!-- Save/Discard buttons when editing -->
+            @if (!readOnly && hasChanges()) {
+            <button
+                class="text-xs px-2 py-1 rounded border border-dojo-border text-dojo-text-muted hover:text-dojo-text hover:border-dojo-text-muted transition-colors"
+                (click)="discardChanges()">
+                {{ 'common.discard' | transloco }}
+            </button>
+            <button
+                class="text-xs px-3 py-1 rounded bg-dojo-success-strong text-white hover:brightness-110 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                [disabled]="error()" (click)="saveChanges()">
+                Save
+            </button>
+            }
+
+            <!-- Copy button -->
+            <button
+                class="text-xs px-2 py-1 border border-dojo-border rounded text-dojo-text-muted hover:text-dojo-text hover:border-dojo-text-muted transition-colors flex items-center gap-1"
+                [class.bg-dojo-success-strong]="copied()" [class.border-dojo-success-strong]="copied()"
+                [class.text-white]="copied()" (click)="copyToClipboard()">
+                @if (copied()) {
+                <iconify-icon icon="lucide:check" class="w-3.5 h-3.5"></iconify-icon>
+                <span>{{ 'common.copied' | transloco }}</span>
+                } @else {
+                <iconify-icon icon="lucide:clipboard" class="w-3.5 h-3.5"></iconify-icon>
+                <span>{{ 'json_editor.copy' | transloco }}</span>
+                }
+            </button>
+        </div>
+    </div>
+
+    <!-- Editor Container -->
+    <div class="relative flex-1 min-h-0">
+        @if (isLoading()) {
+        <div class="absolute inset-0 flex items-center justify-center bg-dojo-bg z-10">
+            <div class="flex flex-col items-center gap-3 text-dojo-text-muted">
+                <iconify-icon icon="lucide:loader-2" class="w-8 h-8 animate-spin"></iconify-icon>
+                <span class="text-sm">{{ 'common.loading_editor' | transloco }}</span>
+            </div>
+        </div>
+        }
+        <div id="monaco-editor-container" class="h-full"></div>
+    </div>
+
+    <!-- Status bar -->
+    <div
+        class="flex items-center justify-between px-3 py-1 bg-dojo-surface border-t border-dojo-border text-[10px] text-dojo-text-muted">
+        <div class="flex items-center gap-3">
+            <span>{{ 'json_editor.json' | transloco }}</span>
+            @if (readOnly) {
+            <span class="px-1.5 py-0.5 bg-dojo-surface-2 rounded">{{ 'json_editor.read_only' | transloco }}</span>
+            }
+        </div>
+        <div class="flex items-center gap-3">
+            <span>{{ 'common.utf8' | transloco }}</span>
+            <span>{{ wordWrap() ? ('common.word_wrap_on' | transloco) : ('common.word_wrap_off' | transloco) }}</span>
+        </div>
+    </div>
+</div>

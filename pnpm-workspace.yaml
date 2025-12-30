@@ -1,0 +1,4 @@
+ignoredBuiltDependencies:
+  - '@swc/core'
+  - nx
+  - sqlite3

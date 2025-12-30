@@ -1,0 +1,19 @@
+{
+  "recommendations": [
+    // Nx Monorepo
+    "nrwl.angular-console",
+    // TypeScript & JavaScript
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    // Angular (für UI)
+    "angular.ng-template",
+    // Testing - Jest mit Test Explorer Integration
+    "orta.vscode-jest",
+    "firsttris.vscode-jest-runner",
+    // Docker
+    "ms-azuretools.vscode-docker"
+  ],
+  "unwantedRecommendations": [
+    "vitest.explorer"
+  ]
+}

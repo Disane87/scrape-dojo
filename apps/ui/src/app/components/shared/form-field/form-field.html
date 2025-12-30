@@ -1,0 +1,20 @@
+<div class="form-field">
+  @if (label()) {
+  <label [class]="labelClasses()" [attr.for]="for()">
+    {{ label() }}
+    @if (required()) {
+    <span class="text-dojo-danger ml-0.5">*</span>
+    }
+  </label>
+  }
+
+  <ng-content />
+
+  @if (hint() && !error()) {
+  <p class="mt-1 text-xs text-dojo-text-muted">{{ hint() }}</p>
+  }
+
+  @if (error()) {
+  <p class="mt-1 text-xs text-dojo-danger">{{ error() }}</p>
+  }
+</div>

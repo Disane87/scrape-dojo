@@ -1,0 +1,39 @@
+{
+    "name": "Scrape Dojo",
+    "short_name": "Scrape Dojo",
+    "description": "Modulare Web-Scraping-Anwendung mit NestJS und Puppeteer",
+    "theme_color": "#0d1117",
+    "background_color": "#0d1117",
+    "display": "standalone",
+    "scope": "/",
+    "start_url": "/",
+    "orientation": "portrait-primary",
+    "icons": [
+        {
+            "src": "logos/scrape-dojo-app-icon-64x64.png",
+            "sizes": "64x64",
+            "type": "image/png"
+        },
+        {
+            "src": "logos/scrape-dojo-app-icon-128x128.png",
+            "sizes": "128x128",
+            "type": "image/png"
+        },
+        {
+            "src": "logos/scrape-dojo-app-icon-256x256.png",
+            "sizes": "256x256",
+            "type": "image/png"
+        },
+        {
+            "src": "logos/scrape-dojo-app-icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "logos/scrape-dojo-app-icon-1024x1024.png",
+            "sizes": "1024x1024",
+            "type": "image/png"
+        }
+    ]
+}

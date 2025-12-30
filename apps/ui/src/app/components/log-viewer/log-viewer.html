@@ -1,0 +1,280 @@
+<div class="flex flex-col bg-dojo-surface border-t border-dojo-border" [ngClass]="collapsible() ? '' : 'h-full'"
+    [style.height.px]="collapsible() ? (isExpanded() ? currentHeight() : 36) : null" [class.select-none]="isResizing()">
+
+    <!-- Resize Handle -->
+    @if (isExpanded() && collapsible()) {
+    <div class="absolute top-0 left-0 right-0 h-1 cursor-ns-resize hover:bg-dojo-accent transition-colors z-10"
+        [class.bg-dojo-accent]="isResizing()" (mousedown)="startResize($event)">
+    </div>
+    }
+
+    <!-- Header -->
+    @if (showHeader()) {
+    <div class="flex items-center justify-between px-4 py-2 border-b border-dojo-border shrink-0"
+        [class.cursor-pointer]="collapsible()" (click)="collapsible() ? toggleExpanded() : null">
+        <div class="flex items-center gap-2">
+            @if (collapsible()) {
+            <iconify-icon icon="lucide:chevron-up" class="w-4 h-4 text-dojo-text-muted transition-transform"
+                [class.rotate-180]="isExpanded()"></iconify-icon>
+            }
+            <span class="text-sm font-medium text-dojo-text">{{ title() }}</span>
+            @if (filteredLogs().length > 0) {
+            <span class="px-1.5 py-0.5 text-xs rounded-full bg-dojo-border text-dojo-text-muted">
+                {{ filteredLogs().length }}
+            </span>
+            }
+            @if (isLive()) {
+            <span class="flex items-center gap-1 text-xs text-dojo-warning">
+                <span class="w-1.5 h-1.5 rounded-full bg-dojo-warning animate-pulse"></span>
+                Live
+            </span>
+            }
+        </div>
+
+        <!-- Filter & Actions -->
+        <div class="flex items-center gap-2" (click)="$event.stopPropagation()">
+            @if (isExpanded()) {
+            <!-- Log Level Filters -->
+            <div class="flex items-center gap-1 mr-2">
+                @for (level of logLevels; track level) {
+                <button [class]="getLevelBadgeClass(level)" (click)="toggleLevel(level)" [title]="level">
+                    {{ level === 'log' ? 'info' : level }}
+                </button>
+                }
+            </div>
+
+            <!-- Group Toggle -->
+            <button class="text-xs px-2 py-1 border rounded transition-colors flex items-center gap-1"
+                [class]="groupByContext() 
+                    ? 'bg-dojo-accent/20 border-dojo-accent text-dojo-accent' 
+                    : 'bg-dojo-surface-2 border-dojo-border text-dojo-text-muted hover:text-dojo-text hover:border-dojo-text-muted'" 
+                (click)="toggleGrouping()"
+                [title]="groupByContext() ? 'Disable grouping' : 'Group by context'">
+                <iconify-icon [icon]="groupByContext() ? 'lucide:list-tree' : 'lucide:list'" class="w-3 h-3"></iconify-icon>
+                <span>{{ groupByContext() ? 'Grouped' : 'Flat' }}</span>
+            </button>
+
+            <!-- Expand/Collapse All (nur wenn gruppiert) -->
+            @if (groupByContext() && groupedLogs()?.length) {
+            <button class="text-xs px-2 py-1 bg-dojo-surface-2 border border-dojo-border rounded text-dojo-text-muted hover:text-dojo-text hover:border-dojo-text-muted transition-colors"
+                (click)="collapsedGroups().size > 0 ? expandAllGroups() : collapseAllGroups()"
+                [title]="collapsedGroups().size > 0 ? 'Expand all' : 'Collapse all'">
+                <iconify-icon [icon]="collapsedGroups().size > 0 ? 'lucide:chevrons-down-up' : 'lucide:chevrons-up-down'" class="w-3 h-3"></iconify-icon>
+            </button>
+            }
+
+            <!-- Auto-Scroll Toggle -->
+            @if (autoScroll()) {
+            <button class="text-xs px-2 py-1 border rounded transition-colors flex items-center gap-1"
+                [class]="autoScrollPaused() 
+                    ? 'bg-dojo-warning/20 border-dojo-warning text-dojo-warning' 
+                    : 'bg-dojo-surface-2 border-dojo-border text-dojo-text-muted hover:text-dojo-text hover:border-dojo-text-muted'" (click)="toggleAutoScroll()"
+                [title]="autoScrollPaused() ? 'Resume auto-scroll' : 'Pause auto-scroll'">
+                @if (autoScrollPaused()) {
+                <iconify-icon icon="lucide:circle-arrow-right" class="w-3 h-3"></iconify-icon>
+                <span>{{ 'log_viewer.paused' | transloco }}</span>
+                } @else {
+                <iconify-icon icon="lucide:circle-plus" class="w-3 h-3"></iconify-icon>
+                <span>{{ 'log_viewer.auto' | transloco }}</span>
+                }
+            </button>
+            }
+
+            <!-- Clear Button -->
+            <button
+                class="text-xs px-2 py-1 bg-dojo-surface-2 border border-dojo-border rounded text-dojo-text-muted hover:text-dojo-text hover:border-dojo-text-muted transition-colors"
+                (click)="onClear()" [title]="'log_viewer.clear_logs' | transloco">
+                {{ 'common.clear' | transloco }}
+            </button>
+            }
+        </div>
+    </div>
+    }
+
+    <!-- Log Content -->
+    @if (isExpanded()) {
+    <div #logsContainer class="flex-1 min-h-0 overflow-y-auto bg-dojo-bg font-mono text-xs" (scroll)="onScroll($event)">
+        
+        <!-- Grouped View -->
+        @if (groupByContext() && groupedLogs()) {
+            @for (group of groupedLogs(); track group.id) {
+            <div class="border-b border-dojo-border/50">
+                <!-- Group Header -->
+                <div class="flex items-center gap-2 px-2 py-1 bg-dojo-surface/80 cursor-pointer hover:bg-dojo-surface-2 sticky top-0 z-10"
+                    (click)="toggleGroup(group.id)">
+                    <iconify-icon [icon]="isGroupCollapsed(group.id) ? 'lucide:chevron-right' : 'lucide:chevron-down'" 
+                        class="w-3 h-3 text-dojo-text-muted shrink-0"></iconify-icon>
+                    <span class="text-xs font-medium text-dojo-text-muted">{{ group.context }}</span>
+                    <span class="px-1 py-0 text-xs rounded bg-dojo-border/50 text-dojo-text-subtle">
+                        {{ group.logs.length }}
+                    </span>
+                    <span class="text-xs text-dojo-text-subtle">{{ group.startTime | date:'HH:mm:ss' }}</span>
+                    @if (group.hasErrors) {
+                    <span class="w-1.5 h-1.5 rounded-full bg-dojo-danger" title="Contains errors"></span>
+                    } @else if (group.hasWarnings) {
+                    <span class="w-1.5 h-1.5 rounded-full bg-dojo-warning" title="Contains warnings"></span>
+                    }
+                </div>
+                
+                <!-- Group Content -->
+                @if (!isGroupCollapsed(group.id)) {
+                <div>
+                    @for (log of group.logs; track $index; let i = $index) {
+                    <ng-container *ngTemplateOutlet="logEntry; context: { log: log, index: i }"></ng-container>
+                    }
+                </div>
+                }
+            </div>
+            } @empty {
+            <ng-container *ngTemplateOutlet="emptyState"></ng-container>
+            }
+        } @else {
+            <!-- Flat View -->
+            @for (log of filteredLogs(); track $index; let i = $index) {
+            <ng-container *ngTemplateOutlet="logEntry; context: { log: log, index: i }"></ng-container>
+            } @empty {
+            <ng-container *ngTemplateOutlet="emptyState"></ng-container>
+            }
+        }
+    </div>
+    }
+</div>
+
+<!-- Log Entry Template -->
+<ng-template #logEntry let-log="log" let-i="index">
+    <!-- Main Log Entry -->
+    <div class="flex items-start hover:bg-dojo-surface border-l-2 transition-colors px-2 py-0.5"
+        [class]="getEventBorderColor(log)">
+        <span class="w-8 text-right text-dojo-text-subtle select-none shrink-0 mr-2 leading-5">{{ i + 1 }}</span>
+        <span class="w-16 shrink-0 text-dojo-text-subtle leading-5">{{ log.timestamp | date:'HH:mm:ss' }}</span>
+
+        @if (log.type === 'log') {
+        <!-- Log Event -->
+        <span class="shrink-0 mr-2 leading-5 text-sm" [class]="getLogLevelIconColor(log.logLevel)">{{
+            getLogLevelIcon(log.logLevel) }}</span>
+        
+        <!-- Workflow vs. General Badge -->
+        @if (log.scrapeId) {
+        <span class="shrink-0 px-1.5 py-0 text-xs rounded mr-2 bg-dojo-success/20 text-dojo-success leading-5 font-medium">
+            WF
+        </span>
+        } @else {
+        <span class="shrink-0 px-1.5 py-0 text-xs rounded mr-2 bg-dojo-border text-dojo-text-subtle leading-5 font-medium">
+            SYS
+        </span>
+        }
+        
+        @if (!groupByContext()) {
+        <span class="shrink-0 px-1 py-0 text-xs rounded mr-2 min-w-[80px] leading-5"
+            [class]="getLogLevelColor(log.logLevel)">
+            {{ log.logContext || 'App' }}
+        </span>
+        }
+        @if (filterMode() === 'all' && log.scrapeId) {
+        <span class="shrink-0 px-1 py-0 text-xs rounded mr-2 bg-dojo-accent/20 text-dojo-accent leading-5">
+            {{ log.scrapeId }}
+        </span>
+        }
+        <span class="text-dojo-text whitespace-pre-wrap break-all leading-5" [title]="log.message">{{ log.message
+            }}</span>
+        } @else {
+        <!-- Other Event Types (step-status, action-status, loop-iteration, etc.) -->
+        <span class="shrink-0 mr-2 leading-5">{{ getEventIcon(log.type) }}</span>
+        <span class="shrink-0 px-1.5 py-0 text-xs rounded mr-2 leading-5" [class]="getEventTypeColor(log.type)">
+            {{ formatEventType(log.type) }}
+        </span>
+        
+        <!-- Step Name -->
+        @if (log.stepName) {
+        <span class="text-dojo-text font-medium mr-1 leading-5">{{ log.stepName }}</span>
+        }
+        
+        <!-- Action Name with arrow -->
+        @if (log.actionName) {
+        <span class="text-dojo-text-muted mr-1 leading-5">→</span>
+        <span class="text-dojo-accent mr-2 leading-5">{{ log.actionName }}</span>
+        }
+        
+        <!-- Loop Info -->
+        @if (log.type === 'loop-iteration' && log.loopName) {
+        <span class="text-dojo-purple mr-1 leading-5">🔄</span>
+        <span class="text-dojo-purple font-medium mr-1 leading-5">{{ log.loopName }}</span>
+        <span class="px-1.5 py-0 text-xs rounded bg-dojo-purple/20 text-dojo-purple leading-5">
+            {{ (log.loopIndex ?? 0) + 1 }}/{{ log.loopTotal || '?' }}
+        </span>
+        @if (log.loopPath && log.loopPath.length > 0) {
+        <span class="text-dojo-text-subtle text-xs ml-1 leading-5">(nested in {{ log.loopPath[log.loopPath.length - 1].name }})</span>
+        }
+        }
+        
+        <!-- Status Badge for action/step status -->
+        @if ((log.type === 'action-status' || log.type === 'step-status') && log.status) {
+        <span class="px-1.5 py-0 text-xs rounded leading-5 ml-1" [class]="getStatusColor(log.status)">
+            {{ log.status }}
+        </span>
+        }
+        
+        <!-- Message -->
+        @if (log.message && log.type !== 'loop-iteration') {
+        <span class="text-dojo-text-muted whitespace-pre-wrap break-all leading-5 ml-1" [title]="log.message">{{
+            log.message }}</span>
+        }
+        }
+    </div>
+    
+    <!-- Variables as separate lines after scrape-start event -->
+    @if (log.type === 'scrape-start' && log.variables) {
+        @if (log.variables.runtime && Object.keys(log.variables.runtime).length > 0) {
+        <div class="flex items-start hover:bg-dojo-surface border-l-2 border-l-dojo-info transition-colors px-2 py-0.5">
+            <span class="w-8 text-right text-dojo-text-subtle select-none shrink-0 mr-2 leading-5"></span>
+            <span class="w-16 shrink-0 text-dojo-text-subtle leading-5"></span>
+            <span class="shrink-0 mr-2 leading-5 text-dojo-info">📤</span>
+            <span class="shrink-0 px-1 py-0 text-xs rounded mr-2 bg-dojo-info/20 text-dojo-info leading-5">
+                Run Variables ({{ Object.keys(log.variables.runtime).length }})
+            </span>
+            <span class="text-dojo-text-muted font-mono text-xs whitespace-pre-wrap break-all leading-5">{{ log.variables.runtime | json }}</span>
+        </div>
+        }
+        
+        @if (log.variables.database && Object.keys(log.variables.database).length > 0) {
+        <div class="flex items-start hover:bg-dojo-surface border-l-2 border-l-dojo-warning transition-colors px-2 py-0.5">
+            <span class="w-8 text-right text-dojo-text-subtle select-none shrink-0 mr-2 leading-5"></span>
+            <span class="w-16 shrink-0 text-dojo-text-subtle leading-5"></span>
+            <span class="shrink-0 mr-2 leading-5 text-dojo-warning">🗄️</span>
+            <span class="shrink-0 px-1 py-0 text-xs rounded mr-2 bg-dojo-warning/20 text-dojo-warning leading-5">
+                DB Variables ({{ Object.keys(log.variables.database).length }})
+            </span>
+            <span class="text-dojo-text-muted font-mono text-xs whitespace-pre-wrap break-all leading-5">{{ log.variables.database | json }}</span>
+        </div>
+        }
+        
+        @if (log.variables.final && Object.keys(log.variables.final).length > 0) {
+        <div class="flex items-start hover:bg-dojo-surface border-l-2 border-l-dojo-success transition-colors px-2 py-0.5">
+            <span class="w-8 text-right text-dojo-text-subtle select-none shrink-0 mr-2 leading-5"></span>
+            <span class="w-16 shrink-0 text-dojo-text-subtle leading-5"></span>
+            <span class="shrink-0 mr-2 leading-5 text-dojo-success">🔧</span>
+            <span class="shrink-0 px-1 py-0 text-xs rounded mr-2 bg-dojo-success/20 text-dojo-success leading-5">
+                {{ 'log_viewer.final_variables' | transloco: { count: Object.keys(log.variables.final).length } }}
+            </span>
+            <span class="text-dojo-text-muted font-mono text-xs whitespace-pre-wrap break-all leading-5">{{ log.variables.final | json }}</span>
+        </div>
+        }
+    }
+</ng-template>
+
+<!-- Empty State Template -->
+<ng-template #emptyState>
+    <div class="p-4 text-center text-dojo-text-subtle">
+        @if (isLive()) {
+        <iconify-icon icon="lucide:loader-2" class="w-8 h-8 mx-auto mb-2 animate-spin"></iconify-icon>
+        <span>{{ 'log_viewer.waiting_for_output' | transloco }}</span>
+        } @else {
+        <span>
+            {{ filterMode() === 'workflow'
+                ? ('log_viewer.no_logs_for_workflow' | transloco)
+                : ('log_viewer.waiting_for_logs' | transloco)
+            }}
+        </span>
+        }
+    </div>
+</ng-template>

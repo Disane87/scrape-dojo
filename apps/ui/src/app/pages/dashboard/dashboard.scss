@@ -1,0 +1,9 @@
+// Tailwind handles all styling now
+// This file can be used for component-specific custom styles if needed
+
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}

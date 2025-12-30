@@ -1,0 +1,12 @@
+<div [class]="alertClasses()">
+  <iconify-icon [icon]="iconName()" class="w-5 h-5 shrink-0"></iconify-icon>
+  <div class="flex-1 text-sm">
+    @if (title()) {
+    <div class="font-medium mb-1">{{ title() }}</div>
+    }
+    <ng-content />
+  </div>
+  @if (dismissible()) {
+  <app-icon-button icon="X" size="xs" variant="ghost" (click)="dismissed.emit()" />
+  }
+</div>

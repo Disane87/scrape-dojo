@@ -1,0 +1,10 @@
+<div [class]="containerClasses()">
+  <iconify-icon [icon]="toIconify(icon())" [class]="iconClasses()"
+    [attr.width]="size() === 'lg' ? '96' : size() === 'md' ? '80' : '64'"
+    [attr.height]="size() === 'lg' ? '96' : size() === 'md' ? '80' : '64'"></iconify-icon>
+  <h3 [class]="titleClasses()">{{ title() }}</h3>
+  @if (description()) {
+  <p class="text-dojo-text-muted max-w-md mb-4">{{ description() }}</p>
+  }
+  <ng-content select="[action]" />
+</div>

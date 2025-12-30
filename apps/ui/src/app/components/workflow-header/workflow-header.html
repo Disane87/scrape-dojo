@@ -1,0 +1,144 @@
+<div class="border-b border-dojo-border p-6">
+    <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-3">
+            <!-- Icon: Custom oder Default -->
+            <div class="relative">
+                <app-scrape-icon [icon]="metadata()?.icon" [alt]="scrapeId()" imgClass="w-7 h-7 rounded"
+                    svgClass="w-6 h-6 text-dojo-text-muted" [class.grayscale]="isDisabled()"
+                    [class.opacity-50]="isDisabled()" />
+                @if (isDisabled()) {
+                <div
+                    class="absolute -top-1 -right-1 w-4 h-4 bg-dojo-surface rounded-full flex items-center justify-center border border-dojo-border">
+                    <iconify-icon icon="lucide:ban" class="w-3 h-3 text-red-400"></iconify-icon>
+                </div>
+                }
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <h1 class="text-xl font-semibold text-dojo-text" [class.line-through]="metadata()?.disabled"
+                        [class.opacity-50]="isDisabled()">{{ scrapeId() }}</h1>
+                    @if (metadata()?.version) {
+                    <span class="text-xs text-dojo-text-muted bg-dojo-surface-2 px-1.5 py-0.5 rounded">v{{
+                        metadata()!.version
+                        }}</span>
+                    }
+                    @if (metadata()?.disabled) {
+                    <span
+                        class="flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-red-500/20 text-red-400 border border-red-500/30">
+                        <iconify-icon icon="lucide:ban" class="w-3 h-3"></iconify-icon>
+                        {{ 'workflow.status_labels.disabled' | transloco }}
+                    </span>
+                    } @else if (isDisabled()) {
+                    <span
+                        class="flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">
+                        <iconify-icon icon="lucide:alert-triangle" class="w-3 h-3"></iconify-icon>
+                        {{ 'workflow.status_labels.no_trigger' | transloco }}
+                    </span>
+                    }
+                    @if (isRunning()) {
+                    <span
+                        class="flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-dojo-warning-strong text-white">
+                        <span class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+                        {{ 'workflow.status_labels.in_progress' | transloco }}
+                    </span>
+                    }
+                </div>
+                @if (metadata()?.description) {
+                <p class="text-sm text-dojo-text-muted mt-0.5">{{ metadata()!.description }}</p>
+                }
+                @if (metadata()?.author) {
+                <div class="flex items-center gap-1.5 mt-1">
+                    @if (metadata()!.author.avatar) {
+                    <img [src]="metadata()!.author.avatar" [alt]="metadata()!.author.name" class="w-4 h-4 rounded-full">
+                    }
+                    @if (metadata()!.author.url) {
+                    <a [href]="metadata()!.author.url" target="_blank" rel="noopener noreferrer"
+                        class="text-xs text-dojo-text-subtle hover:text-dojo-accent hover:underline transition-colors">
+                        {{ 'workflow.author.by' | transloco }} {{ metadata()!.author.name }}
+                    </a>
+                    } @else {
+                    <span class="text-xs text-dojo-text-subtle">{{ 'workflow.author.by' | transloco }} {{
+                        metadata()!.author.name }}</span>
+                    }
+                </div>
+                }
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <!-- Schedule Button - only show if cron trigger exists -->
+            @if (canSchedule()) {
+            <app-button variant="outline" size="sm" [icon]="scheduleEnabled() ? 'CalendarCheck' : 'Clock'"
+                [active]="scheduleEnabled()" [title]="getScheduleButtonTooltip()" (clicked)="openScheduleModal()">
+                @if (scheduleEnabled()) {
+                <span class="hidden sm:inline">{{ 'history.scheduled' | transloco }}</span>
+                }
+            </app-button>
+            }
+
+            @if (isRunning()) {
+            <app-button variant="danger" size="sm" icon="Square" (clicked)="stopScrape()">
+                {{ 'workflow.buttons.stop' | transloco }}
+            </app-button>
+            }
+
+            <!-- Run Button - only show if manual trigger exists -->
+            @if (canRunManually()) {
+            <app-button variant="success" size="sm" [icon]="isRunning() ? 'Loader2' : 'Play'" [loading]="isRunning()"
+                [disabled]="isRunning()" [title]="getRunButtonTooltip()" (clicked)="runScrape()">
+                {{ isRunning() ? ('workflow.buttons.running' | transloco) : ('workflow.buttons.run' | transloco) }}
+            </app-button>
+            }
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex gap-4 border-b border-dojo-border -mb-6 pb-0">
+        <button class="px-3 py-3 text-sm font-medium border-b-2 -mb-px transition-colors flex items-center gap-2"
+            [class]="activeTab() === 'history' 
+          ? 'border-dojo-red text-dojo-text' 
+          : 'border-transparent text-dojo-text-muted hover:text-dojo-text hover:border-dojo-border'"
+            (click)="setTab('history')">
+            <iconify-icon icon="lucide:chart-line" class="w-4 h-4"></iconify-icon>
+            {{ 'workflow.tabs.runs' | transloco }}
+            @if (historyCount() > 0) {
+            <span class="px-1.5 py-0.5 text-xs rounded-full bg-dojo-border">{{ historyCount() }}</span>
+            }
+        </button>
+        <button class="px-3 py-3 text-sm font-medium border-b-2 -mb-px transition-colors flex items-center gap-2"
+            [class]="activeTab() === 'definition' 
+          ? 'border-dojo-red text-dojo-text' 
+          : 'border-transparent text-dojo-text-muted hover:text-dojo-text hover:border-dojo-border'"
+            (click)="setTab('definition')">
+            <iconify-icon icon="lucide:code" class="w-4 h-4"></iconify-icon>
+            {{ 'workflow.tabs.file' | transloco }}
+        </button>
+        <button class="px-3 py-3 text-sm font-medium border-b-2 -mb-px transition-colors flex items-center gap-2"
+            [class]="activeTab() === 'visual' 
+          ? 'border-dojo-red text-dojo-text' 
+          : 'border-transparent text-dojo-text-muted hover:text-dojo-text hover:border-dojo-border'"
+            (click)="setTab('visual')">
+            <iconify-icon icon="lucide:network" class="w-4 h-4"></iconify-icon>
+            {{ 'workflow.tabs.visual' | transloco }}
+        </button>
+        <button class="px-3 py-3 text-sm font-medium border-b-2 -mb-px transition-colors flex items-center gap-2"
+            [class]="activeTab() === 'output' 
+          ? 'border-dojo-red text-dojo-text' 
+          : 'border-transparent text-dojo-text-muted hover:text-dojo-text hover:border-dojo-border'"
+            (click)="setTab('output')">
+            <iconify-icon icon="lucide:file-text" class="w-4 h-4"></iconify-icon>
+            {{ 'workflow.tabs.logs' | transloco }}
+            @if (liveOutputCount() > 0) {
+            <span class="px-1.5 py-0.5 text-xs rounded-full bg-dojo-success-strong text-white animate-pulse">{{
+                liveOutputCount() }}</span>
+            }
+        </button>
+        <button class="px-3 py-3 text-sm font-medium border-b-2 -mb-px transition-colors flex items-center gap-2"
+            [class]="activeTab() === 'variables' 
+          ? 'border-dojo-red text-dojo-text' 
+          : 'border-transparent text-dojo-text-muted hover:text-dojo-text hover:border-dojo-border'"
+            (click)="setTab('variables')">
+            <iconify-icon icon="lucide:variable" class="w-4 h-4"></iconify-icon>
+            {{ 'workflow.tabs.variables' | transloco }}
+        </button>
+    </div>
+</div>

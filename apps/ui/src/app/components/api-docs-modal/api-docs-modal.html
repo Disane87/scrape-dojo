@@ -1,0 +1,8 @@
+<app-modal [isOpen]="isOpen()" [title]="'api_docs_modal.title' | transloco" icon="BookOpen" size="full"
+    [showFooter]="false" (closed)="close()">
+
+    <div class="h-full -m-4">
+        <iframe src="/api" [title]="'api_docs_modal.title' | transloco" class="w-full h-full border-0 bg-white">
+        </iframe>
+    </div>
+</app-modal>

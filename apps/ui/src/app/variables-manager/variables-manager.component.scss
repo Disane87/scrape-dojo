@@ -1,0 +1,104 @@
+.variables-manager {
+    max-width: 1200px;
+
+    // Padding nur wenn nicht in Modal (Modal hat bereits p-6)
+    &:not(.in-modal) {
+        margin: 0 auto;
+    }
+}
+
+// Tabs styling
+.tabs {
+    display: flex;
+    gap: 1rem;
+    border-bottom: 2px solid theme('colors.dojo.border');
+}
+
+.tab {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    font-weight: 500;
+    color: theme('colors.dojo.text-muted');
+    transition: all 0.2s;
+    margin-bottom: -2px;
+
+    &:hover {
+        color: theme('colors.dojo.text');
+    }
+
+    &.active {
+        color: theme('colors.dojo.accent');
+        border-bottom-color: theme('colors.dojo.accent');
+    }
+}
+
+// Smooth scrollbar for table container
+.variables-manager table {
+    min-width: 600px;
+}
+
+// Input focus improvements
+input:focus,
+textarea:focus,
+select:focus {
+    box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.2);
+}
+
+// Modal animation
+.fixed {
+    animation: fadeIn 150ms ease-out;
+}
+
+.fixed>div:last-child {
+    animation: slideIn 200ms ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+// Row hover animation
+tbody tr {
+    transition: background-color 150ms ease;
+}
+
+// Button group transitions
+.flex.items-center.gap-1 {
+    animation: buttonGroupIn 200ms ease-out;
+}
+
+@keyframes buttonGroupIn {
+    from {
+        opacity: 0;
+        transform: translateX(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}

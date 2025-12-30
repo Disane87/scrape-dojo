@@ -1,0 +1,21 @@
+<app-modal [isOpen]="isOpen()" [title]="'otp.title' | transloco" icon="KeyRound" size="sm" [showFooter]="true"
+    [closeOnBackdrop]="true" (closed)="closeModal()">
+
+    <!-- Modal Content -->
+    @if (otpRequest(); as otp) {
+    <div class="space-y-4">
+        <p class="text-dojo-text-muted text-sm">{{ otp.message }}</p>
+
+        <input #otpInput type="text" [ngModel]="otpCode()" (ngModelChange)="otpCode.set($event)"
+            (keyup.enter)="submitOtp()" [placeholder]="'otp.enter_code' | transloco" maxlength="10"
+            class="w-full px-4 py-3 text-center text-2xl tracking-widest font-mono bg-dojo-bg border border-dojo-border rounded-md text-dojo-text placeholder-dojo-text-muted focus:outline-none focus:border-dojo-accent focus:ring-1 focus:ring-dojo-accent">
+    </div>
+    }
+
+    <!-- Footer -->
+    <ng-container modal-footer>
+        <app-button variant="success" [disabled]="!canSubmit()" class="w-full" (clicked)="submitOtp()">
+            Code bestätigen
+        </app-button>
+    </ng-container>
+</app-modal>

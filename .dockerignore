@@ -1,0 +1,61 @@
+# ============================================
+# Docker Ignore File
+# Exclude files not needed in container
+# ============================================
+
+# Dependencies
+node_modules
+.pnpm-store
+
+# Build outputs (we build inside container)
+dist
+.angular
+.nx
+
+# Development files
+*.log
+*.local
+.env.local
+.env.*.local
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Test files
+test
+*.spec.ts
+*.e2e-spec.ts
+coverage
+
+# Documentation
+docs
+*.md
+!README.md
+
+# Browser data (Puppeteer sessions)
+browser-data
+
+# Runtime data
+data
+downloads
+documents
+logs
+tmp
+
+# Misc
+.DS_Store
+Thumbs.db
+*.tsbuildinfo

@@ -1,0 +1,231 @@
+<!-- Recursive Action Tree Component -->
+@for (action of actions(); track action.name; let actionIdx = $index) {
+<div class="border-b border-dojo-surface-2 last:border-b-0" [style.margin-left.px]="depth() * 12">
+    <!-- Loop Action -->
+    @if (isLoopAction(action)) {
+    <!-- Loop Header -->
+    <div class="flex items-center gap-2 px-3 py-2 hover:bg-dojo-surface transition-colors cursor-pointer"
+        (click)="toggleLoop(action.name)">
+        <!-- Status Icon -->
+        <div class="w-5 flex justify-center shrink-0">
+            @switch (action.status) {
+            @case ('success') {
+            <span class="text-dojo-success text-sm">✓</span>
+            }
+            @case ('failed') {
+            <span class="text-dojo-danger text-sm">✗</span>
+            }
+            @case ('running') {
+            <span class="text-dojo-warning animate-pulse text-sm">●</span>
+            }
+            @default {
+            <span class="text-dojo-text-subtle text-sm">○</span>
+            }
+            }
+        </div>
+
+        <!-- Loop Info -->
+        <div class="flex-1 min-w-0 flex items-center gap-2">
+            <span class="text-dojo-text text-sm truncate">{{ action.name }}</span>
+            <span
+                class="text-[10px] px-1.5 py-0.5 rounded font-mono bg-dojo-success-strong/20 text-dojo-success border border-dojo-success-strong/30">
+                🔄 loop
+            </span>
+            @if (depth() > 0) {
+            <span
+                class="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400 border border-purple-500/30">
+                nested
+            </span>
+            }
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-dojo-surface-2 text-dojo-accent">
+                {{ action.loopCurrent || 0 }}/{{ action.loopTotal || 0 }}
+            </span>
+        </div>
+
+        <!-- Progress Bar & Expand -->
+        <div class="flex items-center gap-3 shrink-0">
+            <div class="w-20 h-1.5 bg-dojo-surface-2 rounded-full overflow-hidden">
+                <div class="h-full rounded-full transition-all duration-300" [style.width.%]="getLoopProgress(action)"
+                    [class]="action.status === 'running' ? 'bg-dojo-warning' : 
+                             action.status === 'success' ? 'bg-dojo-success' : 
+                             action.status === 'failed' ? 'bg-dojo-danger' : 'bg-dojo-border'">
+                </div>
+            </div>
+            <svg class="w-4 h-4 text-dojo-text-muted transition-transform"
+                [class.rotate-90]="isLoopExpanded(action.name)" fill="currentColor" viewBox="0 0 16 16">
+                <path
+                    d="M6.22 3.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042L9.94 8 6.22 4.28a.75.75 0 0 1 0-1.06Z" />
+            </svg>
+        </div>
+    </div>
+
+    <!-- Loop Iterations (Expanded) -->
+    @if (isLoopExpanded(action.name)) {
+    <div class="bg-dojo-bg border-t border-dojo-surface-2">
+        <!-- Header -->
+        <div class="px-3 py-1.5 border-b border-dojo-surface-2 flex items-center justify-between">
+            <span class="text-[10px] uppercase tracking-wider text-dojo-text-muted">{{ 'visualizer.iterations' |
+                transloco }}</span>
+            <span class="text-[10px] text-dojo-text-muted">
+                {{ getCompletedIterations(action) }}/{{ action.loopTotal || '?' }} completed
+            </span>
+        </div>
+
+        @if (hasLoopIterations(action)) {
+        <div class="max-h-80 overflow-auto">
+            @for (iteration of action.loopIterations; track iteration.index) {
+            <div class="border-b border-dojo-surface-2/50 last:border-b-0">
+                <!-- Iteration Row -->
+                <div class="flex items-center gap-2 px-3 py-1.5 hover:bg-dojo-surface transition-colors"
+                    [class.cursor-pointer]="hasChildActions(iteration)"
+                    (click)="hasChildActions(iteration) ? toggleIteration(action.name, iteration.index) : null">
+                    <!-- Status -->
+                    <span class="w-4 text-center text-xs" [class]="getIterationStatusClass(iteration)">
+                        {{ getIterationStatusIcon(iteration) }}
+                    </span>
+
+                    <!-- Number -->
+                    <span
+                        class="text-[10px] px-1.5 py-0.5 rounded bg-dojo-surface-2 text-dojo-text-muted font-mono min-w-[36px] text-center">
+                        #{{ iteration.index + 1 }}
+                    </span>
+
+                    <!-- Value -->
+                    @if (iteration.value) {
+                    <span class="text-xs text-dojo-text truncate flex-1 font-mono" [title]="iteration.value">
+                        {{ iteration.value.length > 50 ? iteration.value.substring(0, 50) + '...' : iteration.value }}
+                    </span>
+                    } @else {
+                    <span class="text-xs text-dojo-text-subtle italic flex-1">Element {{ iteration.index + 1 }}</span>
+                    }
+
+                    <!-- Child Actions Badge -->
+                    @if (hasChildActions(iteration)) {
+                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-dojo-surface-2 text-purple-300">
+                        {{ iteration.childActions!.length }} actions
+                    </span>
+                    <svg class="w-3 h-3 text-dojo-text-muted transition-transform"
+                        [class.rotate-90]="isIterationExpanded(action.name, iteration.index)" fill="currentColor"
+                        viewBox="0 0 16 16">
+                        <path
+                            d="M6.22 3.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042L9.94 8 6.22 4.28a.75.75 0 0 1 0-1.06Z" />
+                    </svg>
+                    }
+
+                    <!-- Duration -->
+                    @if (iteration.startTime) {
+                    <span class="text-[10px] text-dojo-text-muted">
+                        {{ formatDuration(iteration.startTime, iteration.endTime) }}
+                    </span>
+                    }
+                </div>
+
+                <!-- Nested Actions (Recursive) -->
+                @if (hasChildActions(iteration) && isIterationExpanded(action.name, iteration.index)) {
+                <div class="bg-dojo-surface border-t border-dojo-surface-2/50">
+                    <app-action-tree [actions]="iteration.childActions!" [runId]="runId()" [stepName]="stepName()"
+                        [depth]="depth() + 1">
+                    </app-action-tree>
+                </div>
+                }
+            </div>
+            }
+        </div>
+        } @else {
+        <div class="px-3 py-4 text-center">
+            <span class="text-xs text-dojo-text-muted">
+                @if (action.status === 'pending') {
+                Loop not started
+                } @else if (action.status === 'running') {
+                Running...
+                } @else {
+                No iteration data
+                }
+            </span>
+        </div>
+        }
+    </div>
+    }
+    } @else {
+    <!-- Regular Action -->
+    <div class="flex items-center gap-2 px-3 py-2 hover:bg-dojo-surface transition-colors"
+        [class.cursor-pointer]="hasActionData(action)"
+        (click)="hasActionData(action) ? toggleAction(action.name) : null">
+        <!-- Status -->
+        <div class="w-5 flex justify-center shrink-0">
+            @switch (action.status) {
+            @case ('success') {
+            <span class="text-dojo-success text-sm">✓</span>
+            }
+            @case ('failed') {
+            <span class="text-dojo-danger text-sm">✗</span>
+            }
+            @case ('running') {
+            <span class="text-dojo-warning animate-pulse text-sm">●</span>
+            }
+            @default {
+            <span class="text-dojo-text-subtle text-sm">○</span>
+            }
+            }
+        </div>
+
+        <!-- Info -->
+        <div class="flex-1 min-w-0 flex items-center gap-2">
+            <span class="text-dojo-text text-sm truncate">{{ action.name }}</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded font-mono bg-dojo-surface-2 text-dojo-success">
+                {{ action.actionType }}
+            </span>
+        </div>
+
+        <!-- Result Preview -->
+        <div class="flex items-center gap-2 text-xs shrink-0">
+            @if (hasActionData(action)) {
+            <span class="px-2 py-0.5 rounded bg-dojo-surface-2 text-dojo-text-muted max-w-[150px] truncate"
+                [title]="getResultPreview(action.result)">
+                @if (isFilePath(action.result)) {
+                <span class="text-dojo-accent">📄 {{ getResultPreview(action.result) }}</span>
+                } @else if (isUrl(action.result)) {
+                <span class="text-dojo-accent">🔗 {{ 'common.url' | transloco }}</span>
+                } @else {
+                {{ getResultPreview(action.result) }}
+                }
+            </span>
+            <svg class="w-3 h-3 text-dojo-text-muted transition-transform"
+                [class.rotate-90]="isActionExpanded(action.name)" fill="currentColor" viewBox="0 0 16 16">
+                <path
+                    d="M6.22 3.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042L9.94 8 6.22 4.28a.75.75 0 0 1 0-1.06Z" />
+            </svg>
+            }
+            @if (action.error) {
+            <span class="text-dojo-danger" [title]="action.error">⚠️</span>
+            }
+        </div>
+    </div>
+
+    <!-- Action Result (Expanded) -->
+    @if (isActionExpanded(action.name) && hasActionData(action)) {
+    <div class="bg-dojo-bg border-t border-dojo-surface-2 px-3 py-2">
+        <div class="flex items-center gap-2 mb-2">
+            <span class="text-[10px] uppercase tracking-wider text-dojo-text-muted">{{ 'visualizer.result' | transloco
+                }}</span>
+        </div>
+        <div
+            class="p-2 rounded bg-dojo-surface border border-dojo-border text-xs text-dojo-text font-mono whitespace-pre-wrap break-all max-h-32 overflow-auto">
+            @if (isFilePath(action.result) || isUrl(action.result)) {
+            <span class="text-dojo-accent">{{ action.result }}</span>
+            } @else {
+            {{ action.result | json }}
+            }
+        </div>
+    </div>
+    }
+
+    <!-- Error Display -->
+    @if (action.error) {
+    <div class="bg-dojo-danger/10 border-t border-dojo-danger/30 px-3 py-2">
+        <div class="text-xs text-dojo-danger font-mono break-all">{{ action.error }}</div>
+    </div>
+    }
+    }
+</div>
+}

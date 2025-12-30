@@ -1,0 +1,9 @@
+<span [class]="badgeClasses()">
+  @if (dot()) {
+  <span [class]="dotClasses()"></span>
+  }
+  @if (icon()) {
+  <iconify-icon [icon]="toIconify(icon()!)" class="w-3 h-3"></iconify-icon>
+  }
+  <ng-content />
+</span>

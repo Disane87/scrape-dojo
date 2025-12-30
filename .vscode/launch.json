@@ -1,0 +1,83 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    // ═══════════════════════════════════════════════════════════
+    // API (NestJS Backend)
+    // ═══════════════════════════════════════════════════════════
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "🚀 Debug API",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "nx",
+        "serve",
+        "api",
+        "--configuration=development"
+      ],
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "autoAttachChildProcesses": true,
+      "restart": true,
+      "sourceMaps": true,
+      "stopOnEntry": false,
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "serverReadyAction": {
+        "pattern": "Nest application successfully started|Application is running on",
+        "uriFormat": "http://localhost:3000",
+        "action": "debugWithChrome"
+      }
+    },
+    // ═══════════════════════════════════════════════════════════
+    // UI (Angular Frontend)
+    // ═══════════════════════════════════════════════════════════
+    {
+      "type": "chrome",
+      "request": "launch",
+      "name": "🎨 Debug UI (Chrome)",
+      "url": "http://localhost:4200",
+      "webRoot": "${workspaceFolder}/apps/ui/src",
+      "sourceMaps": true,
+      "sourceMapPathOverrides": {
+        "webpack:/*": "${webRoot}/*",
+        "/./*": "${webRoot}/*",
+        "/src/*": "${webRoot}/*",
+        "/*": "*",
+        "/./~/*": "${workspaceFolder}/node_modules/*"
+      },
+      "preLaunchTask": "Start UI Dev Server"
+    },
+    // ═══════════════════════════════════════════════════════════
+    // Attach to running Node process
+    // ═══════════════════════════════════════════════════════════
+    {
+      "type": "node",
+      "request": "attach",
+      "name": "🔗 Attach to API",
+      "port": 9229,
+      "restart": true,
+      "sourceMaps": true,
+      "localRoot": "${workspaceFolder}",
+      "remoteRoot": "${workspaceFolder}"
+    }
+  ],
+  "compounds": [
+    // ═══════════════════════════════════════════════════════════
+    // Full Stack Debugging (API + UI)
+    // ═══════════════════════════════════════════════════════════
+    {
+      "name": "⚡ Debug Full Stack (API + UI)",
+      "configurations": [
+        "🚀 Debug API",
+        "🎨 Debug UI (Chrome)"
+      ],
+      "stopAll": true,
+      "presentation": {
+        "order": 1,
+        "group": "main"
+      }
+    }
+  ]
+}

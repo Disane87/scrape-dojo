@@ -1,0 +1,114 @@
+// Modal animation
+.fixed {
+    animation: fadeIn 150ms ease-out;
+}
+
+.fixed>div:last-child {
+    animation: slideIn 200ms ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+// Input focus improvements
+input:focus,
+select:focus,
+textarea:focus {
+    box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.2);
+}
+
+// Variable field spacing
+.variable-field {
+    padding: 0.75rem;
+    background: oklch(from var(--color-dojo-bg) l c h / 0.5);
+    border-radius: 0.5rem;
+    border: 1px solid transparent;
+    transition: border-color 200ms ease;
+
+    &:focus-within {
+        border-color: var(--color-dojo-border);
+    }
+}
+
+// Checkbox styling
+input[type='checkbox'] {
+    appearance: none;
+    width: 1rem;
+    height: 1rem;
+    background: var(--color-dojo-bg);
+    border: 1px solid var(--color-dojo-border);
+    border-radius: 0.25rem;
+    cursor: pointer;
+    position: relative;
+    transition: all 150ms ease;
+
+    &:checked {
+        background: var(--color-dojo-accent);
+        border-color: var(--color-dojo-accent);
+
+        &::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 5px;
+            width: 4px;
+            height: 8px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+    }
+
+    &:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.3);
+    }
+}
+
+// Select styling
+select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%238b949e'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1rem;
+    padding-right: 2.5rem;
+}
+
+// Scrollbar styling
+.overflow-y-auto {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-dojo-border) transparent;
+
+    &::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: var(--color-dojo-border);
+        border-radius: 3px;
+    }
+}

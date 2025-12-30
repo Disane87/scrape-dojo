@@ -1,0 +1,34 @@
+{
+    // Nx Configuration
+    "nxConsole.enableTelemetry": false,
+    // ESLint & Prettier
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit"
+    },
+    "eslint.validate": [
+        "javascript",
+        "typescript",
+        "html"
+    ],
+    // Vitest Configuration für API & UI (Test Explorer Integration)
+    "vitest.commandLine": "pnpm nx test",
+    "vitest.enable": true,
+    // NPM
+    "npm.exclude": [
+        "**/node_modules/**",
+        "**/apps/**",
+        "**/libs/**",
+        "**/.nx/**",
+        "**/tmp/**",
+        "**/dist/**"
+    ],
+    // Angular
+    "[html]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[typescript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    }
+}

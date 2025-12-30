@@ -1,0 +1,14 @@
+<div class="relative" [class.w-full]="fullWidth()">
+  <select [class]="selectClasses()" [disabled]="disabled()" [ngModel]="_value" (ngModelChange)="onSelectChange($event)"
+    (blur)="onBlur()">
+    @if (placeholder()) {
+    <option value="" disabled>{{ placeholder() }}</option>
+    }
+    @for (option of options(); track option.value) {
+    <option [value]="option.value" [disabled]="option.disabled">
+      {{ option.label }}
+    </option>
+    }
+  </select>
+  <iconify-icon icon="lucide:chevron-down"class="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-dojo-text-muted pointer-events-none"></iconify-icon>
+</div>

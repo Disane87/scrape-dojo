@@ -1,0 +1,214 @@
+<div class="cron-builder">
+    <!-- Mode Toggle -->
+    <div class="flex items-center gap-2 mb-4">
+        <button class="px-3 py-1.5 text-sm rounded-md transition-colors" [class.bg-dojo-surface-2]="mode() === 'simple'"
+            [class.text-dojo-text]="mode() === 'simple'" [class.text-dojo-text-muted]="mode() !== 'simple'"
+            [class.hover:text-dojo-text]="mode() !== 'simple'" (click)="mode.set('simple')">
+            Einfach
+        </button>
+        <button class="px-3 py-1.5 text-sm rounded-md transition-colors"
+            [class.bg-dojo-surface-2]="mode() === 'advanced'" [class.text-dojo-text]="mode() === 'advanced'"
+            [class.text-dojo-text-muted]="mode() !== 'advanced'" [class.hover:text-dojo-text]="mode() !== 'advanced'"
+            (click)="mode.set('advanced')">
+            Erweitert
+        </button>
+    </div>
+
+    <!-- Simple Mode -->
+    @if (mode() === 'simple') {
+    <!-- Presets -->
+    @if (showPresets) {
+    <div class="mb-4">
+        <label class="block text-xs font-medium text-dojo-text-muted uppercase tracking-wider mb-2">
+            Schnellauswahl
+        </label>
+        <div class="flex flex-wrap gap-2">
+            @for (preset of presets; track preset.expression) {
+            <button class="px-3 py-1.5 text-sm border rounded-md transition-all"
+                [class.bg-dojo-success-strong]="cronExpression() === preset.expression"
+                [class.border-dojo-success-strong]="cronExpression() === preset.expression"
+                [class.text-white]="cronExpression() === preset.expression"
+                [class.bg-transparent]="cronExpression() !== preset.expression"
+                [class.border-dojo-border]="cronExpression() !== preset.expression"
+                [class.text-dojo-text]="cronExpression() !== preset.expression"
+                [class.hover:border-dojo-text-muted]="cronExpression() !== preset.expression"
+                [title]="preset.description" (click)="selectPreset(preset)">
+                <span>{{ preset.icon }}</span>
+                {{ preset.label }}
+            </button>
+            }
+        </div>
+    </div>
+    }
+
+    <!-- Schedule Type -->
+    <div class="mb-4">
+        <label class="block text-xs font-medium text-dojo-text-muted uppercase tracking-wider mb-2">
+            Intervall
+        </label>
+        <select [ngModel]="scheduleType()" (ngModelChange)="updateScheduleType($event)"
+            class="w-full px-3 py-2 bg-dojo-bg border border-dojo-border rounded-md text-dojo-text focus:outline-none focus:border-dojo-accent">
+            <option value="every-minute">{{ 'cron.every_minute' | transloco }}</option>
+            <option value="hourly">{{ 'cron.hourly' | transloco }}</option>
+            <option value="daily">{{ 'cron.daily' | transloco }}</option>
+            <option value="weekly">{{ 'cron.weekly' | transloco }}</option>
+            <option value="monthly">{{ 'cron.monthly' | transloco }}</option>
+            <option value="custom">{{ 'cron.custom' | transloco }}</option>
+        </select>
+    </div>
+
+    <!-- Time Selection (for hourly, daily, weekly, monthly) -->
+    @if (scheduleType() !== 'every-minute' && scheduleType() !== 'custom') {
+    <div class="grid grid-cols-2 gap-4 mb-4">
+        @if (scheduleType() !== 'hourly') {
+        <!-- Hour -->
+        <div>
+            <label class="block text-xs font-medium text-dojo-text-muted uppercase tracking-wider mb-2">
+                Stunde
+            </label>
+            <select [ngModel]="selectedHour()" (ngModelChange)="updateSimpleValue('hour', $event)"
+                class="w-full px-3 py-2 bg-dojo-bg border border-dojo-border rounded-md text-dojo-text focus:outline-none focus:border-dojo-accent">
+                @for (h of hours; track h) {
+                <option [value]="h">{{ h.toString().padStart(2, '0') }}:00</option>
+                }
+            </select>
+        </div>
+        }
+
+        <!-- Minute -->
+        <div>
+            <label class="block text-xs font-medium text-dojo-text-muted uppercase tracking-wider mb-2">
+                Minute
+            </label>
+            <select [ngModel]="selectedMinute()" (ngModelChange)="updateSimpleValue('minute', $event)"
+                class="w-full px-3 py-2 bg-dojo-bg border border-dojo-border rounded-md text-dojo-text focus:outline-none focus:border-dojo-accent">
+                @for (m of minutes; track m) {
+                <option [value]="m">:{{ m.toString().padStart(2, '0') }}</option>
+                }
+            </select>
+        </div>
+    </div>
+    }
+
+    <!-- Day of Week Selection (for weekly) -->
+    @if (scheduleType() === 'weekly') {
+    <div class="mb-4">
+        <label class="block text-xs font-medium text-dojo-text-muted uppercase tracking-wider mb-2">
+            Wochentage
+        </label>
+        <div class="flex gap-1">
+            @for (day of daysOfWeek; track day.value) {
+            <button class="flex-1 py-2 text-sm font-medium rounded-md transition-colors"
+                [class.bg-dojo-success-strong]="selectedDays().includes(day.value)"
+                [class.text-white]="selectedDays().includes(day.value)"
+                [class.bg-dojo-surface-2]="!selectedDays().includes(day.value)"
+                [class.text-dojo-text-muted]="!selectedDays().includes(day.value)"
+                [class.hover:bg-dojo-border]="!selectedDays().includes(day.value)" [title]="day.long"
+                (click)="toggleDay(day.value)">
+                {{ day.short }}
+            </button>
+            }
+        </div>
+    </div>
+    }
+
+    <!-- Day of Month Selection (for monthly) -->
+    @if (scheduleType() === 'monthly') {
+    <div class="mb-4">
+        <label class="block text-xs font-medium text-dojo-text-muted uppercase tracking-wider mb-2">
+            Tag des Monats
+        </label>
+        <select [ngModel]="selectedDayOfMonth()" (ngModelChange)="updateSimpleValue('dayOfMonth', $event)"
+            class="w-full px-3 py-2 bg-dojo-bg border border-dojo-border rounded-md text-dojo-text focus:outline-none focus:border-dojo-accent">
+            @for (d of daysOfMonthList; track d) {
+            <option [value]="d">{{ d }}.</option>
+            }
+        </select>
+    </div>
+    }
+    }
+
+    <!-- Advanced Mode -->
+    @if (mode() === 'advanced') {
+    <div class="grid grid-cols-5 gap-2 mb-4">
+        <!-- Minute -->
+        <div>
+            <label class="block text-xs font-medium text-dojo-text-muted uppercase tracking-wider mb-2">
+                Minute
+            </label>
+            <input type="text" [ngModel]="minute()" (ngModelChange)="updateAdvancedPart('minute', $event)"
+                class="w-full px-2 py-2 bg-dojo-bg border border-dojo-border rounded-md text-white text-center font-mono text-sm focus:outline-none focus:border-dojo-accent" />
+        </div>
+
+        <!-- Hour -->
+        <div>
+            <label class="block text-xs font-medium text-dojo-text-muted uppercase tracking-wider mb-2">
+                Stunde
+            </label>
+            <input type="text" [ngModel]="hour()" (ngModelChange)="updateAdvancedPart('hour', $event)"
+                class="w-full px-2 py-2 bg-dojo-bg border border-dojo-border rounded-md text-white text-center font-mono text-sm focus:outline-none focus:border-dojo-accent" />
+        </div>
+
+        <!-- Day of Month -->
+        <div>
+            <label class="block text-xs font-medium text-dojo-text-muted uppercase tracking-wider mb-2">
+                Tag
+            </label>
+            <input type="text" [ngModel]="dayOfMonth()" (ngModelChange)="updateAdvancedPart('dayOfMonth', $event)"
+                class="w-full px-2 py-2 bg-dojo-bg border border-dojo-border rounded-md text-white text-center font-mono text-sm focus:outline-none focus:border-dojo-accent" />
+        </div>
+
+        <!-- Month -->
+        <div>
+            <label class="block text-xs font-medium text-dojo-text-muted uppercase tracking-wider mb-2">
+                {{ 'cron.month' | transloco }}
+            </label>
+            <input type="text" [ngModel]="month()" (ngModelChange)="updateAdvancedPart('month', $event)"
+                class="w-full px-2 py-2 bg-dojo-bg border border-dojo-border rounded-md text-white text-center font-mono text-sm focus:outline-none focus:border-dojo-accent" />
+        </div>
+
+        <!-- Day of Week -->
+        <div>
+            <label class="block text-xs font-medium text-dojo-text-muted uppercase tracking-wider mb-2">
+                {{ 'cron.day_of_week' | transloco }}
+            </label>
+            <input type="text" [ngModel]="dayOfWeek()" (ngModelChange)="updateAdvancedPart('dayOfWeek', $event)"
+                class="w-full px-2 py-2 bg-dojo-bg border border-dojo-border rounded-md text-white text-center font-mono text-sm focus:outline-none focus:border-dojo-accent" />
+        </div>
+    </div>
+
+    <!-- Cron Syntax Help -->
+    <div class="p-3 bg-dojo-surface border border-dojo-border rounded-md text-xs text-dojo-text-muted">
+        <div class="font-medium text-dojo-text mb-2">{{ 'cron.syntax_title' | transloco }}</div>
+        <div class="grid grid-cols-5 gap-2 text-center">
+            <div>0-59</div>
+            <div>0-23</div>
+            <div>1-31</div>
+            <div>1-12</div>
+            <div>0-6</div>
+        </div>
+        <div class="mt-2">
+            <code class="text-dojo-accent">*</code> = {{ 'cron.syntax_all' | transloco }},
+            <code class="text-dojo-accent">*/n</code> = {{ 'cron.syntax_every_n' | transloco }},
+            <code class="text-dojo-accent">a-b</code> = {{ 'cron.syntax_range' | transloco }},
+            <code class="text-dojo-accent">a,b</code> = {{ 'cron.syntax_list' | transloco }}
+        </div>
+    </div>
+    }
+
+    <!-- Result Preview -->
+    <div class="mt-4 p-3 bg-dojo-bg border border-dojo-border rounded-md">
+        <div class="flex items-center justify-between">
+            <div>
+                <div class="text-xs text-dojo-text-muted uppercase tracking-wider mb-1">{{ 'cron.expression' | transloco
+                    }}</div>
+                <code class="text-sm text-dojo-accent font-mono">{{ cronExpression() }}</code>
+            </div>
+            <div class="text-right">
+                <div class="text-xs text-dojo-text-muted uppercase tracking-wider mb-1">{{ 'cron.meaning' | transloco }}
+                </div>
+                <div class="text-sm text-dojo-text">{{ humanReadable() }}</div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,258 @@
+@import "tailwindcss";
+
+/* Tell Tailwind where to find classes */
+@source "../app/**/*.html";
+@source "../app/**/*.ts";
+
+/* ================================
+   🥋 Scrape Dojo Theme
+   Inspired by traditional Japanese dojos:
+   - Deep blacks and warm woods
+   - Vibrant reds and oranges (Torii gates, autumn leaves)
+   - Gold accents (temples, craftsmanship)
+   ================================ */
+
+/* ================================
+   ☀️ Light Mode (Default) - CSS Variables
+   ================================ */
+:root {
+  --dojo-bg: #fafaf9;
+  --dojo-surface: #f5f5f4;
+  --dojo-surface-2: #e7e5e4;
+  --dojo-surface-3: #d6d3d1;
+
+  --dojo-border: #d6d3d1;
+  --dojo-border-muted: #e7e5e4;
+
+  --dojo-text: #1c1917;
+  --dojo-text-muted: #57534e;
+  --dojo-text-subtle: #78716c;
+
+  --dojo-accent: #ea580c;
+  --dojo-accent-muted: #c2410c;
+
+  --dojo-success: #16a34a;
+  --dojo-success-strong: #15803d;
+  --dojo-warning: #ca8a04;
+  --dojo-warning-strong: #a16207;
+  --dojo-danger: #dc2626;
+  --dojo-danger-strong: #b91c1c;
+  --dojo-info: #ea580c;
+}
+
+/* ================================
+   🌙 Dark Mode - CSS Variables
+   Tailwind convention: add class "dark" to <html>
+   ================================ */
+.dark {
+  --dojo-bg: #0a0a0a;
+  --dojo-surface: #141414;
+  --dojo-surface-2: #1f1f1f;
+  --dojo-surface-3: #2a2a2a;
+
+  --dojo-border: #333333;
+  --dojo-border-muted: #262626;
+
+  --dojo-text: #f5f5f5;
+  --dojo-text-muted: #a3a3a3;
+  --dojo-text-subtle: #737373;
+
+  --dojo-accent: #fb923c;
+  --dojo-accent-muted: #ea580c;
+
+  --dojo-success: #22c55e;
+  --dojo-success-strong: #16a34a;
+  --dojo-warning: #eab308;
+  --dojo-warning-strong: #ca8a04;
+  --dojo-danger: #ef4444;
+  --dojo-danger-strong: #dc2626;
+  --dojo-info: #fb923c;
+}
+
+/* ================================
+   Tailwind Theme - Maps CSS vars to utilities
+   ================================ */
+@theme {
+  /* Fonts */
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* Border radius */
+  --radius-dojo: 0.75rem;
+  --radius-dojo-lg: 1rem;
+
+  /* 🔥 Brand colors - Always the same */
+  --color-dojo-red: #ef4444;
+  --color-dojo-red-strong: #dc2626;
+  --color-dojo-orange: #f97316;
+  --color-dojo-gold: #eab308;
+  --color-dojo-purple: #a855f7;
+  --color-dojo-purple-muted: #7c3aed;
+
+  /* Dynamic colors - Reference CSS variables */
+  --color-dojo-bg: var(--dojo-bg);
+  --color-dojo-surface: var(--dojo-surface);
+  --color-dojo-surface-2: var(--dojo-surface-2);
+  --color-dojo-surface-3: var(--dojo-surface-3);
+
+  --color-dojo-border: var(--dojo-border);
+  --color-dojo-border-muted: var(--dojo-border-muted);
+
+  --color-dojo-text: var(--dojo-text);
+  --color-dojo-text-muted: var(--dojo-text-muted);
+  --color-dojo-text-subtle: var(--dojo-text-subtle);
+
+  --color-dojo-accent: var(--dojo-accent);
+  --color-dojo-accent-muted: var(--dojo-accent-muted);
+
+  --color-dojo-success: var(--dojo-success);
+  --color-dojo-success-strong: var(--dojo-success-strong);
+  --color-dojo-warning: var(--dojo-warning);
+  --color-dojo-warning-strong: var(--dojo-warning-strong);
+  --color-dojo-danger: var(--dojo-danger);
+  --color-dojo-danger-strong: var(--dojo-danger-strong);
+  --color-dojo-info: var(--dojo-info);
+}
+
+/* Global styles */
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--dojo-bg);
+  color: var(--dojo-text);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* ================================
+   🎨 Custom Scrollbars
+   Styled to match the Dojo theme
+   ================================ */
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--dojo-border) transparent;
+}
+
+/* Webkit (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--dojo-border);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: background-color 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--dojo-text-subtle);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: var(--dojo-text-muted);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Thin scrollbars für Code/Log-Bereiche */
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  border-width: 1px;
+}
+
+/* Versteckte Scrollbars (nur beim Hover sichtbar) */
+.scrollbar-hidden {
+  scrollbar-width: none;
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.scrollbar-hidden:hover {
+  scrollbar-width: thin;
+}
+
+.scrollbar-hidden:hover::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+/* Gutter-Scrollbar (immer Platz reserviert, aber nur bei Hover sichtbar) */
+.scrollbar-gutter {
+  scrollbar-gutter: stable;
+}
+
+.scrollbar-gutter::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
+.scrollbar-gutter:hover::-webkit-scrollbar-thumb {
+  background: var(--dojo-border);
+}
+
+/* ================================
+   🎬 Auth Background Animations
+   ================================ */
+@keyframes float {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(30px, -30px) scale(1.05);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.95);
+  }
+}
+
+@keyframes floatReverse {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(-30px, 30px) scale(0.95);
+  }
+  66% {
+    transform: translate(20px, -20px) scale(1.05);
+  }
+}
+
+@keyframes pulseSlow {
+  0%,
+  100% {
+    opacity: 0.05;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 0.12;
+    transform: translate(-50%, -50%) scale(1.15);
+  }
+}

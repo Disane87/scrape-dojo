@@ -1,0 +1,33 @@
+.json-editor-wrapper {
+
+    // Monaco editor custom styling
+    #monaco-editor-container {
+        .monaco-editor {
+            .margin {
+                background-color: var(--color-dojo-bg) !important;
+            }
+
+            .monaco-editor-background {
+                background-color: var(--color-dojo-bg) !important;
+            }
+
+            .line-numbers {
+                color: var(--color-dojo-text-subtle) !important;
+            }
+
+            .current-line~.line-numbers {
+                color: var(--color-dojo-text) !important;
+            }
+        }
+
+        // Scrollbar styling
+        .monaco-scrollable-element>.scrollbar>.slider {
+            background: oklch(from var(--color-dojo-text-muted) l c h / 0.4) !important;
+            border-radius: 4px;
+
+            &:hover {
+                background: oklch(from var(--color-dojo-text-muted) l c h / 0.6) !important;
+            }
+        }
+    }
+}

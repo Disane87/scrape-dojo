@@ -1,0 +1,182 @@
+{
+    "$schema": "../scrapes.schema.json",
+    "scrapes": [
+        {
+            "id": "order_pdf_scraper",
+            "metadata": {
+                "description": "Scrapes PDF links from test page, supports year selection and pagination",
+                "version": "1.0.0",
+                "author": "gh:@disane87",
+                "icon": "lucide:file-text",
+                "category": "Demos",
+                "tags": [
+                    "pdf",
+                    "pagination",
+                    "year-selection"
+                ],
+                "triggers": [
+                    {
+                        "type": "manual"
+                    }
+                ],
+                "variables": [
+                    {
+                        "name": "selectedYear",
+                        "label": "Jahr auswählen",
+                        "type": "select",
+                        "required": true,
+                        "defaultValue": "2025",
+                        "options": [
+                            {
+                                "label": "2021",
+                                "value": "2021"
+                            },
+                            {
+                                "label": "2022",
+                                "value": "2022"
+                            },
+                            {
+                                "label": "2023",
+                                "value": "2023"
+                            },
+                            {
+                                "label": "2024",
+                                "value": "2024"
+                            },
+                            {
+                                "label": "2025",
+                                "value": "2025"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "maxPages",
+                        "label": "Maximale Seitenanzahl",
+                        "type": "number",
+                        "required": false,
+                        "defaultValue": 2,
+                        "hint": "Wie viele Seiten sollen maximal durchsucht werden?"
+                    },
+                    {
+                        "name": "itemsPerPage",
+                        "label": "Items pro Seite",
+                        "type": "number",
+                        "required": false,
+                        "defaultValue": 10,
+                        "hint": "Wie viele PDFs werden pro Seite angezeigt?"
+                    }
+                ]
+            },
+            "steps": [
+                {
+                    "name": "Setup Pages",
+                    "actions": [
+                        {
+                            "action": "transform",
+                            "name": "pages",
+                            "params": {
+                                "expression": "$number($maxPages) > 0 ? [1..$number($maxPages)] : [1, 2]"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Scrape PDFs",
+                    "actions": [
+                        {
+                            "action": "loop",
+                            "name": "loopPages",
+                            "params": {
+                                "elementKey": "pages",
+                                "actions": [
+                                    {
+                                        "action": "navigate",
+                                        "name": "navigateToPDFPage",
+                                        "params": {
+                                            "url": "http://localhost:8080/index.html?page={{ currentData.loopPages.value }}&year={{ variables.selectedYear }}&itemsPerPage={{ variables.itemsPerPage }}"
+                                        }
+                                    },
+                                    {
+                                        "action": "waitForSelector",
+                                        "name": "waitForPDFList",
+                                        "params": {
+                                            "selector": "#pdf-list",
+                                            "timeout": 5000
+                                        }
+                                    },
+                                    {
+                                        "action": "extractAll",
+                                        "name": "extractPDFLinks",
+                                        "params": {
+                                            "selector": "#pdf-list a",
+                                            "property": "href"
+                                        }
+                                    },
+                                    {
+                                        "action": "logger",
+                                        "name": "logPageInfo",
+                                        "params": {
+                                            "message": "📄 Seite {{ currentData.loopPages.value }} ({{ variables.selectedYear }}): {{ previousData.extractPDFLinks.length }} PDFs gefunden",
+                                            "level": "log"
+                                        }
+                                    },
+                                    {
+                                        "action": "loop",
+                                        "name": "loopPDFs",
+                                        "params": {
+                                            "elementKey": "extractPDFLinks",
+                                            "actions": [
+                                                {
+                                                    "action": "download",
+                                                    "name": "downloadPDF",
+                                                    "params": {
+                                                        "url": "{{ currentData.loopPDFs.value }}",
+                                                        "path": "{{ variables.downloadRootPath }}/{{ variables.selectedYear }}",
+                                                        "filename": "seite{{ currentData.loopPages.value }}_nr{{ currentData.loopPDFs.index }}.pdf"
+                                                    }
+                                                },
+                                                {
+                                                    "action": "transform",
+                                                    "name": "createPDFInfo",
+                                                    "params": {
+                                                        "expression": "{'Dateiname': 'seite' & $string(currentData.loopPages.value) & '_nr' & $string(currentData.loopPDFs.index) & '.pdf', 'Pfad': previousData.downloadPDF}"
+                                                    }
+                                                },
+                                                {
+                                                    "action": "artifacts",
+                                                    "name": "showPDFCard",
+                                                    "params": {
+                                                        "data": "{{ previousData.createPDFInfo }}",
+                                                        "type": "card",
+                                                        "flush": true,
+                                                        "template": "<div class='flex items-center gap-2'><svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='#ef4444' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/><polyline points='14 2 14 8 20 8'/><path d='M10 12h4'/><path d='M10 16h4'/></svg><div class='flex-1 min-w-0'><span class='text-sm text-dojo-text truncate'>{{Dateiname}}</span></div><button class='px-2 py-0.5 bg-dojo-accent text-white rounded text-xs hover:bg-dojo-accent-strong transition-colors flex items-center gap-1 flex-shrink-0' data-download='{{Pfad}}'><svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'/><polyline points='7 10 12 15 17 10'/><line x1='12' y1='15' x2='12' y2='3'/></svg><span>Download</span></button></div>"
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "action": "transform",
+                            "name": "createDownloadSummary",
+                            "params": {
+                                "expression": "loopPages.iterations.($page := value; $cwd := $substringBefore(childActions[0].result, 'documents'); childActions[name='loopPDFs'][0].result.iterations.($fullPath := childActions[0].result; $relativePath := $substringAfter($fullPath, $cwd); $parts := $split($fullPath, '\\\\'); $filename := $parts[-1]; {'Seite': $page, 'Index': index, 'Dateiname': $filename, 'Pfad': $relativePath}))"
+                            }
+                        },
+                        {
+                            "action": "artifacts",
+                            "name": "showDownloadSummary",
+                            "params": {
+                                "data": "{{ previousData.createDownloadSummary }}",
+                                "title": "📊 Download Zusammenfassung",
+                                "description": "{{ previousData.createDownloadSummary.length }} PDFs für Jahr {{ variables.selectedYear }}"
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

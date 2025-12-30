@@ -1,0 +1,113 @@
+<app-modal [isOpen]="isOpen()" [title]="'schedule_modal.automation' | transloco" icon="Clock" size="lg"
+    [showFooter]="true" (closed)="close()">
+
+    <!-- Modal Content -->
+    <div class="space-y-6">
+        <!-- Loading State -->
+        @if (loading()) {
+        <div class="flex items-center justify-center py-12">
+            <app-spinner size="lg" />
+        </div>
+        } @else {
+
+        <!-- Error Message -->
+        @if (error()) {
+        <app-alert variant="error">
+            {{ error() }}
+        </app-alert>
+        }
+
+        <!-- Scrape Name Info -->
+        @if (scrapeName) {
+        <p class="text-sm text-dojo-text-muted">{{ 'schedule_modal.configure_for' | transloco }} <span
+                class="text-dojo-text font-medium">{{ scrapeName }}</span></p>
+        }
+
+        <!-- Manual Execution Toggle -->
+        <div class="bg-dojo-surface-2 border border-dojo-border rounded-lg p-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                        <iconify-icon icon="lucide:play" class="w-5 h-5 text-blue-400"></iconify-icon>
+                    </div>
+                    <div>
+                        <span class="text-dojo-text font-medium">{{ 'schedule_modal.manual_execution' | transloco
+                            }}</span>
+                        <p class="text-sm text-dojo-text-muted">{{ 'schedule.manual_start_info' | transloco }}</p>
+                    </div>
+                </div>
+                <app-toggle [checked]="manualEnabled()" color="blue" (changed)="manualEnabled.set($event)" />
+            </div>
+        </div>
+
+        <!-- Scheduled Execution Toggle -->
+        <div class="bg-dojo-surface-2 border border-dojo-border rounded-lg p-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                        <iconify-icon icon="lucide:calendar-clock" class="w-5 h-5 text-emerald-400"></iconify-icon>
+                    </div>
+                    <div>
+                        <span class="text-dojo-text font-medium">{{ 'schedule_modal.automatic_execution' | transloco
+                            }}</span>
+                        <p class="text-sm text-dojo-text-muted">{{ 'schedule_modal.runs_automatically' | transloco }}
+                        </p>
+                    </div>
+                </div>
+                <app-toggle [checked]="scheduleEnabled()" color="emerald" (changed)="scheduleEnabled.set($event)" />
+            </div>
+        </div>
+
+        <!-- Cron Builder (shown when schedule enabled) -->
+        @if (scheduleEnabled()) {
+        <div class="space-y-4">
+            <h3 class="text-dojo-text font-medium flex items-center gap-2">
+                <iconify-icon icon="lucide:timer" class="w-4 h-4 text-dojo-orange"></iconify-icon>
+                {{ 'schedule_modal.configure_schedule' | transloco }}
+            </h3>
+
+            <app-cron-builder [expression]="cronExpression()" [showPresets]="true"
+                (expressionChange)="onCronExpressionChange($event)">
+            </app-cron-builder>
+
+            <!-- Schedule Info -->
+            @if (lastScheduledRun() || nextScheduledRun()) {
+            <div class="bg-dojo-surface border border-dojo-border rounded-lg p-4 space-y-2">
+                @if (lastScheduledRun()) {
+                <div class="flex items-center justify-between text-sm">
+                    <span class="text-dojo-text-muted">{{ 'schedule_modal.last_automatic_run' | transloco }}</span>
+                    <span class="text-dojo-text">{{ formatDateTime(lastScheduledRun()) }}</span>
+                </div>
+                }
+                @if (nextScheduledRun()) {
+                <div class="flex items-center justify-between text-sm">
+                    <span class="text-dojo-text-muted">{{ 'schedule_modal.next_scheduled_run' | transloco }}</span>
+                    <span class="text-emerald-400 font-medium">{{ formatDateTime(nextScheduledRun()) }}</span>
+                </div>
+                }
+            </div>
+            }
+        </div>
+        }
+
+        <!-- Validation Warning -->
+        @if (!manualEnabled() && !scheduleEnabled()) {
+        <app-alert variant="warning">
+            {{ 'schedule_modal.one_method_required' | transloco }}
+        </app-alert>
+        }
+
+        }
+    </div>
+
+    <!-- Footer -->
+    <ng-container modal-footer>
+        <app-button variant="ghost" (clicked)="close()">
+            {{ 'common.cancel' | transloco }}
+        </app-button>
+        <app-button variant="primary" [disabled]="!isValid() || saving() || !hasChanges()" [loading]="saving()"
+            (clicked)="save()">
+            {{ 'common.save' | transloco }}
+        </app-button>
+    </ng-container>
+</app-modal>

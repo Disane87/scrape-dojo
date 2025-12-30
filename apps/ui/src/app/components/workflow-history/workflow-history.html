@@ -1,0 +1,205 @@
+<!-- Filter Bar -->
+<div class="flex items-center justify-between gap-3 mb-4">
+    <div class="relative">
+        <select
+            class="appearance-none pl-3 pr-8 py-1.5 text-sm bg-dojo-surface-2 border border-dojo-border rounded-md text-dojo-text focus:outline-none focus:border-dojo-accent cursor-pointer"
+            aria-label="{{ 'history.filter_by_status' | transloco }}"
+            title="{{ 'history.filter_by_status' | transloco }}"
+            [ngModel]="statusFilter()"
+            (ngModelChange)="statusFilter.set($event)">
+            <option value="all">{{ 'history.all_workflows' | transloco }}</option>
+            <option value="running">{{ 'history.in_progress' | transloco }}</option>
+            <option value="success">{{ 'history.success' | transloco }}</option>
+            <option value="failed">{{ 'history.failed' | transloco }}</option>
+        </select>
+        <iconify-icon icon="lucide:chevron-down"
+            class="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-dojo-text-muted pointer-events-none"></iconify-icon>
+    </div>
+
+    <!-- Delete All Button -->
+    @if (history().length > 0) {
+    <button
+        class="flex items-center gap-1.5 px-3 py-1.5 text-sm text-dojo-danger hover:text-white hover:bg-dojo-danger-strong border border-dojo-border hover:border-dojo-danger-strong rounded-md transition-colors"
+        (click)="onDeleteAllRuns()">
+        <iconify-icon icon="lucide:trash-2" class="w-4 h-4"></iconify-icon>
+        {{ 'common.clear_all' | transloco }}
+    </button>
+    }
+</div>
+
+<!-- Run List -->
+<div class="border border-dojo-border rounded-md overflow-hidden">
+    @for (run of history(); track run.id; let i = $index) {
+    <div [class]="i < history().length - 1 ? 'border-b border-dojo-surface-2' : ''">
+        <!-- Run Header - Clickable -->
+        <div class="group flex items-center gap-4 px-4 py-3 hover:bg-dojo-surface transition-colors cursor-pointer"
+            (click)="selectRun(run.id)">
+            <!-- Expand Icon -->
+            <iconify-icon icon="lucide:chevron-right" class="w-4 h-4 text-dojo-text-muted transition-transform shrink-0"
+                [class.rotate-90]="selectedRunId() === run.id"></iconify-icon>
+            <!-- Status Icon -->
+            @switch (run.status) {
+            @case ('success') {
+            <iconify-icon icon="lucide:circle-check" class="w-5 h-5 text-dojo-success shrink-0"></iconify-icon>
+            }
+            @case ('failed') {
+            <iconify-icon icon="lucide:circle-x" class="w-5 h-5 text-dojo-danger shrink-0"></iconify-icon>
+            }
+            @case ('running') {
+            <iconify-icon icon="lucide:loader-2" class="w-5 h-5 text-dojo-warning animate-spin shrink-0"></iconify-icon>
+            }
+            @default {
+            <iconify-icon icon="lucide:circle" class="w-5 h-5 text-dojo-text-muted shrink-0"></iconify-icon>
+            }
+            }
+
+            <!-- Run Info -->
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2">
+                    <span class="font-medium text-dojo-text truncate">{{ run.scrapeId }}</span>
+                    <span class="text-dojo-text-muted text-sm">#{{ i + 1 }}</span>
+                </div>
+                <div class="flex items-center gap-2 text-xs text-dojo-text-muted mt-0.5">
+                    <span>{{ 'history.steps_count' | transloco: { count: (run.steps?.length || 0) } }}</span>
+                    <span>·</span>
+                    <span class="flex items-center gap-1">
+                        @if (run.trigger === 'scheduled') {
+                        <iconify-icon icon="lucide:clock" class="w-3 h-3 text-emerald-400"></iconify-icon>
+                        <span class="text-emerald-400">{{ 'history.scheduled' | transloco }}</span>
+                        } @else if (run.trigger === 'api') {
+                        <iconify-icon icon="lucide:webhook" class="w-3 h-3 text-blue-400"></iconify-icon>
+                        <span class="text-blue-400">{{ 'history.api' | transloco }}</span>
+                        } @else {
+                        <iconify-icon icon="lucide:play" class="w-3 h-3"></iconify-icon>
+                        <span>{{ 'history.manual' | transloco }}</span>
+                        }
+                    </span>
+                </div>
+            </div>
+
+            <!-- Timing -->
+            <div class="text-right text-xs text-dojo-text-muted">
+                <div class="flex items-center gap-1 justify-end">
+                    <iconify-icon icon="lucide:clock" class="w-3 h-3"></iconify-icon>
+                    <span>{{ run.startTime | duration:run.endTime }}</span>
+                </div>
+                <div class="mt-0.5">{{ run.startTime | timeAgo }}</div>
+            </div>
+
+            <!-- Delete Button -->
+            <button
+                class="p-1.5 text-dojo-text-muted hover:text-dojo-danger hover:bg-dojo-surface-2 rounded transition-colors opacity-0 group-hover:opacity-100"
+                (click)="onDeleteRun($event, run.id)"
+                aria-label="{{ 'history.delete_run' | transloco }}"
+                title="{{ 'history.delete_run' | transloco }}">
+                <iconify-icon icon="lucide:trash-2" class="w-4 h-4"></iconify-icon>
+            </button>
+        </div>
+
+        <!-- Expanded Timeline View -->
+        @if (selectedRunId() === run.id && run.steps && run.steps.length > 0) {
+        <div class="bg-dojo-bg border-t border-dojo-surface-2">
+            <!-- Timeline Container -->
+            <div class="relative pl-10 pr-5 py-5">
+                <!-- Vertical Timeline Line -->
+                <div class="absolute left-8 top-5 bottom-5 w-0.5 bg-dojo-border-muted"></div>
+
+                @for (step of run.steps; track step.name; let stepIdx = $index; let isLast = $last) {
+                <div class="relative mb-4 last:mb-0">
+                    <!-- Step Timeline Node -->
+                    <div
+                        class="absolute -left-2 top-2.5 w-5 h-5 rounded-full flex items-center justify-center z-10 ring-2 ring-dojo-bg shadow-sm"
+                        [class]="step.status === 'success' ? 'bg-dojo-success-strong' : 
+                                 step.status === 'failed' ? 'bg-dojo-danger-strong' : 
+                                 step.status === 'running' ? 'bg-dojo-warning-strong' : 'bg-dojo-border-muted'"
+                    >
+                        @switch (step.status) {
+                        @case ('success') {
+                        <iconify-icon icon="lucide:check" class="w-3 h-3 text-white"></iconify-icon>
+                        }
+                        @case ('failed') {
+                        <iconify-icon icon="lucide:x" class="w-3 h-3 text-white"></iconify-icon>
+                        }
+                        @case ('running') {
+                        <iconify-icon icon="lucide:loader-2" class="w-3.5 h-3.5 text-white animate-spin"></iconify-icon>
+                        }
+                        @default {
+                        <span class="w-2 h-2 bg-dojo-text-subtle rounded-full"></span>
+                        }
+                        }
+                    </div>
+
+                    <!-- Step Card -->
+                    <div class="ml-7 bg-dojo-surface border border-dojo-border rounded-dojo overflow-hidden">
+                        <!-- Step Header -->
+                        <div class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-dojo-surface-2 transition-colors"
+                            (click)="toggleStep(run.id, step.name)">
+                            <iconify-icon icon="lucide:chevron-right"
+                                class="w-4 h-4 text-dojo-text-muted transition-transform shrink-0"
+                                [class.rotate-90]="isStepExpanded(run.id, step.name)"></iconify-icon>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-medium text-dojo-text text-sm truncate">{{ step.name }}</span>
+                                    <span
+                                            class="text-[10px] px-2 py-0.5 rounded-full bg-dojo-surface-2 text-dojo-text-muted">{{ 'history.step_label' | transloco: { n: (stepIdx + 1) } }}</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 text-xs text-dojo-text-muted">
+                                    <span>{{ 'history.actions_count' | transloco: { count: (step.actions?.length || 0) } }}</span>
+                                @if (step.startTime && step.endTime) {
+                                <span>{{ step.startTime | duration:step.endTime }}</span>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Actions List (Expanded) - Using ActionTree component -->
+                        @if (isStepExpanded(run.id, step.name) && step.actions && step.actions.length > 0) {
+                        <div class="border-t border-dojo-border">
+                            <app-action-tree [actions]="step.actions" [runId]="run.id" [stepName]="step.name"
+                                [depth]="0">
+                            </app-action-tree>
+                        </div>
+                        }
+                    </div>
+                </div>
+                }
+            </div>
+
+            <!-- Run Error (if any) -->
+            @if (run.error) {
+            <div class="mx-4 mb-4 p-3 rounded-md bg-dojo-danger/10 border border-dojo-danger/30">
+                <div class="flex items-start gap-3">
+                    <iconify-icon icon="lucide:octagon-alert" class="w-5 h-5 text-dojo-danger shrink-0 mt-0.5"></iconify-icon>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-sm font-semibold text-dojo-danger mb-2">{{ 'history.run_failed' | transloco }}</div>
+                        <div class="space-y-2">
+                            @if (getErrorType(run.error) === 'http') {
+                            <div class="text-sm">
+                                <span class="text-dojo-danger font-medium">{{ getHttpErrorStatus(run.error) }}</span>
+                                <span class="text-dojo-danger/80 mx-2">•</span>
+                                <span class="text-dojo-danger/80">{{ getHttpErrorMessage(run.error) }}</span>
+                            </div>
+                            } @else if (getErrorType(run.error) === 'timeout') {
+                            <div class="text-sm text-dojo-danger/80">
+                                <iconify-icon icon="lucide:timer-off" class="inline w-4 h-4 mr-1"></iconify-icon>
+                                {{ 'history.timeout_message' | transloco }}
+                            </div>
+                            } @else {
+                            <div class="text-sm text-dojo-danger/80 font-mono break-all">{{ run.error }}</div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+            }
+        </div>
+        }
+    </div>
+    } @empty {
+    <div class="px-4 py-12 text-center">
+        <iconify-icon icon="lucide:circle-minus" width="128" height="128" class="text-dojo-text-muted mx-auto mb-4"></iconify-icon>
+        <h3 class="text-lg font-medium text-dojo-text mb-1">{{ 'history.no_runs' | transloco }}</h3>
+        <p class="text-sm text-dojo-text-muted">{{ 'workflow.run_workflow' | transloco }}</p>
+    </div>
+    }
+</div>

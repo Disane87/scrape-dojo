@@ -1,0 +1,191 @@
+<div class="flex flex-col h-screen bg-dojo-bg text-dojo-text overflow-hidden">
+  <!-- Top Navigation -->
+  <app-top-nav (showApiDocs)="showApiDocs.set(true)" (showSecrets)="showSecrets.set(true)"
+    (showVariables)="showVariables.set(true)" (showStatus)="showStatus.set(true)" />
+
+  <!-- Main Content Area - flex-1 takes remaining space, minus log panel height -->
+  <div class="flex flex-1 overflow-hidden" [style.margin-bottom.px]="showServerLogs() ? serverLogsHeight() : 36">
+    <!-- Left Sidebar - Workflows -->
+    <app-workflow-sidebar [scrapes]="scrapes()" [selectedScrape]="selectedScrape()" [appVersion]="appVersion"
+      [gitCommit]="gitCommit" (scrapeSelected)="selectScrape($event)" />
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col overflow-hidden">
+      @if (selectedScrape(); as scrapeId) {
+      <!-- Workflow Header -->
+      <app-workflow-header [scrapeId]="scrapeId" [metadata]="selectedScrapeMetadata()" [isRunning]="isRunning()"
+        [activeTab]="activeTab()" (activeTabChange)="setActiveTab($event)" [historyCount]="filteredHistory().length" [liveOutputCount]="liveOutput().length"
+        [scheduleEnabled]="scheduleEnabled()" [nextScheduledRun]="nextScheduledRun()" (run)="runScrape()"
+        (stop)="stopScrape()" (openSchedule)="openScheduleModal()" />
+
+      <!-- Tab Content -->
+      <div class="flex-1 min-h-0 p-6" [class.overflow-auto]="activeTab() !== 'definition' && activeTab() !== 'visual'">
+        @switch (activeTab()) {
+        @case ('history') {
+        <div class="flex gap-4 h-full">
+          <!-- Left: History List (60%) -->
+          <div class="w-[60%] h-full overflow-auto">
+            <app-workflow-history [history]="filteredHistory()" [selectedRunId]="selectedRunId()"
+              [(statusFilter)]="statusFilter" (runSelected)="onRunSelected($event)" (deleteRun)="onDeleteRun($event)"
+              (deleteAllRuns)="onDeleteAllRuns()" />
+          </div>
+          
+          <!-- Right: Debug View (40%) -->
+          <div class="w-[40%] h-full">
+            <app-run-debug-view [run]="selectedRun()" />
+          </div>
+        </div>
+        }
+
+        @case ('definition') {
+        @if (selectedScrapeDefinition(); as def) {
+        <div class="h-full">
+          <app-json-editor [data]="def" [fileName]="selectedScrape() + '.jsonc'" [readOnly]="true"
+            [showMinimap]="false">
+          </app-json-editor>
+        </div>
+        } @else {
+        <div class="border border-dojo-border rounded-md overflow-hidden">
+          <div class="p-8 text-center text-dojo-text-muted">
+            <iconify-icon icon="lucide:loader-2" class="w-8 h-8 mx-auto mb-2 animate-spin"></iconify-icon>
+            {{ 'dashboard.loading_definition' | transloco }}
+          </div>
+        </div>
+        }
+        }
+
+        @case ('visual') {
+        <div class="h-full border border-dojo-border rounded-md overflow-hidden">
+          <app-workflow-visualizer [definition]="selectedScrapeDefinition()" />
+        </div>
+        }
+
+        @case ('output') {
+        <div class="h-full flex flex-col border border-dojo-border rounded-md overflow-hidden">
+          <app-log-viewer [logs]="liveOutput()" [title]="'workflow.tabs.logs' | transloco" [displayMode]="'all-events'"
+            [filterMode]="'workflow'" [scrapeId]="selectedScrape() ?? undefined" [runId]="selectedRunId() ?? undefined"
+            [collapsible]="false" [isLive]="isRunning()" [showHeader]="true" [initiallyExpanded]="true"
+            (clear)="liveOutput.set([])" />
+        </div>
+        }
+
+        @case ('variables') {
+        <app-workflow-variables [workflowId]="scrapeId" />
+        }
+        }
+      </div>
+      } @else {
+      <!-- Empty State -->
+      <div class="flex flex-col items-center justify-center h-full text-center px-4">
+        <iconify-icon icon="lucide:layout-grid" width="128" height="128" class="text-dojo-text-muted mb-6"></iconify-icon>
+        <h2 class="text-2xl font-semibold text-dojo-text mb-2">{{ 'dashboard.select_workflow' | transloco }}</h2>
+        <p class="text-dojo-text-muted max-w-md">
+          {{ 'dashboard.select_workflow_description' | transloco }}
+        </p>
+      </div>
+      }
+    </main>
+  </div>
+
+  <!-- API Docs Modal -->
+  <app-api-docs-modal [(isOpen)]="showApiDocs" />
+
+  <!-- Status Modal -->
+  <app-status-modal [(isOpen)]="showStatus" />
+
+  <!-- Secrets Manager Modal -->
+  @if (showSecrets()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center">
+    <div class="absolute inset-0 bg-black/60" (click)="showSecrets.set(false)"></div>
+    <div
+      class="relative w-full max-w-6xl max-h-[90vh] bg-dojo-bg border border-dojo-border rounded-lg shadow-xl overflow-hidden flex flex-col">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-dojo-border shrink-0">
+        <div>
+          <h2 class="text-xl font-semibold text-dojo-text flex items-center gap-2">
+            <iconify-icon icon="lucide:lock" class="w-5 h-5 text-dojo-orange"></iconify-icon>
+            {{ 'secrets.title' | transloco }}
+          </h2>
+          <p class="text-sm text-dojo-text-muted mt-1">
+            {{ 'secrets.description' | transloco }}
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <app-button icon="Plus" (click)="openCreateSecretModal()">
+            {{ 'dashboard.new_secret' | transloco }}
+          </app-button>
+          <button
+            class="p-1.5 hover:bg-dojo-surface-2 rounded text-dojo-text-muted hover:text-dojo-text transition-colors"
+            (click)="showSecrets.set(false)" [title]="'common.close' | transloco">
+            <iconify-icon icon="lucide:x" class="w-5 h-5"></iconify-icon>
+          </button>
+        </div>
+      </div>
+      <div class="p-6 overflow-y-auto flex-1">
+        <app-secrets-manager />
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Variables Modal -->
+  @if (showVariables()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center">
+    <div class="absolute inset-0 bg-black/60" (click)="showVariables.set(false)"></div>
+    <div
+      class="relative w-full max-w-6xl max-h-[90vh] bg-dojo-bg border border-dojo-border rounded-lg shadow-xl overflow-hidden flex flex-col">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-dojo-border shrink-0">
+        <div>
+          <h2 class="text-xl font-semibold text-dojo-text flex items-center gap-2">
+            <iconify-icon icon="lucide:settings-2" class="w-5 h-5 text-dojo-accent"></iconify-icon>
+            {{ 'variables.title' | transloco }}
+          </h2>
+          <p class="text-sm text-dojo-text-muted mt-1">
+            {{ 'dashboard.variables_description' | transloco }}
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <app-button icon="Plus" (click)="openCreateVariableDialog()">
+            {{ 'dashboard.new_variable' | transloco }}
+          </app-button>
+          <button
+            class="p-1.5 hover:bg-dojo-surface-2 rounded text-dojo-text-muted hover:text-dojo-text transition-colors"
+            (click)="showVariables.set(false)" [title]="'common.close' | transloco">
+            <iconify-icon icon="lucide:x" class="w-5 h-5"></iconify-icon>
+          </button>
+        </div>
+      </div>
+      <div class="p-4 overflow-y-auto flex-1">
+        <app-variables-manager />
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- OTP Modal -->
+  <app-otp-modal [otpRequest]="otpRequest()" [(otpCode)]="otpCode" (submit)="onOtpSubmit($event)"
+    (close)="closeOtpModal()" />
+
+  <!-- Run Dialog -->
+  <app-run-dialog [isOpen]="showRunDialog()" [workflowId]="selectedScrape() || ''"
+    [workflowName]="selectedScrapeMetadata()?.description || selectedScrape() || ''" [variables]="runDialogVariables()"
+    (closed)="onRunDialogClosed($event)" />
+
+  <!-- Schedule Modal -->
+  @if (showScheduleModal()) {
+  <app-schedule-modal [scrapeId]="selectedScrape()"
+    [scrapeName]="selectedScrapeMetadata()?.description || selectedScrape() || ''" (closed)="onScheduleModalClosed()"
+    (saved)="onScheduleSaved($event)" />
+  }
+
+  <!-- Notification Modal (Toast-like) -->
+  <app-notification-modal />
+
+  <!-- Global Server Logs Panel -->
+  <div class="fixed bottom-0 left-0 right-0 z-40">
+    <app-log-viewer [logs]="serverLogs()" [title]="'dashboard.server_logs' | transloco" [filterMode]="'all'"
+      [height]="serverLogsHeight()" [collapsible]="true" [initiallyExpanded]="showServerLogs()" [autoScroll]="true"
+      (heightChange)="onServerLogsHeightChange($event)"
+      (expandedChange)="showServerLogs.set($event); saveLogPanelState()" (clear)="clearServerLogs()">
+    </app-log-viewer>
+  </div>
+</div>

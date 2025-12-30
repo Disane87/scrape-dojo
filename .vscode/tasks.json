@@ -1,0 +1,163 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        // ═══════════════════════════════════════════════════════════
+        // API Tasks
+        // ═══════════════════════════════════════════════════════════
+        {
+            "label": "Start API Dev Server",
+            "type": "shell",
+            "command": "pnpm nx serve api --configuration=development",
+            "group": "build",
+            "isBackground": true,
+            "problemMatcher": {
+                "pattern": {
+                    "regexp": "^(.*)$"
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Starting compilation",
+                    "endsPattern": "Nest application successfully started|Application is running on"
+                }
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "new",
+                "group": "servers"
+            }
+        },
+        {
+            "label": "Build API",
+            "type": "shell",
+            "command": "pnpm nx build api",
+            "group": "build",
+            "problemMatcher": [
+                "$tsc"
+            ]
+        },
+        // ═══════════════════════════════════════════════════════════
+        // UI Tasks
+        // ═══════════════════════════════════════════════════════════
+        {
+            "label": "Start UI Dev Server",
+            "type": "shell",
+            "command": "pnpm nx serve ui",
+            "group": "build",
+            "isBackground": true,
+            "problemMatcher": {
+                "pattern": {
+                    "regexp": "^(.*)$"
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Browser application bundle generation",
+                    "endsPattern": "Application bundle generation complete|Compiled successfully"
+                }
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "new",
+                "group": "servers"
+            }
+        },
+        {
+            "label": "Build UI",
+            "type": "shell",
+            "command": "pnpm nx build ui",
+            "group": "build",
+            "problemMatcher": [
+                "$tsc"
+            ]
+        },
+        // ═══════════════════════════════════════════════════════════
+        // Combined Tasks
+        // ═══════════════════════════════════════════════════════════
+        {
+            "label": "Start All Dev Servers",
+            "dependsOn": [
+                "Start API Dev Server",
+                "Start UI Dev Server"
+            ],
+            "dependsOrder": "parallel",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Build All",
+            "type": "shell",
+            "command": "pnpm nx run-many -t build",
+            "group": "build",
+            "problemMatcher": [
+                "$tsc"
+            ]
+        },
+        // ═══════════════════════════════════════════════════════════
+        // Utility Tasks
+        // ═══════════════════════════════════════════════════════════
+        {
+            "label": "Lint All",
+            "type": "shell",
+            "command": "pnpm nx run-many -t lint",
+            "group": "test",
+            "problemMatcher": [
+                "$eslint-stylish"
+            ]
+        },
+        {
+            "label": "Test API",
+            "type": "shell",
+            "command": "pnpm nx test api",
+            "group": "test",
+            "problemMatcher": []
+        },
+        {
+            "label": "Generate JSON Schema",
+            "type": "shell",
+            "command": "pnpm create:schema",
+            "group": "none",
+            "problemMatcher": []
+        },
+        {
+            "label": "Install Dependencies",
+            "type": "shell",
+            "command": "pnpm install",
+            "group": "none",
+            "problemMatcher": []
+        },
+        // ═══════════════════════════════════════════════════════════
+        // Docs Tasks
+        // ═══════════════════════════════════════════════════════════
+        {
+            "label": "Start Docs Dev Server",
+            "type": "shell",
+            "command": "pnpm nx serve docs",
+            "group": "build",
+            "isBackground": true,
+            "problemMatcher": {
+                "pattern": {
+                    "regexp": "^(.*)$"
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Starting the development server",
+                    "endsPattern": "Docusaurus website is running at|compiled successfully"
+                }
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "new",
+                "group": "servers"
+            }
+        },
+        {
+            "label": "Build Docs",
+            "type": "shell",
+            "command": "pnpm nx build docs",
+            "group": "build",
+            "problemMatcher": []
+        }
+    ]
+}

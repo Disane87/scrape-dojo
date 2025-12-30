@@ -1,0 +1,192 @@
+<div class="h-full flex flex-col bg-dojo-bg">
+    <!-- Toolbar -->
+    <div class="flex items-center justify-between px-4 py-2.5 border-b border-dojo-border bg-dojo-surface shrink-0">
+        <div class="flex items-center gap-3">
+            <div
+                class="w-8 h-8 rounded-lg bg-gradient-to-br from-dojo-orange to-amber-600 flex items-center justify-center shadow-lg">
+                <iconify-icon icon="lucide:workflow" class="w-4 h-4 text-white"></iconify-icon>
+            </div>
+            <div>
+                <span class="text-sm font-semibold text-dojo-text">{{ 'visualizer.title' | transloco }}</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-1 bg-dojo-surface-2 rounded-lg p-1">
+            <button
+                class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-dojo-text-muted hover:text-dojo-text hover:bg-dojo-bg rounded-md transition-all"
+                (click)="expandAll()">
+                <iconify-icon icon="lucide:expand" class="w-3.5 h-3.5"></iconify-icon>
+                {{ 'visualizer.expand_all' | transloco }}
+            </button>
+            <button
+                class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-dojo-text-muted hover:text-dojo-text hover:bg-dojo-bg rounded-md transition-all"
+                (click)="collapseAll()">
+                <iconify-icon icon="lucide:shrink" class="w-3.5 h-3.5"></iconify-icon>
+                {{ 'visualizer.collapse_all' | transloco }}
+            </button>
+        </div>
+    </div>
+
+    <!-- Canvas -->
+    <div class="flex-1 overflow-auto p-8"
+        style="background-image: radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 20px 20px;">
+        @if (visualNodes().length === 0) {
+        <div class="flex flex-col items-center justify-center h-96 text-dojo-text-muted">
+            <div class="w-16 h-16 rounded-2xl bg-dojo-surface-2 flex items-center justify-center mb-4">
+                <iconify-icon icon="lucide:xcircle" class="w-8 h-8 opacity-40"></iconify-icon>
+            </div>
+            <p class="text-sm font-medium">{{ 'visualizer.no_workflow' | transloco }}</p>
+            <p class="text-xs text-dojo-text-subtle mt-1">{{ 'visualizer.select_workflow' | transloco }}</p>
+        </div>
+        } @else {
+        <div class="relative flex flex-col items-start">
+            <!-- Main vertical connector line -->
+            <div class="absolute left-6 top-12 bottom-12 w-0.5 bg-dojo-border/50"></div>
+
+            <!-- Start Trigger -->
+            <div class="relative flex items-center gap-4 z-10">
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
+                    style="box-shadow: 0 4px 20px rgba(16, 185, 129, 0.35);">
+                    <iconify-icon icon="lucide:play" class="w-5 h-5 text-white"></iconify-icon>
+                </div>
+                <span class="text-xs font-semibold text-dojo-text-muted uppercase tracking-wider">{{ 'visualizer.start'
+                    | transloco }}</span>
+            </div>
+
+            <!-- Steps -->
+            @for (stepNode of visualNodes(); track stepNode.id; let isLast = $last) {
+            <ng-container
+                *ngTemplateOutlet="stepTemplate; context: { $implicit: stepNode, isLast: isLast }"></ng-container>
+            }
+
+            <!-- End Node -->
+            <div class="relative flex items-center gap-4 mt-4 z-10">
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-500 to-rose-600 flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
+                    style="box-shadow: 0 4px 20px rgba(244, 63, 94, 0.35);">
+                    <iconify-icon icon="lucide:square" class="w-5 h-5 text-white"></iconify-icon>
+                </div>
+                <span class="text-xs font-semibold text-dojo-text-muted uppercase tracking-wider">{{ 'visualizer.end' |
+                    transloco }}</span>
+            </div>
+        </div>
+        }
+    </div>
+</div>
+
+<!-- Step Template -->
+<ng-template #stepTemplate let-node let-isLast="isLast">
+    <!-- Step Card with left connector -->
+    <div class="relative flex items-center mt-4 z-10">
+        <!-- Horizontal connector from line to card -->
+        <div class="absolute left-6 w-4 h-0.5 bg-dojo-border/50"></div>
+
+        <div class="flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 ml-10 min-w-80 bg-dojo-surface border border-dojo-border hover:border-dojo-orange/40"
+            [class.border-dojo-orange/30]="node.isExpanded" style="box-shadow: 0 2px 10px rgba(0,0,0,0.2);"
+            (click)="toggleNode(node.id)">
+            <!-- Expand Arrow -->
+            <div class="w-6 h-6 rounded-md bg-dojo-surface-2 flex items-center justify-center text-dojo-text-muted transition-transform duration-200"
+                [class.rotate-90]="node.isExpanded">
+                <iconify-icon icon="lucide:chevron-right" class="w-3.5 h-3.5"></iconify-icon>
+            </div>
+            <!-- Icon -->
+            <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-gradient-to-br from-dojo-orange to-amber-600"
+                style="box-shadow: 0 2px 10px rgba(234, 88, 12, 0.3);">
+                <iconify-icon icon="lucide:layers" class="w-5 h-5 text-white"></iconify-icon>
+            </div>
+            <!-- Content -->
+            <div class="flex-1">
+                <div class="text-sm font-semibold text-dojo-text">{{ node.name }}</div>
+                <div class="text-xs text-dojo-text-muted mt-0.5">{{ node.children?.length || 0 }} actions</div>
+            </div>
+            <!-- Badge -->
+            <div
+                class="px-2.5 py-1 rounded-md text-[10px] font-semibold uppercase tracking-wider bg-dojo-surface-2 text-dojo-text-muted">
+                Step
+            </div>
+        </div>
+    </div>
+
+    <!-- Expanded Actions -->
+    @if (node.isExpanded && node.children?.length) {
+    <div class="relative ml-14 mt-2">
+        <!-- Vertical line for actions -->
+        <div class="absolute left-1 top-0 bottom-5 w-0.5 bg-dojo-border/40"></div>
+        <!-- Actions list -->
+        <div class="flex flex-col gap-2 pl-6">
+            @for (action of node.children; track action.id; let isLastAction = $last) {
+            <ng-container
+                *ngTemplateOutlet="actionTemplate; context: { $implicit: action, isLast: isLastAction, depth: 0 }"></ng-container>
+            }
+        </div>
+    </div>
+    }
+</ng-template>
+
+<!-- Action Template -->
+<ng-template #actionTemplate let-node let-isLast="isLast" let-depth="depth">
+    <div class="relative" [style.margin-left.px]="depth * 20">
+        <!-- Horizontal connector line -->
+        <div class="absolute left-0 top-1/2 w-4 h-0.5 bg-dojo-border/40 -translate-x-5 -translate-y-1/2"></div>
+
+        <!-- Action Card -->
+        <div class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-200 min-w-72 max-w-lg border-l-[3px]"
+            [ngClass]="getActionCardClass(node.actionType, node.type === 'loop', node.isExpanded)"
+            [title]="getActionDescription(node.actionType)"
+            (click)="node.type === 'loop' ? toggleNode(node.id) : selectNode(node.id); $event.stopPropagation()">
+
+            <!-- Loop expand -->
+            @if (node.type === 'loop') {
+            <div class="w-5 h-5 rounded flex items-center justify-center bg-amber-500/20 text-amber-400 transition-transform duration-200"
+                [class.rotate-90]="node.isExpanded">
+                <iconify-icon icon="lucide:chevron-right" class="w-3 h-3"></iconify-icon>
+            </div>
+            }
+
+            <!-- Icon -->
+            <div class="w-8 h-8 rounded-md flex items-center justify-center"
+                [ngClass]="getActionIconBg(node.actionType)">
+                <iconify-icon [icon]="toIconify(getActionIconName(node.actionType))" class="w-4 h-4"
+                    [attr.stroke-width]="2"></iconify-icon>
+            </div>
+
+            <!-- Content -->
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-medium text-dojo-text truncate">{{ node.name }}</span>
+                    @if (node.name !== node.actionType) {
+                    <span
+                        class="px-1.5 py-0.5 text-[9px] font-medium rounded bg-dojo-surface-2 text-dojo-text-subtle uppercase">{{
+                        node.actionType }}</span>
+                    }
+                </div>
+                @for (param of getImportantParams(node.params); track param.key) {
+                <div class="text-xs text-dojo-text-muted truncate mt-0.5">
+                    <span class="text-dojo-text-subtle">{{ param.key }}:</span>
+                    <span class="ml-1">{{ param.value }}</span>
+                </div>
+                }
+            </div>
+
+            <!-- Loop count -->
+            @if (node.type === 'loop' && node.children?.length) {
+            <div class="px-2 py-0.5 text-[10px] font-medium rounded-full bg-amber-500/20 text-amber-400">
+                {{ node.children.length }} actions
+            </div>
+            }
+        </div>
+
+        <!-- Nested Loop Children -->
+        @if (node.type === 'loop' && node.isExpanded && node.children?.length) {
+        <div class="relative flex mt-2 ml-4">
+            <!-- Loop vertical line -->
+            <div class="absolute left-4 top-0 bottom-0 w-0.5 bg-amber-500/30"></div>
+            <!-- Loop actions -->
+            <div class="flex flex-col gap-2 pl-8">
+                @for (child of node.children; track child.id; let isLastChild = $last) {
+                <ng-container
+                    *ngTemplateOutlet="actionTemplate; context: { $implicit: child, isLast: isLastChild, depth: depth + 1 }"></ng-container>
+                }
+            </div>
+        </div>
+        }
+    </div>
+</ng-template>

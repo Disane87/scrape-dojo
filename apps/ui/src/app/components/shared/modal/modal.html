@@ -1,0 +1,32 @@
+@if (isOpen()) {
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+  <!-- Backdrop -->
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" (click)="onBackdropClick()"></div>
+
+  <!-- Modal -->
+  <div [class]="modalClasses()">
+    <!-- Header -->
+    <div class="flex items-center justify-between px-4 py-3 border-b border-dojo-border shrink-0">
+      <div class="flex items-center gap-2">
+        @if (icon()) {
+        <iconify-icon [icon]="toIconify(icon()!)" class="w-5 h-5 text-dojo-text"></iconify-icon>
+        }
+        <h3 class="text-lg font-semibold text-dojo-text">{{ title() }}</h3>
+      </div>
+      <app-icon-button icon="X" size="sm" [title]="'common.close' | transloco" (click)="close()" />
+    </div>
+
+    <!-- Body -->
+    <div class="p-4 overflow-y-auto flex-1">
+      <ng-content />
+    </div>
+
+    <!-- Footer -->
+    @if (showFooter()) {
+    <div class="flex items-center justify-end gap-3 px-4 py-3 border-t border-dojo-border shrink-0">
+      <ng-content select="[modal-footer]" />
+    </div>
+    }
+  </div>
+</div>
+}

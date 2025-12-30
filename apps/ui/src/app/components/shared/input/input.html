@@ -1,0 +1,12 @@
+<div class="relative" [class.w-full]="fullWidth()">
+  @if (icon()) {
+  <iconify-icon [icon]="toIconify(icon()!)"
+    [class]="iconSizeClass() + ' absolute left-3 top-1/2 -translate-y-1/2 text-dojo-text-muted pointer-events-none'"></iconify-icon>
+  }
+  <input [type]="type()" [class]="inputClasses()" [placeholder]="placeholder()" [disabled]="disabled()"
+    [readonly]="readonly()" [ngModel]="_value" (ngModelChange)="onInputChange($event)" (blur)="onBlur()" />
+  @if (iconRight()) {
+  <iconify-icon [icon]="toIconify(iconRight()!)"
+    [class]="iconSizeClass() + ' absolute right-3 top-1/2 -translate-y-1/2 text-dojo-text-muted pointer-events-none'"></iconify-icon>
+  }
+</div>

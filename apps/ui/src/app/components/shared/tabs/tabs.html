@@ -1,0 +1,24 @@
+<div class="flex gap-4 border-b border-dojo-border">
+  @for (tab of tabs(); track tab.id()) {
+  <button type="button" [class]="getTabClasses(tab.id())" (click)="selectTab(tab.id())">
+    @if (tab.icon()) {
+    <iconify-icon [icon]="toIconify(tab.icon()!)" class="w-4 h-4"></iconify-icon>
+    }
+    <span>{{ tab.label() }}</span>
+    @if (tab.badge() !== undefined && tab.badge() !== null) {
+    <span class="px-1.5 py-0.5 text-xs rounded-full bg-dojo-border">
+      {{ tab.badge() }}
+    </span>
+    }
+  </button>
+  }
+</div>
+
+<!-- Tab content -->
+<div class="tab-content">
+  @for (tab of tabs(); track tab.id()) {
+  @if (isActive(tab.id())) {
+  <ng-container [ngTemplateOutlet]="tab.content"></ng-container>
+  }
+  }
+</div>

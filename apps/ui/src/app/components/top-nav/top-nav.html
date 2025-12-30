@@ -1,0 +1,27 @@
+<nav class="bg-dojo-surface border-b border-dojo-border px-4 py-2.5 shrink-0">
+    <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <img src="logos/scrape-dojo-app-icon-64x64.png" alt="Scrape Dojo" class="w-8 h-8" />
+            <div class="flex items-center gap-2">
+                <span class="text-lg font-bold text-dojo-text">{{ 'app.title' | transloco }}</span>
+                <span class="text-dojo-text-muted text-sm">/</span>
+                <span class="text-sm text-dojo-accent font-medium cursor-pointer hover:underline">{{ 'common.actions' |
+                    transloco }}</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <!-- Secrets -->
+            <app-button variant="outline" size="sm" icon="Lock" (clicked)="openSecrets()">
+                {{ 'secrets.title' | transloco }}
+            </app-button>
+
+            <!-- Variables -->
+            <app-button variant="outline" size="sm" icon="Variable" (clicked)="openVariables()">
+                {{ 'variables.title' | transloco }}
+            </app-button>
+
+            <!-- User Menu -->
+            <app-user-menu (showStatus)="openStatus()" (showApiDocs)="openApiDocs()" />
+        </div>
+    </div>
+</nav>

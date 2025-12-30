@@ -1,0 +1,7 @@
+<button type="button" [class]="buttonClasses()" [title]="title()" [disabled]="disabled() || loading()">
+  @if (loading()) {
+  <iconify-icon icon="lucide:loader-2" [class]="iconSizeClass() + ' animate-spin'"></iconify-icon>
+  } @else {
+  <iconify-icon [icon]="toIconify(icon())" [class]="iconSizeClass()"></iconify-icon>
+  }
+</button>

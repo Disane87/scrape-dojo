@@ -1,0 +1,669 @@
+{
+  "$schema": "../scrapes.schema.json",
+  "scrapes": [
+    {
+      "id": "amazon",
+      "metadata": {
+        "description": "Amazon order history & invoice scraper",
+        "version": "2.2.0",
+        "author": "gh:@disane87",
+        "email": "mfranke87@icloud.com",
+        "icon": "dbi:amazon:light",
+        "category": "E-Commerce",
+        "tags": [
+          "amazon",
+          "invoices",
+          "orders"
+        ],
+        "variables": [
+          {
+            "name": "email",
+            "label": "Amazon E-Mail",
+            "type": "email",
+            "required": true,
+            "description": "Deine Amazon Login E-Mail-Adresse",
+            "secretRef": "AMAZON_EMAIL"
+          },
+          {
+            "name": "password",
+            "label": "Amazon Passwort",
+            "type": "password",
+            "required": true,
+            "description": "Dein Amazon Passwort",
+            "secretRef": "AMAZON_PASSWORD"
+          },
+          {
+            "name": "targetYear",
+            "label": "Jahr (optional)",
+            "type": "select",
+            "required": false,
+            "description": "Nur ein bestimmtes Jahr abrufen (leer = alle Jahre)",
+            "optionsExpression": "[{'value': '', 'label': 'Alle Jahre'}, {'value': 'year-' & $string(year), 'label': $string(year)}, {'value': 'year-' & $string(year-1), 'label': $string(year-1)}, {'value': 'year-' & $string(year-2), 'label': $string(year-2)}, {'value': 'year-' & $string(year-3), 'label': $string(year-3)}, {'value': 'year-' & $string(year-4), 'label': $string(year-4)}, {'value': 'year-' & $string(year-5), 'label': $string(year-5)}, {'value': 'year-' & $string(year-6), 'label': $string(year-6)}, {'value': 'year-' & $string(year-7), 'label': $string(year-7)}, {'value': 'year-' & $string(year-8), 'label': $string(year-8)}, {'value': 'year-' & $string(year-9), 'label': $string(year-9)}]",
+            "default": ""
+          },
+          {
+            "name": "maxPages",
+            "label": "Max. Seiten pro Jahr (Test)",
+            "type": "number",
+            "required": false,
+            "description": "Begrenzt die Anzahl der Seiten (leer = alle)",
+            "default": ""
+          },
+          {
+            "name": "startPage",
+            "label": "Startseite (Test)",
+            "type": "number",
+            "required": false,
+            "description": "Bei welcher Seite starten (1 = erste Seite)",
+            "default": "1"
+          }
+        ],
+        "triggers": [
+          {
+            "type": "manual"
+          },
+          {
+            "type": "cron"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "name": "Login",
+          "actions": [
+            {
+              "name": "Navigate to login",
+              "action": "navigate",
+              "params": {
+                "url": "https://www.amazon.de/ap/signin?openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Fwww.amazon.de%2F%3Fref_%3Dnav_signin&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.assoc_handle=deflex&openid.mode=checkid_setup&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0"
+              }
+            },
+            {
+              "name": "Delay after navigation",
+              "action": "delay",
+              "params": {
+                "time": 2000
+              }
+            },
+            {
+              "name": "passwordFieldVisible",
+              "action": "extract",
+              "params": {
+                "selector": "#ap_password, input[name='password'], input[type='password']",
+                "property": "tagName",
+                "optional": true
+              }
+            },
+            {
+              "name": "Type email",
+              "action": "type",
+              "params": {
+                "selector": "#ap_email, input[name='email'], input[type='email']",
+                "text": "{{previousData.var_email}}",
+                "pressEnter": true,
+                "condition": "{{not (isDefined previousData.passwordFieldVisible)}}"
+              }
+            },
+            {
+              "name": "Wait after email",
+              "action": "delay",
+              "params": {
+                "time": 2500,
+                "condition": "{{not (isDefined previousData.passwordFieldVisible)}}"
+              }
+            },
+            {
+              "name": "Wait for password input",
+              "action": "waitForSelector",
+              "params": {
+                "selector": "#ap_password, input[name='password'], input[type='password']",
+                "timeout": 15000,
+                "condition": "{{not (isDefined previousData.passwordFieldVisible)}}"
+              }
+            },
+            {
+              "name": "Type password",
+              "action": "type",
+              "params": {
+                "selector": "#ap_password, input[name='password'], input[type='password']",
+                "text": "{{previousData.var_password}}",
+                "pressEnter": true
+              }
+            },
+            {
+              "name": "Wait for OTP",
+              "action": "waitForOtp",
+              "params": {
+                "selector": "input[name='otpCode'], #auth-mfa-otpcode, input[name='code']",
+                "detectSelector": "input[name='otpCode'], #auth-mfa-otpcode, form[action*='mfa']",
+                "timeout": 120000,
+                "pressEnter": true,
+                "message": "🔐 Amazon OTP-Code eingeben (aus E-Mail oder Authenticator):"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Navigate to Orders and Extract Years",
+          "actions": [
+            {
+              "name": "Navigate to order history",
+              "action": "navigate",
+              "params": {
+                "url": "https://www.amazon.de/your-orders/orders"
+              }
+            },
+            {
+              "action": "delay",
+              "params": {
+                "time": 2000
+              }
+            },
+            {
+              "name": "extractedYears",
+              "action": "extractAll",
+              "params": {
+                "selector": "#time-filter option[value^='year-']",
+                "property": "value"
+              }
+            },
+            // Filtere Jahre: Wenn targetYear gesetzt ist, nur dieses Jahr, sonst alle
+            {
+              "name": "yearsToProcess",
+              "action": "transform",
+              "params": {
+                "previousDataKeys": [
+                  "extractedYears",
+                  "var_targetYear"
+                ],
+                "expression": "var_targetYear != null and var_targetYear != '' ? [var_targetYear] : extractedYears"
+              }
+            },
+            {
+              "action": "logger",
+              "name": "availableYears",
+              "params": {
+                "message": "📅 Verfügbare Jahre: {{previousData.extractedYears}}",
+                "level": "log"
+              }
+            },
+            {
+              "action": "logger",
+              "params": {
+                "message": "🎯 Zu verarbeiten: {{previousData.yearsToProcess}}",
+                "level": "log"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Process All Years",
+          "actions": [
+            {
+              "action": "loop",
+              "name": "yearLoop",
+              "params": {
+                "elementKey": "yearsToProcess",
+                "actions": [
+                  {
+                    "action": "logger",
+                    "params": {
+                      "message": "📆 Verarbeite {{currentData.yearLoop.value}} ({{add currentData.yearLoop.index 1}})",
+                      "level": "log"
+                    }
+                  },
+                  {
+                    "name": "Navigate to year",
+                    "action": "navigate",
+                    "params": {
+                      "url": "https://www.amazon.de/your-orders/orders?timeFilter={{currentData.yearLoop.value}}"
+                    }
+                  },
+                  {
+                    "action": "delay",
+                    "params": {
+                      "time": 2000
+                    }
+                  },
+                  {
+                    "name": "Get total pages",
+                    "action": "extract",
+                    "params": {
+                      "selector": ".a-pagination li.a-normal:last-of-type a, ul.a-pagination li:nth-last-child(2) a"
+                    }
+                  },
+                  {
+                    "action": "transform",
+                    "name": "totalPages",
+                    "params": {
+                      "previousDataKey": "Get total pages",
+                      "expression": "$type($) = 'string' and $ != '' ? $number($) : 1"
+                    }
+                  },
+                  {
+                    "action": "transform",
+                    "name": "pageIndices",
+                    "params": {
+                      "previousDataKeys": [
+                        "totalPages"
+                      ],
+                      "expression": "($total := totalPages; $maxPagesRaw := '{{var_maxPages}}'; $startPageRaw := '{{var_startPage}}'; $maxPages := $maxPagesRaw != '' and $maxPagesRaw != null ? $number($maxPagesRaw) : $total; $startPage := $startPageRaw != '' and $startPageRaw != null ? $number($startPageRaw) : 1; $startIdx := $startPage - 1; $endIdx := $startIdx + $maxPages - 1; $actualEnd := $endIdx < $total ? $endIdx : $total - 1; $map([$startIdx..$actualEnd], function($v) { $v }))"
+                    }
+                  },
+                  {
+                    "action": "logger",
+                    "params": {
+                      "message": "� DEBUG: var_maxPages='{{var_maxPages}}', var_startPage='{{var_startPage}}', totalPages={{previousData.totalPages}}, pageIndices={{previousData.pageIndices}}",
+                      "level": "log"
+                    }
+                  },
+                  {
+                    "action": "logger",
+                    "params": {
+                      "message": "�📄 Jahr {{currentData.yearLoop.value}}: {{previousData.totalPages}} Seite(n) gefunden",
+                      "level": "log"
+                    }
+                  },
+                  {
+                    "action": "loop",
+                    "name": "pageLoop",
+                    "params": {
+                      "elementKey": "pageIndices",
+                      "actions": [
+                        {
+                          "action": "logger",
+                          "params": {
+                            "message": "📖 Jahr {{currentData.yearLoop.value}} - Seite {{add currentData.pageLoop.index 1}}/{{previousData.totalPages}}",
+                            "level": "log"
+                          }
+                        },
+                        {
+                          "name": "Get all order cards",
+                          "action": "getAll",
+                          "params": {
+                            "selector": ".order-card.js-order-card"
+                          }
+                        },
+                        {
+                          "action": "loop",
+                          "name": "orderLoop",
+                          "params": {
+                            "elementKey": "Get all order cards",
+                            "actions": [
+                              // Extrahiere Bestelldatum (z.B. "15. Dezember 2025")
+                              // Das Datum steht im .order-header unter "Bestellung aufgegeben"
+                              {
+                                "action": "extract",
+                                "name": "orderDate",
+                                "params": {
+                                  "element": "currentData.orderLoop.value",
+                                  "selector": ".order-header .a-size-base.a-color-secondary.aok-break-word"
+                                }
+                              },
+                              // Extrahiere Jahr aus dem Datum
+                              {
+                                "action": "transform",
+                                "name": "orderYear",
+                                "params": {
+                                  "previousDataKey": "orderDate",
+                                  "expression": "$match($, /(20\\d{2})/).groups[0]"
+                                }
+                              },
+                              // Extrahiere Monat aus dem Datum (deutsch: Januar, Februar, etc.)
+                              {
+                                "action": "transform",
+                                "name": "orderMonth",
+                                "params": {
+                                  "previousDataKey": "orderDate",
+                                  "expression": "(\n                                    $months := {'Januar': '01', 'Februar': '02', 'März': '03', 'April': '04', 'Mai': '05', 'Juni': '06', 'Juli': '07', 'August': '08', 'September': '09', 'Oktober': '10', 'November': '11', 'Dezember': '12', 'January': '01', 'February': '02', 'March': '03', 'May': '05', 'June': '06', 'July': '07', 'October': '10', 'December': '12'};\n                                    $match := $match($, /(Januar|Februar|März|April|Mai|Juni|Juli|August|September|Oktober|November|Dezember|January|February|March|April|May|June|July|August|September|October|November|December)/i);\n                                    $match ? $lookup($months, $match.match) : '00'\n                                  )"
+                                }
+                              },
+                              {
+                                "action": "extract",
+                                "name": "orderId",
+                                "params": {
+                                  "element": "currentData.orderLoop.value",
+                                  "selector": "a[href*='/invoice/popover']",
+                                  "property": "href"
+                                }
+                              },
+                              {
+                                "action": "transform",
+                                "name": "orderIdClean",
+                                "params": {
+                                  "previousDataKey": "orderId",
+                                  "expression": "$match($, /orderId=([^&]+)/).groups[0]"
+                                }
+                              },
+                              // Prüfe ob OrderId gültig ist (nicht leer/undefined)
+                              {
+                                "action": "transform",
+                                "name": "hasValidOrderId",
+                                "params": {
+                                  "previousDataKey": "orderIdClean",
+                                  "expression": "$ != null and $type($) = 'string' and $length($) > 5"
+                                }
+                              },
+                              // Prüfe ob diese Bestellung die letzte bekannte ist (aus storedData)
+                              // storedData.amazon.lastOrderId enthält die zuletzt verarbeitete Bestellung
+                              {
+                                "action": "transform",
+                                "name": "isLastKnownOrder",
+                                "params": {
+                                  "previousDataKeys": [
+                                    "orderIdClean"
+                                  ],
+                                  "expression": "orderIdClean = '{{storedData.amazon.lastOrderId}}'"
+                                }
+                              },
+                              // Prüfe ob wir abbrechen sollten: Nur wenn OrderId gültig UND es die letzte bekannte ist
+                              {
+                                "action": "transform",
+                                "name": "shouldBreak",
+                                "params": {
+                                  "previousDataKeys": [
+                                    "hasValidOrderId",
+                                    "isLastKnownOrder"
+                                  ],
+                                  "expression": "hasValidOrderId = true and isLastKnownOrder = true"
+                                }
+                              },
+                              // Wenn diese Bestellung die letzte bekannte ist: Breche ALLE Loops ab
+                              // Da Amazon nach Datum sortiert (neueste zuerst), sind alle folgenden älter
+                              {
+                                "action": "skipIf",
+                                "params": {
+                                  "condition": "shouldBreak",
+                                  "skipIfTrue": true,
+                                  "breakLoop": true,
+                                  "breakLevels": 3,
+                                  "message": "🎉 Bestellung {{previousData.orderIdClean}} ist die letzte bekannte - alle neuen Rechnungen heruntergeladen!"
+                                }
+                              },
+                              // Überspringe Bestellungen ohne Rechnungslink (z.B. digitale Inhalte, stornierte)
+                              {
+                                "action": "skipIf",
+                                "params": {
+                                  "condition": "hasValidOrderId",
+                                  "skipIfFalse": true,
+                                  "message": "⏭️ Überspringe Bestellung ohne Rechnungslink"
+                                }
+                              },
+                              {
+                                "action": "logger",
+                                "params": {
+                                  "message": "🛒 Neue Bestellung {{previousData.orderIdClean}} vom {{previousData.orderDate}}",
+                                  "level": "log"
+                                }
+                              },
+                              {
+                                "name": "Close any open popover first",
+                                "action": "keyboardPress",
+                                "params": {
+                                  "key": "Escape"
+                                }
+                              },
+                              {
+                                "action": "delay",
+                                "params": {
+                                  "time": 500
+                                }
+                              },
+                              {
+                                "name": "Click invoice button",
+                                "action": "click",
+                                "params": {
+                                  "element": "currentData.orderLoop.value",
+                                  "selector": "span.a-declarative[data-action='a-popover'] a.a-link-normal, a[href*='/invoice/popover']",
+                                  "optional": true
+                                }
+                              },
+                              {
+                                "action": "delay",
+                                "params": {
+                                  "time": 2000
+                                }
+                              },
+                              {
+                                "name": "Wait for popover",
+                                "action": "waitForSelector",
+                                "params": {
+                                  "selector": ".a-popover[aria-hidden='false'] .invoice-list a, .a-popover-content .invoice-list a, div.a-popover .a-popover-content a",
+                                  "timeout": 5000,
+                                  "optional": true
+                                }
+                              },
+                              // Überspringe wenn das Popover nicht gefunden wurde (z.B. stornierte Bestellungen)
+                              {
+                                "action": "skipIf",
+                                "params": {
+                                  "condition": "Wait for popover",
+                                  "skipIfFalse": true,
+                                  "message": "⏭️ Kein Rechnungs-Popover verfügbar (storniert oder digitaler Inhalt)"
+                                }
+                              },
+                              {
+                                "action": "delay",
+                                "params": {
+                                  "time": 500
+                                }
+                              },
+                              {
+                                "name": "Get invoice links",
+                                "action": "extractAll",
+                                "params": {
+                                  "selector": ".a-popover[aria-hidden='false'] .invoice-list a[href*='/documents/download/'], .a-popover[aria-hidden='false'] .a-popover-content .invoice-list a[href*='invoice.pdf'], .a-popover[aria-hidden='false'] .a-popover-content a[href*='/documents/download/']",
+                                  "property": "href"
+                                }
+                              },
+                              {
+                                "action": "logger",
+                                "params": {
+                                  "message": "📎 Gefundene Invoice-Links: {{previousData.[Get invoice links]}}",
+                                  "level": "log"
+                                }
+                              },
+                              {
+                                "action": "transform",
+                                "name": "hasInvoiceLinks",
+                                "params": {
+                                  "previousDataKey": "Get invoice links",
+                                  "expression": "$ != null and $type($) = 'array' and $count($) > 0"
+                                }
+                              },
+                              {
+                                "action": "skipIf",
+                                "params": {
+                                  "condition": "hasInvoiceLinks",
+                                  "skipIfFalse": true,
+                                  "message": "⚠️ Keine Invoice-Links im Popover gefunden - überspringe"
+                                }
+                              },
+                              {
+                                "action": "loop",
+                                "name": "invoiceLoop",
+                                "params": {
+                                  "elementKey": "Get invoice links",
+                                  "actions": [
+                                    {
+                                      "action": "transform",
+                                      "name": "invoiceKey",
+                                      "params": {
+                                        "previousDataKeys": [
+                                          "orderIdClean"
+                                        ],
+                                        "expression": "'amazon-invoice-' & orderIdClean & '-' & $string({{add currentData.invoiceLoop.index 1}})"
+                                      }
+                                    },
+                                    {
+                                      "action": "transform",
+                                      "name": "alreadyDownloaded",
+                                      "params": {
+                                        "previousDataKeys": [
+                                          "invoiceKey"
+                                        ],
+                                        "expression": "$contains('{{storedData.amazon.downloadedInvoices}}', invoiceKey)"
+                                      }
+                                    },
+                                    {
+                                      "action": "skipIf",
+                                      "params": {
+                                        "condition": "alreadyDownloaded",
+                                        "skipIfTrue": true,
+                                        "message": "⏭️ Rechnung bereits heruntergeladen (tracked): {{previousData.invoiceKey}}.pdf"
+                                      }
+                                    },
+                                    {
+                                      "action": "logger",
+                                      "params": {
+                                        "message": "⬇️ Download neue Rechnung: {{previousData.invoiceKey}}.pdf",
+                                        "level": "log"
+                                      }
+                                    },
+                                    {
+                                      "action": "download",
+                                      "params": {
+                                        "url": "{{currentData.invoiceLoop.value}}",
+                                        "filename": "{{previousData.invoiceKey}}.pdf",
+                                        "path": "./documents/amazon/{{previousData.orderYear}}/{{previousData.orderMonth}}"
+                                      }
+                                    },
+                                    {
+                                      "action": "transform",
+                                      "name": "updatedDownloadList",
+                                      "params": {
+                                        "previousDataKeys": [
+                                          "invoiceKey"
+                                        ],
+                                        "expression": "'{{storedData.amazon.downloadedInvoices}}' != '' ? '{{storedData.amazon.downloadedInvoices}},' & invoiceKey : invoiceKey"
+                                      }
+                                    },
+                                    {
+                                      "action": "storeData",
+                                      "params": {
+                                        "key": "amazon.downloadedInvoices",
+                                        "value": "{{previousData.updatedDownloadList}}",
+                                        "persist": true
+                                      }
+                                    }
+                                  ]
+                                }
+                              },
+                              // Speichere die erste erfolgreich verarbeitete Bestellung als Referenz
+                              // Die erste heruntergeladene Bestellung ist die neueste
+                              // Prüfe ob wir schon eine Bestellung in diesem Lauf gespeichert haben
+                              {
+                                "action": "transform",
+                                "name": "shouldStoreOrderId",
+                                "params": {
+                                  "previousDataKeys": [
+                                    "firstDownloadedOrderId"
+                                  ],
+                                  "expression": "firstDownloadedOrderId = null or firstDownloadedOrderId = undefined"
+                                }
+                              },
+                              {
+                                "action": "skipIf",
+                                "params": {
+                                  "condition": "shouldStoreOrderId",
+                                  "skipIfFalse": true
+                                }
+                              },
+                              // Speichere in previousData für diesen Lauf (damit wir es nur einmal machen)
+                              {
+                                "action": "transform",
+                                "name": "firstDownloadedOrderId",
+                                "params": {
+                                  "previousDataKey": "orderIdClean",
+                                  "expression": "$"
+                                }
+                              },
+                              // Speichere persistent für den nächsten Scrape-Lauf
+                              {
+                                "action": "storeData",
+                                "params": {
+                                  "key": "amazon.lastOrderId",
+                                  "value": "{{previousData.orderIdClean}}",
+                                  "persist": true
+                                }
+                              },
+                              {
+                                "action": "logger",
+                                "params": {
+                                  "message": "💾 Neue Referenz-Bestellung gespeichert: {{previousData.orderIdClean}}",
+                                  "level": "log"
+                                }
+                              },
+                              {
+                                "name": "Close popover",
+                                "action": "keyboardPress",
+                                "params": {
+                                  "key": "Escape"
+                                }
+                              },
+                              {
+                                "action": "delay",
+                                "params": {
+                                  "time": 500
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "action": "transform",
+                          "name": "isLastPage",
+                          "params": {
+                            "previousDataKeys": [
+                              "pageIndices"
+                            ],
+                            "expression": "{{add currentData.pageLoop.index 1}} >= $count(pageIndices)"
+                          }
+                        },
+                        {
+                          "action": "skipIf",
+                          "params": {
+                            "condition": "isLastPage",
+                            "skipIfTrue": true,
+                            "message": "✅ Letzte erlaubte Seite erreicht (maxPages={{var_maxPages}})"
+                          }
+                        },
+                        {
+                          "name": "Navigate to next page",
+                          "action": "navigate",
+                          "params": {
+                            "url": "https://www.amazon.de/your-orders/orders?timeFilter={{currentData.yearLoop.value}}&startIndex={{multiply (add currentData.pageLoop.index 1) 10}}"
+                          }
+                        },
+                        {
+                          "action": "delay",
+                          "params": {
+                            "time": 1500
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "action": "logger",
+                    "params": {
+                      "message": "✅ Jahr {{currentData.yearLoop.value}} abgeschlossen!",
+                      "level": "log"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "action": "logger",
+              "params": {
+                "message": "🎉 Alle Amazon-Rechnungen wurden heruntergeladen!",
+                "level": "log"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

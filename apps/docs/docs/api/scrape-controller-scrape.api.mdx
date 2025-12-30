@@ -1,0 +1,71 @@
+---
+id: scrape-controller-scrape
+title: "Start scraping"
+description: "Starts a scraping job with the specified configuration ID"
+sidebar_label: "Start scraping"
+hide_title: true
+hide_table_of_contents: true
+api: eJylVE2P0zAQ/SvWnEDy0gB7ym1FEeptxS7isKqQ60waF8f22uOyJco/48YfQ+Om3dKFlRC5JP6YmTfvvckADSYdTSDjHdRwQypSEkokHVUwbi02fiW+GeoEdShSQG1ag43Q3rVmnaPiQLGYgwQfcL9cNJyJE+A77yh6azF+KRkRJAQVVY+EMUF9N4BTPUIN++NFAxIi3mcTsYGaYkYJhpEFRR3IM7i3HYrFXPh2j66kOINGXuAD6kxcOukOewX1APig+mC5sOrVd+8ufGwYkQTahYKHonFrGMclA0rBu4SJI99UFb/OeDvQlZhAbETKWmNKbbZ2BxK0d4SOOFCFYI0u4GabxNHDCa6pul9tUBOTFZlWMvvaiRTldHJvQilP+onZuYJcPnL6bMDvBIzlkXBZXf6lzXOGnSfR+uwa4DhSa9Z1qp1gKaFH6jx7Yo2lJVayhtn+xmw4oBxZIIzbgzFytFBDRxTq2cx6rWznE9Vvq6p6YoQ5btH60KMjcVNyAAtnXOtL84ZKqxP+ud94cXW9eJLm6noh2p8/ouh9k62KmMRnXF0c1e0NiescAhJiBAmMdR/5+lU1yaw0y8xUBJ+oV0XgyeRlvI6zdV5+eLTJfw3iJDXhA82CVcaxFwqbw0T+QR6QUB9NspTABPPpMKxUwk/RjiNv32eMO6jvlhK2Khq1YjLvBmhM4u8G6lbZhM+08+LjNNMvxb/O7B+7mTaV4+HaKpt5BRK+4u70XzIuRwkdqgZjAbw/vtIaA50EPhnJ8dS1H97fwjj+AvJ7yzU=
+sidebar_class_name: "get api-method"
+info_path: docs/api/scrape-dojo-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Start scraping"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/scrape/{scrapeId}"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Starts a scraping job with the specified configuration ID
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<ParamsDetails
+  parameters={[{"name":"scrapeId","required":true,"in":"path","description":"The ID of the scrape configuration to execute","schema":{"example":"amazon-orders","type":"string"}}]}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={undefined}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"200":{"description":"Scraping started successfully","content":{"application/json":{"schema":{"type":"object","properties":{"status":{"type":"string","example":"running"},"scrapeId":{"type":"string","example":"amazon-orders"}}}}}},"404":{"description":"Scrape configuration not found"}}}
+>
+  
+</StatusCodes>
+
+
+      

@@ -1,0 +1,122 @@
+<aside class="w-80 h-full border-r border-dojo-border flex flex-col overflow-hidden">
+    <div class="p-4 border-b border-dojo-border">
+        <div class="relative">
+            <input type="text" [placeholder]="'workflow_sidebar.filter_workflows' | transloco"
+                class="w-full px-3 py-1.5 bg-dojo-bg border border-dojo-border rounded-md text-sm placeholder-dojo-text-muted focus:outline-none focus:border-dojo-accent focus:ring-1 focus:ring-dojo-accent">
+            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-dojo-text-muted">🔍</span>
+        </div>
+    </div>
+
+    <div class="py-2 flex-1 overflow-auto">
+        @if (!hasCategories()) {
+        <!-- No categories - show flat list -->
+        <div class="px-4 py-2 text-xs font-semibold text-dojo-text-muted uppercase tracking-wide">
+            All workflows
+        </div>
+        @for (scrape of scrapes(); track scrape.id) {
+        <ng-container *ngTemplateOutlet="workflowItem; context: { $implicit: scrape }"></ng-container>
+        }
+        } @else {
+        <!-- Grouped by category -->
+        @for (group of groupedScrapes(); track group.category) {
+        <div class="mb-1">
+            <!-- Category Header -->
+            <button
+                class="w-full flex items-center gap-2 px-4 py-2 text-xs font-semibold text-dojo-text-muted uppercase tracking-wide hover:bg-dojo-surface/50 transition-colors"
+                (click)="toggleCategory(group.category)">
+                <iconify-icon [icon]="group.isExpanded ? 'lucide:chevron-down' : 'lucide:chevron-right'"
+                    class="w-4 h-4 transition-transform">
+                </iconify-icon>
+                @if (isUncategorized(group.category)) {
+                <iconify-icon icon="lucide:inbox" class="w-3.5 h-3.5"></iconify-icon>
+                } @else {
+                <iconify-icon icon="lucide:folder" class="w-3.5 h-3.5"></iconify-icon>
+                }
+                <span class="flex-1 text-left">{{ getCategoryDisplayName(group.category) }}</span>
+                <span class="text-[10px] bg-dojo-surface px-1.5 py-0.5 rounded">{{ group.scrapes.length }}</span>
+            </button>
+
+            <!-- Category Items -->
+            @if (group.isExpanded) {
+            <div class="pl-2">
+                @for (scrape of group.scrapes; track scrape.id) {
+                <ng-container *ngTemplateOutlet="workflowItem; context: { $implicit: scrape }"></ng-container>
+                }
+            </div>
+            }
+        </div>
+        }
+        }
+    </div>
+
+    <!-- Sidebar Footer - Version Info -->
+    <div class="mt-auto border-t border-dojo-border px-4 py-3">
+        <div class="flex items-center gap-2 text-xs text-dojo-text-subtle">
+            <iconify-icon icon="lucide:star" class="w-3 h-3"></iconify-icon>
+            <span>v{{ appVersion() }}</span>
+            <span class="text-dojo-text-subtle/50">·</span>
+            <a href="https://github.com/disane87/scrape-dojo/commit/{{ gitCommit() }}" target="_blank"
+                rel="noopener noreferrer" class="font-mono hover:text-dojo-accent hover:underline transition-colors"
+                [title]="'history.view_commit' | transloco">
+                {{ gitCommit() }}
+            </a>
+        </div>
+    </div>
+</aside>
+
+<!-- Workflow Item Template -->
+<ng-template #workflowItem let-scrape>
+    <button class="w-full flex items-center gap-3 px-4 py-2 text-left transition-colors" [class]="selectedScrape() === scrape.id 
+            ? 'bg-dojo-accent-muted/15 text-dojo-accent border-l-2 border-dojo-accent' 
+            : 'hover:bg-dojo-surface border-l-2 border-transparent'" [class.opacity-50]="isDisabled(scrape)"
+        [class.cursor-not-allowed]="isDisabled(scrape)" [title]="getDisabledReason(scrape)"
+        (click)="selectScrape(scrape.id)">
+        <!-- Icon: Custom oder Default -->
+        <div class="relative">
+            <app-scrape-icon [icon]="scrape.metadata?.icon" [alt]="scrape.id" imgClass="w-5 h-5 rounded"
+                svgClass="w-4 h-4 text-dojo-text-muted" [class.grayscale]="isDisabled(scrape)" />
+            @if (isDisabled(scrape)) {
+            <div class="absolute -top-1 -right-1 w-3 h-3 bg-dojo-surface rounded-full flex items-center justify-center">
+                <iconify-icon icon="lucide:ban" class="w-2.5 h-2.5 text-dojo-text-muted"></iconify-icon>
+            </div>
+            }
+        </div>
+        <div class="flex-1 min-w-0">
+            <span class="truncate text-sm block" [class.line-through]="scrape.metadata?.disabled">{{ scrape.id }}</span>
+            @if (scrape.metadata?.description) {
+            <span class="truncate text-xs text-dojo-text-muted block">{{ scrape.metadata.description }}</span>
+            }
+            @if (isDisabled(scrape) && !scrape.metadata?.disabled) {
+            <span class="text-[10px] text-yellow-500 flex items-center gap-1">
+                <iconify-icon icon="lucide:alert-triangle" class="w-2.5 h-2.5"></iconify-icon>
+                Kein Trigger
+            </span>
+            }
+        </div>
+        <!-- Last Run Status -->
+        @if (!isDisabled(scrape)) {
+        @if (scrape.lastRun) {
+        <div class="flex flex-col items-end shrink-0">
+            <span class="text-xs flex items-center gap-1" [class]="{
+                        'text-green-400': scrape.lastRun.status === 'completed',
+                        'text-red-400': scrape.lastRun.status === 'failed',
+                        'text-yellow-400': scrape.lastRun.status === 'running'
+                    }">
+                @if (scrape.lastRun.status === 'completed') {
+                <iconify-icon icon="lucide:check-circle" class="w-3 h-3"></iconify-icon>
+                } @else if (scrape.lastRun.status === 'failed') {
+                <iconify-icon icon="lucide:xcircle" class="w-3 h-3"></iconify-icon>
+                } @else {
+                <iconify-icon icon="lucide:loader-2" class="w-3 h-3 animate-spin"></iconify-icon>
+                }
+            </span>
+            <span class="text-[10px] text-dojo-text-subtle">{{ scrape.lastRun.startTime | relativeTime }}</span>
+        </div>
+        } @else {
+        <span class="text-xs text-dojo-text-subtle shrink-0">–</span>
+        }
+        } @else {
+        <iconify-icon icon="lucide:ban" class="w-4 h-4 text-dojo-text-muted shrink-0"></iconify-icon>
+        }
+    </button>
+</ng-template>

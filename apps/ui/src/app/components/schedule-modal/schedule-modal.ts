@@ -1,0 +1,186 @@
+import { Component, EventEmitter, Input, Output, signal, computed, effect, inject, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { CronBuilderComponent } from '../cron-builder/cron-builder';
+import { ScrapeSchedule } from '@scrape-dojo/shared';
+import { ScrapeService } from '../../services/scrape.service';
+import { ModalComponent, ToggleComponent, ButtonComponent, SpinnerComponent, AlertComponent } from '../shared';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import 'iconify-icon';
+
+@Component({
+    selector: 'app-schedule-modal',
+    standalone: true,
+    imports: [
+        CommonModule,
+        FormsModule,
+        TranslocoModule,
+        CronBuilderComponent,
+        ModalComponent,
+        ToggleComponent,
+        ButtonComponent,
+        SpinnerComponent,
+        AlertComponent
+    ],
+    schemas: [CUSTOM_ELEMENTS_SCHEMA],
+    templateUrl: './schedule-modal.html',
+    styleUrls: ['./schedule-modal.scss']
+})
+export class ScheduleModalComponent {
+    private scrapeService = inject(ScrapeService);
+    private transloco = inject(TranslocoService);
+
+    @Input() set scrapeId(value: string | null) {
+        this._scrapeId.set(value);
+        if (value) {
+            this.loadSchedule(value);
+        }
+    }
+    @Input() scrapeName = '';
+
+    @Output() closed = new EventEmitter<void>();
+    @Output() saved = new EventEmitter<ScrapeSchedule>();
+
+    private _scrapeId = signal<string | null>(null);
+
+    // Form state
+    manualEnabled = signal(true);
+    scheduleEnabled = signal(false);
+    cronExpression = signal('0 9 * * *');
+    timezone = signal('Europe/Berlin');
+
+    // UI state
+    loading = signal(false);
+    saving = signal(false);
+    error = signal<string | null>(null);
+
+    // Schedule info
+    lastScheduledRun = signal<number | null>(null);
+    nextScheduledRun = signal<number | null>(null);
+
+    // Computed
+    isOpen = computed(() => this._scrapeId() !== null);
+
+    isValid = computed(() => {
+        // Mindestens eine Option muss aktiviert sein
+        if (!this.manualEnabled() && !this.scheduleEnabled()) {
+            return false;
+        }
+        // Wenn Schedule aktiviert, muss Cron-Ausdruck vorhanden sein
+        if (this.scheduleEnabled() && !this.cronExpression()) {
+            return false;
+        }
+        return true;
+    });
+
+    hasChanges = signal(false);
+
+    private originalState: {
+        manualEnabled: boolean;
+        scheduleEnabled: boolean;
+        cronExpression: string;
+        timezone: string;
+    } | null = null;
+
+    constructor() {
+        // Track changes
+        effect(() => {
+            const manual = this.manualEnabled();
+            const schedule = this.scheduleEnabled();
+            const cron = this.cronExpression();
+            const tz = this.timezone();
+
+            if (this.originalState) {
+                this.hasChanges.set(
+                    manual !== this.originalState.manualEnabled ||
+                    schedule !== this.originalState.scheduleEnabled ||
+                    cron !== this.originalState.cronExpression ||
+                    tz !== this.originalState.timezone
+                );
+            }
+        });
+    }
+
+    private async loadSchedule(scrapeId: string): Promise<void> {
+        this.loading.set(true);
+        this.error.set(null);
+
+        console.log(`📅 Loading schedule for: ${scrapeId}`);
+
+        try {
+            const schedule = await this.scrapeService.getSchedule(scrapeId).toPromise();
+            console.log(`📅 Schedule loaded:`, schedule);
+
+            if (schedule) {
+                this.manualEnabled.set(schedule.manualEnabled);
+                this.scheduleEnabled.set(schedule.scheduleEnabled);
+                this.cronExpression.set(schedule.cronExpression || '0 9 * * *');
+                this.timezone.set(schedule.timezone || 'Europe/Berlin');
+                this.lastScheduledRun.set(schedule.lastScheduledRun);
+                this.nextScheduledRun.set(schedule.nextScheduledRun);
+
+                console.log(`📅 Schedule state set - scheduleEnabled: ${schedule.scheduleEnabled}, cronExpression: ${schedule.cronExpression}`);
+
+                this.originalState = {
+                    manualEnabled: schedule.manualEnabled,
+                    scheduleEnabled: schedule.scheduleEnabled,
+                    cronExpression: schedule.cronExpression || '0 9 * * *',
+                    timezone: schedule.timezone || 'Europe/Berlin'
+                };
+                this.hasChanges.set(false);
+            }
+        } catch (err: any) {
+            console.error(`📅 Error loading schedule:`, err);
+            this.error.set(err.message || this.transloco.translate('common.load_failed'));
+        } finally {
+            this.loading.set(false);
+        }
+    }
+
+    onCronExpressionChange(expression: string): void {
+        this.cronExpression.set(expression);
+    }
+
+    async save(): Promise<void> {
+        const scrapeId = this._scrapeId();
+        if (!scrapeId || !this.isValid() || this.saving()) return;
+
+        this.saving.set(true);
+        this.error.set(null);
+
+        try {
+            const schedule = await this.scrapeService.updateSchedule(scrapeId, {
+                manualEnabled: this.manualEnabled(),
+                scheduleEnabled: this.scheduleEnabled(),
+                cronExpression: this.scheduleEnabled() ? this.cronExpression() : null,
+                timezone: this.timezone()
+            }).toPromise();
+
+            if (schedule) {
+                this.saved.emit(schedule);
+                this.close();
+            }
+        } catch (err: any) {
+            this.error.set(err.message || this.transloco.translate('common.save_failed'));
+        } finally {
+            this.saving.set(false);
+        }
+    }
+
+    close(): void {
+        this.closed.emit();
+    }
+
+    formatDateTime(timestamp: number | null): string {
+        if (!timestamp) return '—';
+        const lang = this.transloco.getActiveLang();
+        const locale = lang === 'de' ? 'de-DE' : 'en-US';
+        return new Date(timestamp).toLocaleString(locale, {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+}

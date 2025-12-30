@@ -1,0 +1,29 @@
+<button [type]="type()" [class]="buttonClasses()" [disabled]="disabled() || loading()" [title]="title()"
+  (click)="handleClick($event)">
+
+  <!-- Loading Spinner -->
+  @if (loading()) {
+  <iconify-icon icon="lucide:loader-2" [class]="iconSizeClass() + ' animate-spin'"></iconify-icon>
+  } @else if (icon()) {
+  <!-- Left Icon: Iconify or Lucide -->
+  @if (isIconify()) {
+  <iconify-icon [icon]="icon()" [class]="iconSizeClass()"></iconify-icon>
+  } @else {
+  <iconify-icon [icon]="toIconify(icon()!)" [class]="iconSizeClass()"></iconify-icon>
+  }
+  }
+
+  <!-- Text Content (hidden in iconOnly mode) -->
+  @if (!iconOnly()) {
+  <ng-content />
+  }
+
+  <!-- Right Icon -->
+  @if (iconRight() && !loading()) {
+  @if (isIconifyRight()) {
+  <iconify-icon [icon]="iconRight()" [class]="iconSizeClass()"></iconify-icon>
+  } @else {
+  <iconify-icon [icon]="toIconify(iconRight()!)" [class]="iconSizeClass()"></iconify-icon>
+  }
+  }
+</button>

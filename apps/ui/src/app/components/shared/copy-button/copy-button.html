@@ -1,0 +1,13 @@
+<button type="button" [class]="buttonClasses()" (click)="copyToClipboard()">
+  @if (copied()) {
+  <iconify-icon icon="lucide:check"[class]="iconSizeClass()"></iconify-icon>
+  @if (showLabel()) {
+  <span>{{ copiedLabel() }}</span>
+  }
+  } @else {
+  <iconify-icon icon="lucide:clipboard"[class]="iconSizeClass()"></iconify-icon>
+  @if (showLabel()) {
+  <span>{{ label() }}</span>
+  }
+  }
+</button>
