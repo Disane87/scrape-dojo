@@ -554,7 +554,8 @@
       "password_mismatch": "Passwörter stimmen nicht überein",
       "update_password": "Passwort aktualisieren",
       "password_changed": "Passwort erfolgreich geändert",
-      "password_error": "Passwort konnte nicht geändert werden"
+      "password_error": "Passwort konnte nicht geändert werden",
+      "password_change_local_only": "Passwort ändern ist nur für lokale Konten verfügbar. Ihr Konto verwendet {{provider}} zur Authentifizierung."
     },
     "devices": {
       "title": "Vertrauenswürdige Geräte",

@@ -510,7 +510,60 @@
       "logout": "Sign out",
       "profile": "Profile",
       "changePassword": "Change password",
-      "users": "User management"
+      "users": "User management",
+      "settings": "Settings"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Manage your profile, security, and devices",
+    "profile": {
+      "title": "Profile",
+      "email": "Email",
+      "email_readonly": "Email address cannot be changed",
+      "username": "Username",
+      "display_name": "Display name",
+      "role": "Role",
+      "provider": "Authentication method",
+      "save": "Save",
+      "save_success": "Profile successfully updated",
+      "save_error": "Failed to update profile",
+      "load_error": "Failed to load profile"
+    },
+    "security": {
+      "title": "Security",
+      "change_password": "Change password",
+      "current_password": "Current password",
+      "new_password": "New password",
+      "confirm_password": "Confirm password",
+      "password_min_length": "Password must be at least 8 characters",
+      "password_mismatch": "Passwords do not match",
+      "update_password": "Update password",
+      "password_changed": "Password successfully changed",
+      "password_error": "Failed to change password",
+      "password_change_local_only": "Password change is only available for local accounts. Your account uses {{provider}} for authentication."
+    },
+    "devices": {
+      "title": "Trusted devices",
+      "subtitle": "Devices trusted for MFA",
+      "no_devices": "No trusted devices",
+      "last_used": "Last used",
+      "added": "Added",
+      "remove": "Remove",
+      "remove_all": "Remove all",
+      "confirm_remove": "Do you really want to remove this device?",
+      "confirm_remove_all": "Do you really want to remove all other devices? You will remain signed in on this device.",
+      "remove_success": "Device successfully removed",
+      "remove_error": "Failed to remove device",
+      "remove_all_success": "All devices successfully removed",
+      "remove_all_error": "Failed to remove devices",
+      "load_error": "Failed to load devices",
+      "just_now": "Just now",
+      "minutes_ago": "{{minutes}} minutes ago",
+      "hour_ago": "1 hour ago",
+      "hours_ago": "{{hours}} hours ago",
+      "yesterday": "Yesterday",
+      "days_ago": "{{days}} days ago"
     }
   }
 }

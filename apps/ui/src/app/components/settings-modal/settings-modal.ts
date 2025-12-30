@@ -121,26 +121,6 @@ type SettingsTab = 'profile' | 'security' | 'devices';
                                            focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50"
                                 />
                             </div>
-
-                            <button
-                                type="button"
-                                (click)="saveProfile()"
-                                [disabled]="savingProfile()"
-                                class="w-full px-4 py-2.5 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400
-                                       text-white font-semibold rounded-lg shadow-lg
-                                       disabled:opacity-50 disabled:cursor-not-allowed
-                                       transition-all duration-300 flex items-center justify-center gap-2"
-                            >
-                                @if (savingProfile()) {
-                                    <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                } @else {
-                                    <iconify-icon icon="mdi:content-save" class="text-lg"></iconify-icon>
-                                }
-                                <span>{{ 'settings.profile.save' | transloco }}</span>
-                            </button>
                         }
                     </div>
                 }
@@ -151,7 +131,7 @@ type SettingsTab = 'profile' | 'security' | 'devices';
                             <div class="flex items-start gap-3 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
                                 <iconify-icon icon="mdi:information" class="text-xl text-blue-400 flex-shrink-0 mt-0.5"></iconify-icon>
                                 <div class="text-sm text-blue-300">
-                                    Password ändern ist nur für lokale Konten verfügbar. Ihr Konto verwendet {{ profile()?.provider }} zur Authentifizierung.
+                                    {{ 'settings.security.password_change_local_only' | transloco: { provider: profile()?.provider } }}
                                 </div>
                             </div>
                         } @else {
@@ -198,26 +178,6 @@ type SettingsTab = 'profile' | 'security' | 'devices';
                                     <p class="mt-1 text-xs text-red-400">{{ 'settings.security.password_mismatch' | transloco }}</p>
                                 }
                             </div>
-
-                            <button
-                                type="button"
-                                (click)="changePassword()"
-                                [disabled]="!isPasswordFormValid() || changingPassword()"
-                                class="w-full px-4 py-2.5 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400
-                                       text-white font-semibold rounded-lg shadow-lg
-                                       disabled:opacity-50 disabled:cursor-not-allowed
-                                       transition-all duration-300 flex items-center justify-center gap-2"
-                            >
-                                @if (changingPassword()) {
-                                    <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                } @else {
-                                    <iconify-icon icon="mdi:key" class="text-lg"></iconify-icon>
-                                }
-                                <span>{{ 'settings.security.update_password' | transloco }}</span>
-                            </button>
                         }
                     </div>
                 }
@@ -279,6 +239,52 @@ type SettingsTab = 'profile' | 'security' | 'devices';
                             </div>
                         }
                     </div>
+                }
+            </div>
+
+            <!-- Footer with action buttons -->
+            <div modal-footer class="flex items-center gap-2 w-full">
+                @if (activeTab() === 'profile' && profile()) {
+                    <button
+                        type="button"
+                        (click)="saveProfile()"
+                        [disabled]="savingProfile()"
+                        class="flex-1 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400
+                               text-white font-semibold rounded-lg shadow-lg
+                               disabled:opacity-50 disabled:cursor-not-allowed
+                               transition-all duration-300 flex items-center justify-center gap-2"
+                    >
+                        @if (savingProfile()) {
+                            <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        } @else {
+                            <iconify-icon icon="mdi:content-save" class="text-lg"></iconify-icon>
+                        }
+                        <span>{{ 'settings.profile.save' | transloco }}</span>
+                    </button>
+                }
+                @if (activeTab() === 'security' && profile()?.provider === 'local') {
+                    <button
+                        type="button"
+                        (click)="changePassword()"
+                        [disabled]="!isPasswordFormValid() || changingPassword()"
+                        class="flex-1 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400
+                               text-white font-semibold rounded-lg shadow-lg
+                               disabled:opacity-50 disabled:cursor-not-allowed
+                               transition-all duration-300 flex items-center justify-center gap-2"
+                    >
+                        @if (changingPassword()) {
+                            <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        } @else {
+                            <iconify-icon icon="mdi:key" class="text-lg"></iconify-icon>
+                        }
+                        <span>{{ 'settings.security.update_password' | transloco }}</span>
+                    </button>
                 }
             </div>
         </app-modal>
