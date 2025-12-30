@@ -11,3 +11,34 @@
 - If the user needs help with an Nx configuration or project graph error, use the `nx_workspace` tool to get any errors
 
 <!-- nx configuration end-->
+
+# Project-Specific Guidelines
+
+## Internationalization & Documentation
+
+### UI Development
+- **Always provide translations in German AND English** for all new UI features
+- Use Transloco for all user-facing text in the Angular UI
+- Add translation keys to both `de.json` and `en.json` files
+
+### Code Documentation
+- **All code documentation must be in English**
+- This includes JSDoc comments, inline comments, and technical explanations
+- Use clear, concise English for better international collaboration
+
+### Docusaurus Documentation
+- **All documentation must be provided in English AND German**
+- Create separate versions for each language in the docs folder
+- Keep both language versions synchronized in content
+
+## Development Workflow
+
+### GitHub Workflows
+- Use pnpm store caching to speed up CI/CD pipelines
+- Always install all dependencies (not filtered) to ensure tools like `nx` are available
+- Test workflow changes locally when possible before pushing
+
+### Commits
+- Follow conventional commits (fix:, feat:, docs:, etc.)
+- Write commit messages in english
+- Keep commits focused and atomic

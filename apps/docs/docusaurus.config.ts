@@ -121,11 +121,11 @@ const config: Config = {
           items: [
             {
               label: 'Einführung',
-              to: '/docs/intro',
+              to: '/docs/getting-started/installation',
             },
             {
-              label: 'Tutorial',
-              to: '/docs/category/tutorial---basics',
+              label: 'Schnellstart',
+              to: '/docs/getting-started/quickstart',
             },
           ],
         },
