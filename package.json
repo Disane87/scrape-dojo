@@ -20,6 +20,7 @@
     "start": "nx run-many -t serve",
     "start:api": "nx serve api",
     "start:ui": "nx serve ui",
+    "start:docs": "nx serve docs",
     "start:api:debug": "nx serve api --configuration=development -- --inspect",
     "start:prod": "node dist/apps/api/main.js",
     "lint": "nx run-many -t lint",
