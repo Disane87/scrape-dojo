@@ -1,0 +1,29 @@
+scraping:
+  label: Web Scraping
+  permalink: /scraping
+  description: Web Scraping und Datenextraktion
+
+web-automation:
+  label: Web Automation
+  permalink: /web-automation
+  description: Browser-Automatisierung und Workflows
+
+introduction:
+  label: Einführung
+  permalink: /introduction
+  description: Einführung und Getting Started
+
+invoices:
+  label: Invoices
+  permalink: /invoices
+  description: Rechnungen und PDFs
+
+download:
+  label: Download
+  permalink: /download
+  description: Download und File Management
+
+automated:
+  label: Automatisierung
+  permalink: /automated
+  description: Automatisierte Prozesse

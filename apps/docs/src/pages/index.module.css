@@ -10,31 +10,9 @@
   overflow: hidden;
 }
 
-.heroLogo {
-  width: 128px;
-  height: 128px;
-  margin-bottom: 2rem;
-  animation: float 3s ease-in-out infinite;
-  filter: drop-shadow(0 0 20px rgba(251, 146, 60, 0.4));
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
 @media screen and (max-width: 996px) {
   .heroBanner {
     padding: 2rem;
-  }
-  
-  .heroLogo {
-    width: 96px;
-    height: 96px;
   }
 }
 
@@ -42,11 +20,4 @@
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.features {
-  display: flex;
-  align-items: center;
-  padding: 2rem 0;
-  width: 100%;
 }

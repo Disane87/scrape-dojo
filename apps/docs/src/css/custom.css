@@ -1,127 +1,93 @@
 /**
- * 🥋 Scrape Dojo Theme for Docusaurus
- * Inspired by traditional Japanese dojos with warm reds, oranges and gold accents
+ * Scrape Dojo Custom Theme
+ * Custom styling for the Scrape Dojo documentation
  */
 
-/* Light Mode Theme */
+/* You can override the default Infima variables here. */
 :root {
-  /* Primary brand color - Dojo Orange/Red */
-  --ifm-color-primary: #ea580c;
-  --ifm-color-primary-dark: #d14d0a;
-  --ifm-color-primary-darker: #c5490a;
-  --ifm-color-primary-darkest: #a23c08;
-  --ifm-color-primary-light: #ec6923;
-  --ifm-color-primary-lighter: #ed7433;
-  --ifm-color-primary-lightest: #f08a52;
-
-  /* Background colors - Warm paper tones */
-  --ifm-background-color: #fafaf9;
-  --ifm-background-surface-color: #f5f5f4;
+  /* Primary Brand Color - Martial Arts Inspired Purple/Blue */
+  --ifm-color-primary: #6366f1;
+  --ifm-color-primary-dark: #4f46e5;
+  --ifm-color-primary-darker: #4338ca;
+  --ifm-color-primary-darkest: #3730a3;
+  --ifm-color-primary-light: #818cf8;
+  --ifm-color-primary-lighter: #a5b4fc;
+  --ifm-color-primary-lightest: #c7d2fe;
   
-  /* Text colors */
-  --ifm-font-color-base: #1c1917;
-  --ifm-font-color-secondary: #57534e;
-  
-  /* Code blocks */
+  /* Code & Syntax */
   --ifm-code-font-size: 95%;
-  --docusaurus-highlighted-code-line-bg: rgba(234, 88, 12, 0.1);
+  --docusaurus-highlighted-code-line-bg: rgba(99, 102, 241, 0.1);
   
   /* Fonts */
-  --ifm-font-family-base: "Inter", -apple-system, system-ui, sans-serif;
-  --ifm-font-family-monospace: "JetBrains Mono", SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --ifm-font-family-base: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --ifm-heading-font-weight: 700;
   
-  /* Navbar */
-  --ifm-navbar-background-color: #ffffff;
-  --ifm-navbar-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  
-  /* Footer */
-  --ifm-footer-background-color: #1c1917;
-  --ifm-footer-color: #e7e5e4;
-  --ifm-footer-link-color: #fb923c;
-  
-  /* Borders */
-  --ifm-global-border-width: 1px;
-  --ifm-hr-border-color: #e7e5e4;
-  
-  /* Links */
-  --ifm-link-color: #ea580c;
-  --ifm-link-hover-color: #c2410c;
-  
-  /* Border radius */
-  --ifm-global-radius: 0.75rem;
-  --ifm-button-border-radius: 0.75rem;
+  /* Spacing */
+  --ifm-spacing-horizontal: 1.5rem;
 }
 
-/* Dark Mode Theme */
+/* For readability concerns, you should choose a lighter palette in dark mode. */
 [data-theme='dark'] {
-  /* Primary brand color - Brighter orange for dark mode */
-  --ifm-color-primary: #fb923c;
-  --ifm-color-primary-dark: #fa7e1f;
-  --ifm-color-primary-darker: #f97316;
-  --ifm-color-primary-darkest: #ea580c;
-  --ifm-color-primary-light: #fba659;
-  --ifm-color-primary-lighter: #fcb169;
-  --ifm-color-primary-lightest: #fdcb8e;
-
-  /* Background colors - Deep blacks like dojo */
-  --ifm-background-color: #0a0a0a;
-  --ifm-background-surface-color: #141414;
+  --ifm-color-primary: #818cf8;
+  --ifm-color-primary-dark: #6366f1;
+  --ifm-color-primary-darker: #4f46e5;
+  --ifm-color-primary-darkest: #4338ca;
+  --ifm-color-primary-light: #a5b4fc;
+  --ifm-color-primary-lighter: #c7d2fe;
+  --ifm-color-primary-lightest: #e0e7ff;
+  --docusaurus-highlighted-code-line-bg: rgba(129, 140, 248, 0.2);
   
-  /* Text colors */
-  --ifm-font-color-base: #f5f5f5;
-  --ifm-font-color-secondary: #a3a3a3;
-  
-  /* Code blocks */
-  --docusaurus-highlighted-code-line-bg: rgba(251, 146, 60, 0.15);
-  
-  /* Navbar */
-  --ifm-navbar-background-color: #141414;
-  --ifm-navbar-shadow: 0 1px 2px 0 rgba(251, 146, 60, 0.1);
-  
-  /* Footer */
-  --ifm-footer-background-color: #000000;
-  --ifm-footer-color: #a3a3a3;
-  --ifm-footer-link-color: #fb923c;
-  
-  /* Borders */
-  --ifm-hr-border-color: #262626;
-  
-  /* Links */
-  --ifm-link-color: #fb923c;
-  --ifm-link-hover-color: #fdba74;
-  
-  /* Cards and surfaces */
-  --ifm-card-background-color: #1f1f1f;
+  /* Better dark mode colors */
+  --ifm-background-color: #1a1b26;
+  --ifm-background-surface-color: #24283b;
 }
 
-/* Custom Dojo styling */
+/* Custom Logo Styling */
+.navbar__logo img {
+  height: 32px;
+  border-radius: 4px;
+}
+
+/* Hero Section Styling */
 .hero {
-  background: radial-gradient(1200px circle at 20% 10%, rgba(251, 146, 60, 0.15), transparent 55%),
-              radial-gradient(900px circle at 80% 20%, rgba(239, 68, 68, 0.12), transparent 60%);
+  background: linear-gradient(135deg, var(--ifm-color-primary-darker) 0%, var(--ifm-color-primary-light) 100%);
+  color: white;
 }
 
-[data-theme='dark'] .hero {
-  background: radial-gradient(1200px circle at 20% 10%, rgba(251, 146, 60, 0.25), transparent 55%),
-              radial-gradient(900px circle at 80% 20%, rgba(239, 68, 68, 0.18), transparent 60%);
+.hero__title {
+  font-size: 3rem;
+  font-weight: 800;
 }
 
-/* Accent glow effect for important elements */
-.navbar__brand:hover {
-  filter: drop-shadow(0 0 8px rgba(251, 146, 60, 0.4));
-  transition: filter 0.3s ease;
+/* Code Block Enhancements */
+.theme-code-block {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border-radius: 8px;
 }
 
-/* Success, warning, danger colors matching Dojo theme */
-:root {
-  --ifm-color-success: #16a34a;
-  --ifm-color-warning: #ca8a04;
-  --ifm-color-danger: #dc2626;
-  --ifm-color-info: #ea580c;
+/* Admonition Custom Styles */
+.admonition {
+  border-radius: 8px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
 }
 
-[data-theme='dark'] {
-  --ifm-color-success: #22c55e;
-  --ifm-color-warning: #eab308;
-  --ifm-color-danger: #ef4444;
-  --ifm-color-info: #fb923c;
+/* Table Styling */
+table {
+  border-radius: 8px;
+  overflow: hidden;
 }
+
+/* Footer Customization */
+.footer {
+  background: var(--ifm-color-primary-darkest);
+}
+
+[data-theme='dark'] .footer {
+  background: #16171d;
+}
+
+/* Mermaid Diagrams in Dark Mode */
+[data-theme='dark'] .mermaid {
+  filter: invert(1) hue-rotate(180deg);
+}
+

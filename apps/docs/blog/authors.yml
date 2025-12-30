@@ -1,12 +1,10 @@
-scrape_dojo_team:
-  name: Scrape Dojo Team
-  title: Maintainer
-  url: https://github.com/scrape-dojo
-  image_url: https://github.com/scrape-dojo.png
-
-marco_franke:
+disane87:
   name: Marco Franke
-  title: Lead Developer
+  title: Software Engineer & Creator of Scrape Dojo
   url: https://github.com/disane87
-  email: mfranke87@icloud.com
   image_url: https://github.com/disane87.png
+  email: mfranke87@icloud.com
+  page: true
+  socials:
+    github: disane87
+
