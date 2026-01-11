@@ -1,6 +1,7 @@
 import { Component, inject, signal, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { SecretsService } from '../../services/secrets.service';
 import { SecretListItem } from '@scrape-dojo/shared';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
@@ -36,13 +37,16 @@ import 'iconify-icon';
 export class SecretsManagerComponent implements OnInit {
   private secretsService = inject(SecretsService);
   private transloco = inject(TranslocoService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   secrets = this.secretsService.secrets;
   loading = this.secretsService.loading;
   error = this.secretsService.error;
 
   // Modal state
-  showModal = signal(false);
+  showModal = signal(true); // Always true for auxiliary route rendering
+  showCreateEditModal = signal(false);
   editingSecret = signal<SecretListItem | null>(null);
 
   // Form fields
@@ -57,6 +61,17 @@ export class SecretsManagerComponent implements OnInit {
 
   ngOnInit() {
     this.loadSecrets();
+    
+    // Check for secretName in route params
+    this.route.params.subscribe(params => {
+      const secretName = params['secretName'];
+      if (secretName) {
+        this.openCreateModal(secretName);
+      } else {
+        // No param - just show the manager
+        this.showModal.set(true);
+      }
+    });
   }
 
   async loadSecrets() {
@@ -67,28 +82,33 @@ export class SecretsManagerComponent implements OnInit {
     }
   }
 
-  openCreateModal() {
+  openCreateModal(prefillName?: string) {
     this.editingSecret.set(null);
-    this.formName.set('');
+    this.formName.set(prefillName || '');
     this.formValue.set('');
     this.formDescription.set('');
     this.formError.set(null);
-    this.showModal.set(true);
+    this.showCreateEditModal.set(true);
   }
 
   openEditModal(secret: SecretListItem) {
     this.editingSecret.set(secret);
     this.formName.set(secret.name);
-    this.formValue.set(''); // Don't pre-fill value for security
+    this.formValue.set(''); // Don't pre-fill for security
     this.formDescription.set(secret.description || '');
     this.formError.set(null);
-    this.showModal.set(true);
+    this.showCreateEditModal.set(true);
+  }
+
+  closeCreateEditModal() {
+    this.showCreateEditModal.set(false);
+    this.editingSecret.set(null);
+    this.formError.set(null);
   }
 
   closeModal() {
-    this.showModal.set(false);
-    this.editingSecret.set(null);
-    this.formError.set(null);
+    // Close modal by clearing the modal outlet
+    this.router.navigate([{ outlets: { modal: null } }]);
   }
 
   async saveSecret() {

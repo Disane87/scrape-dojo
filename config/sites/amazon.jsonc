@@ -99,9 +99,9 @@
               "action": "type",
               "params": {
                 "selector": "#ap_email, input[name='email'], input[type='email']",
-                "text": "{{previousData.var_email}}",
+                "text": "{{variables.email}}",
                 "pressEnter": true,
-                "condition": "{{not (isDefined previousData.passwordFieldVisible)}}"
+                "condition": "{{hasNoValue previousData.passwordFieldVisible}}"
               }
             },
             {
@@ -109,7 +109,7 @@
               "action": "delay",
               "params": {
                 "time": 2500,
-                "condition": "{{not (isDefined previousData.passwordFieldVisible)}}"
+                "condition": "{{hasNoValue previousData.passwordFieldVisible}}"
               }
             },
             {
@@ -118,7 +118,7 @@
               "params": {
                 "selector": "#ap_password, input[name='password'], input[type='password']",
                 "timeout": 15000,
-                "condition": "{{not (isDefined previousData.passwordFieldVisible)}}"
+                "condition": "{{hasNoValue previousData.passwordFieldVisible}}"
               }
             },
             {
@@ -126,7 +126,7 @@
               "action": "type",
               "params": {
                 "selector": "#ap_password, input[name='password'], input[type='password']",
-                "text": "{{previousData.var_password}}",
+                "text": "{{variables.password}}",
                 "pressEnter": true
               }
             },
@@ -180,6 +180,28 @@
               }
             },
             {
+              "name": "invalidYears",
+              "action": "transform",
+              "params": {
+                "previousDataKeys": [
+                  "extractedYears",
+                  "yearsToProcess"
+                ],
+                "expression": "($available := extractedYears; $requested := yearsToProcess; $filter($requested, function($y) { $count($available[$ = $y]) = 0 }))"
+              }
+            },
+            {
+              "name": "yearsToProcessFinal",
+              "action": "transform",
+              "params": {
+                "previousDataKeys": [
+                  "extractedYears",
+                  "yearsToProcess"
+                ],
+                "expression": "($available := extractedYears; $requested := yearsToProcess; $filter($requested, function($y) { $count($available[$ = $y]) > 0 }))"
+              }
+            },
+            {
               "action": "logger",
               "name": "availableYears",
               "params": {
@@ -190,8 +212,38 @@
             {
               "action": "logger",
               "params": {
-                "message": "🎯 Zu verarbeiten: {{previousData.yearsToProcess}}",
+                "message": "🎯 Zu verarbeiten (final): {{previousData.yearsToProcessFinal}}",
                 "level": "log"
+              }
+            },
+            {
+              "action": "transform",
+              "name": "yearsSummaryData",
+              "params": {
+                "previousDataKeys": [
+                  "var_targetYear",
+                  "extractedYears",
+                  "yearsToProcess",
+                  "yearsToProcessFinal",
+                  "invalidYears"
+                ],
+                "expression": "{ 'targetYear': var_targetYear, 'extractedYears': extractedYears, 'yearsToProcess': yearsToProcess, 'yearsToProcessFinal': yearsToProcessFinal, 'invalidYears': invalidYears }"
+              }
+            },
+            {
+              "action": "artifacts",
+              "name": "yearsSummary",
+              "params": {
+                "type": "json",
+                "title": "Amazon: Jahre",
+                "data": "{{previousData.yearsSummaryData}}"
+              }
+            },
+            {
+              "action": "logger",
+              "params": {
+                "message": "⚠️ Ungültige Jahre angefragt (werden übersprungen): {{previousData.invalidYears}}",
+                "level": "warn"
               }
             }
           ]
@@ -203,7 +255,7 @@
               "action": "loop",
               "name": "yearLoop",
               "params": {
-                "elementKey": "yearsToProcess",
+                "elementKey": "yearsToProcessFinal",
                 "actions": [
                   {
                     "action": "logger",
@@ -242,12 +294,22 @@
                   },
                   {
                     "action": "transform",
-                    "name": "pageIndices",
+                    "name": "paginationConfig",
                     "params": {
                       "previousDataKeys": [
                         "totalPages"
                       ],
-                      "expression": "($total := totalPages; $maxPagesRaw := '{{var_maxPages}}'; $startPageRaw := '{{var_startPage}}'; $maxPages := $maxPagesRaw != '' and $maxPagesRaw != null ? $number($maxPagesRaw) : $total; $startPage := $startPageRaw != '' and $startPageRaw != null ? $number($startPageRaw) : 1; $startIdx := $startPage - 1; $endIdx := $startIdx + $maxPages - 1; $actualEnd := $endIdx < $total ? $endIdx : $total - 1; $map([$startIdx..$actualEnd], function($v) { $v }))"
+                      "expression": "($total := totalPages; $maxPagesRaw := '{{var_maxPages}}'; $startPageRaw := '{{var_startPage}}'; $rawMax := ($maxPagesRaw != '' and $maxPagesRaw != null) ? $number($maxPagesRaw) : $total; $rawStart := ($startPageRaw != '' and $startPageRaw != null) ? $number($startPageRaw) : 1; $start := $rawStart < 1 ? 1 : ($rawStart > $total ? $total : $rawStart); $maxPossible := $total - $start + 1; $max := $rawMax < 1 ? 1 : ($rawMax > $maxPossible ? $maxPossible : $rawMax); { 'totalPages': $total, 'requestedStartPage': $rawStart, 'requestedMaxPages': $rawMax, 'effectiveStartPage': $start, 'effectiveMaxPages': $max })"
+                    }
+                  },
+                  {
+                    "action": "transform",
+                    "name": "pageIndices",
+                    "params": {
+                      "previousDataKeys": [
+                        "paginationConfig"
+                      ],
+                      "expression": "($total := paginationConfig.totalPages; $start := paginationConfig.effectiveStartPage; $max := paginationConfig.effectiveMaxPages; $startIdx := $start - 1; $endIdx := $startIdx + $max - 1; $actualEnd := $endIdx < $total ? $endIdx : $total - 1; $map([$startIdx..$actualEnd], function($v) { $v }))"
                     }
                   },
                   {
@@ -255,6 +317,15 @@
                     "params": {
                       "message": "� DEBUG: var_maxPages='{{var_maxPages}}', var_startPage='{{var_startPage}}', totalPages={{previousData.totalPages}}, pageIndices={{previousData.pageIndices}}",
                       "level": "log"
+                    }
+                  },
+                  {
+                    "action": "artifacts",
+                    "name": "paginationSummary",
+                    "params": {
+                      "type": "json",
+                      "title": "Amazon: Pagination",
+                      "data": "{{previousData.paginationConfig}}"
                     }
                   },
                   {
@@ -332,7 +403,7 @@
                                 "name": "orderIdClean",
                                 "params": {
                                   "previousDataKey": "orderId",
-                                  "expression": "$match($, /orderId=([^&]+)/).groups[0]"
+                                  "expression": "($m := $match($string($), /orderId=([^&]+)/); $m ? $m.groups[0] : '')"
                                 }
                               },
                               // Prüfe ob OrderId gültig ist (nicht leer/undefined)
@@ -341,7 +412,7 @@
                                 "name": "hasValidOrderId",
                                 "params": {
                                   "previousDataKey": "orderIdClean",
-                                  "expression": "$ != null and $type($) = 'string' and $length($) > 5"
+                                  "expression": "($id := $string($); $id != '' and $match($id, /^\\d{3}-\\d{7}-\\d{7}$/) != null)"
                                 }
                               },
                               // Prüfe ob diese Bestellung die letzte bekannte ist (aus storedData)
@@ -522,10 +593,34 @@
                                     },
                                     {
                                       "action": "download",
+                                      "name": "downloadInvoice",
                                       "params": {
                                         "url": "{{currentData.invoiceLoop.value}}",
                                         "filename": "{{previousData.invoiceKey}}.pdf",
                                         "path": "./documents/amazon/{{previousData.orderYear}}/{{previousData.orderMonth}}"
+                                      }
+                                    },
+                                    {
+                                      "action": "transform",
+                                      "name": "downloadedInvoiceData",
+                                      "params": {
+                                        "previousDataKeys": [
+                                          "orderIdClean",
+                                          "orderDate",
+                                          "orderYear",
+                                          "orderMonth",
+                                          "downloadInvoice"
+                                        ],
+                                        "expression": "{ 'orderId': orderIdClean, 'orderDate': orderDate, 'year': orderYear, 'month': orderMonth, 'invoiceUrl': currentData.invoiceLoop.value, 'savedAs': downloadInvoice }"
+                                      }
+                                    },
+                                    {
+                                      "action": "artifacts",
+                                      "name": "downloadedInvoiceArtifact",
+                                      "params": {
+                                        "type": "json",
+                                        "title": "Amazon: Rechnung heruntergeladen",
+                                        "data": "{{previousData.downloadedInvoiceData}}"
                                       }
                                     },
                                     {

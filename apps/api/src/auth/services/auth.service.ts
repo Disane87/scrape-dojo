@@ -30,6 +30,7 @@ export class AuthService {
     private readonly logger = new Logger(AuthService.name);
     private readonly accessTokenExpiry: string;
     private readonly refreshTokenExpiry: string;
+    private readonly trustedDeviceRiskIp: boolean;
 
     constructor(
         private readonly userService: UserService,
@@ -40,6 +41,7 @@ export class AuthService {
     ) {
         this.accessTokenExpiry = this.configService.get<string>('SCRAPE_DOJO_AUTH_ACCESS_TOKEN_EXPIRY', '15m');
         this.refreshTokenExpiry = this.configService.get<string>('SCRAPE_DOJO_AUTH_REFRESH_TOKEN_EXPIRY', '7d');
+        this.trustedDeviceRiskIp = this.configService.get<string>('SCRAPE_DOJO_AUTH_TRUSTED_DEVICE_RISK_IP', 'true') === 'true';
     }
 
     isMfaRequired(): boolean {
@@ -63,13 +65,22 @@ export class AuthService {
         // Check if device is trusted
         // Prefer deviceFingerprint from client, fallback to server-generated fingerprint
         const deviceFingerprint = dto.deviceFingerprint || (userAgent && ipAddress ? this.deviceService.generateFingerprint(userAgent, ipAddress) : null);
-        const isDeviceTrusted = deviceFingerprint ? await this.deviceService.isDeviceTrusted(user.id, deviceFingerprint) : false;
+        const trustedDevice = deviceFingerprint ? await this.deviceService.getTrustedDevice(user.id, deviceFingerprint) : null;
+        const isDeviceTrusted = !!trustedDevice;
 
         // If device is trusted, skip MFA
-        if (isDeviceTrusted && deviceFingerprint && userAgent && ipAddress) {
-            this.logger.log(`Device is trusted for user ${user.id}, skipping MFA`);
-            await this.deviceService.updateDeviceLastUsed(user.id, deviceFingerprint, ipAddress);
-            return this.generateTokenResponse(user, { mfaVerified: true });
+        if (isDeviceTrusted && trustedDevice && deviceFingerprint && userAgent && ipAddress) {
+            const risky = this.trustedDeviceRiskIp
+                ? this.deviceService.isNetworkChangeRisky(trustedDevice.lastIpAddress, ipAddress)
+                : false;
+
+            if (!risky) {
+                this.logger.log(`Device is trusted for user ${user.id}, skipping MFA`);
+                await this.deviceService.updateDeviceLastUsed(user.id, deviceFingerprint, ipAddress);
+                return this.generateTokenResponse(user, { mfaVerified: true });
+            }
+
+            this.logger.log(`Trusted device risk signal triggered for user ${user.id}, requiring MFA`);
         }
 
         if (!dto.mfaCode) {
@@ -123,14 +134,25 @@ export class AuthService {
         picture?: string;
         iss: string;
     }): Promise<TokenResponseDto | MfaChallengeResponse> {
+        this.logger.log(`🔐 OIDC User Login: email=${claims.email}, sub=${claims.sub}, issuer=${claims.iss}`);
+        
         const user = await this.userService.upsertOidcUser(claims);
+        
+        this.logger.log(`✅ User upserted: id=${user.id}, email=${user.email}, mfaEnabled=${user.mfaEnabled}, hasSecret=${!!user.mfaSecret}`);
 
-        if (!this.isMfaRequired()) {
+        const mfaRequired = this.isMfaRequired();
+        this.logger.log(`🔒 MFA Check: required=${mfaRequired}, userMfaEnabled=${user.mfaEnabled}`);
+
+        if (!mfaRequired) {
+            this.logger.log(`✨ MFA not required globally - generating tokens directly`);
             return this.generateTokenResponse(user, { mfaVerified: true });
         }
 
         // OIDC always continues via /auth/mfa/complete using the challenge token.
-        return this.createMfaChallenge(user, { setupRequired: !user.mfaEnabled });
+        const setupRequired = !user.mfaEnabled;
+        this.logger.log(`🎫 Creating MFA challenge: setupRequired=${setupRequired}`);
+        
+        return this.createMfaChallenge(user, { setupRequired });
     }
 
     /**

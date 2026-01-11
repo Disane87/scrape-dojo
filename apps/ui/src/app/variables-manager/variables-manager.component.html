@@ -1,3 +1,5 @@
+<app-modal [isOpen]="showModal()" [title]="'variables.title' | transloco" icon="Settings2" size="xl" (closed)="closeModal()">
+
 <div class="variables-manager">
     <!-- Empty State -->
     @if (store.variables.global().length === 0) {
@@ -77,7 +79,7 @@
     }
 </div>
 
-<!-- Create/Edit Modal -->
+<!-- Create/Edit Modal (Nested) -->
 <app-modal [isOpen]="showDialog()"
     [title]="(editingVariable() ? 'variables.edit_title' : 'variables.create') | transloco" icon="Settings2"
     (closed)="closeDialog()">
@@ -126,4 +128,12 @@
             {{ editingVariable() ? ('common.save' | transloco) : ('variables.create' | transloco) }}
         </app-button>
     </ng-container>
+</app-modal>
+
+<!-- Footer for main variables modal -->
+<ng-container modal-footer>
+    <app-button variant="ghost" (click)="closeModal()">
+        {{ 'common.close' | transloco }}
+    </app-button>
+</ng-container>
 </app-modal>

@@ -2,6 +2,7 @@ import { Component, OnInit, inject, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { generateDeviceFingerprint } from '../../auth/utils/device-fingerprint';
 import 'iconify-icon';
 
 interface TrustedDevice {
@@ -175,7 +176,13 @@ export class DeviceSettingsComponent implements OnInit {
         this.successMessage = '';
         this.errorMessage = '';
 
-        this.http.delete('/api/users/me/devices').subscribe({
+        this.http
+            .delete('/api/users/me/devices', {
+                headers: {
+                    'X-Device-Fingerprint': generateDeviceFingerprint(),
+                },
+            })
+            .subscribe({
             next: () => {
                 this.successMessage = this.transloco.translate('settings.devices.remove_all_success');
                 this.isLoading = false;

@@ -1,6 +1,7 @@
-import { Component, inject, signal, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { Component, inject, signal, CUSTOM_ELEMENTS_SCHEMA, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { StoreService } from '../store/store.service';
 import { VariableListItem } from '@scrape-dojo/shared';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
@@ -30,9 +31,13 @@ import 'iconify-icon';
   templateUrl: './variables-manager.component.html',
   styleUrl: './variables-manager.component.scss'
 })
-export class VariablesManagerComponent {
+export class VariablesManagerComponent implements OnInit {
   readonly store = inject(StoreService);
   private transloco = inject(TranslocoService);
+  private router = inject(Router);
+
+  // Modal state for auxiliary route
+  readonly showModal = signal(true);
 
   // UI State
   readonly showDialog = signal(false);
@@ -40,6 +45,15 @@ export class VariablesManagerComponent {
   readonly formError = signal<string | null>(null);
   readonly saving = signal(false);
   readonly deletingId = signal<string | null>(null);
+
+  ngOnInit(): void {
+    // Load variables when modal opens
+    this.store.variables.load();
+  }
+
+  closeModal(): void {
+    this.router.navigate([{ outlets: { modal: null } }]);
+  }
 
   readonly formData = signal<{
     name: string;

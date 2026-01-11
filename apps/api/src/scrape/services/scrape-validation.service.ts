@@ -1,17 +1,21 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { Scrape } from '../types/scrape.interface';
 import { RunTrigger } from '../../database/entities';
+import { DatabaseService } from '../../database/database.service';
 
 @Injectable()
 export class ScrapeValidationService {
     private readonly logger = new Logger(ScrapeValidationService.name);
 
+    constructor(private readonly databaseService: DatabaseService) {}
+
     /**
      * Validiert ob ein Scrape ausgeführt werden kann
      */
-    validateScrape(scrape: Scrape, trigger: RunTrigger): void {
+    async validateScrape(scrape: Scrape, trigger: RunTrigger): Promise<void> {
         this.checkIfDisabled(scrape);
         this.checkTriggerAllowed(scrape, trigger);
+        await this.checkRequiredSecrets(scrape);
     }
 
     /**
@@ -48,6 +52,34 @@ export class ScrapeValidationService {
                 `Trigger type "${trigger}" is not configured for scrape "${scrape.id}". Allowed triggers: ${allowedTriggers.join(', ')}`
             );
         }
+    }
+
+    /**
+     * Prüft ob alle erforderlichen Secrets existieren
+     */
+    private async checkRequiredSecrets(scrape: Scrape): Promise<void> {
+        const requiredSecrets = (scrape.metadata?.variables || [])
+            .filter(v => v.required && v.secretRef)
+            .map(v => v.secretRef!);
+
+        if (requiredSecrets.length === 0) {
+            return;
+        }
+
+        const allSecrets = await this.databaseService.getAllSecrets();
+        const existingSecretNames = allSecrets.map(s => s.name);
+        const missingSecrets = requiredSecrets.filter(name => !existingSecretNames.includes(name));
+
+        if (missingSecrets.length > 0) {
+            this.logger.error(
+                `❌ Scrape "${scrape.id}" requires missing secrets: ${missingSecrets.join(', ')}`
+            );
+            throw new BadRequestException(
+                `Missing required secrets: ${missingSecrets.join(', ')}. Please create them in the Secrets Manager before running this scrape.`
+            );
+        }
+
+        this.logger.log(`✅ All required secrets exist for scrape "${scrape.id}": ${requiredSecrets.join(', ')}`);
     }
 
     /**

@@ -1,4 +1,4 @@
-@if (isOpen) {
+@if (isOpen()) {
 <div class="fixed inset-0 z-50 flex items-center justify-center">
     <!-- Backdrop -->
     <div class="absolute inset-0 bg-black/60" (click)="cancel()"></div>
@@ -28,6 +28,29 @@
 
         <!-- Body -->
         <div class="p-4 overflow-y-auto flex-1">
+            <!-- Missing Secrets Warning -->
+            @if (missingSecrets().length > 0) {
+            <div
+                class="flex items-start gap-3 p-3 mb-4 bg-dojo-warning/10 border border-dojo-warning rounded">
+                <iconify-icon icon="lucide:alert-circle" class="w-5 h-5 text-dojo-warning shrink-0 mt-0.5"></iconify-icon>
+                <div class="flex-1">
+                    <p class="text-sm font-medium text-dojo-warning mb-1">{{ 'workflow.run_dialog.missing_secrets_title' | transloco }}</p>
+                    <p class="text-xs text-dojo-text-muted mb-2">{{ 'workflow.run_dialog.missing_secrets_message' | transloco }}</p>
+                    <ul class="list-disc list-inside text-xs text-dojo-text-muted mb-3 space-y-0.5">
+                        @for (secret of missingSecrets(); track secret) {
+                        <li><code class="text-dojo-accent">{{ secret }}</code></li>
+                        }
+                    </ul>
+                    <button
+                        class="px-3 py-1.5 bg-dojo-warning hover:bg-dojo-warning/80 text-dojo-bg text-xs font-medium rounded transition-colors flex items-center gap-1.5"
+                        (click)="navigateToSecrets()">
+                        <iconify-icon icon="lucide:settings" class="w-3.5 h-3.5"></iconify-icon>
+                        {{ 'workflow.run_dialog.manage_secrets' | transloco }}
+                    </button>
+                </div>
+            </div>
+            }
+            
             <!-- Error -->
             @if (error()) {
             <div
@@ -38,7 +61,7 @@
             }
 
             <!-- No Variables -->
-            @if (variables.length === 0) {
+            @if (variables().length === 0) {
             <div class="text-center py-6">
                 <iconify-icon icon="lucide:circle-check"
                     class="w-10 h-10 mx-auto text-dojo-success mb-3"></iconify-icon>
@@ -49,19 +72,19 @@
             }
 
             <!-- Variables Form -->
-            @if (variables.length > 0) {
+            @if (variables().length > 0) {
             <div class="space-y-4">
                 <div class="flex items-center gap-2 text-sm text-dojo-text-muted mb-4">
                     <iconify-icon icon="lucide:info" class="w-4 h-4"></iconify-icon>
                     {{ 'workflow.run_dialog.required_fields' | transloco }}
                 </div>
 
-                @for (variable of variables; track variable.name) {
+                @for (variable of variables(); track variable.name) {
                 <div class="variable-field">
                     <!-- Label -->
                     <label class="flex items-center gap-2 text-sm font-medium text-dojo-text mb-1.5">
                         {{ variable.label || variable.name }}
-                        @if (variable.required && !variable.secretRef) {
+                        @if (variable.required) {
                         <span class="text-dojo-danger">*</span>
                         }
                         @if (variable.secretRef) {
@@ -80,12 +103,41 @@
 
                     <!-- Input based on type -->
                     @if (variable.secretRef) {
-                    <!-- Secret linked - read only -->
-                    <div
-                        class="flex items-center gap-2 px-3 py-2 bg-dojo-bg border border-dojo-border rounded-md text-dojo-text-muted">
-                        <iconify-icon icon="lucide:lock" class="w-4 h-4 text-dojo-orange"></iconify-icon>
-                        <span class="text-sm">{{ 'workflow.run_dialog.uses_secret' | transloco }}: <code
-                            class="text-dojo-accent">{{ variable.secretRef }}</code></span>
+                    <!-- Secret linked - read only with warning if empty/missing -->
+                    <div class="relative">
+                        <div
+                            class="flex items-center gap-2 px-3 py-2 pr-10 bg-dojo-bg border rounded-md text-dojo-text-muted"
+                            [class.border-dojo-danger]="isSecretMissing(variable)"
+                            [class.border-dojo-border]="!isSecretMissing(variable)"
+                            [class.bg-dojo-danger/10]="isSecretMissing(variable)">
+                            <iconify-icon 
+                                [icon]="isSecretMissing(variable) ? 'lucide:alert-triangle' : 'lucide:lock'" 
+                                class="w-4 h-4 shrink-0"
+                                [class.text-dojo-danger]="isSecretMissing(variable)"
+                                [class.text-dojo-orange]="!isSecretMissing(variable)"></iconify-icon>
+                            @if (isSecretMissing(variable)) {
+                            <span class="text-sm text-dojo-danger font-medium flex-1">
+                                {{ 'workflow.run_dialog.secret_missing' | transloco }}: 
+                                <code class="text-dojo-danger">{{ variable.secretRef }}</code>
+                            </span>
+                            } @else {
+                            <span class="text-sm flex-1">
+                                {{ 'workflow.run_dialog.uses_secret' | transloco }}: 
+                                <code class="text-dojo-accent">{{ variable.secretRef }}</code>
+                            </span>
+                            }
+                        </div>
+                        <!-- Direct link to Secrets Manager for missing secrets -->
+                        @if (isSecretMissing(variable)) {
+                        <button
+                            type="button"
+                            (click)="navigateToSecret(variable.secretRef)"
+                            class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 hover:bg-dojo-danger/20 rounded transition-colors"
+                            [attr.title]="'workflow.run_dialog.create_secret' | transloco"
+                            [attr.aria-label]="'workflow.run_dialog.create_secret' | transloco">
+                            <iconify-icon icon="lucide:external-link" class="w-4 h-4 text-dojo-danger"></iconify-icon>
+                        </button>
+                        }
                     </div>
                     } @else if (variable.type === 'boolean') {
                     <!-- Boolean toggle -->

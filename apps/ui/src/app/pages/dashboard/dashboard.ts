@@ -17,16 +17,10 @@ import { WorkflowHeaderComponent, TabType } from '../../components/workflow-head
 import { WorkflowHistoryComponent, StatusFilter } from '../../components/workflow-history/workflow-history';
 import { WorkflowVisualizerComponent } from '../../components/workflow-visualizer/workflow-visualizer';
 import { RunDebugViewComponent } from '../../components/run-debug-view/run-debug-view';
-import { ApiDocsModalComponent } from '../../components/api-docs-modal/api-docs-modal';
-import { SettingsModalComponent } from '../../components/settings-modal/settings-modal';
 import { OtpModalComponent } from '../../components/otp-modal/otp-modal';
-import { RunDialogComponent, WorkflowVariable, RunDialogResult } from '../../components/run-dialog/run-dialog';
-import { SecretsManagerComponent } from '../../components/secrets-manager/secrets-manager';
-import { VariablesManagerComponent } from '../../variables-manager/variables-manager.component';
+import { WorkflowVariable, RunDialogResult } from '../../components/run-dialog/run-dialog';
 import { WorkflowVariablesComponent } from '../../components/workflow-variables/workflow-variables.component';
-import { ScheduleModalComponent } from '../../components/schedule-modal/schedule-modal';
 import { NotificationModalComponent } from '../../components/notification-modal/notification-modal';
-import { StatusModalComponent } from '../../components/status-modal/status-modal';
 import { ButtonComponent } from '../../components/shared';
 import { environment } from '../../../environments/environment';
 import 'iconify-icon';
@@ -46,17 +40,9 @@ import 'iconify-icon';
     WorkflowHistoryComponent,
     WorkflowVisualizerComponent,
     RunDebugViewComponent,
-    ApiDocsModalComponent,
-    SettingsModalComponent,
     OtpModalComponent,
-    RunDialogComponent,
-    SecretsManagerComponent,
-    VariablesManagerComponent,
     WorkflowVariablesComponent,
-    ScheduleModalComponent,
-    NotificationModalComponent,
-    StatusModalComponent,
-    ButtonComponent
+    NotificationModalComponent
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './dashboard.html',
@@ -82,31 +68,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
   isRunning = signal(false);
   activeTab = signal<TabType>('history');
   statusFilter = signal<StatusFilter>('all');
-  showApiDocs = signal(false);
-  showSecrets = signal(false);
-  showVariables = signal(false);
-  showStatus = signal(false);
-  showSettings = signal(false);
   showServerLogs = signal(true);
   serverLogsHeight = signal(200);
 
-  // OTP Modal
+  // OTP Modal data (modal opened via router)
   otpRequest = signal<OtpRequest | null>(null);
   otpCode = signal('');
 
-  // Run Dialog
-  showRunDialog = signal(false);
+  // Run Dialog data (modal opened via router)
   runDialogVariables = signal<WorkflowVariable[]>([]);
 
-  // Schedule Modal
-  showScheduleModal = signal(false);
+  // Schedule Modal data (modal opened via router)
   currentSchedule = signal<ScrapeSchedule | null>(null);
-
-  // Variables Manager ViewChild
-  @ViewChild(VariablesManagerComponent) variablesManager?: VariablesManagerComponent;
-
-  // Secrets Manager ViewChild
-  @ViewChild(SecretsManagerComponent) secretsManager?: SecretsManagerComponent;
 
   // Selected Run Details
   selectedRunId = signal<string | null>(null);
@@ -192,14 +165,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-  }
-
-  openCreateVariableDialog(): void {
-    this.variablesManager?.openCreateDialog();
-  }
-
-  openCreateSecretModal(): void {
-    this.secretsManager?.openCreateModal();
   }
 
   private loadStoredLogs(): void {
@@ -289,16 +254,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   openScheduleModal(): void {
-    this.showScheduleModal.set(true);
+    const id = this.selectedScrape();
+    if (id) {
+      this.router.navigate([{ outlets: { modal: ['schedule', id] } }]);
+    }
   }
 
   onScheduleModalClosed(): void {
-    this.showScheduleModal.set(false);
+    this.router.navigate([{ outlets: { modal: null } }]);
   }
 
   onScheduleSaved(schedule: ScrapeSchedule): void {
     this.currentSchedule.set(schedule);
-    this.showScheduleModal.set(false);
+    this.router.navigate([{ outlets: { modal: null } }]);
   }
 
   onDeleteRun(runId: string): void {
@@ -346,12 +314,21 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const definition = this.selectedScrapeDefinition();
     if (!id || this.isRunning()) return;
 
+    console.log('🚀 runScrape called for:', id);
+    console.log('📋 Definition:', definition);
+
     // Prüfe ob Variablen definiert sind
     const variables = definition?.metadata?.variables || [];
+    console.log('📊 Variables found:', variables);
+    
     if (variables.length > 0) {
-      // Zeige Run-Dialog für Variablen-Eingabe
-      this.runDialogVariables.set(variables as WorkflowVariable[]);
-      this.showRunDialog.set(true);
+      // Zeige Run-Dialog für Variablen-Eingabe via Auxiliary Route
+      // Übergebe Variablen via Router State
+      console.log('✅ Navigating to run dialog with variables:', { variables, workflowName: definition.metadata?.description || id });
+      this.router.navigate(
+        [{ outlets: { modal: ['run', id] } }],
+        { state: { variables, workflowName: definition.metadata?.description || id } }
+      );
       return;
     }
 
@@ -360,7 +337,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   onRunDialogClosed(result: RunDialogResult): void {
-    this.showRunDialog.set(false);
+    // Close modal via router
+    this.router.navigate([{ outlets: { modal: null } }]);
 
     if (result.confirmed) {
       const id = this.selectedScrape();

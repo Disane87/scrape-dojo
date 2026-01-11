@@ -76,9 +76,13 @@ export class UserService {
         picture?: string;
         iss: string;
     }): Promise<UserEntity> {
+        this.logger.log(`🔍 OIDC upsert: Looking for user with externalId=${claims.sub}, issuer=${claims.iss}`);
+        
         let user = await this.findByExternalId(claims.sub, claims.iss);
 
         if (user) {
+            this.logger.log(`✓ Found existing OIDC user: id=${user.id}, email=${user.email}, mfaEnabled=${user.mfaEnabled}`);
+            
             // Update existing OIDC user
             user.displayName = claims.name || user.displayName;
             user.username = claims.preferred_username || user.username;
@@ -90,11 +94,15 @@ export class UserService {
             if (!Number.isFinite(user.updatedAt)) user.updatedAt = Date.now();
 
             await this.userRepository.save(user);
-            this.logger.log(`Updated OIDC user: ${user.email}`);
+            this.logger.log(`✓ Updated OIDC user ${user.id} - lastLoginAt refreshed`);
         } else {
+            this.logger.log(`⭐ No existing OIDC user found - checking for local user with email=${claims.email}`);
+            
             // Check if local user with same email exists
             const existingLocal = await this.findByEmail(claims.email);
             if (existingLocal) {
+                this.logger.log(`🔗 Linking OIDC to existing local user: id=${existingLocal.id}, email=${existingLocal.email}, currentMfaEnabled=${existingLocal.mfaEnabled}`);
+                
                 // Link OIDC to existing local account
                 existingLocal.externalId = claims.sub;
                 existingLocal.oidcIssuer = claims.iss;
@@ -107,10 +115,12 @@ export class UserService {
                 if (!Number.isFinite(existingLocal.updatedAt)) existingLocal.updatedAt = Date.now();
 
                 await this.userRepository.save(existingLocal);
-                this.logger.log(`Linked OIDC to existing user: ${existingLocal.email}`);
+                this.logger.log(`✅ Linked OIDC to existing user ${existingLocal.id} - KEEPING existing mfaEnabled=${existingLocal.mfaEnabled}`);
                 return existingLocal;
             }
 
+            this.logger.log(`⭐ Creating NEW OIDC user for email=${claims.email}, sub=${claims.sub}`);
+            
             // Create new OIDC user
             user = this.userRepository.create({
                 id: uuidv4(),
@@ -127,7 +137,7 @@ export class UserService {
             });
 
             await this.userRepository.save(user);
-            this.logger.log(`Created OIDC user: ${user.email}`);
+            this.logger.log(`✅ NEW OIDC user created: id=${user.id}, email=${user.email}, mfaEnabled=${user.mfaEnabled || false}`);
         }
 
         return user;

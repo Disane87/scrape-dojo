@@ -1,5 +1,6 @@
-import { Component, model } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { ModalComponent } from '../shared';
 import { TranslocoModule } from '@jsverse/transloco';
 
@@ -9,10 +10,15 @@ import { TranslocoModule } from '@jsverse/transloco';
     imports: [CommonModule, ModalComponent, TranslocoModule],
     templateUrl: './api-docs-modal.html',
 })
-export class ApiDocsModalComponent {
-    isOpen = model.required<boolean>();
+export class ApiDocsModalComponent implements OnInit {
+    private router = inject(Router);
+    isOpen = signal(true); // Always true for auxiliary route
+
+    ngOnInit(): void {
+        // Component loaded via auxiliary route
+    }
 
     close(): void {
-        this.isOpen.set(false);
+        this.router.navigate([{ outlets: { modal: null } }]);
     }
 }

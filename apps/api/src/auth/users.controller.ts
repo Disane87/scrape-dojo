@@ -1,6 +1,7 @@
 import {
     Controller,
     Get,
+    Post,
     Put,
     Delete,
     Param,
@@ -19,10 +20,11 @@ import {
 } from '@nestjs/swagger';
 import { UserService } from './services/user.service';
 import { DeviceService } from './services/device.service';
+import { ApiKeysService } from './services/api-keys.service';
 import { JwtAuthGuard, RolesGuard } from './guards';
 import { Roles, CurrentUser } from './decorators';
 import { UserEntity, UserRole } from './entities/user.entity';
-import { UpdateUserDto, UserResponseDto, ChangePasswordDto } from './dto';
+import { UpdateUserDto, UserResponseDto, ChangePasswordDto, CreateUserApiKeyDto, UserApiKeyListItemDto, CreateUserApiKeyResponseDto } from './dto';
 
 @ApiTags('users')
 @Controller('users')
@@ -32,6 +34,7 @@ export class UsersController {
     constructor(
         private readonly userService: UserService,
         private readonly deviceService: DeviceService,
+        private readonly apiKeysService: ApiKeysService,
     ) {}
 
     @Get()
@@ -83,6 +86,55 @@ export class UsersController {
             throw new Error('Cannot deactivate yourself');
         }
         await this.userService.deactivateUser(id);
+    }
+
+    // ==================== API Keys (User Context) ====================
+
+    @Get('me/api-keys')
+    @ApiOperation({ summary: 'List API keys for current user' })
+    @ApiResponse({ status: 200, description: 'List of API keys', type: [UserApiKeyListItemDto] })
+    async listMyApiKeys(@CurrentUser() user: UserEntity): Promise<UserApiKeyListItemDto[]> {
+        const keys = await this.apiKeysService.listForUser(user.id);
+        return keys.map((k) => ({
+            id: k.id,
+            name: k.name,
+            keyPrefix: k.keyPrefix,
+            lastUsedAt: k.lastUsedAt ?? null,
+            revokedAt: k.revokedAt ?? null,
+            createdAt: k.createdAt,
+        }));
+    }
+
+    @Post('me/api-keys')
+    @ApiOperation({ summary: 'Create an API key for current user (shown once)' })
+    @ApiResponse({ status: 201, description: 'API key created', type: CreateUserApiKeyResponseDto })
+    async createMyApiKey(
+        @CurrentUser() user: UserEntity,
+        @Body() dto: CreateUserApiKeyDto,
+    ): Promise<CreateUserApiKeyResponseDto> {
+        const { apiKey, entity } = await this.apiKeysService.createForUser(user.id, dto.name);
+        return {
+            apiKey,
+            item: {
+                id: entity.id,
+                name: entity.name,
+                keyPrefix: entity.keyPrefix,
+                lastUsedAt: entity.lastUsedAt ?? null,
+                revokedAt: entity.revokedAt ?? null,
+                createdAt: entity.createdAt,
+            },
+        };
+    }
+
+    @Delete('me/api-keys/:apiKeyId')
+    @HttpCode(HttpStatus.NO_CONTENT)
+    @ApiOperation({ summary: 'Revoke an API key for current user' })
+    @ApiResponse({ status: 204, description: 'API key revoked' })
+    async revokeMyApiKey(
+        @CurrentUser() user: UserEntity,
+        @Param('apiKeyId') apiKeyId: string,
+    ): Promise<void> {
+        await this.apiKeysService.revokeForUser(user.id, apiKeyId);
     }
 
     // ==================== Profile Management ====================
@@ -153,11 +205,22 @@ export class UsersController {
         @CurrentUser() user: UserEntity,
         @Req() req: Request,
     ): Promise<void> {
-        const userAgent = req.headers['user-agent'] || '';
-        const ipAddress = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || '';
-        const currentFingerprint = this.deviceService.generateFingerprint(userAgent, ipAddress);
-        
+        const headerFingerprint = req.headers['x-device-fingerprint'];
+        const currentFingerprint = typeof headerFingerprint === 'string' ? headerFingerprint : null;
+
         const devices = await this.deviceService.getUserDevices(user.id);
+
+        // If the UI didn't send a fingerprint, keep the most recently used device as a best-effort.
+        if (!currentFingerprint) {
+            const keepDeviceId = devices[0]?.id;
+            for (const device of devices) {
+                if (device.id !== keepDeviceId) {
+                    await this.deviceService.removeTrustedDevice(user.id, device.id);
+                }
+            }
+            return;
+        }
+
         for (const device of devices) {
             if (device.deviceFingerprint !== currentFingerprint) {
                 await this.deviceService.removeTrustedDevice(user.id, device.id);

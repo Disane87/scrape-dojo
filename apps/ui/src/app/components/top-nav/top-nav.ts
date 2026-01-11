@@ -1,5 +1,6 @@
-import { Component, output, inject, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { Component, inject, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { ButtonComponent } from '../shared/button/button';
 import { TranslocoModule } from '@jsverse/transloco';
 import { UserMenuComponent } from '../../auth/components/user-menu/user-menu.component';
@@ -13,34 +14,30 @@ import 'iconify-icon';
     templateUrl: './top-nav.html',
 })
 export class TopNavComponent implements OnInit {
-    showApiDocs = output<void>();
-    showSecrets = output<void>();
-    showVariables = output<void>();
-    showStatus = output<void>();
-    showSettings = output<void>();
+    private router = inject(Router);
 
     ngOnInit(): void {
         // no-op
     }
 
     openApiDocs(): void {
-        this.showApiDocs.emit();
+        this.router.navigate([{ outlets: { modal: ['api-docs'] } }]);
     }
 
     openSecrets(): void {
-        this.showSecrets.emit();
+        this.router.navigate([{ outlets: { modal: ['secrets'] } }]);
     }
 
     openVariables(): void {
-        this.showVariables.emit();
+        this.router.navigate([{ outlets: { modal: ['variables-modal'] } }]);
     }
 
     openStatus(): void {
-        this.showStatus.emit();
+        this.router.navigate([{ outlets: { modal: ['status'] } }]);
     }
 
     openSettings(): void {
-        this.showSettings.emit();
+        this.router.navigate([{ outlets: { modal: ['settings-modal'] } }]);
     }
 
     toggleNotifications(): void {

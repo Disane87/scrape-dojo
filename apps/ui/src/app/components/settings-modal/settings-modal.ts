@@ -1,10 +1,12 @@
-import { Component, model, inject, OnInit, signal, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { Component, inject, OnInit, signal, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { ModalComponent } from '../shared';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { AuthService } from '../../auth/services/auth.service';
+import { generateDeviceFingerprint } from '../../auth/utils/device-fingerprint';
 import 'iconify-icon';
 
 interface UserProfile {
@@ -22,6 +24,20 @@ interface TrustedDevice {
     lastIpAddress: string;
     lastUsedAt: number;
     createdAt: number;
+}
+
+interface UserApiKeyListItem {
+    id: string;
+    name: string;
+    keyPrefix: string;
+    lastUsedAt?: number | null;
+    revokedAt?: number | null;
+    createdAt: number;
+}
+
+interface CreateUserApiKeyResponse {
+    apiKey: string;
+    item: UserApiKeyListItem;
 }
 
 type SettingsTab = 'profile' | 'security' | 'devices';
@@ -179,6 +195,96 @@ type SettingsTab = 'profile' | 'security' | 'devices';
                                 }
                             </div>
                         }
+
+                        <!-- API Keys -->
+                        <div class="pt-6 border-t border-dojo-border/60">
+                            <div class="flex items-start justify-between gap-4">
+                                <div>
+                                    <h3 class="text-lg font-semibold text-dojo-text">{{ 'settings.security.api_keys.title' | transloco }}</h3>
+                                    <p class="text-sm text-dojo-text-muted">{{ 'settings.security.api_keys.subtitle' | transloco }}</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    (click)="loadApiKeys()"
+                                    [disabled]="loadingApiKeys()"
+                                    class="px-3 py-1.5 text-sm text-dojo-text-muted hover:text-dojo-text hover:bg-dojo-surface-2 rounded-lg border border-dojo-border transition"
+                                >
+                                    <span>{{ 'settings.security.api_keys.refresh' | transloco }}</span>
+                                </button>
+                            </div>
+
+                            <div class="mt-4 flex flex-col gap-2">
+                                <label class="block text-sm font-medium text-dojo-text">{{ 'settings.security.api_keys.name_label' | transloco }}</label>
+                                <div class="flex gap-2">
+                                    <input
+                                        type="text"
+                                        [(ngModel)]="apiKeyForm.name"
+                                        [placeholder]="'settings.security.api_keys.name_placeholder' | transloco"
+                                        class="flex-1 px-4 py-2.5 bg-dojo-surface-2 border border-dojo-border rounded-lg text-dojo-text
+                                               focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50"
+                                    />
+                                    <button
+                                        type="button"
+                                        (click)="createApiKey()"
+                                        [disabled]="creatingApiKey() || !apiKeyForm.name.trim()"
+                                        class="px-4 py-2.5 bg-linear-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400
+                                               text-white font-semibold rounded-lg shadow-lg
+                                               disabled:opacity-50 disabled:cursor-not-allowed
+                                               transition-all duration-300 flex items-center justify-center gap-2"
+                                    >
+                                        @if (creatingApiKey()) {
+                                            <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                        } @else {
+                                            <iconify-icon icon="mdi:key-plus" class="text-lg"></iconify-icon>
+                                        }
+                                        <span>{{ 'settings.security.api_keys.create' | transloco }}</span>
+                                    </button>
+                                </div>
+                                <p class="text-xs text-dojo-text-subtle">{{ 'settings.security.api_keys.one_time_notice' | transloco }}</p>
+                            </div>
+
+                            <div class="mt-4">
+                                @if (loadingApiKeys()) {
+                                    <div class="flex justify-center py-6">
+                                        <svg class="animate-spin h-6 w-6 text-dojo-accent" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                    </div>
+                                } @else if (apiKeys().length === 0) {
+                                    <div class="text-center py-6 text-dojo-text-muted">
+                                        <iconify-icon icon="mdi:key-outline" class="text-4xl mb-2"></iconify-icon>
+                                        <p>{{ 'settings.security.api_keys.no_keys' | transloco }}</p>
+                                    </div>
+                                } @else {
+                                    <div class="space-y-2">
+                                        @for (k of apiKeys(); track k.id) {
+                                            <div class="flex items-center justify-between p-4 bg-dojo-surface-2 border border-dojo-border rounded-lg">
+                                                <div class="flex-1">
+                                                    <div class="font-medium text-dojo-text">{{ k.name }}</div>
+                                                    <div class="text-xs text-dojo-text-muted">
+                                                        <span class="font-mono">{{ k.keyPrefix }}…</span>
+                                                        • {{ 'settings.security.api_keys.created' | transloco }}: {{ formatAbsoluteDate(k.createdAt) }}
+                                                        • {{ 'settings.security.api_keys.last_used' | transloco }}: {{ k.lastUsedAt ? formatAbsoluteDate(k.lastUsedAt) : ('settings.security.api_keys.never' | transloco) }}
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    (click)="revokeApiKey(k.id)"
+                                                    [disabled]="revokingApiKeyId() === k.id"
+                                                    class="px-3 py-1.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition"
+                                                >
+                                                    {{ 'settings.security.api_keys.revoke' | transloco }}
+                                                </button>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </div>
                     </div>
                 }
 
@@ -291,10 +397,11 @@ type SettingsTab = 'profile' | 'security' | 'devices';
     `,
 })
 export class SettingsModalComponent implements OnInit {
-    isOpen = model.required<boolean>();
+    isOpen = signal(true); // Always true for auxiliary route
     private http = inject(HttpClient);
     private authService = inject(AuthService);
     private transloco = inject(TranslocoService);
+    private router = inject(Router);
 
     activeTab = signal<SettingsTab>('profile');
 
@@ -313,13 +420,21 @@ export class SettingsModalComponent implements OnInit {
     loadingDevices = signal(false);
     removingDevice = signal(false);
 
+    // API Keys
+    apiKeys = signal<UserApiKeyListItem[]>([]);
+    loadingApiKeys = signal(false);
+    creatingApiKey = signal(false);
+    revokingApiKeyId = signal<string | null>(null);
+    apiKeyForm = { name: '' };
+
     ngOnInit(): void {
         this.loadProfile();
         this.loadDevices();
+        this.loadApiKeys();
     }
 
     close(): void {
-        this.isOpen.set(false);
+        this.router.navigate([{ outlets: { modal: null } }]);
     }
 
     getTabClasses(tab: SettingsTab): string {
@@ -430,14 +545,20 @@ export class SettingsModalComponent implements OnInit {
         if (!confirm(this.getTranslation('settings.devices.confirm_remove_all'))) return;
 
         this.removingDevice.set(true);
-        this.http.delete('/api/users/me/devices').subscribe({
-            next: () => {
-                this.loadDevices();
-                this.removingDevice.set(false);
-            },
-            error: () => {
-                this.removingDevice.set(false);
-            },
+        this.http
+            .delete('/api/users/me/devices', {
+                headers: {
+                    'X-Device-Fingerprint': generateDeviceFingerprint(),
+                },
+            })
+            .subscribe({
+                next: () => {
+                    this.loadDevices();
+                    this.removingDevice.set(false);
+                },
+                error: () => {
+                    this.removingDevice.set(false);
+                },
         });
     }
 
@@ -478,5 +599,61 @@ export class SettingsModalComponent implements OnInit {
 
     private getTranslation(key: string, params?: Record<string, any>): string {
         return this.transloco.translate(key, params);
+    }
+
+    // API Key methods
+    loadApiKeys(): void {
+        this.loadingApiKeys.set(true);
+        this.http.get<UserApiKeyListItem[]>('/api/users/me/api-keys').subscribe({
+            next: (keys) => {
+                this.apiKeys.set(keys.filter((k) => !k.revokedAt));
+                this.loadingApiKeys.set(false);
+            },
+            error: () => {
+                this.loadingApiKeys.set(false);
+            },
+        });
+    }
+
+    createApiKey(): void {
+        const name = this.apiKeyForm.name.trim();
+        if (!name) return;
+
+        this.creatingApiKey.set(true);
+        this.http.post<CreateUserApiKeyResponse>('/api/users/me/api-keys', { name }).subscribe({
+            next: (res) => {
+                this.apiKeyForm.name = '';
+                this.creatingApiKey.set(false);
+                this.loadApiKeys();
+                // Show only once in a copy-friendly prompt.
+                window.prompt(this.getTranslation('settings.security.api_keys.copy_prompt'), res.apiKey);
+            },
+            error: () => {
+                this.creatingApiKey.set(false);
+            },
+        });
+    }
+
+    revokeApiKey(apiKeyId: string): void {
+        if (!confirm(this.getTranslation('settings.security.api_keys.confirm_revoke'))) return;
+
+        this.revokingApiKeyId.set(apiKeyId);
+        this.http.delete(`/api/users/me/api-keys/${apiKeyId}`).subscribe({
+            next: () => {
+                this.apiKeys.update((keys) => keys.filter((k) => k.id !== apiKeyId));
+                this.revokingApiKeyId.set(null);
+            },
+            error: () => {
+                this.revokingApiKeyId.set(null);
+            },
+        });
+    }
+
+    formatAbsoluteDate(timestamp: number): string {
+        try {
+            return new Date(timestamp).toLocaleString();
+        } catch {
+            return String(timestamp);
+        }
     }
 }

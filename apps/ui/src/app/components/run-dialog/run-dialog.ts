@@ -1,21 +1,20 @@
 import {
   Component,
   EventEmitter,
-  Input,
   Output,
   signal,
   computed,
   inject,
   OnInit,
-  OnChanges,
-  SimpleChanges,
   CUSTOM_ELEMENTS_SCHEMA
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router, ActivatedRoute } from '@angular/router';
 import { SecretsService } from '../../services/secrets.service';
 import { StoreService } from '../../store/store.service';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { SecretListItem } from '@scrape-dojo/shared';
 import 'iconify-icon';
 
 export interface WorkflowVariable {
@@ -43,36 +42,47 @@ export interface RunDialogResult {
   templateUrl: './run-dialog.html',
   styleUrls: ['./run-dialog.scss'],
 })
-export class RunDialogComponent implements OnInit, OnChanges {
+export class RunDialogComponent implements OnInit {
   private secretsService = inject(SecretsService);
   private store = inject(StoreService);
   private transloco = inject(TranslocoService);
-
-  @Input() isOpen = false;
-  @Input() workflowId = '';
-  @Input() workflowName = '';
-  @Input() variables: WorkflowVariable[] = [];
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   @Output() closed = new EventEmitter<RunDialogResult>();
 
+  isOpen = signal(true); // Always true for auxiliary route
+  workflowId = signal('');
+  workflowName = signal('');
+  variables = signal<WorkflowVariable[]>([]);
+
   // Form state
   variableValues = signal<Record<string, any>>({});
-  secrets = signal<{ id: string; name: string }[]>([]);
+  secrets = signal<SecretListItem[]>([]);
   secretLookup = signal<Record<string, string>>({});
+  missingSecrets = signal<string[]>([]);
   loading = signal(false);
   submitting = signal(false);
   error = signal<string | null>(null);
 
   // Computed
-  hasRequiredVariables = computed(() => this.variables.some((v) => v.required && !v.secretRef));
+  hasRequiredVariables = computed(() => this.variables().some((v) => v.required && !v.secretRef));
 
   requiredVariablesCount = computed(() =>
-    this.variables.filter((v) => v.required && !v.secretRef).length
+    this.variables().filter((v) => v.required && !v.secretRef).length
   );
 
   canSubmit = computed(() => {
     const values = this.variableValues();
-    return this.variables
+    const missingSecretsCount = this.missingSecrets().length;
+    
+    // Prüfe ob fehlende required Secrets vorhanden sind
+    if (missingSecretsCount > 0) {
+      return false;
+    }
+    
+    // Prüfe normale (nicht-secret) required Variablen
+    return this.variables()
       .filter((v) => v.required && !v.secretRef)
       .every((v) => {
         const val = values[v.name];
@@ -80,33 +90,62 @@ export class RunDialogComponent implements OnInit, OnChanges {
       });
   });
 
+  /**
+   * Prüft ob ein Secret fehlt oder leer ist
+   */
+  isSecretMissing(variable: WorkflowVariable): boolean {
+    if (!variable.secretRef) return false;
+    const missingSecrets = this.missingSecrets();
+    return missingSecrets.includes(variable.secretRef);
+  }
+
   constructor() {
   }
 
   ngOnInit() {
-    this.loadSecrets();
-  }
-
-  ngOnChanges(changes: SimpleChanges): void {
-    // Variablen neu laden wenn Dialog geöffnet wird
-    if (changes['isOpen'] && this.isOpen && this.workflowId && this.variables.length > 0) {
-      console.log('🔄 Dialog opened, loading variables for workflow:', this.workflowId);
-      this.loadAndMergeVariables();
-    }
+    // Load workflowId from route params and variables from Router state
+    this.route.params.subscribe(params => {
+      const id = params['workflowId'];
+      if (id) {
+        this.workflowId.set(id);
+        
+        // Load variables from Router state (passed from Dashboard)
+        // Note: getCurrentNavigation() is null after navigation completes, use window.history.state
+        const state = (window.history.state as any);
+        console.log('🔍 Router state:', state);
+        
+        if (state?.variables) {
+          console.log('📋 Loading variables from router state:', state.variables);
+          this.variables.set(state.variables);
+          this.workflowName.set(state.workflowName || id);
+          
+          // Now load and merge with DB variables
+          this.loadAndMergeVariables();
+          this.loadSecrets();
+        } else {
+          console.warn('⚠️ No variables in router state');
+        }
+      }
+    });
   }
 
   /**
    * Lädt DB-Variablen und merged sie mit den Workflow-Definitionen
    */
   private loadAndMergeVariables() {
+    const id = this.workflowId();
+    const vars = this.variables();
+    
+    if (!id || vars.length === 0) return;
+    
     // Hole DB-Variablen für diesen Workflow
-    const dbVariables = this.store.variables.getByWorkflow(this.workflowId);
-    console.log('📊 DB Variables for workflow:', this.workflowId, dbVariables);
-    console.log('📋 Workflow definitions:', this.variables);
+    const dbVariables = this.store.variables.getByWorkflow(id);
+    console.log('📊 DB Variables for workflow:', id, dbVariables);
+    console.log('📋 Workflow definitions:', vars);
 
     // Initialisiere Werte mit defaults aus Definitionen
     const values: Record<string, any> = {};
-    for (const v of this.variables) {
+    for (const v of vars) {
       // Prüfe ob es eine DB-Variable mit diesem Namen gibt
       const dbVar = dbVariables.find(dv => dv.name === v.name);
 
@@ -144,21 +183,55 @@ export class RunDialogComponent implements OnInit, OnChanges {
 
   async loadSecrets() {
     this.loading.set(true);
+    const vars = this.variables();
+    
     try {
       const secrets = await this.secretsService.getSecrets();
       this.secrets.set(secrets);
 
-      // Build lookup for secretRef
+      console.log('🔍 Loaded secrets:', secrets);
+
+      // Build lookup for secretRef and check for missing/empty required secrets
       const lookup: Record<string, string> = {};
-      for (const v of this.variables) {
+      const missingSecrets: string[] = [];
+      
+      for (const v of vars) {
         if (v.secretRef) {
           const secret = secrets.find((s) => s.name === v.secretRef);
-          if (secret) {
+          console.log(`🔍 Checking variable ${v.name} with secretRef ${v.secretRef}:`, secret);
+          
+          if (!secret) {
+            // Secret nicht gefunden - markiere als fehlend
+            console.warn(`⚠️ Secret not found: ${v.secretRef}`);
+            lookup[v.name] = `⚠️ Missing: ${v.secretRef}`;
+            if (v.required) {
+              missingSecrets.push(v.secretRef);
+            }
+          } else if (secret.isEmpty) {
+            // Secret existiert aber ist leer
+            console.warn(`⚠️ Secret is empty: ${secret.name}`, secret);
+            lookup[v.name] = `⚠️ Empty: ${secret.name}`;
+            if (v.required) {
+              missingSecrets.push(v.secretRef);
+            }
+          } else {
+            // Secret OK
+            console.log(`✅ Secret OK: ${secret.name}`);
             lookup[v.name] = `🔐 ${secret.name}`;
           }
         }
       }
+      
       this.secretLookup.set(lookup);
+      this.missingSecrets.set(missingSecrets);
+      
+      console.log('📊 Final missingSecrets:', missingSecrets);
+      console.log('📊 Final lookup:', lookup);
+      
+      // Log missing required secrets
+      if (missingSecrets.length > 0) {
+        console.warn('⚠️ Missing required secrets:', missingSecrets);
+      }
     } catch (err: any) {
       console.error('Failed to load secrets:', err);
     } finally {
@@ -168,7 +241,7 @@ export class RunDialogComponent implements OnInit, OnChanges {
 
   updateValue(name: string, value: any) {
     // Konvertiere number-Typen zu echten Numbers
-    const variable = this.variables.find(v => v.name === name);
+    const variable = this.variables().find(v => v.name === name);
     let convertedValue = value;
 
     if (variable?.type === 'number') {
@@ -181,6 +254,10 @@ export class RunDialogComponent implements OnInit, OnChanges {
 
   getPlaceholder(variable: WorkflowVariable): string {
     if (variable.secretRef) {
+      const secret = this.secrets().find(s => s.name === variable.secretRef);
+      if (!secret) {
+        return `⚠️ Secret "${variable.secretRef}" not found - create it first!`;
+      }
       return `${this.transloco.translate('workflow.run_dialog.uses_secret')}: ${variable.secretRef}`;
     }
     switch (variable.type) {
@@ -213,7 +290,29 @@ export class RunDialogComponent implements OnInit, OnChanges {
   }
 
   cancel() {
+    // Close modal via router
+    this.router.navigate([{ outlets: { modal: null } }]);
     this.closed.emit({ confirmed: false });
+  }
+
+  navigateToSecrets() {
+    // Close dialog first
+    this.cancel();
+    // Navigate to modal outlet
+    this.router.navigate([{ outlets: { modal: ['secrets'] } }]);
+  }
+
+  /**
+   * Navigiert zum Secrets-Manager Modal und fokussiert auf ein bestimmtes Secret
+   */
+  navigateToSecret(secretName: string | undefined) {
+    if (!secretName) return;
+    
+    // Close dialog first
+    this.cancel();
+    
+    // Navigate to modal outlet with secret name
+    this.router.navigate([{ outlets: { modal: ['secrets', 'create', secretName] } }]);
   }
 
   async submit() {
@@ -229,7 +328,7 @@ export class RunDialogComponent implements OnInit, OnChanges {
       // Filter out secret-linked variables (they will be resolved server-side)
       // Filter out undefined/null/empty values (use defaults on server)
       const values: Record<string, any> = {};
-      for (const v of this.variables) {
+      for (const v of this.variables()) {
         if (!v.secretRef) {
           const val = this.variableValues()[v.name];
           // Nur setzen wenn Wert vorhanden (nicht undefined/null/leer)
@@ -249,6 +348,9 @@ export class RunDialogComponent implements OnInit, OnChanges {
 
       console.log('🚀 Submitting run with variables:', values);
 
+      // Close modal via router
+      this.router.navigate([{ outlets: { modal: null } }]);
+      
       this.closed.emit({
         confirmed: true,
         variables: values,

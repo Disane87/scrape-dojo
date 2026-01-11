@@ -1,5 +1,6 @@
-import { Component, model, inject, computed, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { Component, inject, computed, signal, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { ModalComponent } from '../shared';
 import { HealthService } from '../../services/health.service';
 import { TranslocoModule } from '@jsverse/transloco';
@@ -12,10 +13,19 @@ import 'iconify-icon';
     schemas: [CUSTOM_ELEMENTS_SCHEMA],
     templateUrl: './status-modal.html',
 })
-export class StatusModalComponent {
+export class StatusModalComponent implements OnInit {
     private healthService = inject(HealthService);
+    private router = inject(Router);
 
-    isOpen = model.required<boolean>();
+    isOpen = signal(true); // Always true for auxiliary route
+
+    ngOnInit(): void {
+        // Component loaded via auxiliary route
+    }
+
+    close(): void {
+        this.router.navigate([{ outlets: { modal: null } }]);
+    }
 
     // System Status
     systemStatus = this.healthService.systemStatus;
@@ -48,10 +58,6 @@ export class StatusModalComponent {
         if (!variables) return [];
         return Object.entries(variables).sort((a, b) => a[0].localeCompare(b[0]));
     });
-
-    close(): void {
-        this.isOpen.set(false);
-    }
 
     async refresh(): Promise<void> {
         await this.healthService.checkHealth();

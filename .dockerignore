@@ -55,6 +55,12 @@ documents
 logs
 tmp
 
+# Database files (must be fresh or mounted via volume)
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+
 # Misc
 .DS_Store
 Thumbs.db

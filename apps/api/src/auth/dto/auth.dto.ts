@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEmail, IsString, MinLength, IsOptional, IsEnum } from 'class-validator';
+import { IsEmail, IsString, MinLength, IsOptional, IsEnum, MaxLength } from 'class-validator';
 import { UserRole } from '../entities/user.entity';
 
 export class LoginDto {
@@ -184,4 +184,39 @@ export class ChangePasswordDto {
     @IsString()
     @MinLength(8)
     newPassword: string;
+}
+
+export class CreateUserApiKeyDto {
+    @ApiProperty({ description: 'Human-readable name for the API key', example: 'CI / Scripts', maxLength: 64 })
+    @IsString()
+    @MaxLength(64)
+    name: string;
+}
+
+export class UserApiKeyListItemDto {
+    @ApiProperty()
+    id: string;
+
+    @ApiProperty({ description: 'Human-readable name' })
+    name: string;
+
+    @ApiProperty({ description: 'Non-sensitive prefix shown to identify the key', example: 'sdj_12ab34cd56ef' })
+    keyPrefix: string;
+
+    @ApiPropertyOptional({ description: 'Last time this key was used (epoch ms)' })
+    lastUsedAt?: number | null;
+
+    @ApiPropertyOptional({ description: 'Revoked timestamp (epoch ms), if revoked' })
+    revokedAt?: number | null;
+
+    @ApiProperty()
+    createdAt: number;
+}
+
+export class CreateUserApiKeyResponseDto {
+    @ApiProperty({ description: 'The plaintext API key. This is only returned once on creation.' })
+    apiKey: string;
+
+    @ApiProperty({ description: 'Metadata for the created key' })
+    item: UserApiKeyListItemDto;
 }

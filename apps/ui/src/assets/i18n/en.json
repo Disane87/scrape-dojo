@@ -81,7 +81,13 @@
       "please_select": "Please select...",
       "required_count": "required field(s)",
       "cancel": "Cancel",
-      "uses_secret": "Uses Secret"
+      "uses_secret": "Uses Secret",
+      "secret": "Secret",
+      "secret_missing": "Secret missing",
+      "create_secret": "Create secret",
+      "missing_secrets_title": "Missing Secrets",
+      "missing_secrets_message": "The following secrets are required but not yet created:",
+      "manage_secrets": "Manage Secrets"
     },
     "buttons": {
       "run": "Run workflow",
@@ -549,7 +555,23 @@
       "update_password": "Update password",
       "password_changed": "Password successfully changed",
       "password_error": "Failed to change password",
-      "password_change_local_only": "Password change is only available for local accounts. Your account uses {{provider}} for authentication."
+      "password_change_local_only": "Password change is only available for local accounts. Your account uses {{provider}} for authentication.",
+      "api_keys": {
+        "title": "API keys",
+        "subtitle": "Create user-scoped keys for scripts and automations",
+        "refresh": "Refresh",
+        "name_label": "Name",
+        "name_placeholder": "e.g. CI / Scripts",
+        "create": "Create key",
+        "one_time_notice": "The full key is shown only once after creation. Store it in a safe place.",
+        "copy_prompt": "Copy your new API key (shown only once):",
+        "no_keys": "No API keys yet",
+        "created": "Created",
+        "last_used": "Last used",
+        "never": "Never",
+        "revoke": "Revoke",
+        "confirm_revoke": "Do you really want to revoke this API key?"
+      }
     },
     "devices": {
       "title": "Trusted devices",

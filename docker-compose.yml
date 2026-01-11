@@ -17,12 +17,53 @@ services:
     ports:
       - "3030:3000"
     environment:
+      # Node environment (used by some parts of backend)
+      - NODE_ENV=production
+      # Scrape Dojo environment (used by health/puppeteer)
       - SCRAPE_DOJO_NODE_ENV=production
       - SCRAPE_DOJO_PORT=3000
       - SCRAPE_DOJO_DOCKER_ENV=true
+      # Frontend URL for OIDC redirects (UI runs on port 8080 in Docker)
+      - SCRAPE_DOJO_FRONTEND_URL=${SCRAPE_DOJO_FRONTEND_URL:-http://localhost:8080}
+      
+      # Database Configuration
+      - DB_TYPE=${DB_TYPE:-sqlite}
+      - DB_DATABASE=${DB_DATABASE:-./data/scrape-dojo.db}
+      - DB_SYNCHRONIZE=${DB_SYNCHRONIZE:-true}
+      - DB_LOGGING=${DB_LOGGING:-false}
+      
       # Secrets encryption key (256-bit hex, 64 characters)
       # Generate: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
       - SCRAPE_DOJO_ENCRYPTION_KEY=${SCRAPE_DOJO_ENCRYPTION_KEY}
+      # Optional: CORS origins (comma-separated)
+      - SCRAPE_DOJO_CORS_ORIGIN=${SCRAPE_DOJO_CORS_ORIGIN:-}
+      # Optional: Reverse proxy trust level
+      - SCRAPE_DOJO_TRUST_PROXY=${SCRAPE_DOJO_TRUST_PROXY:-1}
+      
+      # Authentication Settings
+      - SCRAPE_DOJO_AUTH_ENABLED=${SCRAPE_DOJO_AUTH_ENABLED:-true}
+      - SCRAPE_DOJO_AUTH_REQUIRE_MFA=${SCRAPE_DOJO_AUTH_REQUIRE_MFA:-true}
+      - SCRAPE_DOJO_AUTH_JWT_SECRET=${SCRAPE_DOJO_AUTH_JWT_SECRET}
+      - SCRAPE_DOJO_AUTH_REFRESH_TOKEN_SECRET=${SCRAPE_DOJO_AUTH_REFRESH_TOKEN_SECRET}
+      - SCRAPE_DOJO_AUTH_ACCESS_TOKEN_EXPIRY=${SCRAPE_DOJO_AUTH_ACCESS_TOKEN_EXPIRY:-15m}
+      - SCRAPE_DOJO_AUTH_REFRESH_TOKEN_EXPIRY=${SCRAPE_DOJO_AUTH_REFRESH_TOKEN_EXPIRY:-7d}
+      - SCRAPE_DOJO_AUTH_RATE_LIMIT_WINDOW_MS=${SCRAPE_DOJO_AUTH_RATE_LIMIT_WINDOW_MS:-60000}
+      - SCRAPE_DOJO_AUTH_RATE_LIMIT_MAX=${SCRAPE_DOJO_AUTH_RATE_LIMIT_MAX:-30}
+      - SCRAPE_DOJO_AUTH_API_KEY=${SCRAPE_DOJO_AUTH_API_KEY:-}
+      
+      # MFA Configuration
+      - SCRAPE_DOJO_AUTH_MFA_ISSUER=${SCRAPE_DOJO_AUTH_MFA_ISSUER:-Scrape Dojo}
+      - SCRAPE_DOJO_AUTH_MFA_CHALLENGE_SECRET=${SCRAPE_DOJO_AUTH_MFA_CHALLENGE_SECRET}
+      - SCRAPE_DOJO_AUTH_MFA_ENCRYPTION_KEY=${SCRAPE_DOJO_AUTH_MFA_ENCRYPTION_KEY}
+      
+      # OIDC / SSO Configuration
+      - SCRAPE_DOJO_AUTH_OIDC_ENABLED=${SCRAPE_DOJO_AUTH_OIDC_ENABLED:-false}
+      - SCRAPE_DOJO_AUTH_OIDC_ISSUER_URL=${SCRAPE_DOJO_AUTH_OIDC_ISSUER_URL:-}
+      - SCRAPE_DOJO_AUTH_OIDC_CLIENT_ID=${SCRAPE_DOJO_AUTH_OIDC_CLIENT_ID:-}
+      - SCRAPE_DOJO_AUTH_OIDC_CLIENT_SECRET=${SCRAPE_DOJO_AUTH_OIDC_CLIENT_SECRET:-}
+      - SCRAPE_DOJO_AUTH_OIDC_REDIRECT_URI=${SCRAPE_DOJO_AUTH_OIDC_REDIRECT_URI:-http://localhost:3000/auth/oidc/callback}
+      - SCRAPE_DOJO_AUTH_OIDC_SCOPES=${SCRAPE_DOJO_AUTH_OIDC_SCOPES:-openid profile email}
+      - SCRAPE_DOJO_AUTH_OIDC_PROVIDER_NAME=${SCRAPE_DOJO_AUTH_OIDC_PROVIDER_NAME:-OIDC Provider}
     volumes:
       # Persist data directories (adjust paths for pptruser home)
       - ./data:/home/pptruser/app/data
@@ -67,10 +108,3 @@ services:
 networks:
   scrape-dojo-network:
     driver: bridge
-
-# ============================================
-# Volume definitions for persistence
-# ============================================
-volumes:
-  scrape-dojo-data:
-    driver: local

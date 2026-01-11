@@ -18,9 +18,9 @@
         }
 
         <!-- Scrape Name Info -->
-        @if (scrapeName) {
+        @if (scrapeName()) {
         <p class="text-sm text-dojo-text-muted">{{ 'schedule_modal.configure_for' | transloco }} <span
-                class="text-dojo-text font-medium">{{ scrapeName }}</span></p>
+                class="text-dojo-text font-medium">{{ scrapeName() }}</span></p>
         }
 
         <!-- Manual Execution Toggle -->

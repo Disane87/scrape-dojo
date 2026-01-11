@@ -86,7 +86,7 @@ export class ScrapeService implements OnModuleInit, OnModuleDestroy {
                 continue;
             }
 
-            this.validationService.validateScrape(scrape, trigger);
+            await this.validationService.validateScrape(scrape, trigger);
 
             const currentRunId = this.generateRunId(runId);
             const previousData = await this.preparePreviousData(scrape, variables);

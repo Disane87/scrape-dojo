@@ -31,9 +31,9 @@ export class StoreService {
 
     // React to login/logout without requiring a full page reload.
     effect(() => {
-      const authed = this.authService.isAuthenticated();
+      const sessionValidated = this.authService.isSessionValidated();
 
-      if (authed) {
+      if (sessionValidated) {
         // Start SSE globally once we have a token.
         this.eventsService.connect();
         void this.initialize();
@@ -59,9 +59,9 @@ export class StoreService {
       return;
     }
 
-    // Skip initialization if not authenticated
-    if (!this.authService.isAuthenticated()) {
-      console.log('⏭️ Skipping store initialization - not authenticated');
+    // Skip initialization until the stored session has been validated.
+    if (!this.authService.isSessionValidated()) {
+      console.log('⏭️ Skipping store initialization - session not validated');
       return;
     }
 

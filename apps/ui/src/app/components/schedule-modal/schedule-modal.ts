@@ -1,6 +1,7 @@
-import { Component, EventEmitter, Input, Output, signal, computed, effect, inject, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { Component, EventEmitter, Output, signal, computed, effect, inject, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router, ActivatedRoute } from '@angular/router';
 import { CronBuilderComponent } from '../cron-builder/cron-builder';
 import { ScrapeSchedule } from '@scrape-dojo/shared';
 import { ScrapeService } from '../../services/scrape.service';
@@ -26,22 +27,28 @@ import 'iconify-icon';
     templateUrl: './schedule-modal.html',
     styleUrls: ['./schedule-modal.scss']
 })
-export class ScheduleModalComponent {
+export class ScheduleModalComponent implements OnInit {
     private scrapeService = inject(ScrapeService);
     private transloco = inject(TranslocoService);
+    private router = inject(Router);
+    private route = inject(ActivatedRoute);
 
-    @Input() set scrapeId(value: string | null) {
-        this._scrapeId.set(value);
-        if (value) {
-            this.loadSchedule(value);
-        }
-    }
-    @Input() scrapeName = '';
-
-    @Output() closed = new EventEmitter<void>();
     @Output() saved = new EventEmitter<ScrapeSchedule>();
 
-    private _scrapeId = signal<string | null>(null);
+    isOpen = signal(true); // Always true for auxiliary route
+    scrapeId = signal<string | null>(null);
+    scrapeName = signal('');
+
+    ngOnInit(): void {
+        // Load scrapeId from route params
+        this.route.params.subscribe(params => {
+            const id = params['scrapeId'];
+            if (id) {
+                this.scrapeId.set(id);
+                this.loadSchedule(id);
+            }
+        });
+    }
 
     // Form state
     manualEnabled = signal(true);
@@ -59,8 +66,6 @@ export class ScheduleModalComponent {
     nextScheduledRun = signal<number | null>(null);
 
     // Computed
-    isOpen = computed(() => this._scrapeId() !== null);
-
     isValid = computed(() => {
         // Mindestens eine Option muss aktiviert sein
         if (!this.manualEnabled() && !this.scheduleEnabled()) {
@@ -142,7 +147,7 @@ export class ScheduleModalComponent {
     }
 
     async save(): Promise<void> {
-        const scrapeId = this._scrapeId();
+        const scrapeId = this.scrapeId();
         if (!scrapeId || !this.isValid() || this.saving()) return;
 
         this.saving.set(true);
@@ -168,7 +173,7 @@ export class ScheduleModalComponent {
     }
 
     close(): void {
-        this.closed.emit();
+        this.router.navigate([{ outlets: { modal: null } }]);
     }
 
     formatDateTime(timestamp: number | null): string {

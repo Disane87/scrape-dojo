@@ -1,88 +1,61 @@
 /**
- * Generate a simple device fingerprint based on browser properties
- * Note: This is a basic implementation. For production use, consider using
- * a library like FingerprintJS for more accurate fingerprinting.
+ * Generate a stable device identifier for the current browser.
+ *
+ * Important: A "trusted device" identifier must be stable across sessions.
+ * Deriving it from browser properties (canvas, screen, etc.) is too volatile
+ * and causes unnecessary MFA prompts.
  */
 
-// Cache the fingerprint to ensure consistency across the session
+const STORAGE_KEY = 'scrape_dojo_device_id';
+
 let cachedFingerprint: string | null = null;
 
 export function generateDeviceFingerprint(): string {
-    // Return cached fingerprint if available
     if (cachedFingerprint) {
         return cachedFingerprint;
     }
 
-    const components: string[] = [];
-
-    // User Agent
-    components.push(navigator.userAgent);
-
-    // Screen resolution
-    components.push(`${screen.width}x${screen.height}x${screen.colorDepth}`);
-
-    // Timezone offset
-    components.push(new Date().getTimezoneOffset().toString());
-
-    // Language
-    components.push(navigator.language);
-
-    // Platform
-    components.push(navigator.platform);
-
-    // Hardware concurrency (number of CPU cores)
-    if (navigator.hardwareConcurrency) {
-        components.push(navigator.hardwareConcurrency.toString());
-    }
-
-    // Device memory (in GB)
-    if ('deviceMemory' in navigator) {
-        components.push((navigator as any).deviceMemory.toString());
-    }
-
-    // Canvas fingerprint (basic)
     try {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-            ctx.textBaseline = 'top';
-            ctx.font = '14px Arial';
-            ctx.fillStyle = '#f60';
-            ctx.fillRect(125, 1, 62, 20);
-            ctx.fillStyle = '#069';
-            ctx.fillText('ScrapeDojo', 2, 15);
-            components.push(canvas.toDataURL());
+        const existing = localStorage.getItem(STORAGE_KEY);
+        if (existing && existing.trim().length > 0) {
+            cachedFingerprint = existing;
+            return existing;
         }
-    } catch (e) {
-        // Canvas fingerprinting might fail in some browsers
-        components.push('canvas-error');
-    }
 
-    // Combine all components and hash
-    const combined = components.join('|');
-    const fingerprint = simpleHash(combined);
-    
-    // Cache the fingerprint for this session
-    cachedFingerprint = fingerprint;
-    
-    return fingerprint;
+        const next = generateId();
+        localStorage.setItem(STORAGE_KEY, next);
+        cachedFingerprint = next;
+        return next;
+    } catch {
+        // If storage is unavailable (privacy mode), fall back to an in-memory id.
+        cachedFingerprint = generateId();
+        return cachedFingerprint;
+    }
 }
 
-/**
- * Simple hash function (djb2)
- */
-function simpleHash(str: string): string {
-    let hash = 5381;
-    for (let i = 0; i < str.length; i++) {
-        hash = (hash * 33) ^ str.charCodeAt(i);
-    }
-    return (hash >>> 0).toString(16);
-}
-
-/**
- * Clear the cached device fingerprint
- * Call this on logout or when you want to regenerate the fingerprint
- */
 export function clearDeviceFingerprintCache(): void {
     cachedFingerprint = null;
+    try {
+        localStorage.removeItem(STORAGE_KEY);
+    } catch {
+        // ignore
+    }
+}
+
+function generateId(): string {
+    const cryptoAny = globalThis.crypto as Crypto | undefined;
+    if (cryptoAny?.randomUUID) {
+        return cryptoAny.randomUUID();
+    }
+
+    const bytes = new Uint8Array(16);
+    cryptoAny?.getRandomValues?.(bytes);
+    for (let i = 0; i < bytes.length; i++) {
+        bytes[i] = bytes[i] ?? Math.floor(Math.random() * 256);
+    }
+
+    // hex string (not a full UUID format, but stable enough)
+    return Array.from(bytes)
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join('');
 }

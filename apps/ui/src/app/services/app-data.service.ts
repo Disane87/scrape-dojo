@@ -28,8 +28,8 @@ export class AppDataService {
     constructor() {
         // Re-run initialization after login without requiring full reload.
         effect(() => {
-            const authed = this.authService.isAuthenticated();
-            if (authed) {
+            const sessionValidated = this.authService.isSessionValidated();
+            if (sessionValidated) {
                 void this.initialize();
                 return;
             }
@@ -44,9 +44,9 @@ export class AppDataService {
      * Nur wenn User eingeloggt ist!
      */
     async initialize(): Promise<void> {
-        // Skip initialization if not authenticated
-        if (!this.authService.isAuthenticated()) {
-            console.log('⏭️ Skipping app data initialization - not authenticated');
+        // Skip initialization until the stored session has been validated.
+        if (!this.authService.isSessionValidated()) {
+            console.log('⏭️ Skipping app data initialization - session not validated');
             return;
         }
 

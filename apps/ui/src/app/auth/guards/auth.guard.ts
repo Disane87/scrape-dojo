@@ -12,7 +12,10 @@ export const authGuard: CanActivateFn = (
     const authService = inject(AuthService);
     const router = inject(Router);
 
-    if (authService.isAuthenticated()) {
+    // Allow navigation when we have a token but the profile validation is still pending.
+    // This prevents a redirect-to-login flicker on cold start while still letting the AuthService
+    // validate and potentially log out if the token is invalid.
+    if (authService.getAccessToken()) {
         return true;
     }
 
@@ -52,7 +55,9 @@ export const guestGuard: CanActivateFn = () => {
     const authService = inject(AuthService);
     const router = inject(Router);
 
-    if (authService.isAuthenticated()) {
+    // Only block the login/register pages once the stored session has been validated.
+    // This avoids trapping users on a blank/unauthorized dashboard when stale tokens exist.
+    if (authService.isAuthenticated() && authService.isSessionValidated()) {
         router.navigate(['/']);
         return false;
     }

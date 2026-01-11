@@ -29,7 +29,7 @@ RUN pnpm install --frozen-lockfile
 RUN pnpm nx build api --configuration=production --verbose
 
 # Prune to production-only dependencies (removes devDependencies)
-RUN pnpm prune --prod
+RUN CI=true pnpm prune --prod
 
 # Stage 2: Production - Use official Puppeteer image
 # This image has Chrome pre-installed and all dependencies configured

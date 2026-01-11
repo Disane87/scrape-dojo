@@ -12,6 +12,7 @@ import {
     BadRequestException,
     Req,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Request, Response } from 'express';
 import {
     ApiTags,
@@ -47,12 +48,16 @@ import {
 @Controller('auth')
 export class AuthController {
     private readonly logger = new Logger(AuthController.name);
+    private readonly frontendUrl: string;
 
     constructor(
         private readonly authService: AuthService,
         private readonly oidcService: OidcService,
         private readonly userService: UserService,
-    ) {}
+        private readonly configService: ConfigService,
+    ) {
+        this.frontendUrl = this.configService.get<string>('SCRAPE_DOJO_FRONTEND_URL', 'http://localhost:4200');
+    }
 
     // ==================== Public Endpoints ====================
 
@@ -187,7 +192,7 @@ export class AuthController {
         if (error) {
             this.logger.error(`OIDC error: ${error} - ${errorDescription}`);
             return res.redirect(
-                `http://localhost:4200/oidc/callback?auth_error=${encodeURIComponent(errorDescription || error)}`,
+                `${this.frontendUrl}/oidc/callback?auth_error=${encodeURIComponent(errorDescription || error)}`,
             );
         }
 
@@ -214,7 +219,7 @@ export class AuthController {
 
             // Redirect to frontend callback route with tokens
             // NOTE: Must not start with '/auth' because the Angular dev proxy forwards '/auth' to the API.
-            const frontendCallbackUrl = 'http://localhost:4200/oidc/callback';
+            const frontendCallbackUrl = `${this.frontendUrl}/oidc/callback`;
             const separator = '?';
 
             if ('accessToken' in tokens) {
@@ -240,7 +245,7 @@ export class AuthController {
                 );
             }
 
-            return res.redirect(`http://localhost:4200/oidc/callback?auth_error=${encodeURIComponent(message)}`);
+            return res.redirect(`${this.frontendUrl}/oidc/callback?auth_error=${encodeURIComponent(message)}`);
         }
     }
 

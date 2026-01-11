@@ -11,4 +11,7 @@ export {
     OidcCallbackDto,
     UpdateUserDto,
     ChangePasswordDto,
+    CreateUserApiKeyDto,
+    UserApiKeyListItemDto,
+    CreateUserApiKeyResponseDto,
 } from './auth.dto';

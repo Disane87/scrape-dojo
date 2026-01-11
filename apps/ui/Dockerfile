@@ -42,6 +42,9 @@ RUN addgroup -g 1001 -S nginx-user && \
     chown -R nginx-user:nginx-user /var/cache/nginx /var/log/nginx /etc/nginx/conf.d && \
     touch /var/run/nginx.pid && chown nginx-user:nginx-user /var/run/nginx.pid
 
+# Switch to non-root user
+USER nginx-user
+
 # Expose port
 EXPOSE 80
 

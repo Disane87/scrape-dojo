@@ -2,13 +2,13 @@ import { Module, Logger } from '@nestjs/common';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Run, RunStep, RunAction, RunLog, ScrapeData, ScrapeSchedule, VariableEntity, SecretEntity } from './entities';
-import { UserEntity, TrustedDeviceEntity } from '../auth/entities';
+import { UserEntity, TrustedDeviceEntity, ApiKeyEntity } from '../auth/entities';
 import { DatabaseService } from './database.service';
 import { RunRepository, StepRepository, ActionRepository, ScrapeDataRepository } from './repositories';
 import * as path from 'path';
 import * as fs from 'fs';
 
-const entities = [Run, RunStep, RunAction, RunLog, ScrapeData, ScrapeSchedule, VariableEntity, SecretEntity, UserEntity, TrustedDeviceEntity];
+const entities = [Run, RunStep, RunAction, RunLog, ScrapeData, ScrapeSchedule, VariableEntity, SecretEntity, UserEntity, TrustedDeviceEntity, ApiKeyEntity];
 
 @Module({
     imports: [

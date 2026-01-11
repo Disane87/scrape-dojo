@@ -91,7 +91,12 @@
       "required_count": "Pflichtfeld(er)",
       "cancel": "Abbrechen",
       "uses_secret": "Verwendet Secret",
-      "secret": "Secret"
+      "secret": "Secret",
+      "secret_missing": "Secret fehlt",
+      "create_secret": "Secret erstellen",
+      "missing_secrets_title": "Fehlende Secrets",
+      "missing_secrets_message": "Folgende Secrets werden benötigt, sind aber noch nicht angelegt:",
+      "manage_secrets": "Secrets verwalten"
     },
     "buttons": {
       "run": "Workflow ausführen",
@@ -563,7 +568,23 @@
       "update_password": "Passwort aktualisieren",
       "password_changed": "Passwort erfolgreich geändert",
       "password_error": "Passwort konnte nicht geändert werden",
-      "password_change_local_only": "Passwort ändern ist nur für lokale Konten verfügbar. Ihr Konto verwendet {{provider}} zur Authentifizierung."
+      "password_change_local_only": "Passwort ändern ist nur für lokale Konten verfügbar. Ihr Konto verwendet {{provider}} zur Authentifizierung.",
+      "api_keys": {
+        "title": "API-Keys",
+        "subtitle": "Erstelle benutzerbezogene Keys für Skripte und Automationen",
+        "refresh": "Aktualisieren",
+        "name_label": "Name",
+        "name_placeholder": "z.B. CI / Skripte",
+        "create": "Key erstellen",
+        "one_time_notice": "Der vollständige Key wird nur einmal nach dem Erstellen angezeigt. Bewahre ihn sicher auf.",
+        "copy_prompt": "Kopiere deinen neuen API-Key (wird nur einmal angezeigt):",
+        "no_keys": "Noch keine API-Keys",
+        "created": "Erstellt",
+        "last_used": "Zuletzt verwendet",
+        "never": "Nie",
+        "revoke": "Widerrufen",
+        "confirm_revoke": "Möchtest du diesen API-Key wirklich widerrufen?"
+      }
     },
     "devices": {
       "title": "Vertrauenswürdige Geräte",

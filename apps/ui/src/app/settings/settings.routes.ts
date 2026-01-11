@@ -5,6 +5,8 @@ import { ProfileSettingsComponent } from './pages/profile-settings.component';
 import { SecuritySettingsComponent } from './pages/security-settings.component';
 import { DeviceSettingsComponent } from './pages/device-settings.component';
 
+const loadSecretsManager = () => import('../components/secrets-manager/secrets-manager').then(m => m.SecretsManagerComponent);
+
 export const settingsRoutes: Routes = [
     {
         path: '',
@@ -27,6 +29,10 @@ export const settingsRoutes: Routes = [
             {
                 path: 'devices',
                 component: DeviceSettingsComponent,
+            },
+            {
+                path: 'secrets',
+                loadComponent: loadSecretsManager,
             },
         ],
     },
