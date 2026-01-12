@@ -1,0 +1,636 @@
+---
+title: Deployment Guide
+description: Docker-Setup und Produktionsumgebung für Scrape Dojo
+---
+
+# Deployment Guide
+
+Scrape Dojo kann auf verschiedene Arten bereitgestellt werden. Dieser Leitfaden zeigt Docker-basierte Deployments sowie manuelle Setups.
+
+## Deployment-Übersicht
+
+```mermaid
+graph TB
+    subgraph Development["💻 Development"]
+        Dev1["pnpm start:api"]
+        Dev2["pnpm start:ui"]
+        Dev3["pnpm start:docs"]
+    end
+    
+    subgraph Docker["🐳 Docker Compose"]
+        DC1["docker-compose.yml"]
+        DC2["API Container"]
+        DC3["UI Container"]
+        DC4["Volumes"]
+    end
+    
+    subgraph Production["🚀 Production"]
+        Prod1["Reverse Proxy<br/>(Nginx/Traefik)"]
+        Prod2["Load Balancer"]
+        Prod3["SSL/TLS"]
+        Prod4["Monitoring"]
+    end
+    
+    Development -.-> Docker
+    Docker -.-> Production
+
+    classDef dev fill:#4299E1,stroke:#fff,stroke-width:2px,color:#fff
+    classDef docker fill:#2D3748,stroke:#fff,stroke-width:2px,color:#fff
+    classDef prod fill:#48BB78,stroke:#fff,stroke-width:2px,color:#fff
+
+    class Dev1,Dev2,Dev3 dev
+    class DC1,DC2,DC3,DC4 docker
+    class Prod1,Prod2,Prod3,Prod4 prod
+```
+
+## Docker Compose Setup
+
+### Architektur
+
+```mermaid
+graph TB
+    Internet["🌍 Internet<br/>Port 80/443"] --> ReverseProxy["🔀 Reverse Proxy<br/>(Optional)"]
+    
+    subgraph DockerCompose["🐳 Docker Compose"]
+        ReverseProxy --> UIService["📱 UI Service<br/>Nginx<br/>Port 4200"]
+        UIService -.->|Proxy /api| APIService
+        
+        APIService["⚙️ API Service<br/>Node.js + NestJS<br/>Port 3000"]
+        
+        subgraph Volumes["💾 Volumes"]
+            ConfigVol["./config:/app/config"]
+            DataVol["./data:/app/data"]
+            DownloadsVol["./downloads:/app/downloads"]
+            LogsVol["./logs:/app/logs"]
+        end
+        
+        APIService --> ConfigVol
+        APIService --> DataVol
+        APIService --> DownloadsVol
+        APIService --> LogsVol
+    end
+
+    classDef service fill:#4299E1,stroke:#fff,stroke-width:2px,color:#fff
+    classDef volume fill:#48BB78,stroke:#fff,stroke-width:2px,color:#fff
+    classDef proxy fill:#E0234E,stroke:#fff,stroke-width:2px,color:#fff
+
+    class UIService,APIService service
+    class ConfigVol,DataVol,DownloadsVol,LogsVol volume
+    class ReverseProxy proxy
+```
+
+### docker-compose.yml
+
+```yaml
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: scrape-dojo-api
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - SCRAPE_DOJO_PORT=3000
+      - JWT_SECRET=${JWT_SECRET}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+    volumes:
+      - ./config:/app/config:ro
+      - ./data:/app/data
+      - ./downloads:/app/downloads
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  ui:
+    build:
+      context: .
+      dockerfile: apps/ui/Dockerfile
+    container_name: scrape-dojo-ui
+    ports:
+      - "4200:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  data:
+  downloads:
+  logs:
+```
+
+### Container Lifecycle
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant DC as Docker Compose
+    participant API as API Container
+    participant UI as UI Container
+    participant Vol as Volumes
+
+    DC->>Vol: Create/Mount Volumes
+    DC->>API: Build & Start Container
+    API->>API: npm install (if needed)
+    API->>API: Run migrations
+    API->>API: Start NestJS App
+    API->>Vol: Mount config, data, downloads
+    
+    DC->>UI: Build & Start Container
+    UI->>UI: Copy static files to Nginx
+    UI->>UI: Start Nginx
+    UI->>API: Proxy /api requests
+    
+    Note over API: Health Check every 30s
+    
+    API-->>DC: Healthy ✅
+    UI-->>DC: Running ✅
+    
+    Note over DC: Ready for requests
+```
+
+## Production Deployment
+
+### Mit Reverse Proxy (Nginx)
+
+```mermaid
+graph LR
+    Internet["🌍 Internet<br/>:443"] --> Nginx["🔀 Nginx<br/>Reverse Proxy"]
+    
+    Nginx -->|/| UIContainer["📱 UI Container<br/>:80"]
+    Nginx -->|/api| APIContainer["⚙️ API Container<br/>:3000"]
+    
+    subgraph SSL["🔐 SSL/TLS"]
+        Cert["Let's Encrypt<br/>Certificate"]
+    end
+    
+    Nginx -.-> Cert
+    
+    subgraph Monitoring["📊 Monitoring"]
+        Logs["📝 Nginx Logs"]
+        Metrics["📈 Prometheus"]
+    end
+    
+    Nginx --> Logs
+    APIContainer --> Metrics
+
+    classDef internet fill:#4299E1,stroke:#fff,stroke-width:2px,color:#fff
+    classDef service fill:#48BB78,stroke:#fff,stroke-width:2px,color:#fff
+    classDef security fill:#E0234E,stroke:#fff,stroke-width:2px,color:#fff
+
+    class Internet internet
+    class UIContainer,APIContainer service
+    class Cert,Logs,Metrics security
+```
+
+### Nginx Configuration
+
+```nginx
+upstream api {
+    server api:3000;
+}
+
+upstream ui {
+    server ui:80;
+}
+
+server {
+    listen 80;
+    server_name scrape-dojo.example.com;
+    
+    # Redirect HTTP to HTTPS
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name scrape-dojo.example.com;
+
+    # SSL Configuration
+    ssl_certificate /etc/letsencrypt/live/scrape-dojo.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/scrape-dojo.example.com/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+    # API Proxy
+    location /api {
+        proxy_pass http://api;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # WebSocket Support
+    location /socket.io {
+        proxy_pass http://api;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+
+    # UI Static Files
+    location / {
+        proxy_pass http://ui;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+```
+
+## High Availability Setup
+
+```mermaid
+graph TB
+    subgraph LB["⚖️ Load Balancer"]
+        LoadBalancer["HAProxy/Nginx"]
+    end
+    
+    subgraph API1["🔧 API Instance 1"]
+        API1Container["API Container"]
+        API1DB["SQLite DB (Replica)"]
+    end
+    
+    subgraph API2["🔧 API Instance 2"]
+        API2Container["API Container"]
+        API2DB["SQLite DB (Replica)"]
+    end
+    
+    subgraph Shared["💾 Shared Storage"]
+        NFS["NFS/S3 Bucket<br/>• Configs<br/>• Downloads"]
+    end
+    
+    LoadBalancer -->|Round Robin| API1Container
+    LoadBalancer -->|Round Robin| API2Container
+    
+    API1Container --> API1DB
+    API2Container --> API2DB
+    
+    API1Container --> NFS
+    API2Container --> NFS
+
+    classDef lb fill:#E0234E,stroke:#fff,stroke-width:2px,color:#fff
+    classDef api fill:#4299E1,stroke:#fff,stroke-width:2px,color:#fff
+    classDef storage fill:#48BB78,stroke:#fff,stroke-width:2px,color:#fff
+
+    class LoadBalancer lb
+    class API1Container,API2Container api
+    class NFS,API1DB,API2DB storage
+```
+
+## Environment Management
+
+### Environment-spezifische Konfiguration
+
+```mermaid
+graph LR
+    subgraph Development["💻 Development"]
+        DevEnv[".env.development<br/>• Debug Mode<br/>• Mock Services<br/>• Hot Reload"]
+    end
+    
+    subgraph Staging["🧪 Staging"]
+        StageEnv[".env.staging<br/>• Test Data<br/>• Performance Logs<br/>• Integration Tests"]
+    end
+    
+    subgraph Production["🚀 Production"]
+        ProdEnv[".env.production<br/>• Optimized Build<br/>• Error Tracking<br/>• Rate Limiting"]
+    end
+    
+    DevEnv -.-> StageEnv
+    StageEnv -.-> ProdEnv
+
+    classDef dev fill:#4299E1,stroke:#fff,stroke-width:2px,color:#fff
+    classDef stage fill:#ED8936,stroke:#fff,stroke-width:2px,color:#fff
+    classDef prod fill:#48BB78,stroke:#fff,stroke-width:2px,color:#fff
+
+    class DevEnv dev
+    class StageEnv stage
+    class ProdEnv prod
+```
+
+### Wichtige Environment Variables
+
+```bash
+# Server Configuration
+NODE_ENV=production
+SCRAPE_DOJO_PORT=3000
+
+# Security
+JWT_SECRET=your-production-jwt-secret
+JWT_EXPIRES_IN=7d
+ENCRYPTION_KEY=your-32-byte-hex-encryption-key
+
+# Database
+DATABASE_PATH=./data/scrape-dojo.db
+
+# Puppeteer
+PUPPETEER_HEADLESS=true
+PUPPETEER_ARGS=--no-sandbox,--disable-setuid-sandbox
+
+# Rate Limiting
+RATE_LIMIT_TTL=60
+RATE_LIMIT_MAX=100
+
+# CORS
+CORS_ORIGIN=https://your-domain.com
+
+# Logging
+LOG_LEVEL=info
+LOG_FILE=./logs/app.log
+```
+
+## CI/CD Pipeline
+
+```mermaid
+graph LR
+    subgraph Source["📦 Source"]
+        Git["Git Push"]
+    end
+    
+    subgraph CI["🔨 CI Pipeline"]
+        Build["Build<br/>• pnpm install<br/>• nx build"]
+        Test["Test<br/>• nx test<br/>• nx lint"]
+        Docker["Docker Build<br/>• Build Images<br/>• Tag & Push"]
+    end
+    
+    subgraph CD["🚀 CD Pipeline"]
+        Deploy["Deploy<br/>• Pull Images<br/>• docker-compose up"]
+        HealthCheck["Health Check<br/>• API /health<br/>• UI response"]
+        Rollback["Rollback<br/>(on failure)"]
+    end
+    
+    Git --> Build
+    Build --> Test
+    Test --> Docker
+    Docker --> Deploy
+    Deploy --> HealthCheck
+    HealthCheck -->|Fail| Rollback
+    HealthCheck -->|Success| Done["✅ Deployed"]
+
+    classDef source fill:#4299E1,stroke:#fff,stroke-width:2px,color:#fff
+    classDef ci fill:#ED8936,stroke:#fff,stroke-width:2px,color:#fff
+    classDef cd fill:#48BB78,stroke:#fff,stroke-width:2px,color:#fff
+    classDef error fill:#E53E3E,stroke:#fff,stroke-width:2px,color:#fff
+
+    class Git source
+    class Build,Test,Docker ci
+    class Deploy,HealthCheck cd
+    class Rollback error
+```
+
+### GitHub Actions Beispiel
+
+```yaml
+name: Build and Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      
+      - name: Install dependencies
+        run: pnpm install
+      
+      - name: Build
+        run: pnpm build
+      
+      - name: Test
+        run: pnpm test
+      
+      - name: Build Docker images
+        run: |
+          docker build -f apps/api/Dockerfile -t scrape-dojo-api .
+          docker build -f apps/ui/Dockerfile -t scrape-dojo-ui .
+      
+      - name: Deploy
+        run: |
+          docker-compose -f docker-compose.prod.yml up -d
+```
+
+## Monitoring & Logging
+
+### Monitoring-Architektur
+
+```mermaid
+graph TB
+    subgraph App["📱 Application"]
+        API["API<br/>• Metrics Endpoint<br/>• Health Checks"]
+        UI["UI<br/>• Error Tracking"]
+    end
+    
+    subgraph Monitoring["📊 Monitoring"]
+        Prometheus["Prometheus<br/>Metrics Collection"]
+        Grafana["Grafana<br/>Dashboards"]
+        Loki["Loki<br/>Log Aggregation"]
+    end
+    
+    subgraph Alerting["🚨 Alerting"]
+        AlertManager["Alert Manager"]
+        Notifications["• Email<br/>• Slack<br/>• PagerDuty"]
+    end
+    
+    API --> Prometheus
+    API --> Loki
+    UI --> Loki
+    
+    Prometheus --> Grafana
+    Loki --> Grafana
+    
+    Prometheus --> AlertManager
+    AlertManager --> Notifications
+
+    classDef app fill:#4299E1,stroke:#fff,stroke-width:2px,color:#fff
+    classDef monitoring fill:#48BB78,stroke:#fff,stroke-width:2px,color:#fff
+    classDef alert fill:#E53E3E,stroke:#fff,stroke-width:2px,color:#fff
+
+    class API,UI app
+    class Prometheus,Grafana,Loki monitoring
+    class AlertManager,Notifications alert
+```
+
+### Log-Flow
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant App as Application
+    participant Winston as Winston Logger
+    participant File as File System
+    participant Loki as Loki
+    participant Grafana as Grafana
+
+    App->>Winston: Log Event
+    Winston->>Winston: Format Log
+    
+    par Write to File
+        Winston->>File: Append to app.log
+    and Send to Loki
+        Winston->>Loki: Push Log
+    end
+    
+    Loki->>Loki: Index & Store
+    Grafana->>Loki: Query Logs
+    Loki-->>Grafana: Return Results
+    Grafana-->>User: Display Logs
+```
+
+## Backup & Recovery
+
+### Backup-Strategie
+
+```mermaid
+graph TB
+    subgraph Data["💾 Data Sources"]
+        DB["SQLite Database<br/>./data/scrape-dojo.db"]
+        Config["Config Files<br/>./config/sites/"]
+        Downloads["Downloads<br/>./downloads/"]
+    end
+    
+    subgraph Backup["🔄 Backup Process"]
+        Daily["Daily Backup<br/>• Full backup<br/>• Retention: 7 days"]
+        Weekly["Weekly Backup<br/>• Full backup<br/>• Retention: 4 weeks"]
+        Monthly["Monthly Backup<br/>• Full backup<br/>• Retention: 12 months"]
+    end
+    
+    subgraph Storage["☁️ Backup Storage"]
+        Local["Local NAS"]
+        S3["Amazon S3"]
+        GCS["Google Cloud Storage"]
+    end
+    
+    DB --> Daily
+    Config --> Daily
+    Downloads --> Weekly
+    
+    Daily --> Local
+    Weekly --> S3
+    Monthly --> GCS
+
+    classDef data fill:#4299E1,stroke:#fff,stroke-width:2px,color:#fff
+    classDef backup fill:#ED8936,stroke:#fff,stroke-width:2px,color:#fff
+    classDef storage fill:#48BB78,stroke:#fff,stroke-width:2px,color:#fff
+
+    class DB,Config,Downloads data
+    class Daily,Weekly,Monthly backup
+    class Local,S3,GCS storage
+```
+
+### Backup Script
+
+```bash
+#!/bin/bash
+# backup.sh
+
+BACKUP_DIR="/backup/scrape-dojo/$(date +%Y-%m-%d)"
+mkdir -p "$BACKUP_DIR"
+
+# Backup Database
+cp ./data/scrape-dojo.db "$BACKUP_DIR/"
+
+# Backup Config
+tar -czf "$BACKUP_DIR/config.tar.gz" ./config/
+
+# Backup Downloads (optional)
+# tar -czf "$BACKUP_DIR/downloads.tar.gz" ./downloads/
+
+# Upload to S3
+aws s3 sync "$BACKUP_DIR" s3://my-bucket/scrape-dojo-backup/
+
+echo "Backup completed: $BACKUP_DIR"
+```
+
+## Scaling Considerations
+
+```mermaid
+graph TB
+    Small["🏠 Small<br/>1-10 Scrapes/day"]
+    Medium["🏢 Medium<br/>10-100 Scrapes/day"]
+    Large["🏭 Large<br/>100+ Scrapes/day"]
+    
+    Small --> SingleInstance["Single Instance<br/>• 2 CPU<br/>• 4 GB RAM<br/>• 50 GB Disk"]
+    
+    Medium --> MultiInstance["Multi Instance<br/>• Load Balanced<br/>• 4 CPU / Instance<br/>• 8 GB RAM<br/>• Shared Storage"]
+    
+    Large --> Distributed["Distributed<br/>• Kubernetes<br/>• Auto-scaling<br/>• Message Queue<br/>• CDN"]
+
+    classDef small fill:#4299E1,stroke:#fff,stroke-width:2px,color:#fff
+    classDef medium fill:#ED8936,stroke:#fff,stroke-width:2px,color:#fff
+    classDef large fill:#E53E3E,stroke:#fff,stroke-width:2px,color:#fff
+
+    class Small,SingleInstance small
+    class Medium,MultiInstance medium
+    class Large,Distributed large
+```
+
+## Troubleshooting
+
+### Common Issues
+
+```mermaid
+graph TB
+    Issue["⚠️ Problem"] --> CheckLogs{Logs<br/>prüfen}
+    
+    CheckLogs -->|API Error| APILog["API Logs<br/>./logs/app.log"]
+    CheckLogs -->|UI Error| UILog["Browser Console"]
+    CheckLogs -->|Container Error| DockerLog["docker logs"]
+    
+    APILog --> Solutions["💡 Solutions<br/>• Check env vars<br/>• Database permissions<br/>• Port conflicts"]
+    UILog --> Solutions
+    DockerLog --> Solutions
+    
+    Solutions --> Fixed{Problem<br/>gelöst?}
+    Fixed -->|Ja| Success["✅ Resolved"]
+    Fixed -->|Nein| Support["📞 Contact Support"]
+
+    classDef issue fill:#E53E3E,stroke:#fff,stroke-width:2px,color:#fff
+    classDef log fill:#4299E1,stroke:#fff,stroke-width:2px,color:#fff
+    classDef solution fill:#48BB78,stroke:#fff,stroke-width:2px,color:#fff
+
+    class Issue issue
+    class APILog,UILog,DockerLog log
+    class Solutions,Success solution
+```
+
+## Best Practices
+
+### ✅ Do's
+- Verwende Docker für konsistente Deployments
+- Implementiere Health Checks
+- Aktiviere HTTPS in Produktion
+- Setze Rate Limiting
+- Führe regelmäßige Backups durch
+- Überwache Logs und Metriken
+
+### ❌ Don'ts
+- Hardcode Secrets in Code/Dockerfiles
+- Verwende `latest` Tags in Produktion
+- Ignoriere Security Updates
+- Deploye ohne Tests
+- Betreibe ohne Monitoring
+
+## Weiterführende Links
+
+- [Docker Documentation](https://docs.docker.com/)
+- [Nginx Configuration](/deployment/nginx)
+- [Monitoring Setup](/deployment/monitoring)
+- [Backup Strategy](/deployment/backup)

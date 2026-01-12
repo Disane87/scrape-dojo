@@ -1,0 +1,465 @@
+---
+title: Scrape Workflow
+description: Detaillierter Ablauf einer Scrape-Ausführung mit Datenfluss
+---
+
+# Scrape Workflow
+
+Ein Scrape-Workflow in Scrape Dojo durchläuft mehrere Phasen, von der Initialisierung bis zum Abschluss. Dieser Leitfaden erklärt den gesamten Prozess im Detail.
+
+## Workflow-Übersicht
+
+```mermaid
+graph TB
+    Start([▶️ Start Scrape]) --> LoadConfig[📄 Lade Config]
+    LoadConfig --> ValidateConfig{✅ Config Valid?}
+    
+    ValidateConfig -->|Nein| Error([❌ Fehler])
+    ValidateConfig -->|Ja| InitContext[🎯 Initialisiere Context]
+    
+    InitContext --> LoadSecrets[🔑 Lade Secrets]
+    LoadSecrets --> LoadVariables[📝 Lade Variables]
+    LoadVariables --> LaunchBrowser[🌐 Starte Browser]
+    
+    LaunchBrowser --> ProcessActions[⚡ Verarbeite Actions]
+    
+    ProcessActions --> HasMore{Weitere<br/>Actions?}
+    HasMore -->|Ja| NextAction[Nächste Action]
+    HasMore -->|Nein| SaveResults[💾 Speichere Ergebnisse]
+    
+    NextAction --> RenderTemplate[🎨 Render Template]
+    RenderTemplate --> ExecuteAction[▶️ Führe Action aus]
+    ExecuteAction --> Transform[🔄 Transformiere Daten]
+    Transform --> UpdateContext[📊 Update Context]
+    UpdateContext --> EmitEvent[📡 Emit Event]
+    EmitEvent --> ProcessActions
+    
+    SaveResults --> CloseBrowser[🔒 Schließe Browser]
+    CloseBrowser --> End([✅ Fertig])
+
+    classDef success fill:#48BB78,stroke:#fff,stroke-width:2px,color:#fff
+    classDef process fill:#4299E1,stroke:#fff,stroke-width:2px,color:#fff
+    classDef error fill:#E53E3E,stroke:#fff,stroke-width:2px,color:#fff
+    classDef decision fill:#ED8936,stroke:#fff,stroke-width:2px,color:#fff
+
+    class Start,End,SaveResults success
+    class LoadConfig,InitContext,LaunchBrowser,ProcessActions,ExecuteAction process
+    class Error error
+    class ValidateConfig,HasMore decision
+```
+
+## Datenfluss (previousData & currentData)
+
+Ein zentrales Konzept in Scrape Dojo ist der Datenfluss zwischen Actions über `previousData` und `currentData`.
+
+```mermaid
+graph LR
+    subgraph "Action 1: Navigate"
+        A1[Navigate to URL] --> A1Data[currentData: null<br/>previousData: null]
+    end
+
+    subgraph "Action 2: Extract Title"
+        A2[Extract Element] --> A2Data[currentData: title string<br/>previousData: null]
+    end
+
+    subgraph "Action 3: Extract List"
+        A3[Extract Elements] --> A3Data["currentData: [item1, item2]<br/>previousData: 'title'"]
+    end
+
+    subgraph "Action 4: Loop"
+        A4[Loop over items] --> A4Data["currentData: item1<br/>previousData: [item1, item2]"]
+    end
+
+    A1Data -->|Flow| A2
+    A2Data -->|Flow| A3
+    A3Data -->|Flow| A4
+
+    classDef data fill:#4299E1,stroke:#fff,stroke-width:2px,color:#fff
+    classDef action fill:#48BB78,stroke:#fff,stroke-width:2px,color:#fff
+
+    class A1Data,A2Data,A3Data,A4Data data
+    class A1,A2,A3,A4 action
+```
+
+### Data Context Schema
+
+```typescript
+interface ActionContext {
+  previousData: any;      // Resultat der vorherigen Action
+  currentData: any;       // Resultat der aktuellen Action
+  variables: object;      // Globale Variablen
+  secrets: object;        // Verschlüsselte Secrets
+  browser: Browser;       // Puppeteer Browser Instance
+  page: Page;            // Aktuelle Browser Page
+}
+```
+
+## Action Lifecycle
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Engine as Scrape Engine
+    participant Template as Template Service
+    participant Action as Action Handler
+    participant Browser as Puppeteer
+    participant Transform as JSONata
+    participant Events as Event System
+
+    Engine->>Template: Render Handlebars
+    Template-->>Engine: Rendered Config
+    
+    Engine->>Action: Execute Action
+    Action->>Browser: Perform Browser Action
+    Browser-->>Action: Browser Result
+    
+    Action->>Transform: Transform Data (JSONata)
+    Transform-->>Action: Transformed Result
+    
+    Action-->>Engine: Action Result
+    Engine->>Events: Emit Progress Event
+    
+    Engine->>Engine: Update previousData
+    Engine->>Engine: Set currentData
+```
+
+## Template Rendering
+
+Vor jeder Action werden Handlebars-Templates gerendert, um dynamische Werte einzusetzen.
+
+```mermaid
+graph TB
+    ActionConfig["Action Config (JSON)"] --> Scan{Enthält<br/>Templates?}
+    
+    Scan -->|Nein| Execute[Führe Action aus]
+    Scan -->|Ja| RenderVars["Render {{variables.*}}"]
+    
+    RenderVars --> RenderSecrets["Render {{secrets.*}}"]
+    RenderSecrets --> RenderPrev["Render {{previousData.*}}"]
+    RenderPrev --> RenderCurr["Render {{currentData.*}}"]
+    
+    RenderCurr --> Execute
+    Execute --> Result[Action Result]
+
+    classDef template fill:#4299E1,stroke:#fff,stroke-width:2px,color:#fff
+    classDef action fill:#48BB78,stroke:#fff,stroke-width:2px,color:#fff
+
+    class RenderVars,RenderSecrets,RenderPrev,RenderCurr template
+    class Execute,Result action
+```
+
+### Template Beispiel
+
+```json
+{
+  "type": "navigate",
+  "url": "{{variables.baseUrl}}/login"
+}
+
+// Nach Rendering:
+{
+  "type": "navigate",
+  "url": "https://example.com/login"
+}
+```
+
+## Loop-Verarbeitung
+
+Loops ermöglichen die Iteration über Arrays und wiederholte Ausführung von Actions.
+
+```mermaid
+graph TB
+    LoopStart[📋 Loop Action] --> GetData[Hole Loop-Daten]
+    GetData --> CheckData{Daten<br/>vorhanden?}
+    
+    CheckData -->|Nein| LoopEnd[Loop beendet]
+    CheckData -->|Ja| IsArray{Ist<br/>Array?}
+    
+    IsArray -->|Nein| Error[❌ Fehler: Keine Array-Daten]
+    IsArray -->|Ja| InitLoop[Initialisiere Loop<br/>index = 0]
+    
+    InitLoop --> HasItems{index < length?}
+    HasItems -->|Nein| LoopEnd
+    HasItems -->|Ja| SetContext["Set currentData = items[index]<br/>Set previousData = gesamtes Array"]
+    
+    SetContext --> ProcessSubActions[🔄 Verarbeite Sub-Actions]
+    ProcessSubActions --> SubAction1[Sub-Action 1]
+    SubAction1 --> SubAction2[Sub-Action 2]
+    SubAction2 --> SubActionN[Sub-Action N]
+    
+    SubActionN --> IncrementIndex[index++]
+    IncrementIndex --> HasItems
+
+    classDef loop fill:#4299E1,stroke:#fff,stroke-width:2px,color:#fff
+    classDef action fill:#48BB78,stroke:#fff,stroke-width:2px,color:#fff
+    classDef error fill:#E53E3E,stroke:#fff,stroke-width:2px,color:#fff
+
+    class LoopStart,InitLoop,SetContext loop
+    class ProcessSubActions,SubAction1,SubAction2,SubActionN action
+    class Error error
+```
+
+### Loop Datenfluss
+
+```mermaid
+sequenceDiagram
+    participant Loop as Loop Action
+    participant Context as Context Manager
+    participant Sub as Sub-Actions
+    
+    Note over Loop: Array: ['A', 'B', 'C']
+    
+    Loop->>Context: Iteration 1
+    Context->>Sub: currentData = 'A'<br/>previousData = ['A','B','C']
+    Sub-->>Context: Result 1
+    
+    Loop->>Context: Iteration 2
+    Context->>Sub: currentData = 'B'<br/>previousData = ['A','B','C']
+    Sub-->>Context: Result 2
+    
+    Loop->>Context: Iteration 3
+    Context->>Sub: currentData = 'C'<br/>previousData = ['A','B','C']
+    Sub-->>Context: Result 3
+    
+    Context-->>Loop: Alle Iterationen abgeschlossen
+```
+
+## Transformation mit JSONata
+
+JSONata ermöglicht komplexe Datentransformationen auf extrahierte Daten.
+
+```mermaid
+graph LR
+    subgraph Input["📥 Input"]
+        Raw["Raw Browser Data<br/>{title: 'Hello', price: '10.99'}"]
+    end
+
+    subgraph Transformation["🔄 JSONata"]
+        Expression["$number(price)<br/>* 1.19"]
+    end
+
+    subgraph Output["📤 Output"]
+        Result["Transformed Data<br/>{title: 'Hello', price: 13.08}"]
+    end
+
+    Raw --> Transformation
+    Transformation --> Result
+
+    classDef input fill:#4299E1,stroke:#fff,stroke-width:2px,color:#fff
+    classDef transform fill:#ED8936,stroke:#fff,stroke-width:2px,color:#fff
+    classDef output fill:#48BB78,stroke:#fff,stroke-width:2px,color:#fff
+
+    class Raw input
+    class Expression transform
+    class Result output
+```
+
+### Transformation Flow
+
+```mermaid
+sequenceDiagram
+    participant Action as Action Handler
+    participant Extract as Data Extraction
+    participant JSONata as JSONata Engine
+    participant Validate as Validator
+
+    Action->>Extract: Extract DOM Elements
+    Extract-->>Action: Raw HTML/Text Data
+    
+    Action->>JSONata: Apply Transformation
+    Note over JSONata: Expression: $uppercase(title)
+    JSONata-->>Action: Transformed Data
+    
+    Action->>Validate: Validate Result
+    Validate-->>Action: Valid ✅
+    
+    Action->>Action: Update currentData
+```
+
+## Event System
+
+Während der Scrape-Ausführung werden verschiedene Events emittiert.
+
+```mermaid
+graph TB
+    ScrapeStart[🚀 Scrape Started] --> Navigation[🌐 Navigation Event]
+    Navigation --> Action[⚡ Action Event]
+    
+    Action --> ActionStart[▶️ Action Started]
+    Action --> ActionProgress[📊 Action Progress]
+    Action --> ActionComplete[✅ Action Completed]
+    Action --> ActionError[❌ Action Error]
+    
+    ActionComplete --> NextAction{Weitere<br/>Actions?}
+    ActionError --> ErrorHandler[⚠️ Error Handler]
+    
+    NextAction -->|Ja| Action
+    NextAction -->|Nein| Complete[🎉 Scrape Completed]
+    
+    ErrorHandler --> Complete
+    
+    ActionStart -.-> UI[📱 UI Update]
+    ActionProgress -.-> UI
+    ActionComplete -.-> UI
+    ActionError -.-> UI
+
+    classDef event fill:#4299E1,stroke:#fff,stroke-width:2px,color:#fff
+    classDef error fill:#E53E3E,stroke:#fff,stroke-width:2px,color:#fff
+    classDef complete fill:#48BB78,stroke:#fff,stroke-width:2px,color:#fff
+
+    class ActionStart,ActionProgress event
+    class ActionError,ErrorHandler error
+    class ActionComplete,Complete complete
+```
+
+## Vollständiges Beispiel
+
+### Scrape Config
+```jsonc
+{
+  "name": "example-scrape",
+  "actions": [
+    {
+      "type": "navigate",
+      "description": "Open homepage",
+      "url": "{{variables.baseUrl}}"
+    },
+    {
+      "type": "extract",
+      "description": "Extract product links",
+      "selector": ".product-link",
+      "extractData": "href",
+      "multiple": true
+    },
+    {
+      "type": "loop",
+      "description": "Process each product",
+      "loopData": "{{previousData}}",
+      "actions": [
+        {
+          "type": "navigate",
+          "url": "{{currentData}}"
+        },
+        {
+          "type": "extract",
+          "selector": ".product-title",
+          "extractData": "innerText"
+        }
+      ]
+    }
+  ]
+}
+```
+
+### Ausführungsfluss
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant API as API
+    participant Engine as Scrape Engine
+    participant Browser as Puppeteer
+    participant WS as WebSocket
+
+    API->>Engine: Start Scrape
+    Engine->>Engine: Load Config
+    Engine->>Browser: Launch Browser
+    Engine->>WS: Emit 'scrape.started'
+    
+    Engine->>Browser: Navigate to baseUrl
+    WS-->>UI: Update: "Navigated"
+    
+    Engine->>Browser: Extract product links
+    Note over Engine: currentData = ['/p1', '/p2']
+    WS-->>UI: Update: "Extracted 2 products"
+    
+    loop For each product
+        Engine->>Browser: Navigate to product
+        WS-->>UI: Update: "Processing product 1"
+        Engine->>Browser: Extract title
+        Note over Engine: currentData = "Product Title"
+        WS-->>UI: Update: "Extracted title"
+    end
+    
+    Engine->>Browser: Close Browser
+    Engine->>WS: Emit 'scrape.completed'
+    WS-->>UI: Final Update
+    Engine-->>API: Return Results
+```
+
+## Error Handling
+
+```mermaid
+graph TB
+    Action[▶️ Execute Action] --> Try{Try<br/>Execute}
+    
+    Try -->|Success| Result[✅ Action Successful]
+    Try -->|Error| Catch[❌ Catch Error]
+    
+    Catch --> CheckRetry{Retry<br/>konfiguriert?}
+    CheckRetry -->|Nein| LogError[Log Error]
+    CheckRetry -->|Ja| CheckAttempts{Versuche<br/>übrig?}
+    
+    CheckAttempts -->|Ja| Wait[⏱️ Warte]
+    CheckAttempts -->|Nein| LogError
+    
+    Wait --> Try
+    
+    LogError --> EmitError[📡 Emit Error Event]
+    EmitError --> Continue{Continue<br/>on Error?}
+    
+    Continue -->|Ja| NextAction[➡️ Nächste Action]
+    Continue -->|Nein| Abort[🛑 Abort Scrape]
+
+    classDef success fill:#48BB78,stroke:#fff,stroke-width:2px,color:#fff
+    classDef error fill:#E53E3E,stroke:#fff,stroke-width:2px,color:#fff
+    classDef process fill:#4299E1,stroke:#fff,stroke-width:2px,color:#fff
+
+    class Result,NextAction success
+    class Catch,LogError,EmitError,Abort error
+    class Try,CheckRetry,CheckAttempts,Wait,Continue process
+```
+
+## Best Practices
+
+### 1. **Nutze previousData effektiv**
+```jsonc
+{
+  "type": "extract",
+  "selector": ".price",
+  "transformData": "$number($substring(previousData, 1))"
+}
+```
+
+### 2. **Verwende Loops für Arrays**
+```jsonc
+{
+  "type": "loop",
+  "loopData": "{{previousData}}",
+  "actions": [/* Sub-Actions */]
+}
+```
+
+### 3. **Setze sinnvolle Descriptions**
+```jsonc
+{
+  "type": "click",
+  "description": "Click login button",
+  "selector": "#login-btn"
+}
+```
+
+### 4. **Nutze Transformationen**
+```jsonc
+{
+  "type": "extract",
+  "transformData": "{ product: title, price: $number(price) }"
+}
+```
+
+## Weiterführende Links
+
+- [Available Actions](/user-guide/actions) - Alle verfügbaren Action-Typen
+- [Template Syntax](/user-guide/templates) - Handlebars Template-Syntax
+- [JSONata Guide](/user-guide/jsonata) - Datentransformationen
+- [API Reference](/api/scrape-endpoints) - Scrape API Endpunkte

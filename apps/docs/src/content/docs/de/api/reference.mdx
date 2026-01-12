@@ -1,0 +1,908 @@
+---
+title: API Reference
+description: Vollständige API-Dokumentation für Scrape Dojo
+---
+
+# API Reference
+
+Diese Seite dokumentiert alle verfügbaren REST API Endpunkte von Scrape Dojo.
+
+## Base URL
+
+```
+http://localhost:3000/api
+```
+
+## OpenAPI/Swagger
+
+Eine interaktive API-Dokumentation ist verfügbar unter:
+
+```
+http://localhost:3000/api
+```
+
+## Übersicht
+
+```mermaid
+mindmap
+  root((API))
+    Authentication
+      Login
+      Logout
+      Token Refresh
+      OIDC
+      MFA/TOTP
+    Scrapes
+      Run Scrape
+      Get Status
+      List Scrapes
+      Get Results
+    Secrets
+      Create Secret
+      List Secrets
+      Update Secret
+      Delete Secret
+    Variables
+      Create Variable
+      List Variables
+      Update Variable
+      Delete Variable
+    Files
+      Upload File
+      List Files
+      Download File
+      Delete File
+    Events
+      WebSocket
+      SSE
+```
+
+---
+
+## 🔐 Authentication
+
+### POST /auth/login
+
+Authentifizierung mit Benutzername und Passwort.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    Client->>API: POST /auth/login
+    API->>DB: Verify credentials
+    DB-->>API: User found
+    API->>API: Generate JWT
+    API-->>Client: 200 + access_token
+```
+
+**Request:**
+```bash
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "admin",
+    "password": "password123"
+  }'
+```
+
+**Response:**
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "expires_in": 3600,
+  "user": {
+    "id": "user-123",
+    "username": "admin",
+    "roles": ["admin"]
+  }
+}
+```
+
+**Status Codes:**
+- `200` - Login erfolgreich
+- `401` - Ungültige Credentials
+- `429` - Zu viele Login-Versuche
+
+---
+
+### POST /auth/refresh
+
+Erneuert ein abgelaufenes Access Token.
+
+**Request:**
+```bash
+curl -X POST http://localhost:3000/api/auth/refresh \
+  -H "Content-Type: application/json" \
+  -d '{
+    "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }'
+```
+
+**Response:**
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "expires_in": 3600
+}
+```
+
+---
+
+### GET /auth/oidc/login
+
+Startet den OIDC/SSO Login-Flow.
+
+**Request:**
+```bash
+curl http://localhost:3000/api/auth/oidc/login
+```
+
+**Response:**
+```
+302 Redirect to OIDC Provider
+Location: https://oidc-provider.com/authorize?client_id=...
+```
+
+---
+
+### POST /auth/mfa/setup
+
+Richtet MFA/TOTP für einen Benutzer ein.
+
+**Request:**
+```bash
+curl -X POST http://localhost:3000/api/auth/mfa/setup \
+  -H "Authorization: Bearer <token>"
+```
+
+**Response:**
+```json
+{
+  "secret": "JBSWY3DPEHPK3PXP",
+  "qrCode": "data:image/png;base64,iVBORw0KGgoAAAANS...",
+  "backupCodes": [
+    "1234-5678-9012",
+    "3456-7890-1234",
+    "5678-9012-3456"
+  ]
+}
+```
+
+---
+
+### POST /auth/mfa/verify
+
+Verifiziert einen MFA/TOTP Code.
+
+**Request:**
+```bash
+curl -X POST http://localhost:3000/api/auth/mfa/verify \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "code": "123456"
+  }'
+```
+
+**Response:**
+```json
+{
+  "verified": true,
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+---
+
+## 🤖 Scrapes
+
+### POST /scrape/run
+
+Startet einen neuen Scrape.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    Client->>API: POST /scrape/run
+    API->>ScrapeService: runScrape()
+    ScrapeService->>Puppeteer: Launch browser
+    Puppeteer-->>ScrapeService: Browser instance
+    ScrapeService->>ScrapeService: Execute actions
+    ScrapeService->>EventGateway: Emit progress
+    EventGateway-->>Client: WebSocket events
+    ScrapeService->>DB: Save results
+    ScrapeService-->>API: Scrape results
+    API-->>Client: 200 + results
+```
+
+**Request:**
+```bash
+curl -X POST http://localhost:3000/api/scrape/run \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "configName": "amazon-product-search",
+    "variables": {
+      "searchTerm": "laptop",
+      "maxResults": 10
+    },
+    "headless": true
+  }'
+```
+
+**Response:**
+```json
+{
+  "runId": "run-abc-123",
+  "status": "running",
+  "startTime": "2024-01-11T10:00:00.000Z",
+  "configName": "amazon-product-search"
+}
+```
+
+**Status Codes:**
+- `200` - Scrape gestartet
+- `400` - Ungültige Konfiguration
+- `404` - Konfiguration nicht gefunden
+- `500` - Server-Fehler
+
+---
+
+### GET /scrape/status/:runId
+
+Ruft den Status eines laufenden oder abgeschlossenen Scrapes ab.
+
+**Request:**
+```bash
+curl http://localhost:3000/api/scrape/status/run-abc-123 \
+  -H "Authorization: Bearer <token>"
+```
+
+**Response:**
+```json
+{
+  "runId": "run-abc-123",
+  "status": "completed",
+  "startTime": "2024-01-11T10:00:00.000Z",
+  "endTime": "2024-01-11T10:05:30.000Z",
+  "duration": 330000,
+  "progress": {
+    "currentAction": 15,
+    "totalActions": 15,
+    "percentage": 100
+  },
+  "results": {
+    "products": [
+      {
+        "title": "Dell Laptop XPS 15",
+        "price": 1299.99,
+        "rating": 4.5
+      }
+    ]
+  }
+}
+```
+
+**Status Values:**
+- `pending` - In Warteschlange
+- `running` - Wird ausgeführt
+- `completed` - Erfolgreich abgeschlossen
+- `failed` - Fehlgeschlagen
+- `cancelled` - Abgebrochen
+
+---
+
+### GET /scrape/list
+
+Listet alle Scrape-Konfigurationen auf.
+
+**Request:**
+```bash
+curl http://localhost:3000/api/scrape/list \
+  -H "Authorization: Bearer <token>"
+```
+
+**Response:**
+```json
+{
+  "scrapes": [
+    {
+      "name": "amazon-product-search",
+      "description": "Sucht nach Produkten auf Amazon",
+      "lastRun": "2024-01-11T10:00:00.000Z",
+      "status": "active"
+    },
+    {
+      "name": "news-aggregator",
+      "description": "Sammelt Nachrichten von verschiedenen Quellen",
+      "lastRun": "2024-01-11T09:00:00.000Z",
+      "status": "active"
+    }
+  ],
+  "total": 2
+}
+```
+
+---
+
+### GET /scrape/results/:runId
+
+Ruft die detaillierten Ergebnisse eines Scrapes ab.
+
+**Request:**
+```bash
+curl http://localhost:3000/api/scrape/results/run-abc-123 \
+  -H "Authorization: Bearer <token>"
+```
+
+**Response:**
+```json
+{
+  "runId": "run-abc-123",
+  "configName": "amazon-product-search",
+  "results": {
+    "products": [
+      {
+        "title": "Dell Laptop XPS 15",
+        "price": 1299.99,
+        "rating": 4.5,
+        "url": "https://amazon.com/dp/B08..."
+      }
+    ],
+    "metadata": {
+      "totalFound": 10,
+      "scrapedAt": "2024-01-11T10:05:30.000Z"
+    }
+  },
+  "screenshots": [
+    {
+      "url": "/api/files/screenshots/run-abc-123/page-1.png",
+      "timestamp": "2024-01-11T10:02:15.000Z"
+    }
+  ]
+}
+```
+
+---
+
+### DELETE /scrape/cancel/:runId
+
+Bricht einen laufenden Scrape ab.
+
+**Request:**
+```bash
+curl -X DELETE http://localhost:3000/api/scrape/cancel/run-abc-123 \
+  -H "Authorization: Bearer <token>"
+```
+
+**Response:**
+```json
+{
+  "runId": "run-abc-123",
+  "status": "cancelled",
+  "message": "Scrape successfully cancelled"
+}
+```
+
+---
+
+## 🔑 Secrets
+
+Secrets werden AES-256-CBC verschlüsselt gespeichert.
+
+### POST /secrets
+
+Erstellt ein neues Secret.
+
+**Request:**
+```bash
+curl -X POST http://localhost:3000/api/secrets \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "key": "api_key",
+    "value": "sk-1234567890abcdef"
+  }'
+```
+
+**Response:**
+```json
+{
+  "id": "secret-123",
+  "key": "api_key",
+  "createdAt": "2024-01-11T10:00:00.000Z"
+}
+```
+
+---
+
+### GET /secrets
+
+Listet alle Secrets auf (ohne Werte).
+
+**Request:**
+```bash
+curl http://localhost:3000/api/secrets \
+  -H "Authorization: Bearer <token>"
+```
+
+**Response:**
+```json
+{
+  "secrets": [
+    {
+      "id": "secret-123",
+      "key": "api_key",
+      "createdAt": "2024-01-11T10:00:00.000Z",
+      "updatedAt": "2024-01-11T10:00:00.000Z"
+    },
+    {
+      "id": "secret-456",
+      "key": "db_password",
+      "createdAt": "2024-01-10T09:00:00.000Z",
+      "updatedAt": "2024-01-10T09:00:00.000Z"
+    }
+  ],
+  "total": 2
+}
+```
+
+---
+
+### PUT /secrets/:id
+
+Aktualisiert ein bestehendes Secret.
+
+**Request:**
+```bash
+curl -X PUT http://localhost:3000/api/secrets/secret-123 \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "value": "sk-newkey1234567890"
+  }'
+```
+
+**Response:**
+```json
+{
+  "id": "secret-123",
+  "key": "api_key",
+  "updatedAt": "2024-01-11T11:00:00.000Z"
+}
+```
+
+---
+
+### DELETE /secrets/:id
+
+Löscht ein Secret.
+
+**Request:**
+```bash
+curl -X DELETE http://localhost:3000/api/secrets/secret-123 \
+  -H "Authorization: Bearer <token>"
+```
+
+**Response:**
+```json
+{
+  "message": "Secret successfully deleted"
+}
+```
+
+---
+
+## 📊 Variables
+
+Variablen werden unverschlüsselt gespeichert und können in Scrape-Konfigurationen verwendet werden.
+
+### POST /variables
+
+Erstellt eine neue Variable.
+
+**Request:**
+```bash
+curl -X POST http://localhost:3000/api/variables \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "key": "base_url",
+    "value": "https://example.com"
+  }'
+```
+
+**Response:**
+```json
+{
+  "id": "var-123",
+  "key": "base_url",
+  "value": "https://example.com",
+  "createdAt": "2024-01-11T10:00:00.000Z"
+}
+```
+
+---
+
+### GET /variables
+
+Listet alle Variablen auf.
+
+**Request:**
+```bash
+curl http://localhost:3000/api/variables \
+  -H "Authorization: Bearer <token>"
+```
+
+**Response:**
+```json
+{
+  "variables": [
+    {
+      "id": "var-123",
+      "key": "base_url",
+      "value": "https://example.com",
+      "createdAt": "2024-01-11T10:00:00.000Z"
+    },
+    {
+      "id": "var-456",
+      "key": "max_retries",
+      "value": "3",
+      "createdAt": "2024-01-10T09:00:00.000Z"
+    }
+  ],
+  "total": 2
+}
+```
+
+---
+
+### PUT /variables/:id
+
+Aktualisiert eine Variable.
+
+**Request:**
+```bash
+curl -X PUT http://localhost:3000/api/variables/var-123 \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "value": "https://newexample.com"
+  }'
+```
+
+**Response:**
+```json
+{
+  "id": "var-123",
+  "key": "base_url",
+  "value": "https://newexample.com",
+  "updatedAt": "2024-01-11T11:00:00.000Z"
+}
+```
+
+---
+
+### DELETE /variables/:id
+
+Löscht eine Variable.
+
+**Request:**
+```bash
+curl -X DELETE http://localhost:3000/api/variables/var-123 \
+  -H "Authorization: Bearer <token>"
+```
+
+**Response:**
+```json
+{
+  "message": "Variable successfully deleted"
+}
+```
+
+---
+
+## 📁 Files
+
+### POST /files/upload
+
+Lädt eine Datei hoch.
+
+**Request:**
+```bash
+curl -X POST http://localhost:3000/api/files/upload \
+  -H "Authorization: Bearer <token>" \
+  -F "file=@/path/to/file.pdf"
+```
+
+**Response:**
+```json
+{
+  "id": "file-123",
+  "filename": "file.pdf",
+  "size": 1024567,
+  "mimeType": "application/pdf",
+  "url": "/api/files/download/file-123",
+  "uploadedAt": "2024-01-11T10:00:00.000Z"
+}
+```
+
+---
+
+### GET /files/list
+
+Listet alle hochgeladenen Dateien auf.
+
+**Request:**
+```bash
+curl http://localhost:3000/api/files/list \
+  -H "Authorization: Bearer <token>"
+```
+
+**Response:**
+```json
+{
+  "files": [
+    {
+      "id": "file-123",
+      "filename": "file.pdf",
+      "size": 1024567,
+      "mimeType": "application/pdf",
+      "url": "/api/files/download/file-123",
+      "uploadedAt": "2024-01-11T10:00:00.000Z"
+    }
+  ],
+  "total": 1
+}
+```
+
+---
+
+### GET /files/download/:id
+
+Lädt eine Datei herunter.
+
+**Request:**
+```bash
+curl http://localhost:3000/api/files/download/file-123 \
+  -H "Authorization: Bearer <token>" \
+  -o downloaded-file.pdf
+```
+
+**Response:**
+```
+Binary file content
+```
+
+---
+
+### DELETE /files/:id
+
+Löscht eine Datei.
+
+**Request:**
+```bash
+curl -X DELETE http://localhost:3000/api/files/file-123 \
+  -H "Authorization: Bearer <token>"
+```
+
+**Response:**
+```json
+{
+  "message": "File successfully deleted"
+}
+```
+
+---
+
+## 🔌 Events (WebSocket)
+
+### Connection
+
+```typescript
+import { io } from 'socket.io-client';
+
+const socket = io('http://localhost:3000', {
+  auth: {
+    token: 'your-jwt-token'
+  }
+});
+```
+
+### Event Types
+
+```mermaid
+graph LR
+    A[Client] -->|connect| B[Server]
+    B -->|scrape.started| A
+    B -->|scrape.action| A
+    B -->|scrape.progress| A
+    B -->|scrape.completed| A
+    B -->|scrape.error| A
+    
+    classDef client fill:#4299E1,stroke:#fff,stroke-width:2px,color:#fff
+    classDef server fill:#48BB78,stroke:#fff,stroke-width:2px,color:#fff
+    
+    class A client
+    class B server
+```
+
+### scrape.started
+
+```typescript
+socket.on('scrape.started', (data) => {
+  console.log('Scrape started:', data);
+});
+```
+
+**Payload:**
+```json
+{
+  "runId": "run-abc-123",
+  "configName": "amazon-product-search",
+  "startTime": "2024-01-11T10:00:00.000Z"
+}
+```
+
+### scrape.action
+
+```typescript
+socket.on('scrape.action', (data) => {
+  console.log('Action:', data.description);
+});
+```
+
+**Payload:**
+```json
+{
+  "runId": "run-abc-123",
+  "actionIndex": 5,
+  "actionType": "extract",
+  "description": "Extrahiere Produkttitel",
+  "timestamp": "2024-01-11T10:02:15.000Z"
+}
+```
+
+### scrape.progress
+
+```typescript
+socket.on('scrape.progress', (data) => {
+  console.log(`Progress: ${data.percentage}%`);
+});
+```
+
+**Payload:**
+```json
+{
+  "runId": "run-abc-123",
+  "currentAction": 8,
+  "totalActions": 15,
+  "percentage": 53.33
+}
+```
+
+### scrape.completed
+
+```typescript
+socket.on('scrape.completed', (data) => {
+  console.log('Scrape completed:', data.results);
+});
+```
+
+**Payload:**
+```json
+{
+  "runId": "run-abc-123",
+  "status": "completed",
+  "endTime": "2024-01-11T10:05:30.000Z",
+  "duration": 330000,
+  "results": {
+    "products": [...]
+  }
+}
+```
+
+### scrape.error
+
+```typescript
+socket.on('scrape.error', (data) => {
+  console.error('Scrape error:', data.error);
+});
+```
+
+**Payload:**
+```json
+{
+  "runId": "run-abc-123",
+  "error": "Selector not found: .product-title",
+  "actionIndex": 5,
+  "timestamp": "2024-01-11T10:02:15.000Z"
+}
+```
+
+---
+
+## Rate Limiting
+
+```mermaid
+graph LR
+    A[Request] --> B{Rate Limit Check}
+    B -->|< 100/min| C[Allow]
+    B -->|>= 100/min| D[429 Error]
+    
+    classDef success fill:#48BB78,stroke:#fff,stroke-width:2px,color:#fff
+    classDef error fill:#E53E3E,stroke:#fff,stroke-width:2px,color:#fff
+    
+    class C success
+    class D error
+```
+
+**Limits:**
+- `/auth/*`: 10 Requests / Minute
+- `/scrape/*`: 30 Requests / Minute
+- Alle anderen: 100 Requests / Minute
+
+**429 Response:**
+```json
+{
+  "statusCode": 429,
+  "message": "Too many requests",
+  "retryAfter": 60
+}
+```
+
+---
+
+## Error Responses
+
+Alle Fehler folgen diesem Format:
+
+```json
+{
+  "statusCode": 400,
+  "message": "Invalid request",
+  "error": "Bad Request",
+  "details": {
+    "field": "configName",
+    "reason": "Configuration not found"
+  }
+}
+```
+
+**Status Codes:**
+- `400` - Bad Request
+- `401` - Unauthorized
+- `403` - Forbidden
+- `404` - Not Found
+- `429` - Too Many Requests
+- `500` - Internal Server Error
+
+---
+
+## Authentication
+
+Alle geschützten Endpunkte benötigen einen JWT-Token im Authorization-Header:
+
+```bash
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+**Token-Struktur:**
+```json
+{
+  "sub": "user-123",
+  "username": "admin",
+  "roles": ["admin"],
+  "iat": 1641896400,
+  "exp": 1641900000
+}
+```
+
+---
+
+## Weitere Ressourcen
+
+- [Swagger UI](http://localhost:3000/api) - Interaktive API-Dokumentation
+- [Architecture](/de/architecture/overview/) - System-Architektur
+- [Authentication](/de/architecture/authentication/) - Authentifizierung im Detail

@@ -1,0 +1,383 @@
+---
+title: Navigation Actions
+description: Actions zum Navigieren zwischen Seiten
+---
+
+# Navigation Actions
+
+Navigation Actions steuern die Browser-Navigation zwischen verschiedenen URLs und Seiten.
+
+## Übersicht
+
+```mermaid
+graph LR
+    A[Current Page] -->|navigate| B[New URL]
+    B -->|goBack| A
+    A -->|goForward| B
+    A -->|reload| A
+    
+    classDef action fill:#4299E1,stroke:#fff,stroke-width:2px,color:#fff
+    class A,B action
+```
+
+---
+
+## navigate
+
+Navigiert zu einer URL.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Action
+    participant Browser
+    participant Server
+    
+    Action->>Browser: page.goto(url)
+    Browser->>Server: HTTP GET
+    Server-->>Browser: HTML Response
+    Browser->>Browser: Render Page
+    Browser-->>Action: Navigation complete
+```
+
+### Parameter
+
+| Parameter | Typ | Required | Beschreibung |
+|-----------|-----|----------|--------------|
+| `type` | string | ✅ | `"navigate"` |
+| `url` | string | ✅ | Ziel-URL (unterstützt Templates) |
+| `waitUntil` | string | ❌ | Wann gilt Navigation als abgeschlossen |
+| `timeout` | number | ❌ | Timeout in Millisekunden (default: 30000) |
+
+### waitUntil-Optionen
+
+- `load` - Wenn load-Event gefeuert wird (default)
+- `domcontentloaded` - Wenn DOM vollständig geladen
+- `networkidle0` - Wenn keine Netzwerkaktivität für 500ms
+- `networkidle2` - Wenn max. 2 Netzwerkverbindungen für 500ms
+
+### Beispiele
+
+**Einfache Navigation:**
+```jsonc
+{
+  "type": "navigate",
+  "description": "Öffne die Produktseite",
+  "url": "https://example.com/products"
+}
+```
+
+**Mit erweiterten Optionen:**
+```jsonc
+{
+  "type": "navigate",
+  "url": "https://example.com/products",
+  "waitUntil": "networkidle2",
+  "timeout": 60000
+}
+```
+
+**Mit Variablen:**
+```jsonc
+{
+  "type": "navigate",
+  "url": "{{variables.baseUrl}}/search?q={{variables.searchTerm}}",
+  "waitUntil": "load"
+}
+```
+
+**Mit dynamischen Parametern:**
+```jsonc
+{
+  "type": "navigate",
+  "url": "https://example.com/products/{{previousData.productId}}",
+  "waitUntil": "domcontentloaded"
+}
+```
+
+---
+
+## goBack
+
+Navigiert zur vorherigen Seite (Browser-Zurück-Button).
+
+### Parameter
+
+| Parameter | Typ | Required | Beschreibung |
+|-----------|-----|----------|--------------|
+| `type` | string | ✅ | `"goBack"` |
+| `waitUntil` | string | ❌ | Siehe navigate |
+| `timeout` | number | ❌ | Timeout in Millisekunden |
+
+### Beispiele
+
+**Einfach zurück:**
+```jsonc
+{
+  "type": "goBack",
+  "description": "Zurück zur Übersicht"
+}
+```
+
+**Mit waitUntil:**
+```jsonc
+{
+  "type": "goBack",
+  "waitUntil": "networkidle0"
+}
+```
+
+### Anwendungsfall
+
+```jsonc
+[
+  {
+    "type": "navigate",
+    "url": "https://example.com/products"
+  },
+  {
+    "type": "click",
+    "selector": ".product-link"
+  },
+  {
+    "type": "extract",
+    "selector": ".product-details",
+    "extractData": "innerText"
+  },
+  {
+    "type": "goBack",
+    "description": "Zurück zur Produktliste"
+  }
+]
+```
+
+---
+
+## goForward
+
+Navigiert zur nächsten Seite (Browser-Vorwärts-Button).
+
+### Parameter
+
+| Parameter | Typ | Required | Beschreibung |
+|-----------|-----|----------|--------------|
+| `type` | string | ✅ | `"goForward"` |
+| `waitUntil` | string | ❌ | Siehe navigate |
+| `timeout` | number | ❌ | Timeout in Millisekunden |
+
+### Beispiele
+
+```jsonc
+{
+  "type": "goForward",
+  "description": "Vorwärts zur Detailseite"
+}
+```
+
+---
+
+## reload
+
+Lädt die aktuelle Seite neu.
+
+### Parameter
+
+| Parameter | Typ | Required | Beschreibung |
+|-----------|-----|----------|--------------|
+| `type` | string | ✅ | `"reload"` |
+| `waitUntil` | string | ❌ | Siehe navigate |
+| `timeout` | number | ❌ | Timeout in Millisekunden |
+
+### Beispiele
+
+**Einfacher Reload:**
+```jsonc
+{
+  "type": "reload",
+  "description": "Seite neu laden"
+}
+```
+
+**Mit networkidle:**
+```jsonc
+{
+  "type": "reload",
+  "description": "Seite neu laden und auf Netzwerk warten",
+  "waitUntil": "networkidle0",
+  "timeout": 60000
+}
+```
+
+### Anwendungsfall - Dynamische Inhalte aktualisieren
+
+```jsonc
+[
+  {
+    "type": "navigate",
+    "url": "https://example.com/dashboard"
+  },
+  {
+    "type": "extract",
+    "selector": ".data-count",
+    "extractData": "innerText"
+  },
+  {
+    "type": "wait",
+    "timeout": 5000
+  },
+  {
+    "type": "reload",
+    "description": "Dashboard aktualisieren"
+  },
+  {
+    "type": "extract",
+    "selector": ".data-count",
+    "extractData": "innerText"
+  }
+]
+```
+
+---
+
+## Best Practices
+
+### 1. Richtige waitUntil-Option wählen
+
+```mermaid
+graph TB
+    Start[Navigation starten] --> Question{Seiten-Typ?}
+    Question -->|Statische Seite| Load[waitUntil: load]
+    Question -->|SPA/React| DOM[waitUntil: domcontentloaded]
+    Question -->|Viele API-Calls| Idle0[waitUntil: networkidle0]
+    Question -->|Wenige API-Calls| Idle2[waitUntil: networkidle2]
+    
+    classDef recommended fill:#48BB78,stroke:#fff,stroke-width:2px,color:#fff
+    class Load,DOM,Idle0,Idle2 recommended
+```
+
+**Statische Seiten:**
+```jsonc
+{
+  "type": "navigate",
+  "url": "https://example.com",
+  "waitUntil": "load"  // ✅ Ausreichend für statische Inhalte
+}
+```
+
+**Single Page Applications:**
+```jsonc
+{
+  "type": "navigate",
+  "url": "https://react-app.com",
+  "waitUntil": "domcontentloaded"  // ✅ Wartet auf DOM, nicht auf alle Ressourcen
+}
+```
+
+**API-lastige Seiten:**
+```jsonc
+{
+  "type": "navigate",
+  "url": "https://api-heavy.com",
+  "waitUntil": "networkidle0"  // ✅ Wartet bis alle API-Calls fertig
+}
+```
+
+### 2. Timeouts großzügig setzen
+
+```jsonc
+{
+  "type": "navigate",
+  "url": "https://slow-site.com",
+  "timeout": 120000,  // ✅ 2 Minuten für langsame Seiten
+  "waitUntil": "networkidle2"
+}
+```
+
+### 3. Template-Variablen für Flexibilität
+
+```jsonc
+{
+  "type": "navigate",
+  "url": "{{variables.baseUrl}}/{{variables.path}}",  // ✅ Wiederverwendbar
+  "waitUntil": "load"
+}
+```
+
+### 4. Navigation mit Error Handling
+
+```jsonc
+[
+  {
+    "type": "navigate",
+    "url": "https://example.com/page",
+    "timeout": 30000
+  },
+  {
+    "type": "waitForSelector",
+    "selector": ".content",
+    "timeout": 5000
+  },
+  {
+    "type": "condition",
+    "condition": "$not($exists(previousData))",
+    "then": [
+      {
+        "type": "reload",
+        "description": "Seite neu laden bei Fehler"
+      }
+    ]
+  }
+]
+```
+
+---
+
+## Häufige Fehler vermeiden
+
+### ❌ Zu kurze Timeouts
+
+```jsonc
+{
+  "type": "navigate",
+  "url": "https://slow-site.com",
+  "timeout": 5000  // ❌ Zu kurz!
+}
+```
+
+### ✅ Besser
+
+```jsonc
+{
+  "type": "navigate",
+  "url": "https://slow-site.com",
+  "timeout": 60000  // ✅ Großzügiger Timeout
+}
+```
+
+### ❌ Falsches waitUntil für SPA
+
+```jsonc
+{
+  "type": "navigate",
+  "url": "https://react-app.com",
+  "waitUntil": "networkidle0"  // ❌ Kann sehr lange dauern
+}
+```
+
+### ✅ Besser
+
+```jsonc
+{
+  "type": "navigate",
+  "url": "https://react-app.com",
+  "waitUntil": "domcontentloaded"  // ✅ Optimal für SPAs
+}
+```
+
+---
+
+## Weiterführende Links
+
+- [Interaktions-Actions](/de/user-guide/actions/interaction/) - Nach Navigation interagieren
+- [Wartezeit-Actions](/de/user-guide/actions/timing/) - Warten auf Elemente
+- [Template-Syntax](/de/user-guide/templates/) - Variablen in URLs

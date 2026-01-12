@@ -1,0 +1,358 @@
+---
+title: API Module Structure
+description: NestJS Module und Controller Architektur von Scrape Dojo
+---
+
+# API Module Structure
+
+Die Scrape Dojo API ist eine NestJS-Anwendung mit einer modularen Architektur. Jedes Modul ist für einen spezifischen Funktionsbereich verantwortlich.
+
+## Module-Übersicht
+
+```mermaid
+graph TB
+    AppModule["🏠 AppModule<br/>Root Module"]
+    
+    subgraph Core["📦 Core Modules"]
+        AuthModule["🔐 AuthModule<br/>Authentication & Authorization"]
+        DatabaseModule["💾 DatabaseModule<br/>TypeORM Configuration"]
+        EventsModule["📡 EventsModule<br/>WebSocket & SSE"]
+        HealthModule["❤️ HealthModule<br/>Health Checks"]
+    end
+
+    subgraph Features["✨ Feature Modules"]
+        ScrapeModule["🕷️ ScrapeModule<br/>Main Scraping Logic"]
+        SecretsModule["🔑 SecretsModule<br/>Encrypted Storage"]
+        VariablesModule["📝 VariablesModule<br/>Config Variables"]
+        FilesModule["📁 FilesModule<br/>File Management"]
+        ActionsModule["⚡ ActionsModule<br/>Action Types"]
+    end
+
+    AppModule --> Core
+    AppModule --> Features
+    
+    Core --> AuthModule
+    Core --> DatabaseModule
+    Core --> EventsModule
+    Core --> HealthModule
+    
+    Features --> ScrapeModule
+    Features --> SecretsModule
+    Features --> VariablesModule
+    Features --> FilesModule
+    Features --> ActionsModule
+
+    ScrapeModule -.-> AuthModule
+    ScrapeModule -.-> EventsModule
+    ScrapeModule -.-> SecretsModule
+    ScrapeModule -.-> VariablesModule
+
+    classDef core fill:#4299E1,stroke:#fff,stroke-width:2px,color:#fff
+    classDef feature fill:#48BB78,stroke:#fff,stroke-width:2px,color:#fff
+    classDef root fill:#E0234E,stroke:#fff,stroke-width:2px,color:#fff
+
+    class AuthModule,DatabaseModule,EventsModule,HealthModule core
+    class ScrapeModule,SecretsModule,VariablesModule,FilesModule,ActionsModule feature
+    class AppModule root
+```
+
+## Controller & Services
+
+```mermaid
+graph LR
+    subgraph Controllers["🎮 Controllers"]
+        AuthController["AuthController<br/>/api/auth"]
+        UsersController["UsersController<br/>/api/users"]
+        ScrapeController["ScrapeController<br/>/api/scrape"]
+        ScrapeUIController["ScrapeUIController<br/>/"]
+        SecretsController["SecretsController<br/>/api/secrets"]
+        VariablesController["VariablesController<br/>/api/variables"]
+        FilesController["FilesController<br/>/api/files"]
+        ActionsController["ActionsController<br/>/api/actions"]
+        HealthController["HealthController<br/>/api/health"]
+    end
+
+    subgraph Services["⚙️ Services"]
+        AuthService["AuthService"]
+        UserService["UserService"]
+        ScrapeService["ScrapeService"]
+        BrowserService["BrowserService"]
+        ActionService["ActionService"]
+        SecretsService["SecretsService"]
+        VariablesService["VariablesService"]
+        FilesService["FilesService"]
+        EventEmitter["EventEmitter"]
+    end
+
+    subgraph Entities["💾 Entities (TypeORM)"]
+        User["User"]
+        Secret["Secret"]
+        Variable["Variable"]
+    end
+
+    AuthController --> AuthService
+    UsersController --> UserService
+    ScrapeController --> ScrapeService
+    SecretsController --> SecretsService
+    VariablesController --> VariablesService
+    FilesController --> FilesService
+    ActionsController --> ActionService
+    HealthController --> HealthController
+
+    ScrapeService --> BrowserService
+    ScrapeService --> ActionService
+    ScrapeService --> SecretsService
+    ScrapeService --> VariablesService
+    ScrapeService --> EventEmitter
+
+    AuthService --> User
+    SecretsService --> Secret
+    VariablesService --> Variable
+
+    classDef controller fill:#E0234E,stroke:#fff,stroke-width:2px,color:#fff
+    classDef service fill:#4299E1,stroke:#fff,stroke-width:2px,color:#fff
+    classDef entity fill:#48BB78,stroke:#fff,stroke-width:2px,color:#fff
+
+    class AuthController,UsersController,ScrapeController,ScrapeUIController,SecretsController,VariablesController,FilesController,ActionsController,HealthController controller
+    class AuthService,UserService,ScrapeService,BrowserService,ActionService,SecretsService,VariablesService,FilesService,EventEmitter service
+    class User,Secret,Variable entity
+```
+
+## AuthModule Details
+
+```mermaid
+graph TB
+    subgraph AuthModule["🔐 AuthModule"]
+        subgraph Controllers["Controllers"]
+            AuthController["AuthController<br/>POST /auth/login<br/>POST /auth/register<br/>GET /auth/oidc/*"]
+            UsersController["UsersController<br/>GET /users/me<br/>PUT /users/me<br/>POST /users/totp/*"]
+        end
+
+        subgraph Services["Services"]
+            AuthService["AuthService<br/>• validateUser()<br/>• login()<br/>• register()"]
+            JwtStrategy["JwtStrategy<br/>Passport.js Strategy"]
+            JwtAuthGuard["JwtAuthGuard<br/>Route Protection"]
+            OidcStrategy["OidcStrategy<br/>OpenID Connect"]
+            TotpService["TotpService<br/>MFA/TOTP Logic"]
+        end
+
+        subgraph Entities["Entities"]
+            UserEntity["User Entity<br/>• id<br/>• username<br/>• password<br/>• totpSecret"]
+        end
+
+        AuthController --> AuthService
+        UsersController --> AuthService
+        AuthService --> UserEntity
+        AuthService --> JwtStrategy
+        AuthService --> OidcStrategy
+        AuthService --> TotpService
+        JwtAuthGuard --> JwtStrategy
+    end
+
+    ExternalOIDC["External OIDC Provider"] -.->|Callback| OidcStrategy
+
+    classDef controller fill:#E0234E,stroke:#fff,stroke-width:2px,color:#fff
+    classDef service fill:#4299E1,stroke:#fff,stroke-width:2px,color:#fff
+    classDef entity fill:#48BB78,stroke:#fff,stroke-width:2px,color:#fff
+
+    class AuthController,UsersController controller
+    class AuthService,JwtStrategy,JwtAuthGuard,OidcStrategy,TotpService service
+    class UserEntity entity
+```
+
+## ScrapeModule Details
+
+```mermaid
+graph TB
+    subgraph ScrapeModule["🕷️ ScrapeModule"]
+        subgraph Controllers["Controllers"]
+            ScrapeController["ScrapeController<br/>POST /scrape/run<br/>GET /scrape/configs<br/>GET /scrape/runs"]
+            ScrapeUIController["ScrapeUIController<br/>GET /config/:name"]
+        end
+
+        subgraph Services["Services"]
+            ScrapeService["ScrapeService<br/>• runScrape()<br/>• loadConfig()<br/>• processActions()"]
+            BrowserService["BrowserService<br/>• launchBrowser()<br/>• closeBrowser()"]
+            ActionHandlerService["ActionHandlerService<br/>• handleAction()<br/>• executeAction()"]
+            TemplateService["TemplateService<br/>• renderHandlebars()<br/>• processJSONata()"]
+        end
+
+        subgraph Actions["Action Handlers"]
+            NavigateAction["NavigateAction"]
+            ClickAction["ClickAction"]
+            TypeAction["TypeAction"]
+            ExtractAction["ExtractAction"]
+            DownloadAction["DownloadAction"]
+            LoopAction["LoopAction"]
+        end
+
+        ScrapeController --> ScrapeService
+        ScrapeService --> BrowserService
+        ScrapeService --> ActionHandlerService
+        ScrapeService --> TemplateService
+        
+        ActionHandlerService --> NavigateAction
+        ActionHandlerService --> ClickAction
+        ActionHandlerService --> TypeAction
+        ActionHandlerService --> ExtractAction
+        ActionHandlerService --> DownloadAction
+        ActionHandlerService --> LoopAction
+    end
+
+    EventsGateway["EventsGateway<br/>WebSocket"] -.->|Emit Events| ScrapeService
+    Puppeteer["Puppeteer"] <-.-> BrowserService
+
+    classDef controller fill:#E0234E,stroke:#fff,stroke-width:2px,color:#fff
+    classDef service fill:#4299E1,stroke:#fff,stroke-width:2px,color:#fff
+    classDef action fill:#48BB78,stroke:#fff,stroke-width:2px,color:#fff
+
+    class ScrapeController,ScrapeUIController controller
+    class ScrapeService,BrowserService,ActionHandlerService,TemplateService service
+    class NavigateAction,ClickAction,TypeAction,ExtractAction,DownloadAction,LoopAction action
+```
+
+## Request Flow
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant C as Client
+    participant Ctrl as Controller
+    participant Guard as AuthGuard
+    participant Svc as Service
+    participant DB as Database
+    participant Evt as EventGateway
+
+    C->>Ctrl: HTTP Request
+    Ctrl->>Guard: Check Authentication
+    Guard->>Guard: Validate JWT Token
+    
+    alt Token Invalid
+        Guard-->>C: 401 Unauthorized
+    else Token Valid
+        Guard->>Ctrl: Proceed
+        Ctrl->>Svc: Call Service Method
+        Svc->>DB: Query/Update Data
+        DB-->>Svc: Result
+        Svc->>Evt: Emit Event (Optional)
+        Evt-->>C: WebSocket Update
+        Svc-->>Ctrl: Return Result
+        Ctrl-->>C: HTTP Response
+    end
+```
+
+## Dependency Injection
+
+```mermaid
+graph LR
+    subgraph Container["🎯 NestJS DI Container"]
+        Providers["Providers<br/>• Services<br/>• Repositories<br/>• Strategies"]
+        Controllers["Controllers<br/>Injizieren Services"]
+        Middleware["Middleware<br/>• Logger<br/>• CORS<br/>• Helmet"]
+        Guards["Guards<br/>• JwtAuthGuard<br/>• RolesGuard"]
+        Interceptors["Interceptors<br/>• Logging<br/>• Transform"]
+    end
+
+    Controllers --> Providers
+    Controllers --> Guards
+    Controllers --> Interceptors
+    Middleware --> Controllers
+
+    classDef provider fill:#48BB78,stroke:#fff,stroke-width:2px,color:#fff
+    classDef controller fill:#E0234E,stroke:#fff,stroke-width:2px,color:#fff
+    classDef middleware fill:#4299E1,stroke:#fff,stroke-width:2px,color:#fff
+
+    class Providers provider
+    class Controllers controller
+    class Middleware,Guards,Interceptors middleware
+```
+
+## Modul-Konfiguration
+
+### AppModule
+```typescript
+@Module({
+  imports: [
+    ConfigModule.forRoot(),
+    DatabaseModule,
+    AuthModule,
+    ScrapeModule,
+    EventsModule,
+    SecretsModule,
+    VariablesModule,
+    FilesModule,
+    HealthModule
+  ],
+})
+export class AppModule {}
+```
+
+### AuthModule
+```typescript
+@Module({
+  imports: [
+    TypeOrmModule.forFeature([User]),
+    PassportModule,
+    JwtModule.registerAsync({...}),
+  ],
+  controllers: [AuthController, UsersController],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    OidcStrategy,
+    TotpService
+  ],
+  exports: [AuthService]
+})
+export class AuthModule {}
+```
+
+### ScrapeModule
+```typescript
+@Module({
+  imports: [
+    EventsModule,
+    SecretsModule,
+    VariablesModule
+  ],
+  controllers: [
+    ScrapeController,
+    ScrapeUIController
+  ],
+  providers: [
+    ScrapeService,
+    BrowserService,
+    ActionHandlerService,
+    TemplateService
+  ]
+})
+export class ScrapeModule {}
+```
+
+## Wichtige Schnittstellen
+
+### AuthService
+- `validateUser(username, password)` - Benutzer-Validierung
+- `login(user)` - JWT Token generieren
+- `register(dto)` - Neuen Benutzer anlegen
+
+### ScrapeService
+- `runScrape(configName, options)` - Scrape ausführen
+- `loadConfig(name)` - Konfiguration laden
+- `processActions(actions, context)` - Actions abarbeiten
+
+### BrowserService  
+- `launchBrowser(options)` - Puppeteer Browser starten
+- `createPage()` - Neue Browser-Seite erstellen
+- `closeBrowser()` - Browser schließen
+
+### EventsGateway
+- `emitLog(message)` - Log-Event senden
+- `emitStatus(status)` - Status-Event senden
+- `emitProgress(progress)` - Progress-Event senden
+
+## Weiterführende Links
+
+- [Scrape Workflow](/architecture/scrape-workflow) - Detaillierter Ablauf einer Scrape-Ausführung
+- [Authentication Flow](/architecture/authentication) - Authentifizierungs-Prozess
+- [API Reference](/api/endpoints) - Alle REST-Endpunkte

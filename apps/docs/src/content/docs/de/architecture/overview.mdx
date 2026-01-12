@@ -1,0 +1,281 @@
+---
+title: Architektur-Übersicht
+description: Technische Architektur und Komponenten von Scrape Dojo
+---
+
+# Architektur-Übersicht
+
+Scrape Dojo ist ein modernes Monorepo-Projekt, das mit Nx verwaltet wird und drei Hauptkomponenten umfasst: API, UI und Dokumentation.
+
+## High-Level Architektur
+
+```mermaid
+graph TB
+    subgraph Client["🌐 Client Layer"]
+        Browser["Web Browser"]
+        CLI["CLI Tools"]
+    end
+
+    subgraph Frontend["🎨 Frontend (Angular)"]
+        UI["Angular UI Application<br/>Port: 4200"]
+        UIComponents["Components<br/>• Dashboard<br/>• Scrape Editor<br/>• Log Viewer"]
+        UIServices["Services<br/>• HTTP Client<br/>• WebSocket<br/>• State Management"]
+    end
+
+    subgraph Backend["⚙️ Backend (NestJS)"]
+        API["NestJS API<br/>Port: 3000"]
+        Controllers["Controllers<br/>• Scrape<br/>• Auth<br/>• Files"]
+        Services["Services<br/>• ScrapeService<br/>• AuthService<br/>• SecretService"]
+        Modules["Modules<br/>• Scrape<br/>• Auth<br/>• Database"]
+    end
+
+    subgraph Data["💾 Data Layer"]
+        SQLite["SQLite Database<br/>• Users<br/>• Secrets<br/>• Variables"]
+        Files["File System<br/>• Scrape Configs<br/>• Downloads<br/>• Logs"]
+    end
+
+    subgraph External["🔌 External Services"]
+        Puppeteer["Puppeteer<br/>Browser Automation"]
+        OIDC["OIDC Provider<br/>(Optional)"]
+    end
+
+    Browser --> UI
+    CLI --> API
+    UI --> UIComponents
+    UIComponents --> UIServices
+    UIServices -->|HTTP/REST| API
+    UIServices -->|WebSocket| API
+    
+    API --> Controllers
+    Controllers --> Services
+    Services --> Modules
+    
+    Services --> SQLite
+    Services --> Files
+    Services --> Puppeteer
+    Services --> OIDC
+
+    classDef frontend fill:#E0234E,stroke:#fff,stroke-width:2px,color:#fff
+    classDef backend fill:#143055,stroke:#fff,stroke-width:2px,color:#fff
+    classDef data fill:#2D3748,stroke:#fff,stroke-width:2px,color:#fff
+    classDef external fill:#4299E1,stroke:#fff,stroke-width:2px,color:#fff
+
+    class UI,UIComponents,UIServices frontend
+    class API,Controllers,Services,Modules backend
+    class SQLite,Files data
+    class Puppeteer,OIDC external
+```
+
+## Technologie-Stack
+
+```mermaid
+mindmap
+  root((Scrape Dojo))
+    Frontend
+      Angular 19
+      Transloco i18n
+      Monaco Editor
+      Iconify Icons
+      TailwindCSS
+    Backend
+      NestJS
+      Puppeteer
+      TypeORM
+      SQLite
+      Handlebars
+      JSONata
+    DevOps
+      Nx Monorepo
+      Docker
+      pnpm
+      Vitest
+      ESLint
+    Auth
+      JWT
+      OIDC/SSO
+      MFA/TOTP
+      Passport.js
+```
+
+## Projektstruktur
+
+```mermaid
+graph LR
+    subgraph Monorepo["📦 Nx Monorepo"]
+        Apps["apps/"]
+        Libs["libs/"]
+        Config["config/"]
+    end
+
+    subgraph Applications["apps/"]
+        API["🔧 api/<br/>NestJS Backend"]
+        UI["🎨 ui/<br/>Angular Frontend"]
+        Docs["📚 docs/<br/>Astro Starlight"]
+    end
+
+    subgraph Libraries["libs/"]
+        Shared["shared/<br/>Common Types & Utilities"]
+    end
+
+    subgraph Configuration["config/"]
+        Scrapes["sites/<br/>Scrape Definitions (JSON)"]
+        Schema["scrapes.schema.json"]
+    end
+
+    Monorepo --> Apps
+    Monorepo --> Libs
+    Monorepo --> Config
+    
+    Apps --> API
+    Apps --> UI
+    Apps --> Docs
+    
+    Libs --> Shared
+    
+    Config --> Scrapes
+    Config --> Schema
+
+    classDef app fill:#E0234E,stroke:#fff,stroke-width:2px,color:#fff
+    classDef lib fill:#4299E1,stroke:#fff,stroke-width:2px,color:#fff
+    classDef config fill:#48BB78,stroke:#fff,stroke-width:2px,color:#fff
+
+    class API,UI,Docs app
+    class Shared lib
+    class Scrapes,Schema config
+```
+
+## Datenfluss
+
+```mermaid
+sequenceDiagram
+    participant U as 👤 User (Browser)
+    participant UI as 🎨 Angular UI
+    participant API as ⚙️ NestJS API
+    participant S as 💾 Storage
+    participant P as 🌐 Puppeteer
+
+    U->>UI: Start Scrape
+    UI->>API: POST /api/scrape/run
+    API->>S: Load Scrape Config
+    S-->>API: Config (JSON)
+    API->>API: Parse Handlebars Templates
+    API->>P: Launch Browser
+    
+    loop For each Action
+        API->>P: Execute Action
+        P-->>API: Result Data
+        API->>API: Transform with JSONata
+        API->>UI: WebSocket Event
+        UI-->>U: Live Update
+    end
+
+    API->>S: Save Results
+    API-->>UI: Final Response
+    UI-->>U: Show Results
+    P->>P: Close Browser
+```
+
+## Deployment-Architektur
+
+```mermaid
+graph TB
+    subgraph Docker["🐳 Docker Compose"]
+        API_Container["API Container<br/>Node.js + Puppeteer"]
+        UI_Container["UI Container<br/>Nginx + Static Files"]
+        Volume_Config["Volume: ./config"]
+        Volume_Data["Volume: ./data"]
+        Volume_Downloads["Volume: ./downloads"]
+    end
+
+    subgraph Network["🌐 Network"]
+        ReverseProxy["Reverse Proxy<br/>(Optional)"]
+        LoadBalancer["Load Balancer<br/>(Optional)"]
+    end
+
+    Internet["🌍 Internet"] --> ReverseProxy
+    ReverseProxy --> LoadBalancer
+    LoadBalancer --> UI_Container
+    LoadBalancer --> API_Container
+    
+    API_Container --> Volume_Config
+    API_Container --> Volume_Data
+    API_Container --> Volume_Downloads
+    
+    UI_Container -.->|Proxy /api| API_Container
+
+    classDef container fill:#2D3748,stroke:#fff,stroke-width:2px,color:#fff
+    classDef volume fill:#48BB78,stroke:#fff,stroke-width:2px,color:#fff
+    classDef network fill:#4299E1,stroke:#fff,stroke-width:2px,color:#fff
+
+    class API_Container,UI_Container container
+    class Volume_Config,Volume_Data,Volume_Downloads volume
+    class ReverseProxy,LoadBalancer network
+```
+
+## Sicherheitsarchitektur
+
+```mermaid
+graph TB
+    Request["Incoming Request"] --> Auth{Authentifiziert?}
+    
+    Auth -->|Nein| Login["Login Page"]
+    Auth -->|Ja| TokenCheck{Token Valid?}
+    
+    TokenCheck -->|Nein| Login
+    TokenCheck -->|Ja| MFA{MFA Erforderlich?}
+    
+    MFA -->|Ja| TOTPCheck{TOTP Valid?}
+    MFA -->|Nein| RouteAccess
+    
+    TOTPCheck -->|Nein| Login
+    TOTPCheck -->|Ja| RouteAccess["Route Access"]
+    
+    RouteAccess --> Encryption["Encrypted Secrets<br/>AES-256-CBC"]
+    
+    Login --> LocalAuth["Local JWT"]
+    Login --> OIDC["OIDC/SSO"]
+    
+    LocalAuth --> TokenGen["Generate JWT"]
+    OIDC --> OIDCProvider["External Provider"]
+    OIDCProvider --> TokenGen
+    
+    TokenGen --> TokenCheck
+
+    classDef secure fill:#48BB78,stroke:#fff,stroke-width:2px,color:#fff
+    classDef auth fill:#4299E1,stroke:#fff,stroke-width:2px,color:#fff
+    classDef danger fill:#E53E3E,stroke:#fff,stroke-width:2px,color:#fff
+
+    class Encryption,RouteAccess secure
+    class Login,TokenCheck,MFA,TOTPCheck auth
+```
+
+## Key Features
+
+### 🎯 Modulares Design
+- **Nx Monorepo**: Alle Projekte in einem Repository
+- **Shared Libraries**: Wiederverwendbare Typen und Utilities
+- **Klare Trennung**: Frontend, Backend und Docs sind getrennt
+
+### 🔄 Echtzeit-Kommunikation
+- **WebSocket**: Live-Updates während der Scrape-Ausführung
+- **Event-System**: Strukturierte Events für Logs und Status
+- **Server-Sent Events**: Alternative für SSE-Support
+
+### 🔒 Sicherheit First
+- **Verschlüsselte Secrets**: AES-256-CBC Encryption
+- **JWT Authentication**: Sichere Token-basierte Auth
+- **OIDC/SSO Support**: Integration mit Enterprise Identity Providern
+- **MFA/TOTP**: Zweifaktor-Authentifizierung
+
+### 🚀 Performance
+- **Puppeteer**: Hochperformante Browser-Automatisierung
+- **TypeORM**: Effiziente Datenbankoperationen
+- **Caching**: Intelligentes Caching von Scrape-Configs
+- **Streaming**: Große Dateien werden gestreamt
+
+## Weiterführende Dokumentation
+
+- [API Module Structure](/architecture/api-modules) - Detaillierte Übersicht aller NestJS Module
+- [Scrape Workflow](/architecture/scrape-workflow) - Wie Scrapes intern ablaufen
+- [Authentication Flow](/architecture/authentication) - Vollständiger Auth-Prozess
+- [Deployment Guide](/architecture/deployment) - Produktionsumgebung aufsetzen

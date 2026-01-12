@@ -2,6 +2,7 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import tailwindcss from '@tailwindcss/vite';
+import mermaid from 'astro-mermaid';
 
 // https://astro.build/config
 export default defineConfig({
@@ -9,6 +10,10 @@ export default defineConfig({
   base: '/scrape-dojo',
 
   integrations: [
+      mermaid({
+        theme: 'default',
+        autoTheme: true,
+      }),
       starlight({
           title: 'Scrape Dojo',
           description: 'Web Scraping Framework Documentation',
@@ -48,6 +53,20 @@ export default defineConfig({
                       de: 'Benutzerhandbuch',
                   },
                   autogenerate: { directory: 'user-guide' },
+              },
+              {
+                  label: 'Architecture',
+                  translations: {
+                      de: 'Architektur',
+                  },
+                  autogenerate: { directory: 'architecture' },
+              },
+              {
+                  label: 'API Reference',
+                  translations: {
+                      de: 'API Referenz',
+                  },
+                  autogenerate: { directory: 'api' },
               },
               {
                   label: 'Examples',
