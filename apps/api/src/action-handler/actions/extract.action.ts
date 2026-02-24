@@ -1,7 +1,7 @@
 import { BaseAction } from "./bases/base.action";
 import { Action } from "../_decorators/action.decorator";
 import { getValueFromPath } from "./_helpers/get-value-from-path.helper";
-import { ElementHandle, JSHandle, Page } from "puppeteer";
+import { ElementHandle } from "puppeteer";
 
 export type ExtractActionParams = {
     selector: string;

@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C \"C:/Workspace/scrape-dojo\" status --porcelain)",
+      "Bash(git -C \"C:/Workspace/scrape-dojo\" diff --stat)"
+    ]
+  }
+}

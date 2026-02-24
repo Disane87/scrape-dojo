@@ -324,7 +324,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (variables.length > 0) {
       // Zeige Run-Dialog für Variablen-Eingabe via Auxiliary Route
       // Übergebe Variablen via Router State
-      console.log('✅ Navigating to run dialog with variables:', { variables, workflowName: definition.metadata?.description || id });
       this.router.navigate(
         [{ outlets: { modal: ['run', id] } }],
         { state: { variables, workflowName: definition.metadata?.description || id } }
@@ -516,18 +515,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // Run Details
   onRunSelected(runId: string): void {
-    const newRunId = this.selectedRunId() === runId ? null : runId;
-    this.selectedRunId.set(newRunId);
-    
-    // URL aktualisieren
-    const jobId = this.selectedScrape();
-    const currentTab = this.activeTab();
-    if (jobId) {
-      this.navigateToJob(jobId, currentTab, newRunId);
-    }
-  }
-
-  selectRun(runId: string): void {
     const newRunId = this.selectedRunId() === runId ? null : runId;
     this.selectedRunId.set(newRunId);
     

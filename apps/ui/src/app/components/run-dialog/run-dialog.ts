@@ -153,21 +153,16 @@ export class RunDialogComponent implements OnInit {
         // Verwende Wert aus DB (konvertiere je nach Typ)
         if (v.type === 'boolean') {
           values[v.name] = dbVar.value === 'true' || dbVar.value === 'True';
-          console.log(`✅ ${v.name}: Using DB value (boolean)`, values[v.name]);
         } else if (v.type === 'number') {
           values[v.name] = Number(dbVar.value);
-          console.log(`✅ ${v.name}: Using DB value (number)`, values[v.name]);
         } else {
           values[v.name] = dbVar.value;
-          console.log(`✅ ${v.name}: Using DB value (string)`, values[v.name]);
         }
       } else if (v.defaultValue !== undefined) {
         // Verwende defaultValue aus Workflow-Definition
-        console.log(`📌 ${v.name}: Using defaultValue from workflow`, v.defaultValue);
         values[v.name] = v.defaultValue;
       } else if (v.default !== undefined) {
         // Fallback: Verwende default aus Definition (alte Syntax)
-        console.log(`📌 ${v.name}: Using default`, v.default);
         values[v.name] = v.default;
       } else if (v.type === 'boolean') {
         values[v.name] = false;
@@ -177,7 +172,6 @@ export class RunDialogComponent implements OnInit {
         values[v.name] = '';
       }
     }
-    console.log('💾 Final variable values:', values);
     this.variableValues.set(values);
   }
 
@@ -189,7 +183,6 @@ export class RunDialogComponent implements OnInit {
       const secrets = await this.secretsService.getSecrets();
       this.secrets.set(secrets);
 
-      console.log('🔍 Loaded secrets:', secrets);
 
       // Build lookup for secretRef and check for missing/empty required secrets
       const lookup: Record<string, string> = {};
@@ -198,7 +191,6 @@ export class RunDialogComponent implements OnInit {
       for (const v of vars) {
         if (v.secretRef) {
           const secret = secrets.find((s) => s.name === v.secretRef);
-          console.log(`🔍 Checking variable ${v.name} with secretRef ${v.secretRef}:`, secret);
           
           if (!secret) {
             // Secret nicht gefunden - markiere als fehlend
@@ -216,7 +208,6 @@ export class RunDialogComponent implements OnInit {
             }
           } else {
             // Secret OK
-            console.log(`✅ Secret OK: ${secret.name}`);
             lookup[v.name] = `🔐 ${secret.name}`;
           }
         }
@@ -225,8 +216,6 @@ export class RunDialogComponent implements OnInit {
       this.secretLookup.set(lookup);
       this.missingSecrets.set(missingSecrets);
       
-      console.log('📊 Final missingSecrets:', missingSecrets);
-      console.log('📊 Final lookup:', lookup);
       
       // Log missing required secrets
       if (missingSecrets.length > 0) {
@@ -346,7 +335,6 @@ export class RunDialogComponent implements OnInit {
         }
       }
 
-      console.log('🚀 Submitting run with variables:', values);
 
       // Close modal via router
       this.router.navigate([{ outlets: { modal: null } }]);

@@ -1,6 +1,5 @@
-import { ElementHandle, Page } from "puppeteer";
+import { ElementHandle } from "puppeteer";
 import { BaseAction } from "./bases/base.action";
-import { PreviousData } from "../types/previous-data.type";
 import { Action } from "../_decorators/action.decorator";
 
 export type TypeActionParams = {

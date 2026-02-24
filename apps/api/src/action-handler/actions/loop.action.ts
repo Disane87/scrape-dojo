@@ -7,14 +7,10 @@ import { Action } from "../_decorators/action.decorator";
 import { ScrapeActionData } from "../../scrape/types/scrape-action-data.interface";
 import { PuppeteerService } from "../../puppeteer/puppeteer.service";
 
-import * as fs from 'fs';
-import * as path from 'path';
-
-// Typdefinition für die Parameter der LoopAction
 export type LoopActionParams = {
-    elementKey: string; // Schlüssel, um Elemente aus dem vorherigen Resultat zu beziehen
-    actions: Array<ScrapeAction<unknown>>; // Aktionen, die für jedes Element ausgeführt werden
-    reverse: boolean; // Optional: Elemente in umgekehrter Reihenfolge durchlaufen
+    elementKey: string;
+    actions: Array<ScrapeAction<unknown>>;
+    reverse: boolean;
 }
 
 @Action('loop', {
@@ -112,26 +108,8 @@ export class LoopAction extends BaseAction<LoopActionParams> {
             
             this.logger.indent();
 
-            // Führe jede Aktion für das aktuelle Element aus
             for (const actionConfig of this.params.actions) {
-                // this.currentLoopElement = element as object;
-
-                // // previousData.set(`loop-${this.name}`, element);
-                // this.data = {
-                //     currentData: {
-                //         [this.name]: element
-                //         ...this.data?.currentData, // Verwende den Spread-Operator korrekt
-                //       [this.name]: element
-                //     },
-                //   };
-
-
                 this.data.currentData[this.name] = { value: element, index: i };
-                // this.data.storedData[this.name] = {
-                //     [element as string]: {}
-                //   };
-
-                // Verwende actionsHandlerService, um die Aktion auszuführen, und übergebe actionMap
 
                 try {
                     const ret = await this.actionsHandlerService.handleAction(

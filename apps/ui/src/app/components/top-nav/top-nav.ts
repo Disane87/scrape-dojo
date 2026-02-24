@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { Component, inject, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ButtonComponent } from '../shared/button/button';
@@ -13,12 +13,8 @@ import 'iconify-icon';
     schemas: [CUSTOM_ELEMENTS_SCHEMA],
     templateUrl: './top-nav.html',
 })
-export class TopNavComponent implements OnInit {
+export class TopNavComponent {
     private router = inject(Router);
-
-    ngOnInit(): void {
-        // no-op
-    }
 
     openApiDocs(): void {
         this.router.navigate([{ outlets: { modal: ['api-docs'] } }]);
@@ -38,13 +34,5 @@ export class TopNavComponent implements OnInit {
 
     openSettings(): void {
         this.router.navigate([{ outlets: { modal: ['settings-modal'] } }]);
-    }
-
-    toggleNotifications(): void {
-        // moved into user menu
-    }
-
-    toggleTheme(): void {
-        // moved into user menu
     }
 }

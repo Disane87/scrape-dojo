@@ -60,8 +60,12 @@ export class ThemeService {
     /** Toggle between light, dark, and system */
     cycleTheme(): void {
         const current = this.theme();
-        const next: Theme = current === 'light' ? 'dark' : current === 'dark' ? 'system' : 'light';
-        this.setTheme(next);
+        const themeOrder: Record<Theme, Theme> = {
+            light: 'dark',
+            dark: 'system',
+            system: 'light'
+        };
+        this.setTheme(themeOrder[current]);
     }
 
     /** Set a specific theme */
