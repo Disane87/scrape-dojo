@@ -6,15 +6,18 @@ import {
   computed,
   inject,
   OnInit,
-  CUSTOM_ELEMENTS_SCHEMA
+  CUSTOM_ELEMENTS_SCHEMA,
+  DestroyRef
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { SecretsService } from '../../services/secrets.service';
+import { ScrapeService } from '../../services/scrape.service';
 import { StoreService } from '../../store/store.service';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
-import { SecretListItem } from '@scrape-dojo/shared';
+import { SecretListItem, RunHistoryItem } from '@scrape-dojo/shared';
 import 'iconify-icon';
 
 export interface WorkflowVariable {
@@ -44,10 +47,12 @@ export interface RunDialogResult {
 })
 export class RunDialogComponent implements OnInit {
   private secretsService = inject(SecretsService);
+  private scrapeService = inject(ScrapeService);
   private store = inject(StoreService);
   private transloco = inject(TranslocoService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private destroyRef = inject(DestroyRef);
 
   @Output() closed = new EventEmitter<RunDialogResult>();
 
@@ -104,7 +109,7 @@ export class RunDialogComponent implements OnInit {
 
   ngOnInit() {
     // Load workflowId from route params and variables from Router state
-    this.route.params.subscribe(params => {
+    this.route.params.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
       const id = params['workflowId'];
       if (id) {
         this.workflowId.set(id);
@@ -335,10 +340,40 @@ export class RunDialogComponent implements OnInit {
         }
       }
 
+      // Generate a unique run ID
+      const runId = `run-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const scrapeId = this.workflowId();
+
+      // Add run to the store immediately so the UI shows it
+      const runItem: RunHistoryItem = {
+        id: runId,
+        scrapeId,
+        status: 'running',
+        startTime: Date.now(),
+        steps: []
+      };
+      this.store.runs.add(runItem);
 
       // Close modal via router
       this.router.navigate([{ outlets: { modal: null } }]);
-      
+
+      // Execute the API call
+      this.scrapeService.runScrape(scrapeId, runId, values).subscribe({
+        next: (response) => {
+          this.store.runs.update(runId, {
+            status: response.success ? ('success' as const) : ('failed' as const),
+            endTime: Date.now()
+          });
+        },
+        error: (err) => {
+          this.store.runs.update(runId, {
+            status: 'failed' as const,
+            endTime: Date.now(),
+            error: err.message
+          });
+        }
+      });
+
       this.closed.emit({
         confirmed: true,
         variables: values,

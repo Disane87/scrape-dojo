@@ -145,15 +145,15 @@ export class ScrapeEventsService implements OnModuleInit, OnModuleDestroy {
      * Observable für alle Scrape-Events
      */
     getEvents(): Observable<ScrapeEvent> {
-        this.activeConnections++;
-        this.logger.debug(`📡 SSE client connected. Active connections: ${this.activeConnections}`);
-
         return new Observable<ScrapeEvent>((subscriber) => {
+            this.activeConnections++;
+            this.logger.debug(`📡 SSE client connected. Active connections: ${this.activeConnections}`);
+
             const subscription = this.eventSubject.asObservable().subscribe(subscriber);
 
             // Cleanup when client disconnects
             return () => {
-                this.activeConnections--;
+                this.activeConnections = Math.max(0, this.activeConnections - 1);
                 this.logger.debug(`📡 SSE client disconnected. Active connections: ${this.activeConnections}`);
                 subscription.unsubscribe();
             };

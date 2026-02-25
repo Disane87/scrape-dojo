@@ -82,7 +82,7 @@
               "name": "Delay after navigation",
               "action": "delay",
               "params": {
-                "time": 2000
+                "time": 1000
               }
             },
             {
@@ -108,8 +108,35 @@
               "name": "Wait after email",
               "action": "delay",
               "params": {
-                "time": 2500,
+                "time": 1500,
                 "condition": "{{hasNoValue previousData.passwordFieldVisible}}"
+              }
+            },
+            {
+              "name": "Wait for CVF/OTP before password",
+              "action": "waitForOtp",
+              "params": {
+                "selector": "#cvf-input-code, input[name='code'], input[name='otpCode'], #auth-mfa-otpcode",
+                "detectSelector": "#cvf-input-code, input[name='code'], input[name='otpCode'], #auth-mfa-otpcode, form[action*='cvf'], form[action*='mfa']",
+                "timeout": 120000,
+                "pressEnter": true,
+                "message": "🔐 Amazon Sicherheitscode eingeben (SMS/E-Mail/Authenticator):"
+              }
+            },
+            {
+              "name": "Wait after CVF/OTP",
+              "action": "delay",
+              "params": {
+                "time": 1500
+              }
+            },
+            {
+              "name": "passwordFieldVisibleAfterOtp",
+              "action": "extract",
+              "params": {
+                "selector": "#ap_password, input[name='password'], input[type='password']",
+                "property": "tagName",
+                "optional": true
               }
             },
             {
@@ -117,8 +144,9 @@
               "action": "waitForSelector",
               "params": {
                 "selector": "#ap_password, input[name='password'], input[type='password']",
-                "timeout": 15000,
-                "condition": "{{hasNoValue previousData.passwordFieldVisible}}"
+                "timeout": 10000,
+                "optional": true,
+                "condition": "{{hasValue previousData.passwordFieldVisibleAfterOtp}}"
               }
             },
             {
@@ -127,18 +155,19 @@
               "params": {
                 "selector": "#ap_password, input[name='password'], input[type='password']",
                 "text": "{{variables.password}}",
-                "pressEnter": true
+                "pressEnter": true,
+                "condition": "{{hasValue previousData.passwordFieldVisibleAfterOtp}}"
               }
             },
             {
-              "name": "Wait for OTP",
+              "name": "Wait for MFA after password",
               "action": "waitForOtp",
               "params": {
-                "selector": "input[name='otpCode'], #auth-mfa-otpcode, input[name='code']",
-                "detectSelector": "input[name='otpCode'], #auth-mfa-otpcode, form[action*='mfa']",
+                "selector": "#cvf-input-code, input[name='code'], input[name='otpCode'], #auth-mfa-otpcode",
+                "detectSelector": "#cvf-input-code, input[name='code'], input[name='otpCode'], #auth-mfa-otpcode, form[action*='cvf'], form[action*='mfa']",
                 "timeout": 120000,
                 "pressEnter": true,
-                "message": "🔐 Amazon OTP-Code eingeben (aus E-Mail oder Authenticator):"
+                "message": "🔐 Amazon MFA-Code eingeben (aus E-Mail oder Authenticator):"
               }
             }
           ]
@@ -156,7 +185,7 @@
             {
               "action": "delay",
               "params": {
-                "time": 2000
+                "time": 800
               }
             },
             {
@@ -274,14 +303,14 @@
                   {
                     "action": "delay",
                     "params": {
-                      "time": 2000
+                      "time": 800
                     }
                   },
                   {
                     "name": "Get total pages",
                     "action": "extract",
                     "params": {
-                      "selector": ".a-pagination li.a-normal:last-of-type a, ul.a-pagination li:nth-last-child(2) a"
+                      "selector": "ul.a-pagination li:nth-last-child(2) a"
                     }
                   },
                   {
@@ -342,9 +371,22 @@
                       "elementKey": "pageIndices",
                       "actions": [
                         {
+                          "name": "Navigate to page",
+                          "action": "navigate",
+                          "params": {
+                            "url": "https://www.amazon.de/your-orders/orders?timeFilter={{currentData.yearLoop.value}}&startIndex={{multiply currentData.pageLoop.value 10}}"
+                          }
+                        },
+                        {
+                          "action": "delay",
+                          "params": {
+                            "time": 800
+                          }
+                        },
+                        {
                           "action": "logger",
                           "params": {
-                            "message": "📖 Jahr {{currentData.yearLoop.value}} - Seite {{add currentData.pageLoop.index 1}}/{{previousData.totalPages}}",
+                            "message": "📖 Jahr {{currentData.yearLoop.value}} - Seite {{add currentData.pageLoop.value 1}}/{{previousData.totalPages}}",
                             "level": "log"
                           }
                         },
@@ -412,7 +454,7 @@
                                 "name": "hasValidOrderId",
                                 "params": {
                                   "previousDataKey": "orderIdClean",
-                                  "expression": "($id := $string($); $id != '' and $match($id, /^\\d{3}-\\d{7}-\\d{7}$/) != null)"
+                                  "expression": "($id := $string($); $id != '' and $match($id, /^[A-Za-z0-9]{3}-\\d{7}-\\d{7}$/) != null)"
                                 }
                               },
                               // Prüfe ob diese Bestellung die letzte bekannte ist (aus storedData)
@@ -477,7 +519,7 @@
                               {
                                 "action": "delay",
                                 "params": {
-                                  "time": 500
+                                  "time": 300
                                 }
                               },
                               {
@@ -492,7 +534,7 @@
                               {
                                 "action": "delay",
                                 "params": {
-                                  "time": 2000
+                                  "time": 800
                                 }
                               },
                               {
@@ -516,7 +558,7 @@
                               {
                                 "action": "delay",
                                 "params": {
-                                  "time": 500
+                                  "time": 300
                                 }
                               },
                               {
@@ -644,6 +686,19 @@
                                   ]
                                 }
                               },
+                              {
+                                "name": "Close popover",
+                                "action": "keyboardPress",
+                                "params": {
+                                  "key": "Escape"
+                                }
+                              },
+                              {
+                                "action": "delay",
+                                "params": {
+                                  "time": 300
+                                }
+                              },
                               // Speichere die erste erfolgreich verarbeitete Bestellung als Referenz
                               // Die erste heruntergeladene Bestellung ist die neueste
                               // Prüfe ob wir schon eine Bestellung in diesem Lauf gespeichert haben
@@ -688,52 +743,8 @@
                                   "message": "💾 Neue Referenz-Bestellung gespeichert: {{previousData.orderIdClean}}",
                                   "level": "log"
                                 }
-                              },
-                              {
-                                "name": "Close popover",
-                                "action": "keyboardPress",
-                                "params": {
-                                  "key": "Escape"
-                                }
-                              },
-                              {
-                                "action": "delay",
-                                "params": {
-                                  "time": 500
-                                }
                               }
                             ]
-                          }
-                        },
-                        {
-                          "action": "transform",
-                          "name": "isLastPage",
-                          "params": {
-                            "previousDataKeys": [
-                              "pageIndices"
-                            ],
-                            "expression": "{{add currentData.pageLoop.index 1}} >= $count(pageIndices)"
-                          }
-                        },
-                        {
-                          "action": "skipIf",
-                          "params": {
-                            "condition": "isLastPage",
-                            "skipIfTrue": true,
-                            "message": "✅ Letzte erlaubte Seite erreicht (maxPages={{var_maxPages}})"
-                          }
-                        },
-                        {
-                          "name": "Navigate to next page",
-                          "action": "navigate",
-                          "params": {
-                            "url": "https://www.amazon.de/your-orders/orders?timeFilter={{currentData.yearLoop.value}}&startIndex={{multiply (add currentData.pageLoop.index 1) 10}}"
-                          }
-                        },
-                        {
-                          "action": "delay",
-                          "params": {
-                            "time": 1500
                           }
                         }
                       ]

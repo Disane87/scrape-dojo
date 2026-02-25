@@ -1,4 +1,5 @@
-import { Component, input, signal, effect, computed, CUSTOM_ELEMENTS_SCHEMA, AfterViewInit, OnDestroy, inject } from '@angular/core';
+import { Component, input, signal, effect, computed, CUSTOM_ELEMENTS_SCHEMA, AfterViewInit, OnDestroy, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { RunHistoryItem } from '@scrape-dojo/shared';
 import { ScrapeService } from '../../services/scrape.service';
@@ -90,7 +91,9 @@ export class RunDebugViewComponent implements AfterViewInit, OnDestroy {
     
     private scrapeService = inject(ScrapeService);
     private store = inject(StoreService);
+    private destroyRef = inject(DestroyRef);
     private editor: import('monaco-editor').editor.IStandaloneCodeEditor | null = null;
+    private destroyed = false;
     monacoLoaded = signal(false);
     private monacoFailed = signal(false);
     rawDebugText = signal('{}');
@@ -128,6 +131,7 @@ export class RunDebugViewComponent implements AfterViewInit, OnDestroy {
     async ngAfterViewInit() {
         try {
             await this.loadMonaco();
+            if (this.destroyed) return;
             this.initEditor();
             this.monacoLoaded.set(!!this.editor);
         } catch (error) {
@@ -142,6 +146,7 @@ export class RunDebugViewComponent implements AfterViewInit, OnDestroy {
     }
     
     ngOnDestroy() {
+        this.destroyed = true;
         this.editor?.dispose();
     }
     
@@ -217,7 +222,7 @@ export class RunDebugViewComponent implements AfterViewInit, OnDestroy {
         // Lade Debug-Daten vom Server
         this.isLoading.set(true);
         
-        this.scrapeService.getRunDebugData(run.id).subscribe({
+        this.scrapeService.getRunDebugData(run.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
             next: (debugData) => {
                 // Cache debug data im Store
                 this.store.runs.cacheDebugData(run.id, debugData);
@@ -247,7 +252,7 @@ export class RunDebugViewComponent implements AfterViewInit, OnDestroy {
         console.log('📥 Loading artifacts for run', runId);
         
         // Lade Artifacts vom Server und speichere im Store
-        this.scrapeService.getRunArtifacts(runId).subscribe({
+        this.scrapeService.getRunArtifacts(runId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
             next: (artifacts) => {
                 if (artifacts && artifacts.length > 0) {
                     // Cache artifacts im Store - das computed Signal reagiert automatisch

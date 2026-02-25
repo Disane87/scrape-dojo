@@ -188,6 +188,8 @@ export class JsonEditorComponent implements OnInit, OnDestroy {
     private editor: import('monaco-editor').editor.IStandaloneCodeEditor | null = null;
     private editorContainer: HTMLElement | null = null;
     private resizeObserver: ResizeObserver | null = null;
+    private initTimeout: ReturnType<typeof setTimeout> | null = null;
+    private copiedTimeout: ReturnType<typeof setTimeout> | null = null;
     private themesRegistered = false;
     private editorReady = signal(false);
 
@@ -236,6 +238,14 @@ export class JsonEditorComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy() {
+        if (this.initTimeout) {
+            clearTimeout(this.initTimeout);
+            this.initTimeout = null;
+        }
+        if (this.copiedTimeout) {
+            clearTimeout(this.copiedTimeout);
+            this.copiedTimeout = null;
+        }
         this.resizeObserver?.disconnect();
         this.editor?.dispose();
     }
@@ -251,7 +261,8 @@ export class JsonEditorComponent implements OnInit, OnDestroy {
             }
 
             // Wait a tick for container to be ready
-            setTimeout(() => {
+            this.initTimeout = setTimeout(() => {
+                this.initTimeout = null;
                 this.initEditor();
                 this.isLoading.set(false);
             }, 100);
@@ -398,7 +409,11 @@ export class JsonEditorComponent implements OnInit, OnDestroy {
         const value = this.editor.getValue();
         navigator.clipboard.writeText(value).then(() => {
             this.copied.set(true);
-            setTimeout(() => this.copied.set(false), 2000);
+            if (this.copiedTimeout) clearTimeout(this.copiedTimeout);
+            this.copiedTimeout = setTimeout(() => {
+                this.copiedTimeout = null;
+                this.copied.set(false);
+            }, 2000);
         });
     }
 

@@ -1,4 +1,5 @@
-import { Component, EventEmitter, Output, signal, computed, effect, inject, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { Component, EventEmitter, Output, signal, computed, effect, inject, OnInit, DestroyRef, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -32,6 +33,7 @@ export class ScheduleModalComponent implements OnInit {
     private transloco = inject(TranslocoService);
     private router = inject(Router);
     private route = inject(ActivatedRoute);
+    private destroyRef = inject(DestroyRef);
 
     @Output() saved = new EventEmitter<ScrapeSchedule>();
 
@@ -41,7 +43,7 @@ export class ScheduleModalComponent implements OnInit {
 
     ngOnInit(): void {
         // Load scrapeId from route params
-        this.route.params.subscribe(params => {
+        this.route.params.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
             const id = params['scrapeId'];
             if (id) {
                 this.scrapeId.set(id);

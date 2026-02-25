@@ -168,7 +168,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   private loadStoredLogs(): void {
-    this.scrapeService.getLogs().subscribe({
+    this.scrapeService.getLogs().pipe(takeUntil(this.destroy$)).subscribe({
       next: (logs) => {
         this.serverLogs.set(logs);
       },
@@ -247,7 +247,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   private loadSchedule(id: string): void {
-    this.scrapeService.getSchedule(id).subscribe({
+    this.scrapeService.getSchedule(id).pipe(takeUntil(this.destroy$)).subscribe({
       next: (schedule) => this.currentSchedule.set(schedule),
       error: () => this.currentSchedule.set(null)
     });
@@ -276,7 +276,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
 
     // Run auf dem Server löschen
-    this.scrapeService.deleteRun(runId).subscribe({
+    this.scrapeService.deleteRun(runId).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => {
         // Run aus dem Store entfernen
         this.store.runs.remove(runId);
@@ -290,7 +290,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (!currentScrapeId) return;
 
     // Alle Runs des Scrapes auf dem Server löschen
-    this.scrapeService.deleteRunsByScrapeId(currentScrapeId).subscribe({
+    this.scrapeService.deleteRunsByScrapeId(currentScrapeId).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => {
         // Selection aufheben
         this.selectedRunId.set(null);
@@ -303,7 +303,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   loadScrapeDefinition(id: string): void {
-    this.scrapeService.getScrapeDefinition(id).subscribe({
+    this.scrapeService.getScrapeDefinition(id).pipe(takeUntil(this.destroy$)).subscribe({
       next: (definition) => this.selectedScrapeDefinition.set(definition),
       error: (err) => console.error('Failed to load definition:', err)
     });
@@ -375,7 +375,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.selectedRunId.set(runItem.id);
 
     // Übergebe die runId und Variablen an den Server
-    this.scrapeService.runScrape(id, runId, variables).subscribe({
+    this.scrapeService.runScrape(id, runId, variables).pipe(takeUntil(this.destroy$)).subscribe({
       next: (response) => {
         this.isRunning.set(false);
         this.store.runs.update(runId, {
@@ -397,7 +397,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   stopScrape(): void {
     if (!this.isRunning()) return;
 
-    this.scrapeService.stopScrape().subscribe({
+    this.scrapeService.stopScrape().pipe(takeUntil(this.destroy$)).subscribe({
       next: (response) => {
         this.isRunning.set(false);
         const runId = this.selectedRunId();
@@ -485,7 +485,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // ========== OTP METHODS ==========
 
   onOtpSubmit(data: { requestId: string; code: string }): void {
-    this.scrapeService.submitOtp(data.requestId, data.code).subscribe({
+    this.scrapeService.submitOtp(data.requestId, data.code).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => {
         this.otpRequest.set(null);
         this.otpCode.set('');
@@ -499,7 +499,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const code = this.otpCode();
     if (!request || !code || code.length < 4) return;
 
-    this.scrapeService.submitOtp(request.requestId, code).subscribe({
+    this.scrapeService.submitOtp(request.requestId, code).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => {
         this.otpRequest.set(null);
         this.otpCode.set('');
@@ -545,7 +545,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   clearServerLogs(): void {
     this.serverLogs.set([]);
     // Auch auf dem Server löschen
-    this.scrapeService.clearLogs().subscribe({
+    this.scrapeService.clearLogs().pipe(takeUntil(this.destroy$)).subscribe({
       error: (err) => console.warn('Failed to clear server logs:', err)
     });
   }

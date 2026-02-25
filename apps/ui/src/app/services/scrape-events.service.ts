@@ -13,11 +13,17 @@ export class ScrapeEventsService {
   private authService = inject(AuthService);
   private eventSource: EventSource | null = null;
   private eventsSubject = new Subject<ScrapeEvent>();
+  private connecting = false;
+  private retryCount = 0;
+  private readonly maxRetries = 10;
+  private readonly baseRetryDelay = 3000;
+  private readonly maxRetryDelay = 30000;
+  private retryTimeout: ReturnType<typeof setTimeout> | null = null;
 
   readonly events$ = this.eventsSubject.asObservable();
 
   connect(): void {
-    if (this.eventSource) {
+    if (this.eventSource || this.connecting) {
       return;
     }
 
@@ -27,12 +33,19 @@ export class ScrapeEventsService {
       return;
     }
 
+    this.connecting = true;
+
     // Request notification permission on connect
     this.notificationService.requestPermission();
 
     this.ngZone.runOutsideAngular(() => {
       const url = `/api/events?access_token=${encodeURIComponent(token)}`;
       this.eventSource = new EventSource(url);
+      this.connecting = false;
+
+      this.eventSource.onopen = () => {
+        this.retryCount = 0;
+      };
 
       this.eventSource.onmessage = (event) => {
         this.ngZone.run(() => {
@@ -48,15 +61,27 @@ export class ScrapeEventsService {
         });
       };
 
-      this.eventSource.onerror = (error) => {
-        console.error('SSE connection error:', error);
-        this.disconnect();
-        // Reconnect after 3 seconds (only if still authenticated)
-        setTimeout(() => {
+      this.eventSource.onerror = () => {
+        this.closeEventSource();
+
+        if (this.retryCount >= this.maxRetries) {
+          console.error(`SSE: max retries (${this.maxRetries}) reached, giving up`);
+          return;
+        }
+
+        // Exponential backoff: 3s, 6s, 12s, 24s, 30s (capped)
+        const delay = Math.min(
+          this.baseRetryDelay * Math.pow(2, this.retryCount),
+          this.maxRetryDelay
+        );
+        this.retryCount++;
+
+        this.retryTimeout = setTimeout(() => {
+          this.retryTimeout = null;
           if (this.authService.getAccessToken()) {
             this.connect();
           }
-        }, 3000);
+        }, delay);
       };
     });
   }
@@ -81,7 +106,20 @@ export class ScrapeEventsService {
   }
 
   disconnect(): void {
+    if (this.retryTimeout) {
+      clearTimeout(this.retryTimeout);
+      this.retryTimeout = null;
+    }
+    this.retryCount = 0;
+    this.closeEventSource();
+  }
+
+  private closeEventSource(): void {
+    this.connecting = false;
     if (this.eventSource) {
+      this.eventSource.onmessage = null;
+      this.eventSource.onerror = null;
+      this.eventSource.onopen = null;
       this.eventSource.close();
       this.eventSource = null;
     }

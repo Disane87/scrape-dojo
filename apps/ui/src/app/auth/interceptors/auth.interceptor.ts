@@ -6,13 +6,13 @@ import {
     HttpEvent,
     HttpErrorResponse,
 } from '@angular/common/http';
-import { Observable, throwError, BehaviorSubject } from 'rxjs';
+import { Observable, throwError, ReplaySubject } from 'rxjs';
 import { catchError, filter, take, switchMap, finalize } from 'rxjs/operators';
 import { AuthService } from '../services/auth.service';
 
 // Track if we're currently refreshing
 let isRefreshing = false;
-const refreshTokenSubject = new BehaviorSubject<string | null>(null);
+let refreshTokenSubject = new ReplaySubject<string>(1);
 
 /**
  * HTTP Interceptor that adds JWT token to requests
@@ -104,16 +104,18 @@ function handle401Error(
 
     if (!isRefreshing) {
         isRefreshing = true;
-        refreshTokenSubject.next(null);
+        refreshTokenSubject = new ReplaySubject<string>(1);
 
         return authService.refreshToken().pipe(
             switchMap((tokens) => {
                 isRefreshing = false;
                 refreshTokenSubject.next(tokens.accessToken);
+                refreshTokenSubject.complete();
                 return next(addTokenToRequest(req, tokens.accessToken));
             }),
             catchError((err) => {
                 isRefreshing = false;
+                refreshTokenSubject.error(err);
                 const status = err instanceof HttpErrorResponse ? err.status : (err as any)?.status;
                 if (status === 401 || status === 403) {
                     authService.logout();
@@ -128,7 +130,6 @@ function handle401Error(
 
     // Wait for token refresh to complete
     return refreshTokenSubject.pipe(
-        filter((token): token is string => token !== null),
         take(1),
         switchMap((token) => next(addTokenToRequest(req, token)))
     );
