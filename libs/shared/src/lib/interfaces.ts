@@ -227,10 +227,18 @@ export interface LoopIteration {
 }
 
 // OTP Request
+export interface OtpAlternative {
+  id: string;        // z.B. "whatsapp", "passkey"
+  label: string;     // z.B. "Code an WhatsApp senden"
+  selector: string;  // CSS-Selektor des Buttons auf der Seite
+  icon?: string;     // Iconify icon name, z.B. "logos:whatsapp-icon"
+}
+
 export interface OtpRequest {
   requestId: string;
   message: string;
   selector: string;
+  alternatives?: OtpAlternative[];
 }
 
 // Notification Request

@@ -9,6 +9,20 @@
         <input #otpInput type="text" [ngModel]="otpCode()" (ngModelChange)="otpCode.set($event)"
             (keyup.enter)="submitOtp()" [placeholder]="'otp.enter_code' | transloco" maxlength="10"
             class="w-full px-4 py-3 text-center text-2xl tracking-widest font-mono bg-dojo-bg border border-dojo-border rounded-md text-dojo-text placeholder-dojo-text-muted focus:outline-none focus:border-dojo-accent focus:ring-1 focus:ring-dojo-accent">
+
+        @if (alternatives().length > 0) {
+        <div class="border-t border-dojo-border pt-3 mt-3">
+            <p class="text-xs text-dojo-text-muted mb-2">{{ 'otp.or_alternative' | transloco }}</p>
+            @for (alt of alternatives(); track alt.id) {
+            <app-button variant="outline" class="w-full mb-2" (clicked)="onAlternativeClick(alt)">
+                @if (alt.icon) {
+                <iconify-icon [icon]="alt.icon" width="16" height="16" class="mr-2"></iconify-icon>
+                }
+                {{ alt.label }}
+            </app-button>
+            }
+        </div>
+        }
     </div>
     }
 

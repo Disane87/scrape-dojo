@@ -151,19 +151,16 @@ export class ScrapeExecutionService {
             const action = step.actions[actionIndex];
             const actionName = action.name || `${action.action}-${actionIndex}`;
 
-            this.logger.scrape(`Running action: ${action.action} with params: ${JSON.stringify(action.params)}`);
-
             const dbAction = await this.databaseService.createAction(stepId, actionName, action.action, actionIndex);
-
-            // ✨ OBSERVER PATTERN: Publish ActionStartedEvent
-            await this.eventBus.publish(
-                new ActionStartedEvent(runId, scrape.id, runId, actionName, action.action, actionIndex)
-            );
 
             this.scrapeEventsService.updateActionStatus(
                 scrape.id, step.name, stepIndex,
                 actionName, actionIndex, action.action,
                 'running', undefined, runId
+            );
+
+            this.eventBus.publish(
+                new ActionStartedEvent(runId, scrape.id, runId, actionName, action.action, actionIndex)
             );
 
             try {
@@ -189,26 +186,24 @@ export class ScrapeExecutionService {
                     };
                 }
 
-                await this.databaseService.updateActionStatus(
-                    dbAction.id, 
-                    'completed', 
-                    undefined, 
+                // Fire-and-forget for non-critical DB write and events
+                this.databaseService.updateActionStatus(
+                    dbAction.id,
+                    'completed',
+                    undefined,
                     actionResult,
                     loopData
                 );
-                
-                // ✨ OBSERVER PATTERN: Publish ActionCompletedEvent
-                await this.eventBus.publish(
-                    new ActionCompletedEvent(runId, scrape.id, runId, actionName, action.action, actionIndex, actionResult)
-                );
-                
+
                 this.scrapeEventsService.updateActionStatus(
                     scrape.id, step.name, stepIndex,
                     actionName, actionIndex, action.action,
                     'completed', undefined, runId, actionResult
                 );
 
-                this.logger.scrape(`Action "${action.name}" completed`);
+                this.eventBus.publish(
+                    new ActionCompletedEvent(runId, scrape.id, runId, actionName, action.action, actionIndex, actionResult)
+                );
             } catch (error) {
                 await this.handleActionError(error, scrape, step, stepIndex, actionName, actionIndex, action.action, dbAction.id, runId);
             }

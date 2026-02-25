@@ -3,6 +3,7 @@ import { Subject, Observable } from 'rxjs';
 import { watch, FSWatcher } from 'node:fs';
 import { join } from 'path';
 import { existsSync, statSync } from 'fs';
+import type { Page } from 'puppeteer';
 
 export type LogLevel = 'log' | 'error' | 'warn' | 'debug' | 'verbose';
 
@@ -44,11 +45,19 @@ export interface ScrapeEvent {
     };
 }
 
+export interface OtpAlternative {
+    id: string;
+    label: string;
+    selector: string;
+    icon?: string;
+}
+
 export interface OtpRequest {
     scrapeId: string;
     requestId: string;
     message: string;
     selector: string;
+    alternatives?: OtpAlternative[];
 }
 
 export interface NotificationData {
@@ -67,7 +76,7 @@ export class ScrapeEventsService implements OnModuleInit, OnModuleDestroy {
 
     private eventSubject = new Subject<ScrapeEvent>();
 
-    private pendingOtpRequests = new Map<string, (code: string) => void>();
+    private pendingOtpRequests = new Map<string, { resolve: (code: string) => void; page: Page; alternatives?: OtpAlternative[] }>();
     private fileWatchers: FSWatcher[] = [];
     private reloadDebounce: NodeJS.Timeout | null = null;
 
@@ -400,14 +409,14 @@ export class ScrapeEventsService implements OnModuleInit, OnModuleDestroy {
     /**
      * OTP anfordern - gibt ein Promise zurück das mit dem Code resolved
      */
-    async requestOtp(scrapeId: string, message: string, selector: string, runId?: string): Promise<string> {
+    async requestOtp(scrapeId: string, message: string, selector: string, runId?: string, page?: Page, alternatives?: OtpAlternative[]): Promise<string> {
         const requestId = `otp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
         this.logger.log(`🔐 OTP angefordert: ${requestId}`);
 
         return new Promise((resolve) => {
-            // Speichere den Resolver
-            this.pendingOtpRequests.set(requestId, resolve);
+            // Speichere den Resolver + Page-Referenz
+            this.pendingOtpRequests.set(requestId, { resolve, page, alternatives });
 
             // Emit das Event
             this.emit({
@@ -417,7 +426,8 @@ export class ScrapeEventsService implements OnModuleInit, OnModuleDestroy {
                 message: JSON.stringify({
                     requestId,
                     message,
-                    selector
+                    selector,
+                    alternatives
                 } as OtpRequest)
             });
         });
@@ -429,9 +439,9 @@ export class ScrapeEventsService implements OnModuleInit, OnModuleDestroy {
     submitOtp(requestId: string, code: string) {
         this.logger.log(`🔑 OTP empfangen für Request: ${requestId}`);
 
-        const resolver = this.pendingOtpRequests.get(requestId);
-        if (resolver) {
-            resolver(code);
+        const pending = this.pendingOtpRequests.get(requestId);
+        if (pending) {
+            pending.resolve(code);
             this.pendingOtpRequests.delete(requestId);
 
             this.emit({
@@ -441,6 +451,27 @@ export class ScrapeEventsService implements OnModuleInit, OnModuleDestroy {
             });
         } else {
             this.logger.warn(`⚠️ Kein ausstehender OTP-Request für ID: ${requestId}`);
+        }
+    }
+
+    /**
+     * OTP-Alternative ausführen (z.B. WhatsApp-Button klicken)
+     */
+    async executeOtpAction(requestId: string, selector: string): Promise<boolean> {
+        const pending = this.pendingOtpRequests.get(requestId);
+        if (!pending?.page) {
+            this.logger.warn(`⚠️ Kein ausstehender OTP-Request oder keine Page für ID: ${requestId}`);
+            return false;
+        }
+
+        try {
+            this.logger.log(`🔘 Klicke OTP-Alternative: ${selector}`);
+            await pending.page.click(selector);
+            this.logger.log(`✅ OTP-Alternative geklickt: ${selector}`);
+            return true;
+        } catch (error) {
+            this.logger.error(`❌ Fehler beim Klicken der OTP-Alternative: ${error.message}`);
+            return false;
         }
     }
 

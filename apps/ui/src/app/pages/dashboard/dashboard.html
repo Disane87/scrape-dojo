@@ -88,7 +88,7 @@
 
   <!-- OTP Modal (via auxiliary route when needed) -->
   <app-otp-modal [otpRequest]="otpRequest()" [(otpCode)]="otpCode" (submit)="onOtpSubmit($event)"
-    (close)="closeOtpModal()" />
+    (alternativeClicked)="onOtpAlternativeClicked($event)" (close)="closeOtpModal()" />
 
   <!-- Notification Modal (Toast-like, always present) -->
   <app-notification-modal />

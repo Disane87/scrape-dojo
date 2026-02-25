@@ -431,7 +431,8 @@
   },
   "otp": {
     "title": "OTP code required",
-    "enter_code": "Enter code..."
+    "enter_code": "Enter code...",
+    "or_alternative": "Or:"
   },
   "api_docs_modal": {
     "title": "API Documentation"

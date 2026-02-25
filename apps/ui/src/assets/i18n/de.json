@@ -438,7 +438,8 @@
   },
   "otp": {
     "title": "OTP-Code erforderlich",
-    "enter_code": "Code eingeben..."
+    "enter_code": "Code eingeben...",
+    "or_alternative": "Oder:"
   },
   "api_docs_modal": {
     "title": "API-Dokumentation"

@@ -49,7 +49,6 @@ export class ActionHandlerService implements OnModuleInit {
         this.logger.setEventContext(data?.scrapeEventsService, data?.scrapeId, data?.runId);
 
         this.logger.log(`🚀 Handling action {"action":"${scrapeAction.action}","name":"${scrapeAction.name || ''}"}`);
-        this.logger.debug(`📋 Params: ${JSON.stringify(scrapeAction.params)}`);
 
         // Action finden
         const actionInstance = this.getAction(scrapeAction.action);
@@ -87,12 +86,7 @@ export class ActionHandlerService implements OnModuleInit {
         };
 
         const instance = this.actionFactory.create(actionInstance, context, this);
-        
-        // Action ausführen
-        const result = await instance.run();
-        this.logger.scrape(`✅ Action "${scrapeAction.action}" completed. Result: ${JSON.stringify(result)}`);
-
-        return result;
+        return await instance.run();
     }
 
     getAction(action: string) {

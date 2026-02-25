@@ -34,6 +34,10 @@ export class ScrapeService {
     return this.http.post<{ success: boolean }>(`${this.apiUrl}/otp/${requestId}`, { code });
   }
 
+  executeOtpAction(requestId: string, selector: string): Observable<{ success: boolean }> {
+    return this.http.post<{ success: boolean }>(`${this.apiUrl}/otp-action/${requestId}`, { selector });
+  }
+
   stopScrape(): Observable<{ stopped: boolean; message: string }> {
     return this.http.post<{ stopped: boolean; message: string }>(`${this.apiUrl}/scrape/stop`, {});
   }

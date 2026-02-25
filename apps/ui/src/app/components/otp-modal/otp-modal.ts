@@ -1,7 +1,7 @@
 import { Component, input, output, model, ViewChild, ElementRef, AfterViewInit, computed, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { OtpRequest } from '@scrape-dojo/shared';
+import { OtpRequest, OtpAlternative } from '@scrape-dojo/shared';
 import { ModalComponent, ButtonComponent } from '../shared';
 import { TranslocoModule } from '@jsverse/transloco';
 import 'iconify-icon';
@@ -18,12 +18,14 @@ export class OtpModalComponent implements AfterViewInit {
     otpCode = model<string>('');
 
     submit = output<{ requestId: string; code: string }>();
+    alternativeClicked = output<{ requestId: string; selector: string }>();
     close = output<void>();
 
     @ViewChild('otpInput') otpInput?: ElementRef<HTMLInputElement>;
 
     isOpen = computed(() => this.otpRequest() !== null);
     canSubmit = computed(() => this.otpCode().length >= 4);
+    alternatives = computed(() => this.otpRequest()?.alternatives ?? []);
 
     ngAfterViewInit(): void {
         this.focusInput();
@@ -40,6 +42,12 @@ export class OtpModalComponent implements AfterViewInit {
 
         this.submit.emit({ requestId: request.requestId, code });
         this.otpCode.set('');
+    }
+
+    onAlternativeClick(alt: OtpAlternative): void {
+        const request = this.otpRequest();
+        if (!request) return;
+        this.alternativeClicked.emit({ requestId: request.requestId, selector: alt.selector });
     }
 
     closeModal(): void {

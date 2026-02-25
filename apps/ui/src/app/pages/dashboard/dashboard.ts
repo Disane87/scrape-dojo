@@ -508,6 +508,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     });
   }
 
+  onOtpAlternativeClicked(data: { requestId: string; selector: string }): void {
+    this.scrapeService.executeOtpAction(data.requestId, data.selector).pipe(takeUntil(this.destroy$)).subscribe({
+      error: (err) => console.error('Failed to execute OTP action:', err)
+    });
+  }
+
   closeOtpModal(): void {
     this.otpRequest.set(null);
     this.otpCode.set('');

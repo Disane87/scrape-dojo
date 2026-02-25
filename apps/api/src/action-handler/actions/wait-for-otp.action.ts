@@ -1,5 +1,17 @@
 import { BaseAction } from "./bases/base.action";
 import { Action } from "../_decorators/action.decorator";
+import { OtpAlternative } from "../../scrape/scrape-events.service";
+
+export type WaitForOtpAlternativeParam = {
+    /** Eindeutige ID, z.B. "whatsapp", "passkey" */
+    id: string;
+    /** Label das dem User angezeigt wird */
+    label: string;
+    /** CSS-Selektor des Buttons auf der Seite */
+    selector: string;
+    /** Iconify Icon-Name, z.B. "logos:whatsapp-icon" */
+    icon?: string;
+}
 
 export type WaitForOtpActionParams = {
     /** CSS-Selektor für das OTP-Eingabefeld */
@@ -12,6 +24,8 @@ export type WaitForOtpActionParams = {
     pressEnter?: boolean;
     /** Nachricht die dem Benutzer angezeigt wird */
     message?: string;
+    /** Alternative Verifikationsmethoden (z.B. WhatsApp, Passkey) */
+    alternatives?: WaitForOtpAlternativeParam[];
 }
 
 @Action('waitForOtp', {
@@ -32,19 +46,43 @@ export class WaitForOtpAction extends BaseAction<WaitForOtpActionParams> {
             message = 'Bitte gib den OTP-Code ein:'
         } = this.params;
 
-        // Prüfe ob OTP-Seite angezeigt wird (falls detectSelector angegeben)
+        // Prüfe ob OTP-Seite angezeigt wird (falls detectSelector angegeben).
+        // Retry-Logik: Nach form-submits (z.B. Email + Enter) navigiert die Seite.
+        // Während der Navigation wird der Execution-Context zerstört, was waitForSelector
+        // mit einem Fehler abbricht. Wir fangen das ab und versuchen es erneut.
         if (detectSelector) {
-            try {
-                const otpPageDetected = await this.page.$(detectSelector);
-                if (!otpPageDetected) {
-                    this.logger.log('✅ Keine OTP-Seite erkannt, überspringe...');
-                    return null;
+            let detected = false;
+            const maxAttempts = 3;
+
+            for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+                try {
+                    const otpPageDetected = await this.page.waitForSelector(detectSelector, { timeout: 5000 });
+                    if (otpPageDetected) {
+                        detected = true;
+                    }
+                    break;
+                } catch (error) {
+                    const msg = error.message || '';
+                    const isNavigationError = msg.includes('Execution context') ||
+                        msg.includes('navigat') ||
+                        msg.includes('detached') ||
+                        msg.includes('Target closed');
+
+                    if (isNavigationError && attempt < maxAttempts) {
+                        this.logger.debug(`OTP detect attempt ${attempt}/${maxAttempts} — page navigating, retrying in 1s...`);
+                        await new Promise(r => setTimeout(r, 1000));
+                        continue;
+                    }
+                    // Genuine timeout or last attempt — element not found
+                    break;
                 }
-                this.logger.log('🔒 OTP-Seite erkannt!');
-            } catch (error) {
-                this.logger.debug(`OTP-Seite nicht erkannt: ${error.message}`);
+            }
+
+            if (!detected) {
+                this.logger.log('✅ Keine OTP-Seite erkannt, überspringe...');
                 return null;
             }
+            this.logger.log('🔒 OTP-Seite erkannt!');
         }
 
         // Warte auf das OTP-Eingabefeld
@@ -56,6 +94,26 @@ export class WaitForOtpAction extends BaseAction<WaitForOtpActionParams> {
             return null;
         }
 
+        // Alternative Verifikationsmethoden aus Config filtern (nur sichtbare)
+        const configAlternatives = this.params.alternatives || [];
+        const alternatives: OtpAlternative[] = [];
+        for (const alt of configAlternatives) {
+            try {
+                const el = await this.page.$(alt.selector);
+                if (el) {
+                    alternatives.push({ id: alt.id, label: alt.label, selector: alt.selector, icon: alt.icon });
+                    this.logger.debug(`🔘 Alternative sichtbar: ${alt.label} (${alt.selector})`);
+                } else {
+                    this.logger.debug(`⏭️ Alternative nicht gefunden: ${alt.label} (${alt.selector})`);
+                }
+            } catch {
+                this.logger.debug(`⏭️ Alternative-Selektor fehlgeschlagen: ${alt.selector}`);
+            }
+        }
+        if (alternatives.length > 0) {
+            this.logger.log(`🔘 ${alternatives.length} alternative Verifikationsmethode(n) verfügbar: ${alternatives.map(a => a.label).join(', ')}`);
+        }
+
         // Fordere OTP über den ScrapeEventsService an
         let otpCode: string;
 
@@ -65,7 +123,10 @@ export class WaitForOtpAction extends BaseAction<WaitForOtpActionParams> {
             otpCode = await this.data.scrapeEventsService.requestOtp(
                 this.data.scrapeId || 'unknown',
                 message,
-                selector
+                selector,
+                this.data.runId,
+                this.page,
+                alternatives
             );
         } else {
             // Fallback: Terminal-Eingabe

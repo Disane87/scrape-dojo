@@ -210,6 +210,22 @@ export class ScrapeUIController {
     }
 
     /**
+     * OTP-Alternative ausführen (z.B. WhatsApp-Button klicken)
+     */
+    @Post('otp-action/:requestId')
+    async executeOtpAction(@Param('requestId') requestId: string, @Body() body: { selector: string }, @Res() res: Response) {
+        try {
+            const success = await this.scrapeEventsService.executeOtpAction(requestId, body.selector);
+            res.status(success ? HttpStatus.OK : HttpStatus.BAD_REQUEST).json({ success });
+        } catch (error) {
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+                error: 'OTP action failed',
+                message: error.message
+            });
+        }
+    }
+
+    /**
      * OTP-Code einreichen
      */
     @Post('otp/:requestId')
