@@ -385,7 +385,8 @@
                                 "params": {
                                   "element": "currentData.orderLoop.value",
                                   "selector": "a[href*='/invoice/popover']",
-                                  "property": "href"
+                                  "property": "href",
+                                  "optional": true
                                 }
                               },
                               {
@@ -458,6 +459,16 @@
                                 }
                               },
                               {
+                                "name": "Wait for popover closed",
+                                "action": "waitForSelector",
+                                "params": {
+                                  "selector": ".a-popover[aria-hidden='false']",
+                                  "hidden": true,
+                                  "timeout": 1000,
+                                  "optional": true
+                                }
+                              },
+                              {
                                 "name": "Click invoice button",
                                 "action": "click",
                                 "params": {
@@ -471,7 +482,7 @@
                                 "action": "waitForSelector",
                                 "params": {
                                   "selector": ".a-popover[aria-hidden='false'] .invoice-list a, .a-popover-content .invoice-list a, div.a-popover .a-popover-content a",
-                                  "timeout": 5000,
+                                  "timeout": 2000,
                                   "optional": true
                                 }
                               },
@@ -606,6 +617,16 @@
                                 "action": "keyboardPress",
                                 "params": {
                                   "key": "Escape"
+                                }
+                              },
+                              {
+                                "name": "Wait for popover closed after",
+                                "action": "waitForSelector",
+                                "params": {
+                                  "selector": ".a-popover[aria-hidden='false']",
+                                  "hidden": true,
+                                  "timeout": 1000,
+                                  "optional": true
                                 }
                               },
                               // Speichere die erste erfolgreich verarbeitete Bestellung als Referenz
