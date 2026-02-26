@@ -9,7 +9,7 @@ import { Aside } from '@astrojs/starlight/components';
 
 With `skipIf` you can skip actions in a loop iteration or break out of the entire loop — depending on what you need. This is perfect for incremental scraping: if you notice you already have a file, you skip the rest or bail out completely.
 
-## Parameters
+## ⚙️ Parameters
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -23,7 +23,7 @@ With `skipIf` you can skip actions in a loop iteration or break out of the entir
 The `condition` parameter is not a JSONata expression, but a **key lookup**: the value is looked up in `previousData` (or `data`) and checked for truthiness.
 </Aside>
 
-## Examples
+## 💡 Examples
 
 **Skip remaining actions when condition is met:**
 

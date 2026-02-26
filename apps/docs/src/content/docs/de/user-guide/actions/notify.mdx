@@ -11,7 +11,7 @@ Willst du während eines Scrapes eine Nachricht an die UI schicken? Vielleicht e
 
 Das ist besonders nützlich bei langen Scrapes, damit du weißt, was gerade passiert, ohne ständig die Logs zu checken.
 
-## Parameter
+## ⚙️ Parameter
 
 | Parameter | Typ | Pflicht | Beschreibung |
 |-----------|-----|---------|--------------|
@@ -21,7 +21,7 @@ Das ist besonders nützlich bei langen Scrapes, damit du weißt, was gerade pass
 | `browserNotification` | `boolean` | Nein | Browser-Notification anzeigen (Standard: `false`) |
 | `autoDismiss` | `number` | Nein | Automatisches Ausblenden nach X Millisekunden. `0` = manuelles Schließen (Standard: `5000`) |
 
-### Notification-Typen
+### 📋 Notification-Typen
 
 | Typ | Beschreibung |
 |-----|--------------|
@@ -30,7 +30,7 @@ Das ist besonders nützlich bei langen Scrapes, damit du weißt, was gerade pass
 | `warning` | Warnung (gelb) |
 | `error` | Fehlermeldung (rot) |
 
-## Beispiele
+## 💡 Beispiele
 
 **Info-Benachrichtigung:**
 
@@ -100,7 +100,7 @@ Browser-Notifications erfordern, dass der Benutzer die Berechtigung im Browser e
 Für wichtige Meldungen (Fehler, Warnungen) setze `autoDismiss: 0`, damit die Nachricht nicht automatisch verschwindet und der Benutzer sie bewusst bestätigen muss.
 </Aside>
 
-## Tipps
+## 💡 Tipps
 
 - Die `notify`-Action gibt `true` zurück, wenn die Benachrichtigung erfolgreich gesendet wurde.
 - Wenn kein Events-Service verfügbar ist (z.B. bei API-only Ausführung), wird die Nachricht nur geloggt.

@@ -9,7 +9,7 @@ import { Aside } from '@astrojs/starlight/components';
 
 Learning is best done with real examples! Here you'll find three complete scrape configurations — from simple to complex. Each example is ready to use: copy the config into a `.jsonc` file under `config/sites/`, adjust the URLs, and start the scrape.
 
-## Example 1: Extract a Website Title
+## 🎯 Example 1: Extract a Website Title
 
 A simple starter: open a website, extract the main title, display it as an artifact. Three actions, done.
 
@@ -69,7 +69,7 @@ A simple starter: open a website, extract the main title, display it as an artif
 The `name` of each action determines the key in `previousData`. Here: `previousData.title` contains the extracted text. Choose descriptive names!
 </Aside>
 
-## Example 2: Scrape a Product List
+## 🛒 Example 2: Scrape a Product List
 
 Now it gets interesting: open a product page, wait for it to load, collect all product cards, iterate over each one, extract data, transform it, and save it.
 
@@ -190,7 +190,7 @@ Now it gets interesting: open a product page, wait for it to load, collect all p
 The `scope: "currentElement"` in the extract actions inside the loop ensures that the search is limited to the current product card element — not the entire page.
 </Aside>
 
-## Example 3: Login with File Download
+## 🔐 Example 3: Login with File Download
 
 The full package: login with secrets, optional OTP handling, iterate through a document list, skip already existing files, and download new ones.
 

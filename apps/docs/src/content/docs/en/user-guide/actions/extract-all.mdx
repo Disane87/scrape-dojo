@@ -11,7 +11,7 @@ Need more than just a single value — how about a whole list? Then `extractAll`
 
 Just like with `extract`, it uses `textContent` by default, but you can query any property or attribute.
 
-## Parameters
+## ⚙️ Parameters
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -23,7 +23,7 @@ Just like with `extract`, it uses `textContent` by default, but you can query an
 `extractAll` always returns an **array of strings**. Empty values and whitespace-only strings are automatically filtered out.
 </Aside>
 
-## Examples
+## 💡 Examples
 
 **Extract all product names:**
 
@@ -94,7 +94,7 @@ Result:
 ]
 ```
 
-## Tips
+## 💡 Tips
 
 - If no elements are found, `extractAll` returns `null` — not an empty array. Keep that in mind for your further processing.
 - For `data-*` attributes, `getAttribute()` is used internally; for everything else, `getProperty()`. This happens automatically, you don't need to worry about it.

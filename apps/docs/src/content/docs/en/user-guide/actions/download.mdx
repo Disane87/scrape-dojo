@@ -11,7 +11,7 @@ Want to download PDFs, images, or other files that your scrape finds on a page? 
 
 The best part: relative URLs are resolved automatically and files are neatly sorted into subfolders per scrape.
 
-## Parameters
+## ⚙️ Parameters
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -23,7 +23,7 @@ The best part: relative URLs are resolved automatically and files are neatly sor
 The `path` is automatically extended with a subfolder using the `scrapeId`. If you specify `./downloads` and your scrape is called `amazon-invoices`, the files end up in `./downloads/amazon-invoices/`.
 </Aside>
 
-## URL Resolution
+## 🔗 URL Resolution
 
 The action is smart about handling URLs:
 
@@ -34,11 +34,11 @@ The action is smart about handling URLs:
 | Relative | `/files/report.pdf` | Resolved against the current page URL |
 | Local | `file:///tmp/generated.pdf` | File is copied locally |
 
-## Cookies & Authentication
+## 🍪 Cookies & Authentication
 
 Downloads automatically use the cookies from the current browser session. That means: if your scrape logged in beforehand, downloads of protected files will work too.
 
-## Examples
+## 💡 Examples
 
 **Download a PDF:**
 
@@ -103,7 +103,7 @@ Downloads automatically use the cookies from the current browser session. That m
 If the `filename` is empty (e.g. because a Handlebars template couldn't be resolved), the action will abort with an error. When in doubt, check beforehand whether the value exists.
 </Aside>
 
-## Tips
+## 💡 Tips
 
 - The return value is the full path of the saved file -- ideal for subsequent `fileExists` checks or logging.
 - Combine `download` with a `loop` action to download multiple files from a page.

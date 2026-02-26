@@ -11,14 +11,14 @@ Debugging ohne Logs ist wie Autofahren mit geschlossenen Augen. Die `logger`-Act
 
 Die Nachrichten unterstützen Handlebars-Templates, sodass du dynamische Werte direkt einbauen kannst.
 
-## Parameter
+## ⚙️ Parameter
 
 | Parameter | Typ | Pflicht | Beschreibung |
 |-----------|-----|---------|--------------|
 | `message` | `string` | Ja | Die Log-Nachricht. Unterstützt Handlebars-Templates. |
 | `level` | `string` | Nein | Log-Level: `log`, `error`, `warn`, `debug`, `verbose` (Standard: `log`) |
 
-### Log-Levels
+### 📊 Log-Levels
 
 | Level | Beschreibung |
 |-------|--------------|
@@ -28,7 +28,7 @@ Die Nachrichten unterstützen Handlebars-Templates, sodass du dynamische Werte d
 | `debug` | Debug-Info -- nur sichtbar bei aktiviertem Debug-Modus |
 | `verbose` | Detaillierte Info -- nur bei höchster Log-Stufe sichtbar |
 
-## Beispiele
+## 💡 Beispiele
 
 **Einfache Status-Meldung:**
 
@@ -86,7 +86,7 @@ Die Nachrichten unterstützen Handlebars-Templates, sodass du dynamische Werte d
 Setze an wichtigen Stellen im Workflow Logger-Actions ein -- z.B. nach einer Extraktion, vor einem Download oder am Ende einer Schleife. In der Run-Historie siehst du dann genau, was passiert ist.
 </Aside>
 
-## Tipps
+## 💡 Tipps
 
 - Die `logger`-Action gibt keinen Rückgabewert zurück (bzw. `undefined`).
 - Log-Nachrichten erscheinen sowohl in der Run-Historie als auch in den Echtzeit-SSE-Events.

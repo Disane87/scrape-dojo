@@ -11,7 +11,7 @@ Want to send a message to the UI during a scrape? Maybe a success message, a war
 
 This is especially useful for long-running scrapes so you know what's going on without constantly checking the logs.
 
-## Parameters
+## ⚙️ Parameters
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -21,7 +21,7 @@ This is especially useful for long-running scrapes so you know what's going on w
 | `browserNotification` | `boolean` | No | Show a browser notification (default: `false`) |
 | `autoDismiss` | `number` | No | Auto-dismiss after X milliseconds. `0` = manual close (default: `5000`) |
 
-### Notification Types
+### 📋 Notification Types
 
 | Type | Description |
 |------|-------------|
@@ -30,7 +30,7 @@ This is especially useful for long-running scrapes so you know what's going on w
 | `warning` | Warning (yellow) |
 | `error` | Error message (red) |
 
-## Examples
+## 💡 Examples
 
 **Info notification:**
 
@@ -100,7 +100,7 @@ Browser notifications require the user to have granted permission in the browser
 For important messages (errors, warnings), set `autoDismiss: 0` so the message doesn't disappear automatically and the user has to acknowledge it manually.
 </Aside>
 
-## Tips
+## 💡 Tips
 
 - The `notify` action returns `true` if the notification was sent successfully.
 - If no events service is available (e.g. in API-only execution), the message is only logged.

@@ -123,7 +123,7 @@ Hier sind die wichtigsten Themen, die du kennen solltest. Klick dich durch — j
 
 Ein zentrales Konzept in Scrape Dojo: Jede Action kann auf Daten aus verschiedenen Quellen zugreifen. Der `name` einer Action bestimmt, unter welchem Key ihr Ergebnis gespeichert wird.
 
-### Datenquellen
+### 📦 Datenquellen
 
 | Quelle | Template-Syntax | Was steckt drin? |
 |--------|----------------|------------------|
@@ -133,7 +133,7 @@ Ein zentrales Konzept in Scrape Dojo: Jede Action kann auf Daten aus verschieden
 | `variables` | `{{variables.name}}` | Laufzeit-Variablen (aus dem Run-Dialog) und Datenbank-Variablen. Laufzeit-Werte haben Vorrang. |
 | `secrets` | `{{secrets.secretName}}` | Verschlüsselte Secrets aus der Datenbank. Werden zur Laufzeit entschlüsselt. |
 
-### Beispiel: Datenfluss in Aktion
+### 💡 Beispiel: Datenfluss in Aktion
 
 Stell dir vor, du willst Produkt-Links von einer Seite sammeln und dann jedes Produkt einzeln besuchen:
 
@@ -188,7 +188,7 @@ Stell dir vor, du willst Produkt-Links von einer Seite sammeln und dann jedes Pr
 Der `name` jeder Action ist entscheidend: Er bestimmt, unter welchem Key das Ergebnis in `previousData` gespeichert wird. Wähle aussagekräftige Namen wie `productLinks`, `priceData` oder `pageTitle`.
 </Aside>
 
-### Variablen-Priorität
+### 📊 Variablen-Priorität
 
 Wenn eine Variable an mehreren Stellen definiert ist, gilt diese Reihenfolge (höchste Priorität zuerst):
 

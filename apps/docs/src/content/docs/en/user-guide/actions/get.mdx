@@ -11,7 +11,7 @@ With `get`, you grab an **ElementHandle** — a reference to a DOM element. This
 
 Think of it like a bookmark finger: you point at an element, and the following actions only look at that area.
 
-## Parameters
+## ⚙️ Parameters
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -22,7 +22,7 @@ Think of it like a bookmark finger: you point at an element, and the following a
 `get` does **not** return text — it returns an ElementHandle! If you need the text content, use `extract` instead.
 </Aside>
 
-## Examples
+## 💡 Examples
 
 **Get an element and then extract from it:**
 
@@ -93,7 +93,7 @@ Think of it like a bookmark finger: you point at an element, and the following a
 ]
 ```
 
-## Tips
+## 💡 Tips
 
 - `get` internally uses `waitForSelector` to wait for the element before returning the handle. So you don't need an extra `waitForSelector` beforehand.
 - If the element isn't found, `get` returns `null` and logs an error.

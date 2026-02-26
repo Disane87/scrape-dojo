@@ -11,7 +11,7 @@ Mit `get` holst du dir einen **ElementHandle** — also eine Referenz auf ein DO
 
 Stell dir das wie einen Lesezeichen-Finger vor: Du zeigst auf ein Element, und die nächsten Actions schauen sich dann nur diesen Bereich an.
 
-## Parameter
+## ⚙️ Parameter
 
 | Parameter | Typ | Pflicht | Beschreibung |
 |-----------|-----|---------|--------------|
@@ -22,7 +22,7 @@ Stell dir das wie einen Lesezeichen-Finger vor: Du zeigst auf ein Element, und d
 `get` gibt **keinen Text** zurück, sondern einen ElementHandle! Wenn du den Textinhalt brauchst, nutze stattdessen `extract`.
 </Aside>
 
-## Beispiele
+## 💡 Beispiele
 
 **Element holen und dann extrahieren:**
 
@@ -93,7 +93,7 @@ Stell dir das wie einen Lesezeichen-Finger vor: Du zeigst auf ein Element, und d
 ]
 ```
 
-## Tipps
+## 💡 Tipps
 
 - `get` wartet intern mit `waitForSelector` auf das Element, bevor es den Handle zurückgibt. Du brauchst also kein zusätzliches `waitForSelector` davor.
 - Wenn das Element nicht gefunden wird, gibt `get` `null` zurück und loggt einen Fehler.

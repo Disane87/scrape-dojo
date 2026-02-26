@@ -11,7 +11,7 @@ Jeder Scrape, der in Scrape Dojo läuft, wird als "Run" protokolliert. Du bekomm
 
 Kurz gesagt: Kein Scrape-Run geht verloren, und wenn mal was klemmt, findest du hier die Antworten.
 
-## Run-Felder
+## 📋 Run-Felder
 
 Jeder Run zeichnet folgende Informationen auf:
 
@@ -27,7 +27,7 @@ Jeder Run zeichnet folgende Informationen auf:
 | `steps` | Liste aller ausgeführten Steps mit deren Actions |
 | `logs` | Protokollierte Log-Einträge |
 
-### Run-Status
+### 🚦 Run-Status
 
 | Status | Bedeutung |
 |--------|-----------|
@@ -36,11 +36,11 @@ Jeder Run zeichnet folgende Informationen auf:
 | `error` | Mit Fehler beendet |
 | `aborted` | Manuell abgebrochen |
 
-## Run History in der UI
+## 🖥️ Run History in der UI
 
 Die UI zeigt dir eine Liste aller Runs mit Status, Dauer und Trigger-Typ. Ein Klick auf einen Run öffnet die Detailansicht.
 
-### Detailansicht
+### 🔍 Detailansicht
 
 In der Detailansicht siehst du:
 - Vollständige Step-Hierarchie (einschließlich verschachtelter Loops)
@@ -49,9 +49,9 @@ In der Detailansicht siehst du:
 - Artefakte (extrahierte Daten, Screenshots)
 - Runtime-Variablen und deren Werte
 
-## Run-Management via API
+## 🌐 Run-Management via API
 
-### Alle Runs abrufen
+### 📥 Alle Runs abrufen
 
 ```bash
 # Alle Runs (mit Limit)
@@ -79,7 +79,7 @@ GET /api/runs?scrapeId=my-workflow&limit=100
 ]
 ```
 
-### Einzelnen Run abrufen
+### 📥 Einzelnen Run abrufen
 
 ```bash
 GET /api/runs/{runId}
@@ -87,7 +87,7 @@ GET /api/runs/{runId}
 
 Gibt den vollständigen Run mit allen Steps, Actions, Parametern und Ergebnissen zurück.
 
-## Debug-Daten
+## 🐛 Debug-Daten
 
 Der Debug-Endpoint ist dein bester Freund bei der Fehlersuche. Er liefert dir alle internen Daten eines Runs:
 
@@ -126,7 +126,7 @@ GET /api/runs/{runId}/debug
 
 Die `previousData`-Sektion zeigt das Ergebnis jeder Action anhand ihres Namens. So kannst du nachvollziehen, welche Daten an jedem Punkt des Workflows verfügbar waren.
 
-## Artefakte
+## 📦 Artefakte
 
 Artefakte sind extrahierte Daten, die von `artifacts`-Actions während der Ausführung erzeugt wurden:
 
@@ -136,11 +136,11 @@ GET /api/runs/{runId}/artifacts
 
 Artefakte werden in der UI als Karten, Tabellen oder JSON-Ansichten dargestellt, je nach Datentyp.
 
-## Cleanup
+## 🧹 Cleanup
 
 Damit deine Datenbank nicht überquillt, gibt es verschiedene Cleanup-Optionen.
 
-### Alte Runs löschen
+### 🗑️ Alte Runs löschen
 
 ```bash
 POST /api/runs/cleanup
@@ -161,19 +161,19 @@ Löscht alle Runs, die älter als die angegebene Anzahl an Tagen sind.
 }
 ```
 
-### Einzelnen Run löschen
+### 🗑️ Einzelnen Run löschen
 
 ```bash
 DELETE /api/runs/{runId}
 ```
 
-### Alle Runs eines Scrapes löschen
+### 🗑️ Alle Runs eines Scrapes löschen
 
 ```bash
 DELETE /api/scrapes/{scrapeId}/runs
 ```
 
-### Selektives Cleanup
+### 🔍 Selektives Cleanup
 
 ```bash
 # Nur fehlerhafte Runs löschen (älter als 7 Tage)
@@ -188,7 +188,7 @@ POST /api/runs/cleanup
 Richte einen Cleanup-Zeitplan ein, z.B. "Runs älter als 30 Tage löschen". Gerade in Entwicklungsumgebungen sammeln sich schnell hunderte Runs an.
 </Aside>
 
-## Echtzeit-Monitoring via SSE
+## 📡 Echtzeit-Monitoring via SSE
 
 Während ein Scrape läuft, liefern Server-Sent Events (SSE) Live-Status-Updates direkt in die UI:
 
@@ -206,35 +206,35 @@ Die UI aktualisiert sich automatisch anhand dieser Events und zeigt den Fortschr
 Details zur SSE-Integration für eigene Clients findest du unter [SSE Events](/de/developer/sse-events/).
 </Aside>
 
-## Fehleranalyse
+## 🔍 Fehleranalyse
 
 Hier sind die typischen Szenarien, denen du begegnen wirst, und wie du sie angehst:
 
-### Action gibt falsches Ergebnis
+### ⚠️ Action gibt falsches Ergebnis
 
 1. Debug-Daten abrufen: `GET /api/runs/{runId}/debug`
 2. In `previousData` den Wert der betroffenen Action prüfen
 3. Selector, Transform-Expression oder Parameter anpassen
 
-### Variable nicht verfügbar
+### ⚠️ Variable nicht verfügbar
 
 1. Debug-Daten prüfen -- ist die Variable im `variables`-Objekt vorhanden?
 2. Variablen-Definition in `metadata.variables` prüfen
 3. Auflösungsreihenfolge beachten (Runtime > Database > Config Default)
 
-### Loop-Iteration fehlgeschlagen
+### ⚠️ Loop-Iteration fehlgeschlagen
 
 1. In der Detailansicht den `loopPath` prüfen (zeigt verschachtelte Position)
 2. `currentData` an der Fehlerstelle analysieren
 3. Optional: `optional: true` für fehlertolerante Extraktion verwenden
 
-### Timeout-Fehler
+### ⚠️ Timeout-Fehler
 
 1. Prüfen, ob der Selector korrekt ist und das Element existiert
 2. `waitForSelector`-Action vor der betroffenen Action hinzufügen
 3. Timeout-Wert erhöhen, falls die Seite langsam lädt
 
-## Best Practices
+## ✅ Best Practices
 
 - **Logger-Actions einsetzen** für wichtige Checkpoints im Workflow:
   ```jsonc

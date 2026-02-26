@@ -11,11 +11,11 @@ Scrape Dojo hat zwei mächtige Systeme für dynamische Werte und Datenverarbeitu
 
 Lass uns mal reinschauen, was damit alles geht!
 
-## Handlebars-Templates
+## 🔧 Handlebars-Templates
 
 Handlebars-Templates kommen überall dort zum Einsatz, wo du dynamische Werte in Strings einsetzen willst. Die Syntax ist simpel: doppelte geschweifte Klammern `{{ausdruck}}`.
 
-### Verfügbare Kontextobjekte
+### 📦 Verfügbare Kontextobjekte
 
 | Objekt | Syntax | Beschreibung |
 |--------|--------|-------------|
@@ -24,7 +24,7 @@ Handlebars-Templates kommen überall dort zum Einsatz, wo du dynamische Werte in
 | `storedData` | `{{storedData.key}}` | Persistente Daten, die mit der `storeData`-Action gespeichert wurden. |
 | `variables` | `{{variables.name}}` | Laufzeit-Variablen (Run-Dialog) und Datenbank-Variablen. Laufzeitwerte haben Vorrang. |
 
-### Beispiele
+### 💡 Beispiele
 
 ```jsonc
 {
@@ -62,11 +62,11 @@ Handlebars-Templates kommen überall dort zum Einsatz, wo du dynamische Werte in
 }
 ```
 
-## Custom Helpers
+## 🛠️ Custom Helpers
 
 Neben der Standard-Handlebars-Syntax registriert Scrape Dojo eigene Helpers für häufige Operationen. Helpers werden innerhalb von `{{...}}` aufgerufen.
 
-### Mathematik
+### 🔢 Mathematik
 
 | Helper | Signatur | Beschreibung | Beispiel |
 |--------|----------|-------------|---------|
@@ -86,14 +86,14 @@ Neben der Standard-Handlebars-Syntax registriert Scrape Dojo eigene Helpers für
 }
 ```
 
-### Vergleiche
+### ⚖️ Vergleiche
 
 | Helper | Signatur | Beschreibung | Beispiel |
 |--------|----------|-------------|---------|
 | `eq` | `eq(a, b)` | Strikte Gleichheit (`===`) | `{{#if (eq previousData.status "ok")}}...{{/if}}` |
 | `ne` | `ne(a, b)` | Ungleichheit (`!==`) | `{{#if (ne previousData.count 0)}}...{{/if}}` |
 
-### Wertprüfungen
+### 🔍 Wertprüfungen
 
 | Helper | Signatur | Beschreibung | Beispiel |
 |--------|----------|-------------|---------|
@@ -102,19 +102,19 @@ Neben der Standard-Handlebars-Syntax registriert Scrape Dojo eigene Helpers für
 | `isDefined` | `isDefined(v)` | `true` wenn nicht `undefined` | `{{#if (isDefined variables.maxItems)}}...{{/if}}` |
 | `isUndefined` | `isUndefined(v)` | `true` wenn `undefined` | `{{#if (isUndefined previousData.optional)}}...{{/if}}` |
 
-### Logik
+### 🧠 Logik
 
 | Helper | Signatur | Beschreibung | Beispiel |
 |--------|----------|-------------|---------|
 | `not` | `not(v)` | Logische Negation | `{{#if (not previousData.disabled)}}...{{/if}}` |
 
-### Typ
+### 🏷️ Typ
 
 | Helper | Signatur | Beschreibung | Beispiel |
 |--------|----------|-------------|---------|
 | `typeof` | `typeof(v)` | Gibt den JavaScript-Typ zurück | `{{typeof previousData.result}}` |
 
-### Zeit
+### 🕐 Zeit
 
 | Helper | Signatur | Beschreibung | Beispiel |
 |--------|----------|-------------|---------|
@@ -132,7 +132,7 @@ Neben der Standard-Handlebars-Syntax registriert Scrape Dojo eigene Helpers für
 }
 ```
 
-### JSONata-Integration
+### 🔗 JSONata-Integration
 
 | Helper | Signatur | Beschreibung |
 |--------|----------|-------------|
@@ -151,11 +151,11 @@ Der `jsonata`-Helper ist die Brücke zwischen Handlebars und JSONata. Er führt 
 }
 ```
 
-## JSONata-Ausdrücke
+## 🔄 JSONata-Ausdrücke
 
 [JSONata](https://jsonata.org/) ist eine mächtige Abfrage- und Transformationssprache für JSON-Daten. In Scrape Dojo wird JSONata primär in der `transform`-Action und in `break`-Bedingungen verwendet.
 
-### Grundprinzip
+### 🎯 Grundprinzip
 
 Die `transform`-Action bekommt die bisherigen Daten als Kontext und wendet einen JSONata-Ausdruck darauf an:
 
@@ -169,7 +169,7 @@ Die `transform`-Action bekommt die bisherigen Daten als Kontext und wendet einen
 }
 ```
 
-### Datenkontext der transform-Action
+### 📦 Datenkontext der transform-Action
 
 Die `transform`-Action bietet mehrere Wege, den Input-Kontext zu bestimmen:
 
@@ -246,7 +246,7 @@ Mit `data` kannst du zusätzliche Key-Value-Paare übergeben. Die Werte werden a
 </TabItem>
 </Tabs>
 
-### Häufige JSONata-Muster
+### 🛠️ Häufige JSONata-Muster
 
 #### Arrays filtern
 
@@ -322,7 +322,7 @@ Mit `data` kannst du zusätzliche Key-Value-Paare übergeben. Die Werte werden a
 }
 ```
 
-### Break-Bedingungen mit JSONata
+### 🛑 Break-Bedingungen mit JSONata
 
 Die `break`-Action verwendet JSONata-Ausdrücke, um zu entscheiden, ob ein Loop abgebrochen werden soll. Der Ausdruck muss einen truthy oder falsy Wert zurückgeben:
 
@@ -336,7 +336,7 @@ Die `break`-Action verwendet JSONata-Ausdrücke, um zu entscheiden, ob ein Loop 
 }
 ```
 
-## Handlebars vs. JSONata -- Vergleich
+## ⚖️ Handlebars vs. JSONata -- Vergleich
 
 Hier nochmal auf einen Blick, wann du was verwendest:
 
@@ -348,7 +348,7 @@ Hier nochmal auf einen Blick, wann du was verwendest:
 | **Ergebnis** | String | Beliebiger JSON-Typ |
 | **Kontext** | previousData, currentData, storedData, variables | previousData als Root-Objekt |
 
-### Typisches Zusammenspiel
+### 🤝 Typisches Zusammenspiel
 
 1. **Handlebars** setzt dynamische Werte in Strings ein (URLs, Nachrichten, Selektoren).
 2. **JSONata** transformiert strukturierte Daten (Filtern, Sortieren, Umstrukturieren).

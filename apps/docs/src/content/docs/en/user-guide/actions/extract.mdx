@@ -11,7 +11,7 @@ The `extract` action is your Swiss army knife for reading data. Whether it's tex
 
 By default, it extracts `textContent`, but you can query any DOM property or HTML attribute using the `property` parameter.
 
-## Parameters
+## ⚙️ Parameters
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -19,7 +19,7 @@ By default, it extracts `textContent`, but you can query any DOM property or HTM
 | `element` | `string` | No | Key from `previousData` to use an ElementHandle as context (instead of the whole page) |
 | `property` | `string` | No | The property to extract (default: `"textContent"`) |
 
-### Common property values
+### 📋 Common property values
 
 | Property | Description | Typical element |
 |----------|-------------|-----------------|
@@ -31,7 +31,7 @@ By default, it extracts `textContent`, but you can query any DOM property or HTM
 | `value` | Value of a form field | `<input>`, `<select>`, `<textarea>` |
 | `data-*` | Any data attribute | Any element |
 
-## Examples
+## 💡 Examples
 
 **Extract text:**
 
@@ -100,7 +100,7 @@ By default, it extracts `textContent`, but you can query any DOM property or HTM
 When you use `element`, the `selector` is resolved relative to that element — not the entire page. This is perfect when you've previously grabbed a specific element with `get`.
 </Aside>
 
-## Tips
+## 💡 Tips
 
 - If no `property` is specified, `textContent` is used automatically — so you don't have to set it explicitly every time.
 - The extracted text is automatically trimmed (whitespace at the beginning and end is removed).

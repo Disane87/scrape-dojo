@@ -11,7 +11,7 @@ Manchmal muss dein Scrape einfach kurz warten, bis die Seite fertig geladen hat.
 
 Das ist super nützlich bei Seiten, die Inhalte dynamisch nachladen, z.B. nach einem Klick oder Scrollen.
 
-## Parameter
+## ⚙️ Parameter
 
 | Parameter | Typ | Pflicht | Beschreibung |
 |-----------|-----|---------|--------------|
@@ -24,7 +24,7 @@ Das ist super nützlich bei Seiten, die Inhalte dynamisch nachladen, z.B. nach e
 Setze `optional: true`, wenn du nicht sicher bist, ob das Element überhaupt auftaucht — z.B. bei Cookie-Bannern oder optionalen Popups. So bricht dein Scrape nicht ab, sondern macht einfach weiter.
 </Aside>
 
-## Beispiele
+## 💡 Beispiele
 
 **Auf Suchergebnisse warten:**
 
@@ -64,7 +64,7 @@ Setze `optional: true`, wenn du nicht sicher bist, ob das Element überhaupt auf
 Wenn `optional` auf `false` steht (Standard) und das Element nicht innerhalb des Timeouts erscheint, wird der gesamte Scrape mit einem Fehler abgebrochen. Überlege dir also gut, ob du `optional: true` setzen willst.
 </Aside>
 
-## Tipps
+## 💡 Tipps
 
 - Der Standard-Timeout von 30 Sekunden ist für die meisten Seiten ausreichend. Bei langsamen APIs oder großen Seiten kannst du ihn aber ruhig erhöhen.
 - Nutze `condition` zusammen mit Variablen oder vorherigen Ergebnissen, um Waits nur dann auszuführen, wenn sie wirklich nötig sind.

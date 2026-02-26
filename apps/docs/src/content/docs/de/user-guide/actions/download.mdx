@@ -11,7 +11,7 @@ Du willst PDFs, Bilder oder andere Dateien runterladen, die dein Scrape auf eine
 
 Das Beste: Relative URLs werden automatisch aufgelöst und die Dateien werden sauber in Unterordner pro Scrape sortiert.
 
-## Parameter
+## ⚙️ Parameter
 
 | Parameter | Typ | Pflicht | Beschreibung |
 |-----------|-----|---------|--------------|
@@ -23,7 +23,7 @@ Das Beste: Relative URLs werden automatisch aufgelöst und die Dateien werden sa
 Der `path` wird automatisch um einen Unterordner mit der `scrapeId` erweitert. Wenn du `./downloads` angibst und dein Scrape `amazon-invoices` heißt, landen die Dateien in `./downloads/amazon-invoices/`.
 </Aside>
 
-## URL-Auflösung
+## 🔗 URL-Auflösung
 
 Die Action ist schlau beim Umgang mit URLs:
 
@@ -34,11 +34,11 @@ Die Action ist schlau beim Umgang mit URLs:
 | Relativ | `/files/report.pdf` | Wird gegen die aktuelle Seiten-URL aufgelöst |
 | Lokal | `file:///tmp/generated.pdf` | Datei wird lokal kopiert |
 
-## Cookies & Authentifizierung
+## 🍪 Cookies & Authentifizierung
 
 Downloads verwenden automatisch die Cookies der aktuellen Browser-Session. Das heißt: Wenn dein Scrape sich vorher eingeloggt hat, funktionieren auch Downloads von geschützten Dateien.
 
-## Beispiele
+## 💡 Beispiele
 
 **PDF herunterladen:**
 
@@ -103,7 +103,7 @@ Downloads verwenden automatisch die Cookies der aktuellen Browser-Session. Das h
 Wenn der `filename` leer ist (z.B. weil ein Handlebars-Template nicht aufgelöst werden konnte), bricht die Action mit einem Fehler ab. Prüfe im Zweifelsfall vorher, ob der Wert vorhanden ist.
 </Aside>
 
-## Tipps
+## 💡 Tipps
 
 - Der Rückgabewert ist der vollständige Pfad der gespeicherten Datei -- ideal für nachfolgende `fileExists`-Checks oder Logging.
 - Kombiniere `download` mit einer `loop`-Action, um mehrere Dateien von einer Seite herunterzuladen.

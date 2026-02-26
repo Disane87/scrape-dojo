@@ -11,7 +11,7 @@ Every scrape that runs in Scrape Dojo is recorded as a "run". You get a complete
 
 In short: no scrape run is ever lost, and when something's stuck, you'll find the answers here.
 
-## Run Fields
+## 📋 Run Fields
 
 Each run records the following information:
 
@@ -27,7 +27,7 @@ Each run records the following information:
 | `steps` | List of all executed steps with their actions |
 | `logs` | Recorded log entries |
 
-### Run Status
+### 📋 Run Status
 
 | Status | Meaning |
 |--------|---------|
@@ -36,11 +36,11 @@ Each run records the following information:
 | `error` | Finished with an error |
 | `aborted` | Manually cancelled |
 
-## Run History in the UI
+## 📊 Run History in the UI
 
 The UI shows you a list of all runs with status, duration, and trigger type. Clicking on a run opens the detail view.
 
-### Detail View
+### 🔍 Detail View
 
 In the detail view you'll see:
 - Complete step hierarchy (including nested loops)
@@ -49,9 +49,9 @@ In the detail view you'll see:
 - Artifacts (extracted data, screenshots)
 - Runtime variables and their values
 
-## Run Management via API
+## 🌐 Run Management via API
 
-### Retrieve All Runs
+### 📋 Retrieve All Runs
 
 ```bash
 # All runs (with limit)
@@ -79,7 +79,7 @@ GET /api/runs?scrapeId=my-workflow&limit=100
 ]
 ```
 
-### Retrieve a Single Run
+### 📋 Retrieve a Single Run
 
 ```bash
 GET /api/runs/{runId}
@@ -87,7 +87,7 @@ GET /api/runs/{runId}
 
 Returns the complete run with all steps, actions, parameters, and results.
 
-## Debug Data
+## 🐛 Debug Data
 
 The debug endpoint is your best friend when troubleshooting. It gives you all the internal data of a run:
 
@@ -126,7 +126,7 @@ GET /api/runs/{runId}/debug
 
 The `previousData` section shows the result of each action by its name. This lets you trace which data was available at each point in the workflow.
 
-## Artifacts
+## 📦 Artifacts
 
 Artifacts are extracted data produced by `artifacts` actions during execution:
 
@@ -136,11 +136,11 @@ GET /api/runs/{runId}/artifacts
 
 Artifacts are displayed in the UI as cards, tables, or JSON views, depending on the data type.
 
-## Cleanup
+## 🧹 Cleanup
 
 To keep your database from overflowing, there are several cleanup options.
 
-### Delete Old Runs
+### 🗑️ Delete Old Runs
 
 ```bash
 POST /api/runs/cleanup
@@ -161,19 +161,19 @@ Deletes all runs older than the specified number of days.
 }
 ```
 
-### Delete a Single Run
+### 🗑️ Delete a Single Run
 
 ```bash
 DELETE /api/runs/{runId}
 ```
 
-### Delete All Runs for a Scrape
+### 🗑️ Delete All Runs for a Scrape
 
 ```bash
 DELETE /api/scrapes/{scrapeId}/runs
 ```
 
-### Selective Cleanup
+### 🔧 Selective Cleanup
 
 ```bash
 # Delete only failed runs (older than 7 days)
@@ -188,7 +188,7 @@ POST /api/runs/cleanup
 Set up a cleanup schedule, e.g. "delete runs older than 30 days". Especially in development environments, hundreds of runs can pile up quickly.
 </Aside>
 
-## Real-Time Monitoring via SSE
+## 📡 Real-Time Monitoring via SSE
 
 While a scrape is running, Server-Sent Events (SSE) deliver live status updates directly to the UI:
 
@@ -206,35 +206,35 @@ The UI updates automatically based on these events and shows progress in real ti
 For details on SSE integration for your own clients, check out [SSE Events](/en/developer/sse-events/).
 </Aside>
 
-## Error Analysis
+## 🔍 Error Analysis
 
 Here are the typical scenarios you'll encounter and how to tackle them:
 
-### Action Returns Wrong Result
+### ⚠️ Action Returns Wrong Result
 
 1. Retrieve debug data: `GET /api/runs/{runId}/debug`
 2. Check the value of the affected action in `previousData`
 3. Adjust the selector, transform expression, or parameters
 
-### Variable Not Available
+### ⚠️ Variable Not Available
 
 1. Check debug data -- is the variable present in the `variables` object?
 2. Check the variable definition in `metadata.variables`
 3. Consider the resolution order (Runtime > Database > Config Default)
 
-### Loop Iteration Failed
+### ⚠️ Loop Iteration Failed
 
 1. Check the `loopPath` in the detail view (shows nested position)
 2. Analyze `currentData` at the point of failure
 3. Optionally: use `optional: true` for fault-tolerant extraction
 
-### Timeout Error
+### ⚠️ Timeout Error
 
 1. Check whether the selector is correct and the element exists
 2. Add a `waitForSelector` action before the affected action
 3. Increase the timeout value if the page loads slowly
 
-## Best Practices
+## ✅ Best Practices
 
 - **Use logger actions** for important checkpoints in the workflow:
   ```jsonc

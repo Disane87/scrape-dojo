@@ -11,14 +11,14 @@ Debugging without logs is like driving with your eyes closed. The `logger` actio
 
 Messages support Handlebars templates, so you can embed dynamic values directly.
 
-## Parameters
+## ⚙️ Parameters
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `message` | `string` | Yes | The log message. Supports Handlebars templates. |
 | `level` | `string` | No | Log level: `log`, `error`, `warn`, `debug`, `verbose` (default: `log`) |
 
-### Log Levels
+### 📋 Log Levels
 
 | Level | Description |
 |-------|-------------|
@@ -28,7 +28,7 @@ Messages support Handlebars templates, so you can embed dynamic values directly.
 | `debug` | Debug info -- only visible when debug mode is enabled |
 | `verbose` | Detailed info -- only visible at the highest log level |
 
-## Examples
+## 💡 Examples
 
 **Simple status message:**
 
@@ -86,7 +86,7 @@ Messages support Handlebars templates, so you can embed dynamic values directly.
 Place logger actions at important points in the workflow -- e.g. after an extraction, before a download, or at the end of a loop. In the run history, you'll then see exactly what happened.
 </Aside>
 
-## Tips
+## 💡 Tips
 
 - The `logger` action does not return a value (i.e. `undefined`).
 - Log messages appear both in the run history and in real-time SSE events.

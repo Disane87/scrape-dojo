@@ -9,7 +9,7 @@ import { Aside } from '@astrojs/starlight/components';
 
 Die `click`-Action ist dein digitaler Zeigefinger — damit klickst du auf Buttons, Links, Checkboxen oder jedes andere Element auf der Seite. Besonders praktisch: Mit dem `optional`-Flag kannst du Klicks definieren, die nicht fehlschlagen, wenn das Element mal nicht da ist (perfekt für Cookie-Banner und Co.).
 
-## Parameter
+## ⚙️ Parameter
 
 | Parameter | Typ | Pflicht | Default | Beschreibung |
 |-----------|-----|---------|---------|-------------|
@@ -20,9 +20,9 @@ Die `click`-Action ist dein digitaler Zeigefinger — damit klickst du auf Butto
 
 *Entweder `selector` oder `element` muss angegeben werden. Beide zusammen sind auch möglich — dann wird innerhalb des Elements nach dem Selektor gesucht.
 
-## Beispiele
+## 💡 Beispiele
 
-### Einfacher Klick
+### 🎯 Einfacher Klick
 
 ```jsonc
 {
@@ -34,7 +34,7 @@ Die `click`-Action ist dein digitaler Zeigefinger — damit klickst du auf Butto
 }
 ```
 
-### Optionaler Klick (Cookie-Banner)
+### 🍪 Optionaler Klick (Cookie-Banner)
 
 Perfekt für Elemente, die nicht immer vorhanden sind:
 
@@ -52,7 +52,7 @@ Perfekt für Elemente, die nicht immer vorhanden sind:
 
 Wenn der Cookie-Banner nicht erscheint, geht der Scrape einfach weiter — kein Fehler, kein Drama.
 
-### Klick mit Element aus previousData
+### 🔗 Klick mit Element aus previousData
 
 Wenn du vorher mit `get` oder `getAll` ein ElementHandle geholt hast, kannst du darauf (oder innerhalb davon) klicken:
 

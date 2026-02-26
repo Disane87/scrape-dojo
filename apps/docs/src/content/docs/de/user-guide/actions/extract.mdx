@@ -11,7 +11,7 @@ Die `extract`-Action ist dein Schweizer Taschenmesser zum Daten-Auslesen. Ob Tex
 
 Standardmäßig wird der `textContent` extrahiert, aber du kannst über den `property`-Parameter jede beliebige DOM-Eigenschaft oder jedes HTML-Attribut abfragen.
 
-## Parameter
+## ⚙️ Parameter
 
 | Parameter | Typ | Pflicht | Beschreibung |
 |-----------|-----|---------|--------------|
@@ -19,7 +19,7 @@ Standardmäßig wird der `textContent` extrahiert, aber du kannst über den `pro
 | `element` | `string` | Nein | Key aus `previousData`, um einen ElementHandle als Kontext zu verwenden (statt der ganzen Seite) |
 | `property` | `string` | Nein | Die zu extrahierende Eigenschaft (Standard: `"textContent"`) |
 
-### Gängige property-Werte
+### 📋 Gängige property-Werte
 
 | Property | Beschreibung | Typisches Element |
 |----------|--------------|-------------------|
@@ -31,7 +31,7 @@ Standardmäßig wird der `textContent` extrahiert, aber du kannst über den `pro
 | `value` | Wert eines Formularfelds | `<input>`, `<select>`, `<textarea>` |
 | `data-*` | Beliebiges data-Attribut | Jedes Element |
 
-## Beispiele
+## 💡 Beispiele
 
 **Text extrahieren:**
 
@@ -100,7 +100,7 @@ Standardmäßig wird der `textContent` extrahiert, aber du kannst über den `pro
 Wenn du `element` verwendest, wird der `selector` relativ zu diesem Element aufgelöst — nicht zur gesamten Seite. Das ist perfekt, wenn du vorher mit `get` ein bestimmtes Element geholt hast.
 </Aside>
 
-## Tipps
+## 💡 Tipps
 
 - Wenn kein `property` angegeben wird, wird automatisch `textContent` verwendet — du musst es also nicht jedes Mal explizit setzen.
 - Der extrahierte Text wird automatisch getrimmt (Leerzeichen am Anfang und Ende werden entfernt).

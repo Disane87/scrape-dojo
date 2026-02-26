@@ -9,13 +9,13 @@ import { Aside } from '@astrojs/starlight/components';
 
 Die `keyboardPress`-Action simuliert einen einzelnen Tastendruck — als hättest du selbst die Taste gedrückt. Super nützlich, um Dialoge mit Escape zu schließen, Formulare mit Enter abzuschicken oder durch Dropdown-Menüs zu navigieren.
 
-## Parameter
+## ⚙️ Parameter
 
 | Parameter | Typ | Pflicht | Default | Beschreibung |
 |-----------|-----|---------|---------|-------------|
 | `key` | `string` | Ja | — | Name der Taste, die gedrückt werden soll. |
 
-## Verfügbare Tasten
+## 📋 Verfügbare Tasten
 
 Du kannst alle Standard-Tastennamen verwenden, die Puppeteer unterstützt. Hier die gängigsten:
 
@@ -35,9 +35,9 @@ Du kannst alle Standard-Tastennamen verwenden, die Puppeteer unterstützt. Hier 
 | `PageUp` | Seite nach oben scrollen |
 | `PageDown` | Seite nach unten scrollen |
 
-## Beispiele
+## 💡 Beispiele
 
-### Dialog schließen mit Escape
+### 🚪 Dialog schließen mit Escape
 
 ```jsonc
 {
@@ -49,7 +49,7 @@ Du kannst alle Standard-Tastennamen verwenden, die Puppeteer unterstützt. Hier 
 }
 ```
 
-### Formular mit Enter absenden
+### ⏎ Formular mit Enter absenden
 
 ```jsonc
 {
@@ -61,7 +61,7 @@ Du kannst alle Standard-Tastennamen verwenden, die Puppeteer unterstützt. Hier 
 }
 ```
 
-### Durch ein Dropdown navigieren
+### 🔽 Durch ein Dropdown navigieren
 
 Manche Dropdowns lassen sich am besten per Tastatur bedienen:
 
@@ -91,7 +91,7 @@ Manche Dropdowns lassen sich am besten per Tastatur bedienen:
 ]
 ```
 
-### Tab zum nächsten Feld
+### ➡️ Tab zum nächsten Feld
 
 ```jsonc
 {

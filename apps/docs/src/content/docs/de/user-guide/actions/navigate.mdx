@@ -9,7 +9,7 @@ import { Aside } from '@astrojs/starlight/components';
 
 Mit der `navigate`-Action steuerst du den Browser zu einer URL. Das ist meistens die erste Action in jedem Scrape — schließlich muss der Browser ja erstmal wissen, wo es hingehen soll. Du kannst dabei steuern, wann die Navigation als "fertig" gilt und wie lange maximal gewartet wird.
 
-## Parameter
+## ⚙️ Parameter
 
 | Parameter | Typ | Pflicht | Default | Beschreibung |
 |-----------|-----|---------|---------|-------------|
@@ -17,7 +17,7 @@ Mit der `navigate`-Action steuerst du den Browser zu einer URL. Das ist meistens
 | `waitUntil` | `string` | Nein | `domcontentloaded` | Wann gilt die Seite als geladen? |
 | `timeout` | `number` | Nein | `30000` | Maximale Wartezeit in Millisekunden. |
 
-### waitUntil-Optionen
+### ⏱️ waitUntil-Optionen
 
 | Wert | Beschreibung |
 |------|-------------|
@@ -26,9 +26,9 @@ Mit der `navigate`-Action steuerst du den Browser zu einer URL. Das ist meistens
 | `networkidle0` | Kein Netzwerk-Traffic mehr seit 500ms (strengste Option) |
 | `networkidle2` | Maximal 2 offene Netzwerk-Verbindungen seit 500ms |
 
-## Beispiele
+## 💡 Beispiele
 
-### Einfache Navigation
+### 🎯 Einfache Navigation
 
 ```jsonc
 {
@@ -40,7 +40,7 @@ Mit der `navigate`-Action steuerst du den Browser zu einer URL. Das ist meistens
 }
 ```
 
-### Mit waitUntil
+### ⏱️ Mit waitUntil
 
 Wenn die Seite viele dynamische Inhalte nachlädt, ist `networkidle0` eine gute Wahl:
 
@@ -56,7 +56,7 @@ Wenn die Seite viele dynamische Inhalte nachlädt, ist `networkidle0` eine gute 
 }
 ```
 
-### Dynamische URL mit Handlebars
+### 🔀 Dynamische URL mit Handlebars
 
 Du kannst Variablen direkt in die URL einbauen:
 

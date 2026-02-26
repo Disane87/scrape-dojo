@@ -9,7 +9,7 @@ import { Aside } from '@astrojs/starlight/components';
 
 The `navigate` action steers the browser to a URL. This is usually the first action in any scrape — after all, the browser needs to know where to go first. You can control when the navigation is considered "done" and how long to wait at most.
 
-## Parameters
+## ⚙️ Parameters
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
@@ -17,7 +17,7 @@ The `navigate` action steers the browser to a URL. This is usually the first act
 | `waitUntil` | `string` | No | `domcontentloaded` | When is the page considered loaded? |
 | `timeout` | `number` | No | `30000` | Maximum wait time in milliseconds. |
 
-### waitUntil Options
+### ⏱️ waitUntil Options
 
 | Value | Description |
 |-------|-------------|
@@ -26,9 +26,9 @@ The `navigate` action steers the browser to a URL. This is usually the first act
 | `networkidle0` | No network traffic for 500ms (strictest option) |
 | `networkidle2` | At most 2 open network connections for 500ms |
 
-## Examples
+## 💡 Examples
 
-### Simple Navigation
+### 🎯 Simple Navigation
 
 ```jsonc
 {
@@ -40,7 +40,7 @@ The `navigate` action steers the browser to a URL. This is usually the first act
 }
 ```
 
-### With waitUntil
+### ⏱️ With waitUntil
 
 If the page loads a lot of dynamic content, `networkidle0` is a good choice:
 
@@ -56,7 +56,7 @@ If the page loads a lot of dynamic content, `networkidle0` is a good choice:
 }
 ```
 
-### Dynamic URL with Handlebars
+### 🔀 Dynamic URL with Handlebars
 
 You can embed variables directly in the URL:
 

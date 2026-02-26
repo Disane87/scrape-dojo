@@ -9,7 +9,7 @@ import { Aside } from '@astrojs/starlight/components';
 
 Du willst nicht eine Action für jedes Element einzeln schreiben? Klar, dafür gibt's `loop`. Damit iterierst du über Arrays oder ElementHandle-Listen, die du vorher z.B. mit `getAll` oder `extract` eingesammelt hast. Pro Durchgang wird dein Action-Block einmal ausgeführt — wie eine klassische `for`-Schleife, nur in JSON.
 
-## Parameter
+## ⚙️ Parameter
 
 | Parameter | Typ | Pflicht | Beschreibung |
 |-----------|-----|---------|--------------|
@@ -17,7 +17,7 @@ Du willst nicht eine Action für jedes Element einzeln schreiben? Klar, dafür g
 | `actions` | `array` | Ja | Array von Actions, die pro Iteration ausgeführt werden |
 | `reverse` | `boolean` | Nein | Wenn `true`, wird das Array rückwärts durchlaufen |
 
-## currentData im Loop
+## 🔄 currentData im Loop
 
 Innerhalb eines Loops steht dir `currentData` zur Verfügung. Darüber erreichst du das aktuelle Element und den Index:
 
@@ -32,7 +32,7 @@ Wobei `<loopName>` der `name` deiner Loop-Action ist.
 In Handlebars-Templates greifst du so darauf zu: `{{currentData.myLoop.value}}` bzw. `{{currentData.myLoop.index}}`.
 </Aside>
 
-## Beispiele
+## 💡 Beispiele
 
 **Über ElementHandles iterieren (getAll → loop → extract):**
 

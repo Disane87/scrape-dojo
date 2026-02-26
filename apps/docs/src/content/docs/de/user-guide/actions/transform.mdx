@@ -9,7 +9,7 @@ import { Aside } from '@astrojs/starlight/components';
 
 Rohdaten sind selten so, wie du sie am Ende haben willst. Mit `transform` kannst du Daten umbauen, filtern, zusammenführen und aufbereiten — alles mit JSONata-Ausdrücken. Das ist quasi dein Schweizer Taschenmesser für Datenverarbeitung innerhalb eines Scrapes.
 
-## Parameter
+## ⚙️ Parameter
 
 | Parameter | Typ | Pflicht | Beschreibung |
 |-----------|-----|---------|--------------|
@@ -18,7 +18,7 @@ Rohdaten sind selten so, wie du sie am Ende haben willst. Mit `transform` kannst
 | `previousDataKeys` | `string[]` | Nein | Merged mehrere Keys zu einem Objekt als Root |
 | `data` | `object` | Nein | Zusätzliche Key-Value-Daten (Werte können Handlebars-Templates sein) |
 
-### Wie wird der Input bestimmt?
+### 🔀 Wie wird der Input bestimmt?
 
 Die Priorität ist:
 
@@ -31,7 +31,7 @@ Die Priorität ist:
 Innerhalb einer Loop steht `currentData` automatisch im Kontext zur Verfügung — du kannst also z.B. `currentData.myLoop.value` in der Expression verwenden.
 </Aside>
 
-## Beispiele
+## 💡 Beispiele
 
 **Feld-Mapping (Objekt umbauen):**
 

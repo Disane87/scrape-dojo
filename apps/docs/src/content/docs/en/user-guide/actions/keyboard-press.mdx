@@ -9,13 +9,13 @@ import { Aside } from '@astrojs/starlight/components';
 
 The `keyboardPress` action simulates a single key press — as if you pressed the key yourself. Super useful for closing dialogs with Escape, submitting forms with Enter, or navigating through dropdown menus.
 
-## Parameters
+## ⚙️ Parameters
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | `key` | `string` | Yes | — | Name of the key to press. |
 
-## Available Keys
+## 📋 Available Keys
 
 You can use all standard key names supported by Puppeteer. Here are the most common ones:
 
@@ -35,9 +35,9 @@ You can use all standard key names supported by Puppeteer. Here are the most com
 | `PageUp` | Scroll page up |
 | `PageDown` | Scroll page down |
 
-## Examples
+## 💡 Examples
 
-### Close a Dialog with Escape
+### ❌ Close a Dialog with Escape
 
 ```jsonc
 {
@@ -49,7 +49,7 @@ You can use all standard key names supported by Puppeteer. Here are the most com
 }
 ```
 
-### Submit a Form with Enter
+### ⏎ Submit a Form with Enter
 
 ```jsonc
 {
@@ -61,7 +61,7 @@ You can use all standard key names supported by Puppeteer. Here are the most com
 }
 ```
 
-### Navigate Through a Dropdown
+### 🔽 Navigate Through a Dropdown
 
 Some dropdowns are best operated via the keyboard:
 
@@ -91,7 +91,7 @@ Some dropdowns are best operated via the keyboard:
 ]
 ```
 
-### Tab to the Next Field
+### ➡️ Tab to the Next Field
 
 ```jsonc
 {

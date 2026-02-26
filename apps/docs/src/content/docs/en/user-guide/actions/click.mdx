@@ -9,7 +9,7 @@ import { Aside } from '@astrojs/starlight/components';
 
 The `click` action is your digital finger — use it to click on buttons, links, checkboxes, or any other element on the page. Especially handy: with the `optional` flag you can define clicks that won't fail if the element isn't there (perfect for cookie banners and the like).
 
-## Parameters
+## ⚙️ Parameters
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
@@ -20,9 +20,9 @@ The `click` action is your digital finger — use it to click on buttons, links,
 
 *Either `selector` or `element` must be provided. You can also use both together — in that case, the selector is searched within the element.
 
-## Examples
+## 💡 Examples
 
-### Simple Click
+### 🎯 Simple Click
 
 ```jsonc
 {
@@ -34,7 +34,7 @@ The `click` action is your digital finger — use it to click on buttons, links,
 }
 ```
 
-### Optional Click (Cookie Banner)
+### 🍪 Optional Click (Cookie Banner)
 
 Perfect for elements that aren't always present:
 
@@ -52,7 +52,7 @@ Perfect for elements that aren't always present:
 
 If the cookie banner doesn't show up, the scrape just continues — no error, no drama.
 
-### Click with Element from previousData
+### 🔗 Click with Element from previousData
 
 If you previously fetched an ElementHandle with `get` or `getAll`, you can click on it (or within it):
 

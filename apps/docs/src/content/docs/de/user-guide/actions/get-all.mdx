@@ -11,7 +11,7 @@ import { Aside } from '@astrojs/starlight/components';
 
 Denk an eine Produktliste: Mit `getAll` holst du dir alle Produktkarten, und im Loop extrahierst du dann aus jeder Karte Name, Preis und Link.
 
-## Parameter
+## ⚙️ Parameter
 
 | Parameter | Typ | Pflicht | Beschreibung |
 |-----------|-----|---------|--------------|
@@ -22,7 +22,7 @@ Denk an eine Produktliste: Mit `getAll` holst du dir alle Produktkarten, und im 
 `getAll` gibt ein **Array von ElementHandles** zurück — keinen Text! Nutze es zusammen mit `loop`, um über die Elemente zu iterieren, und `extract` innerhalb des Loops, um die Daten auszulesen.
 </Aside>
 
-## Beispiele
+## 💡 Beispiele
 
 **Alle Produkte holen und im Loop extrahieren:**
 
@@ -111,7 +111,7 @@ Denk an eine Produktliste: Mit `getAll` holst du dir alle Produktkarten, und im 
 Im `loop` ist das aktuelle Element über `$loopItem` verfügbar. Verwende diesen Wert im `element`-Parameter deiner Actions, damit sie im Kontext des jeweiligen Elements arbeiten.
 </Aside>
 
-## Tipps
+## 💡 Tipps
 
 - `getAll` wartet intern mit `waitForSelector` darauf, dass mindestens ein Element zum Selektor passt. Wenn keines gefunden wird, bekommst du ein leeres Array.
 - Die Kombination `getAll` + `loop` ist das Standardmuster, um Listen auf Webseiten zu scrapen. Du wirst es in fast jedem Scrape verwenden.

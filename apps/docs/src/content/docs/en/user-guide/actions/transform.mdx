@@ -9,7 +9,7 @@ import { Aside } from '@astrojs/starlight/components';
 
 Raw data is rarely in the shape you actually want. With `transform` you can reshape, filter, merge, and clean up data — all using JSONata expressions. Think of it as your Swiss army knife for data processing within a scrape.
 
-## Parameters
+## ⚙️ Parameters
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -18,7 +18,7 @@ Raw data is rarely in the shape you actually want. With `transform` you can resh
 | `previousDataKeys` | `string[]` | No | Merges multiple keys into one object as root |
 | `data` | `object` | No | Additional key-value data (values can be Handlebars templates) |
 
-### How is the input determined?
+### 🔀 How is the input determined?
 
 The priority is:
 
@@ -31,7 +31,7 @@ The priority is:
 Inside a loop, `currentData` is automatically available in the context — so you can use e.g. `currentData.myLoop.value` in the expression.
 </Aside>
 
-## Examples
+## 💡 Examples
 
 **Field mapping (reshaping an object):**
 

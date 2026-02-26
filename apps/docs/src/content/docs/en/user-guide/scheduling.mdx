@@ -11,7 +11,7 @@ Sure, you can start your scrapes manually every time. But let's be honest -- tha
 
 Set it up once and it runs on its own. That's how it should be!
 
-## Trigger Types
+## ⏰ Trigger Types
 
 | Type | Description |
 |------|-------------|
@@ -43,11 +43,11 @@ Triggers are defined in the `metadata.triggers` array of the scrape configuratio
 }
 ```
 
-## Cron Configuration
+## ⏰ Cron Configuration
 
 A scrape with `"type": "cron"` in the triggers array can be configured with a cron expression via the UI or API.
 
-### Configure a Schedule via the API
+### 🔧 Configure a Schedule via the API
 
 ```bash
 PUT /api/scrapes/{scrapeId}/schedule
@@ -60,7 +60,7 @@ Content-Type: application/json
 }
 ```
 
-### Retrieve a Schedule
+### 📋 Retrieve a Schedule
 
 ```bash
 GET /api/scrapes/{scrapeId}/schedule
@@ -79,13 +79,13 @@ GET /api/scrapes/{scrapeId}/schedule
 }
 ```
 
-### Retrieve All Schedules
+### 📋 Retrieve All Schedules
 
 ```bash
 GET /api/schedules
 ```
 
-### Check Scheduler Status
+### 📡 Check Scheduler Status
 
 ```bash
 GET /api/scheduler/status
@@ -107,7 +107,7 @@ GET /api/scheduler/status
 ]
 ```
 
-## Cron Syntax
+## 📋 Cron Syntax
 
 Scrape Dojo uses the standard POSIX cron syntax with 5 fields:
 
@@ -116,7 +116,7 @@ Minute  Hour  Day(Month)  Month  Weekday
   *       *       *         *       *
 ```
 
-### Fields
+### 📋 Fields
 
 | Field | Value Range | Description |
 |-------|-------------|-------------|
@@ -126,7 +126,7 @@ Minute  Hour  Day(Month)  Month  Weekday
 | Month | 1-12 | Month of the year |
 | Weekday | 0-7 | Day of the week (0 and 7 = Sunday) |
 
-### Special Characters
+### 🔣 Special Characters
 
 | Character | Meaning | Example |
 |-----------|---------|---------|
@@ -136,7 +136,7 @@ Minute  Hour  Day(Month)  Month  Weekday
 | `n,m` | List | `0,30 * * * *` = On the hour and half hour |
 | `n-m/x` | Range with step | `0 8-18/2 * * *` = Every 2 hours from 8 AM to 6 PM |
 
-### Examples
+### 💡 Examples
 
 ```bash
 # Daily at 9:00 AM
@@ -165,7 +165,7 @@ Minute  Hour  Day(Month)  Month  Weekday
 Not sure about the cron syntax? Check out [crontab.guru](https://crontab.guru/) -- you can test expressions live and get a human-readable description.
 </Aside>
 
-## Timezone
+## 🌍 Timezone
 
 The default timezone is `Europe/Berlin`. You can configure it individually per schedule:
 
@@ -184,7 +184,7 @@ All common IANA timezones are supported (e.g. `UTC`, `Europe/Berlin`, `America/N
 Watch out for daylight saving time! `0 9 * * *` with `timezone: "UTC"` is 10:00 AM in Germany (CET) or 11:00 AM (CEST).
 </Aside>
 
-## Webhook Trigger
+## 🪝 Webhook Trigger
 
 The webhook trigger lets you start scrapes through external HTTP requests:
 
@@ -216,7 +216,7 @@ curl -X POST http://localhost:3000/api/webhooks/{scrapeId} \
 You can pass variables via the request body, which are then available in the scrape as `{{variables.orderId}}`. This makes your webhooks dynamic.
 </Aside>
 
-## Startup Trigger
+## 🚀 Startup Trigger
 
 The startup trigger automatically runs a scrape when the application starts:
 
@@ -237,7 +237,7 @@ The startup trigger automatically runs a scrape when the application starts:
 
 The optional `delay` value specifies the delay in milliseconds after application startup. This is useful so the app can fully boot up before the scrape kicks off.
 
-## Combining Triggers
+## 🔗 Combining Triggers
 
 You can define multiple triggers for the same scrape -- no problem:
 
@@ -260,7 +260,7 @@ You can define multiple triggers for the same scrape -- no problem:
 
 The run history shows you which trigger initiated the execution (`manual`, `scheduled`, `api`).
 
-## Best Practices
+## ✅ Best Practices
 
 - **Set the timezone explicitly**, especially for international teams
 - **Don't choose intervals too short** -- at least 15 minutes is recommended
@@ -269,9 +269,9 @@ The run history shows you which trigger initiated the execution (`manual`, `sche
 - **Check logs regularly**, especially after activating a new schedule
 - **Use webhook secrets** and make them accessible over HTTPS
 
-## Troubleshooting
+## 🔍 Troubleshooting
 
-### Schedule Not Running
+### ⚠️ Schedule Not Running
 
 1. Check if `scheduleEnabled: true` is set:
    ```bash
@@ -284,7 +284,7 @@ The run history shows you which trigger initiated the execution (`manual`, `sche
 3. Validate the cron expression (e.g. on [crontab.guru](https://crontab.guru/))
 4. Check API logs for error messages
 
-### Wrong Execution Time
+### ⚠️ Wrong Execution Time
 
 1. Check the timezone of the schedule configuration
 2. Verify server time and timezone via `/api/health`

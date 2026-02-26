@@ -11,11 +11,11 @@ Manchmal willst du einfach sehen, was der Browser gerade anzeigt. Die `screensho
 
 Der Dateiname wird automatisch generiert -- aus einem Zeitstempel und dem Seitentitel. Du musst dich also um nichts kümmern.
 
-## Parameter
+## ⚙️ Parameter
 
 Die `screenshot`-Action hat **keine Parameter**. Einfach aufrufen und fertig.
 
-## Wie funktioniert der Dateiname?
+## 📝 Wie funktioniert der Dateiname?
 
 Der generierte Dateiname folgt dem Muster:
 
@@ -29,7 +29,7 @@ Dabei wird der Seitentitel bereinigt (Sonderzeichen werden durch Bindestriche er
 20260226-143022-amazon-de-mein-konto.png
 ```
 
-## Speicherort
+## 📂 Speicherort
 
 Screenshots werden im Verzeichnis `./screenshots/` gespeichert. Falls das Verzeichnis noch nicht existiert, wird es automatisch angelegt.
 
@@ -37,7 +37,7 @@ Screenshots werden im Verzeichnis `./screenshots/` gespeichert. Falls das Verzei
 Im Docker-Setup solltest du das `./screenshots/`-Verzeichnis als Volume mounten, damit die Bilder auch nach einem Container-Neustart noch da sind.
 </Aside>
 
-## Beispiel
+## 💡 Beispiel
 
 **Einfacher Screenshot:**
 
@@ -77,7 +77,7 @@ Im Docker-Setup solltest du das `./screenshots/`-Verzeichnis als Volume mounten,
 Der Rückgabewert der Action ist der vollständige Dateipfad des Screenshots. Du kannst ihn über `previousData` in nachfolgenden Actions verwenden, z.B. um ihn zu loggen.
 </Aside>
 
-## Tipps
+## 💡 Tipps
 
 - Nutze Screenshots vor und nach kritischen Aktionen, um den Seitenzustand zu dokumentieren.
 - Bei Fehlersuche: Setze einen Screenshot direkt vor die fehlerhafte Action, um zu sehen, was der Browser zu diesem Zeitpunkt anzeigt.

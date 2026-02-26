@@ -11,7 +11,7 @@ Sometimes your scrape just needs to hold on a moment until the page has finished
 
 This is super useful for pages that load content dynamically, e.g. after a click or scroll.
 
-## Parameters
+## ⚙️ Parameters
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -24,7 +24,7 @@ This is super useful for pages that load content dynamically, e.g. after a click
 Set `optional: true` when you're not sure if the element will actually show up — e.g. for cookie banners or optional popups. That way your scrape won't abort, it'll just keep going.
 </Aside>
 
-## Examples
+## 💡 Examples
 
 **Wait for search results:**
 
@@ -64,7 +64,7 @@ Set `optional: true` when you're not sure if the element will actually show up �
 If `optional` is set to `false` (default) and the element doesn't appear within the timeout, the entire scrape will abort with an error. So think carefully about whether you want to set `optional: true`.
 </Aside>
 
-## Tips
+## 💡 Tips
 
 - The default timeout of 30 seconds is enough for most pages. For slow APIs or large pages, feel free to bump it up.
 - Use `condition` together with variables or previous results to only run waits when they're actually needed.

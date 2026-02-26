@@ -11,7 +11,7 @@ Klar, du kannst deine Scrapes jedes Mal manuell starten. Aber mal ehrlich -- das
 
 Einmal einrichten und dann läuft die Sache von alleine. So soll das sein!
 
-## Trigger-Typen
+## 📋 Trigger-Typen
 
 | Typ | Beschreibung |
 |-----|--------------|
@@ -43,11 +43,11 @@ Trigger werden im `metadata.triggers`-Array der Scrape-Konfiguration definiert:
 }
 ```
 
-## Cron-Konfiguration
+## ⏰ Cron-Konfiguration
 
 Ein Scrape mit `"type": "cron"` im Triggers-Array kann über die UI oder API mit einer Cron-Expression versehen werden.
 
-### Schedule über die API konfigurieren
+### 🔧 Schedule über die API konfigurieren
 
 ```bash
 PUT /api/scrapes/{scrapeId}/schedule
@@ -60,7 +60,7 @@ Content-Type: application/json
 }
 ```
 
-### Schedule abrufen
+### 📥 Schedule abrufen
 
 ```bash
 GET /api/scrapes/{scrapeId}/schedule
@@ -79,13 +79,13 @@ GET /api/scrapes/{scrapeId}/schedule
 }
 ```
 
-### Alle Schedules abrufen
+### 📋 Alle Schedules abrufen
 
 ```bash
 GET /api/schedules
 ```
 
-### Scheduler-Status prüfen
+### 📡 Scheduler-Status prüfen
 
 ```bash
 GET /api/scheduler/status
@@ -107,7 +107,7 @@ GET /api/scheduler/status
 ]
 ```
 
-## Cron-Syntax
+## 📝 Cron-Syntax
 
 Scrape Dojo verwendet die Standard-POSIX-Cron-Syntax mit 5 Feldern:
 
@@ -116,7 +116,7 @@ Minute  Stunde  Tag(Monat)  Monat  Wochentag
   *       *        *          *       *
 ```
 
-### Felder
+### 📋 Felder
 
 | Feld | Wertebereich | Beschreibung |
 |------|-------------|--------------|
@@ -126,7 +126,7 @@ Minute  Stunde  Tag(Monat)  Monat  Wochentag
 | Monat | 1-12 | Monat im Jahr |
 | Wochentag | 0-7 | Wochentag (0 und 7 = Sonntag) |
 
-### Spezielle Zeichen
+### 🔣 Spezielle Zeichen
 
 | Zeichen | Bedeutung | Beispiel |
 |---------|-----------|----------|
@@ -136,7 +136,7 @@ Minute  Stunde  Tag(Monat)  Monat  Wochentag
 | `n,m` | Liste | `0,30 * * * *` = Zur vollen und halben Stunde |
 | `n-m/x` | Bereich mit Schritt | `0 8-18/2 * * *` = Alle 2 Stunden von 8-18 Uhr |
 
-### Beispiele
+### 💡 Beispiele
 
 ```bash
 # Täglich um 9:00 Uhr
@@ -165,7 +165,7 @@ Minute  Stunde  Tag(Monat)  Monat  Wochentag
 Du bist dir bei der Cron-Syntax nicht sicher? Schau auf [crontab.guru](https://crontab.guru/) vorbei -- da kannst du Ausdrücke live testen und bekommst eine menschenlesbare Beschreibung.
 </Aside>
 
-## Zeitzone
+## 🌍 Zeitzone
 
 Die Standard-Zeitzone ist `Europe/Berlin`. Du kannst sie pro Schedule individuell konfigurieren:
 
@@ -184,7 +184,7 @@ Alle gängigen IANA-Zeitzonen werden unterstützt (z.B. `UTC`, `Europe/Berlin`, 
 Beachte bei der Zeitzone die Sommerzeit! `0 9 * * *` mit `timezone: "UTC"` ist in Deutschland 10:00 (MEZ) bzw. 11:00 (MESZ).
 </Aside>
 
-## Webhook-Trigger
+## 🪝 Webhook-Trigger
 
 Der Webhook-Trigger ermöglicht das Starten von Scrapes durch externe HTTP-Requests:
 
@@ -216,7 +216,7 @@ curl -X POST http://localhost:3000/api/webhooks/{scrapeId} \
 Über den Request-Body kannst du Variablen übergeben, die dann im Scrape als `{{variables.orderId}}` verfügbar sind. So machst du deine Webhooks dynamisch.
 </Aside>
 
-## Startup-Trigger
+## 🚀 Startup-Trigger
 
 Der Startup-Trigger führt einen Scrape automatisch beim Start der Anwendung aus:
 
@@ -237,7 +237,7 @@ Der Startup-Trigger führt einen Scrape automatisch beim Start der Anwendung aus
 
 Der optionale `delay`-Wert gibt die Verzögerung in Millisekunden nach dem Anwendungsstart an. Das ist nützlich, damit die App erst komplett hochfahren kann, bevor der Scrape losläuft.
 
-## Trigger kombinieren
+## 🔗 Trigger kombinieren
 
 Du kannst mehrere Trigger für denselben Scrape definieren -- kein Problem:
 
@@ -260,7 +260,7 @@ Du kannst mehrere Trigger für denselben Scrape definieren -- kein Problem:
 
 Die Run-Historie zeigt dir an, welcher Trigger die Ausführung ausgelöst hat (`manual`, `scheduled`, `api`).
 
-## Best Practices
+## ✅ Best Practices
 
 - **Zeitzone explizit setzen**, besonders bei internationalen Teams
 - **Intervalle nicht zu kurz wählen** -- mindestens 15 Minuten empfohlen
@@ -269,9 +269,9 @@ Die Run-Historie zeigt dir an, welcher Trigger die Ausführung ausgelöst hat (`
 - **Logs regelmäßig prüfen**, insbesondere nach Aktivierung eines neuen Schedules
 - **Webhook-Secrets verwenden** und über HTTPS aufrufbar machen
 
-## Troubleshooting
+## 🔍 Troubleshooting
 
-### Schedule läuft nicht
+### ⚠️ Schedule läuft nicht
 
 1. Prüfen, ob `scheduleEnabled: true` gesetzt ist:
    ```bash
@@ -284,7 +284,7 @@ Die Run-Historie zeigt dir an, welcher Trigger die Ausführung ausgelöst hat (`
 3. Cron-Expression validieren (z.B. auf [crontab.guru](https://crontab.guru/))
 4. API-Logs auf Fehlermeldungen prüfen
 
-### Falsche Ausführungszeit
+### ⚠️ Falsche Ausführungszeit
 
 1. Zeitzone der Schedule-Konfiguration prüfen
 2. Serverzeit und -zeitzone verifizieren über `/api/health`

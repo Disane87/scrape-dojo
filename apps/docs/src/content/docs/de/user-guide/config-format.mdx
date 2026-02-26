@@ -112,7 +112,7 @@ Variablen machen dein Scrape flexibel: Anstatt Werte fest in die Config zu schre
 
 Stell dir vor, du hast ein Scrape das Daten für verschiedene Jahre und Regionen abruft — mit Variablen brauchst du dafür nur eine einzige Config:
 
-### Felder einer Variable
+### 📋 Felder einer Variable
 
 | Feld | Typ | Pflicht | Beschreibung |
 |------|-----|---------|-------------|
@@ -128,7 +128,7 @@ Stell dir vor, du hast ein Scrape das Daten für verschiedene Jahre und Regionen
 | `optionsExpression` | `string` | — | JSONata-Ausdruck für dynamische Optionen bei `select` |
 | `secretRef` | `string` | — | Name eines Secrets, dessen Wert als Default geladen wird |
 
-### Variablen-Typen
+### 📋 Variablen-Typen
 
 | Typ | UI-Element | Beschreibung |
 |-----|-----------|-------------|
@@ -140,7 +140,7 @@ Stell dir vor, du hast ein Scrape das Daten für verschiedene Jahre und Regionen
 | `url` | URL-Feld | URL mit Validierung |
 | `select` | Dropdown | Auswahl aus vordefinierten Optionen |
 
-### Beispiel
+### 💡 Beispiel
 
 ```jsonc
 {
@@ -189,7 +189,7 @@ Stell dir vor, du hast ein Scrape das Daten für verschiedene Jahre und Regionen
 Variablen mit `secretRef` werden automatisch mit dem Wert des referenzierten Secrets befüllt. Der Benutzer kann den Wert trotzdem im UI-Dialog überschreiben — praktisch für Standardwerte, die man mal schnell ändern will.
 </Aside>
 
-### Dynamische Optionen mit `optionsExpression`
+### 🔀 Dynamische Optionen mit `optionsExpression`
 
 Für `select`-Variablen kannst du Optionen auch dynamisch per JSONata-Ausdruck generieren. Im Ausdruck stehen `$year`, `$month` und `$day` als Kontext zur Verfügung:
 
@@ -276,7 +276,7 @@ Ein Scrape besteht aus einem oder mehreren **Steps**. Jeder Step hat einen `name
 }
 ```
 
-### Action-Struktur
+### ⚡ Action-Struktur
 
 Jede Action hat drei Felder:
 

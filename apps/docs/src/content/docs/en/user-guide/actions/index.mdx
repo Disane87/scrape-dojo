@@ -11,15 +11,15 @@ Actions are the heart of Scrape Dojo. Think of each action as an individual tool
 
 There are currently **22 actions** available, organized into six categories. Let's take a look!
 
-## All Actions by Category
+## 📋 All Actions by Category
 
-### Navigation
+### 🧭 Navigation
 
 | Action | Description |
 |--------|-------------|
 | [`navigate`](/en/user-guide/actions/navigate/) | Opens a URL in the browser |
 
-### Interaction
+### 👆 Interaction
 
 | Action | Description |
 |--------|-------------|
@@ -28,7 +28,7 @@ There are currently **22 actions** available, organized into six categories. Let
 | [`keyboardPress`](/en/user-guide/actions/keyboard-press/) | Presses a key on the keyboard |
 | `waitForOtp` | Waits for an OTP input from the user |
 
-### Extraction
+### 📥 Extraction
 
 | Action | Description |
 |--------|-------------|
@@ -37,14 +37,14 @@ There are currently **22 actions** available, organized into six categories. Let
 | `get` | Gets a single element handle for later interaction |
 | `getAll` | Gets multiple element handles for later interaction |
 
-### Data Processing
+### 💾 Data Processing
 
 | Action | Description |
 |--------|-------------|
 | `transform` | Transforms data using JSONata expressions |
 | `storeData` | Persistently stores data in the database |
 
-### Flow Control
+### 🔄 Flow Control
 
 | Action | Description |
 |--------|-------------|
@@ -53,7 +53,7 @@ There are currently **22 actions** available, organized into six categories. Let
 | `skipIf` | Skips subsequent actions when a condition is met |
 | `waitForSelector` | Waits until an element appears on the page |
 
-### Utility
+### 🔧 Utility
 
 | Action | Description |
 |--------|-------------|
@@ -65,7 +65,7 @@ There are currently **22 actions** available, organized into six categories. Let
 | `artifacts` | Displays data as an artifact in the UI (auto-detects format) |
 | `fileExists` | Checks whether a file exists at a given path |
 
-## Structure of an Action
+## 📐 Structure of an Action
 
 Every action consists of three required fields:
 
@@ -89,7 +89,7 @@ Every action consists of three required fields:
 Don't mix up `name` and `action`! `name` is **your** identifier for data access, `action` is the **predefined** action type. Example: `"name": "productTitle"` and `"action": "extract"`.
 </Aside>
 
-## Data Flow with previousData
+## 🔄 Data Flow with previousData
 
 Here's the genius part of Scrape Dojo: every action can access the results of all previous actions within the same step. This works via the `previousData` map.
 
@@ -123,7 +123,7 @@ For example, if you define an action with `"name": "productTitle"`, its result i
 The `previousData` map is **shared per step**. When you move to a new step, `previousData` starts empty again.
 </Aside>
 
-## Available Data Variables
+## 📋 Available Data Variables
 
 In your action's `params`, you can access various data sources using Handlebars syntax (`{{ }}`):
 

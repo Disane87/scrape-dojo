@@ -11,7 +11,7 @@ Brauchst du nicht nur einen Wert, sondern gleich eine ganze Liste? Dann ist `ext
 
 Genau wie bei `extract` wird standardmäßig `textContent` verwendet, aber du kannst jede Eigenschaft oder jedes Attribut abfragen.
 
-## Parameter
+## ⚙️ Parameter
 
 | Parameter | Typ | Pflicht | Beschreibung |
 |-----------|-----|---------|--------------|
@@ -23,7 +23,7 @@ Genau wie bei `extract` wird standardmäßig `textContent` verwendet, aber du ka
 `extractAll` gibt immer ein **Array von Strings** zurück. Leere Werte und reine Whitespace-Strings werden automatisch herausgefiltert.
 </Aside>
 
-## Beispiele
+## 💡 Beispiele
 
 **Alle Produktnamen extrahieren:**
 
@@ -94,7 +94,7 @@ Ergebnis:
 ]
 ```
 
-## Tipps
+## 💡 Tipps
 
 - Wenn keine Elemente gefunden werden, gibt `extractAll` `null` zurück — nicht ein leeres Array. Plane das in deiner weiteren Verarbeitung ein.
 - Für `data-*` Attribute wird intern `getAttribute()` verwendet, für alles andere `getProperty()`. Das passiert automatisch, du musst dich nicht darum kümmern.

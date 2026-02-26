@@ -11,7 +11,7 @@ Two-factor authentication is great for security — but when scraping, it can be
 
 The best part: you can even define alternative verification methods in case the user prefers WhatsApp or a passkey.
 
-## Parameters
+## ⚙️ Parameters
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -22,7 +22,7 @@ The best part: you can even define alternative verification methods in case the 
 | `message` | `string` | No | Message displayed to the user in the UI (default: `"Please enter the OTP code:"`) |
 | `alternatives` | `array` | No | Alternative verification methods (see below) |
 
-### alternatives object
+### 🔀 alternatives object
 
 Each item in the `alternatives` array has the following structure:
 
@@ -37,7 +37,7 @@ Each item in the `alternatives` array has the following structure:
 The `detectSelector` is super handy when the OTP page doesn't always show up — e.g. when you're already logged in or a cookie is present. That way the wait is simply skipped without your scrape aborting.
 </Aside>
 
-## Examples
+## 💡 Examples
 
 **Simple OTP wait:**
 
@@ -82,7 +82,7 @@ The `detectSelector` is super handy when the OTP page doesn't always show up —
 Alternatives are only shown in the UI when the corresponding button selector is actually found on the page. That way, options that aren't available won't show up.
 </Aside>
 
-## Tips
+## 💡 Tips
 
 - The default timeout of 2 minutes is intentionally generous — SMS codes can sometimes take a while to arrive.
 - When `pressEnter` is set to `true`, Scrape Dojo automatically waits for navigation after pressing Enter. That way you won't miss a page transition.

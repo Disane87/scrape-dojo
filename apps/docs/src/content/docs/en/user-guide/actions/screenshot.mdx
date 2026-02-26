@@ -11,11 +11,11 @@ Sometimes you just want to see what the browser is currently showing. The `scree
 
 The filename is generated automatically -- from a timestamp and the page title. So you don't have to worry about a thing.
 
-## Parameters
+## ⚙️ Parameters
 
 The `screenshot` action has **no parameters**. Just call it and you're done.
 
-## How does the filename work?
+## 📝 How does the filename work?
 
 The generated filename follows this pattern:
 
@@ -29,7 +29,7 @@ The page title gets sanitized (special characters are replaced with hyphens and 
 20260226-143022-amazon-de-mein-konto.png
 ```
 
-## Storage location
+## 📁 Storage location
 
 Screenshots are saved in the `./screenshots/` directory. If the directory doesn't exist yet, it's created automatically.
 
@@ -37,7 +37,7 @@ Screenshots are saved in the `./screenshots/` directory. If the directory doesn'
 In a Docker setup, you should mount the `./screenshots/` directory as a volume so the images survive a container restart.
 </Aside>
 
-## Examples
+## 💡 Examples
 
 **Simple screenshot:**
 
@@ -77,7 +77,7 @@ In a Docker setup, you should mount the `./screenshots/` directory as a volume s
 The return value of the action is the full file path of the screenshot. You can use it via `previousData` in subsequent actions, e.g. to log it.
 </Aside>
 
-## Tips
+## 💡 Tips
 
 - Use screenshots before and after critical actions to document the page state.
 - When debugging: place a screenshot right before the failing action to see what the browser is showing at that point.

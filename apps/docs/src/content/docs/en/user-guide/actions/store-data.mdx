@@ -9,7 +9,7 @@ import { Aside } from '@astrojs/starlight/components';
 
 With `storeData` you can save values that you want to reuse later in the same run or even in future runs. This is super handy for counters, intermediate results, or flags that you need across multiple steps.
 
-## Parameters
+## ⚙️ Parameters
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -18,7 +18,7 @@ With `storeData` you can save values that you want to reuse later in the same ru
 | `persist` | `boolean` | No | If `true`, the value is persisted in the database and survives all runs (job level) |
 | `attachToRun` | `boolean` | No | If `true`, the value is attached to the current run and shown in the run details (default: `true`) |
 
-### Storage Levels
+### 📋 Storage Levels
 
 - **Runtime** (default): The value is available in the current run via `storedData.key`
 - **Run-Level** (`attachToRun: true`): The value is saved to the database and visible in the run detail view
@@ -28,7 +28,7 @@ With `storeData` you can save values that you want to reuse later in the same ru
 When `persist: true` is set, `attachToRun` is automatically set to `false`. Job-level data belongs to the scrape, not to an individual run.
 </Aside>
 
-## Examples
+## 💡 Examples
 
 **Storing a simple value:**
 

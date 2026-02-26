@@ -11,14 +11,14 @@ Before you download a file again or repeat an expensive scrape step, you might w
 
 Super handy for deduplication -- avoiding duplicate downloads.
 
-## Parameters
+## ⚙️ Parameters
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `path` | `string` | Yes | Path to the file or directory |
 | `pattern` | `string` | No | Glob pattern for the file search (e.g. `*.pdf`, `invoice-*.pdf`) |
 
-## Return Value
+## 📋 Return Value
 
 The action returns a **boolean**:
 - `true` -- file (or pattern match) found
@@ -26,7 +26,7 @@ The action returns a **boolean**:
 
 The value is then available in `previousData`.
 
-## Examples
+## 💡 Examples
 
 **Check a single file:**
 
@@ -97,7 +97,7 @@ This searches in the `./downloads/invoices/2025` directory for all files matchin
 The `fileExists` + `skipIf` pattern is worth its weight in gold when you run a scrape regularly and only want to download new files. Saves you bandwidth and time.
 </Aside>
 
-## Glob Pattern Reference
+## 📋 Glob Pattern Reference
 
 | Pattern | Description |
 |---------|-------------|
@@ -107,7 +107,7 @@ The `fileExists` + `skipIf` pattern is worth its weight in gold when you run a s
 | `invoice-2025-*.pdf` | All invoices from 2025 |
 | `report-??.csv` | Reports with a two-digit number |
 
-## Tips
+## 💡 Tips
 
 - When using `pattern`, `path` must be a **directory**, not a file path.
 - Without `pattern`, `path` is interpreted as a full file path.

@@ -9,7 +9,7 @@ import { Aside } from '@astrojs/starlight/components';
 
 The `type` action lets you enter text into input fields — just like you would manually via the keyboard. Ideal for login forms, search fields, or any other text input. Bonus: you can include secrets and even define conditions for when typing should happen.
 
-## Parameters
+## ⚙️ Parameters
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
@@ -18,9 +18,9 @@ The `type` action lets you enter text into input fields — just like you would 
 | `pressEnter` | `boolean` | No | `false` | If `true`, Enter is pressed after typing (triggers navigation). |
 | `condition` | `string` | No | — | Handlebars condition. The action only runs if the result is `"true"`. |
 
-## Examples
+## 💡 Examples
 
-### Simple Text Input
+### 🎯 Simple Text Input
 
 ```jsonc
 {
@@ -33,7 +33,7 @@ The `type` action lets you enter text into input fields — just like you would 
 }
 ```
 
-### Password from Secrets
+### 🔒 Password from Secrets
 
 You should never write sensitive data like passwords directly into the config. Use secrets instead:
 
@@ -52,7 +52,7 @@ You should never write sensitive data like passwords directly into the config. U
 Password fields are automatically masked in the log (`********`) when the selector contains the word "password". Still — always use secrets instead of plaintext!
 </Aside>
 
-### Input with Enter
+### ⏎ Input with Enter
 
 Handy for search fields that don't have their own submit button:
 
@@ -68,7 +68,7 @@ Handy for search fields that don't have their own submit button:
 }
 ```
 
-### Conditional Input
+### 🔀 Conditional Input
 
 Sometimes you only want to type when a certain condition is met — for example, when a previous field has a specific value:
 
