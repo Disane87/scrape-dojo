@@ -1,267 +1,212 @@
 ---
 title: Schnellstart
-description: Scrape Dojo in 5 Minuten einrichten und nutzen
+description: Scrape Dojo in 5 Minuten einrichten und dein erstes Scrape erstellen
+sidebar:
+  order: 1
 ---
 
-# Schnellstart
+import { Card, CardGrid, Aside, Tabs, TabItem, Steps, LinkCard } from '@astrojs/starlight/components';
 
-Dieser Guide bringt dich in wenigen Minuten mit Scrape Dojo zum Laufen.
+Du willst direkt loslegen? Perfekt — dieser Guide bringt dich in wenigen Minuten von Null auf dein erstes funktionierendes Scrape. Wir gehen zusammen durch Installation, Konfiguration und den ersten Testlauf.
 
-## Voraussetzungen
+## 📋 Voraussetzungen
 
-```mermaid
-graph LR
-    A[💻 Node.js 18+] --> D[✅ Ready]
-    B[📦 pnpm 8+] --> D
-    C[🐳 Docker optional] --> D
-    
-    classDef ready fill:#48BB78,stroke:#fff,stroke-width:2px,color:#fff
-    class D ready
-```
+Bevor es losgeht, check kurz ob du folgende Tools installiert hast:
 
-- Node.js 18 oder höher
-- pnpm 8 oder höher (oder npm/yarn)
-- Optional: Docker & Docker Compose
+| Software | Version | Hinweis |
+|----------|---------|---------|
+| **Node.js** | 20+ | [nodejs.org](https://nodejs.org/) |
+| **pnpm** | 9+ | `npm install -g pnpm` |
+| **Chrome/Chromium** | Aktuell | Wird von Puppeteer für die Browser-Automatisierung genutzt |
+| **Docker** _(optional)_ | 24+ | Empfohlen für Produktion — damit sparst du dir viel Konfig-Arbeit |
 
-## Installation
+<Aside type="tip">
+Wenn du nur mal schnell reinschauen willst, nimm Docker. Damit hast du alles in ein paar Minuten am Laufen, ohne dich um Node-Versionen oder Dependencies zu kümmern.
+</Aside>
 
-### Option 1: Docker (empfohlen)
+## 🚀 Installation
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant U as User
-    participant D as Docker
-    participant A as API
-    participant UI as UI
+<Tabs>
+<TabItem label="🐳 Docker (empfohlen)">
 
-    U->>D: docker-compose up -d
-    D->>A: Start API Container
-    D->>UI: Start UI Container
-    A-->>U: API ready on :3000
-    UI-->>U: UI ready on :4200
-```
+Docker ist der einfachste Weg, Scrape Dojo zum Laufen zu bringen. Kein Node.js nötig, kein Dependency-Chaos — einfach Container starten und fertig.
 
-```bash
-# Repository klonen
-git clone https://github.com/disane87/scrape-dojo.git
-cd scrape-dojo
+<Steps>
 
-# Environment-Variablen konfigurieren
-cp .env.example .env
-# Editiere .env - mindestens JWT_SECRET und ENCRYPTION_KEY setzen
+1. **Encryption Key generieren**
 
-# Container starten
-docker-compose up -d
+   Der Encryption Key verschlüsselt deine Secrets (Passwörter, API-Keys etc.) in der Datenbank. Du brauchst einen 256-Bit Hex-Key:
 
-# Logs verfolgen
-docker-compose logs -f
-```
+   ```bash
+   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+   ```
 
-**URLs:**
-- UI: http://localhost:4200
-- API: http://localhost:3000
-- API Docs: http://localhost:3000/api
+   <Aside type="caution">
+   Bewahre diesen Key sicher auf (z.B. in einem Passwort-Manager). Wenn du ihn verlierst, sind alle gespeicherten Secrets unwiderruflich weg!
+   </Aside>
 
-### Option 2: Lokale Entwicklung
+2. **`docker-compose.yml` erstellen**
 
-```bash
-# Repository klonen
-git clone https://github.com/disane87/scrape-dojo.git
-cd scrape-dojo
+   Erstelle eine `docker-compose.yml` in einem neuen Ordner:
 
-# Dependencies installieren
-pnpm install
+   ```yaml
+   version: '3.8'
+   services:
+     api:
+       image: scrape-dojo/api:latest
+       ports:
+         - "3030:3000"
+       environment:
+         - SCRAPE_DOJO_ENCRYPTION_KEY=dein_generierter_key_hier
+         - DB_TYPE=sqlite
+       volumes:
+         - ./data:/app/data
+         - ./downloads:/app/downloads
+         - ./logs:/app/logs
+         - ./config:/app/config
+         - ./browser-data:/app/browser-data
+       restart: unless-stopped
 
-# Environment-Variablen konfigurieren
-cp .env.example .env
-# Editiere .env
+     ui:
+       image: scrape-dojo/ui:latest
+       ports:
+         - "8080:80"
+       depends_on:
+         - api
+       restart: unless-stopped
+   ```
 
-# Alle Services starten
-pnpm start
+3. **Container starten**
 
-# Oder einzeln:
-pnpm start:api   # API auf :3000
-pnpm start:ui    # UI auf :4200
-pnpm start:docs  # Docs auf :4321
-```
+   ```bash
+   docker compose up -d
+   ```
 
-## Erster Scrape
+4. **Logs checken**
 
-### 1. Scrape-Konfiguration erstellen
+   ```bash
+   docker compose logs -f
+   ```
 
-Erstelle eine neue Datei `config/sites/my-first-scrape.jsonc`:
+   Wenn alles klappt, siehst du nach ein paar Sekunden die Startmeldungen von API und UI.
 
-```jsonc
-{
-  "name": "my-first-scrape",
-  "description": "Mein erster Scrape mit Scrape Dojo",
-  "actions": [
-    {
-      "type": "navigate",
-      "description": "Öffne die Website",
-      "url": "https://example.com"
-    },
-    {
-      "type": "extract",
-      "description": "Extrahiere den Titel",
-      "selector": "h1",
-      "extractData": "innerText"
-    },
-    {
-      "type": "extract",
-      "description": "Extrahiere den ersten Paragraph",
-      "selector": "p",
-      "extractData": "innerText"
-    }
-  ]
-}
-```
+</Steps>
 
-### 2. Scrape ausführen
+<Aside type="tip">
+Die API läuft unter `http://localhost:3030/api`, die UI unter `http://localhost:8080`. Einfach im Browser öffnen und loslegen!
+</Aside>
 
-#### Via UI (einfachste Methode)
+**📁 Volumes im Überblick:**
 
-```mermaid
-graph LR
-    A[🌐 Open UI] --> B[📋 Select Scrape]
-    B --> C[▶️ Click Run]
-    C --> D[👀 Watch Live]
-    D --> E[📊 View Results]
-    
-    classDef action fill:#4299E1,stroke:#fff,stroke-width:2px,color:#fff
-    classDef result fill:#48BB78,stroke:#fff,stroke-width:2px,color:#fff
-    
-    class A,B,C,D action
-    class E result
-```
+| Volume | Was steckt drin? |
+|--------|------------------|
+| `./data` | SQLite-Datenbank und persistente Daten |
+| `./downloads` | Heruntergeladene Dateien (PDFs, Screenshots etc.) |
+| `./logs` | Log-Dateien der Anwendung |
+| `./config` | Deine Scrape-Konfigurationsdateien (JSONC) |
+| `./browser-data` | Browser-Profildaten (Cookies, Sessions — damit du eingeloggt bleibst) |
 
-1. Öffne http://localhost:4200
-2. Navigiere zu "Scrapes"
-3. Wähle "my-first-scrape"
-4. Klicke "Run"
-5. Beobachte die Live-Ausführung
-6. Prüfe die Ergebnisse
+</TabItem>
+<TabItem label="📦 Aus dem Quellcode">
 
-#### Via API
+Wenn du am Code mitarbeiten oder alles selbst kontrollieren willst, kannst du Scrape Dojo direkt aus dem Quellcode starten.
 
-```bash
-curl -X POST http://localhost:3000/api/scrape/run \
-  -H "Content-Type: application/json" \
-  -d '{
-    "configName": "my-first-scrape"
-  }'
-```
+<Steps>
 
-### 3. Ergebnis verstehen
+1. **Repository klonen**
 
-Der Scrape liefert folgende Struktur:
+   ```bash
+   git clone https://github.com/disane87/scrape-dojo.git
+   cd scrape-dojo
+   ```
 
-```typescript
-{
-  runId: "unique-run-id",
-  status: "completed",
-  startTime: "2024-01-11T10:00:00.000Z",
-  endTime: "2024-01-11T10:00:05.000Z",
-  results: {
-    // Extrahierte Daten
-    title: "Example Domain",
-    paragraph: "This domain is for use in..."
-  }
-}
-```
+2. **Dependencies installieren**
 
-## Erweiterte Konfiguration
+   ```bash
+   pnpm install
+   ```
 
-### Mit Variablen
+   Das dauert beim ersten Mal ein paar Minuten — pnpm lädt alle Pakete für API, UI und die Shared Library.
+
+3. **Environment konfigurieren**
+
+   Erstelle eine `.env`-Datei im Root-Verzeichnis:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   Öffne die `.env` und setze mindestens den Encryption Key:
+
+   ```bash
+   SCRAPE_DOJO_ENCRYPTION_KEY=dein_generierter_key_hier
+   ```
+
+   Key generieren:
+
+   ```bash
+   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+   ```
+
+4. **Anwendung starten**
+
+   ```bash
+   # Alles auf einmal (API + UI)
+   pnpm start
+
+   # Oder einzeln, wenn du nur eins brauchst:
+   pnpm start:api   # API auf Port 3000
+   pnpm start:ui    # UI auf Port 4200
+   ```
+
+</Steps>
+
+<Aside type="tip">
+Im Dev-Modus läuft die UI unter `http://localhost:4200`. Der Dev-Server leitet API-Anfragen automatisch an `http://localhost:3000` weiter — du musst dich also nicht um CORS oder Proxy-Konfig kümmern.
+</Aside>
+
+</TabItem>
+</Tabs>
+
+## ⚡ Dein erstes Scrape
+
+Jetzt wird's spannend! Stell dir vor, du willst den Titel einer Webseite auslesen. Erstelle dafür eine neue Datei `config/sites/my-first-scrape.jsonc`:
 
 ```jsonc
 {
-  "name": "parameterized-scrape",
-  "actions": [
+  "$schema": "../scrapes.schema.json",
+  "scrapes": [
     {
-      "type": "navigate",
-      "url": "{{variables.baseUrl}}/{{variables.path}}"
-    }
-  ]
-}
-```
-
-**Variablen setzen:**
-1. Via UI: Settings → Variables
-2. Via API: POST /api/variables
-
-```json
-{
-  "baseUrl": "https://example.com",
-  "path": "products"
-}
-```
-
-### Mit Secrets (verschlüsselt)
-
-```jsonc
-{
-  "name": "authenticated-scrape",
-  "actions": [
-    {
-      "type": "navigate",
-      "url": "{{variables.loginUrl}}"
-    },
-    {
-      "type": "type",
-      "selector": "#username",
-      "value": "{{secrets.username}}"
-    },
-    {
-      "type": "type",
-      "selector": "#password",
-      "value": "{{secrets.password}}"
-    },
-    {
-      "type": "click",
-      "selector": "#login-button"
-    }
-  ]
-}
-```
-
-**Secrets setzen:**
-1. Via UI: Settings → Secrets
-2. Via API: POST /api/secrets
-
-### Mit Loops
-
-```jsonc
-{
-  "name": "multi-item-scrape",
-  "actions": [
-    {
-      "type": "extract",
-      "description": "Extrahiere alle Produkt-Links",
-      "selector": ".product-link",
-      "extractData": "href",
-      "multiple": true
-    },
-    {
-      "type": "loop",
-      "description": "Besuche jedes Produkt",
-      "loopData": "{{previousData}}",
-      "actions": [
+      "id": "my-first-scrape",
+      "metadata": {
+        "description": "Mein erstes Scrape — liest den Seitentitel aus",
+        "version": "1.0.0",
+        "author": "gh:@dein-username",
+        "triggers": [{ "type": "manual" }]
+      },
+      "steps": [
         {
-          "type": "navigate",
-          "url": "{{currentData}}"
-        },
-        {
-          "type": "extract",
-          "selector": ".product-title",
-          "extractData": "innerText"
-        },
-        {
-          "type": "extract",
-          "selector": ".product-price",
-          "extractData": "innerText",
-          "transformData": "$number($substring(innerText, 1))"
+          "name": "Titel auslesen",
+          "actions": [
+            {
+              "name": "navigate",
+              "action": "navigate",
+              "params": { "url": "https://example.com" }
+            },
+            {
+              "name": "title",
+              "action": "extract",
+              "params": { "selector": "h1" }
+            },
+            {
+              "name": "logTitle",
+              "action": "logger",
+              "params": {
+                "message": "Gefundener Titel: {{previousData.title}}",
+                "level": "log"
+              }
+            }
+          ]
         }
       ]
     }
@@ -269,134 +214,84 @@ Der Scrape liefert folgende Struktur:
 }
 ```
 
-## Live Monitoring
+### 🔍 Was passiert hier?
 
-### WebSocket Events
+Das Scrape führt drei Actions nacheinander aus:
 
-Verbinde dich mit dem WebSocket-Endpunkt für Live-Updates:
+| # | Action | Was sie macht |
+|---|--------|---------------|
+| 1 | `navigate` | Öffnet `https://example.com` im Browser |
+| 2 | `extract` | Holt den Text aus dem `h1`-Element. Das Ergebnis landet unter `previousData.title` (der `name` der Action ist der Key) |
+| 3 | `logger` | Gibt den Titel in der Konsole aus. Das `{{previousData.title}}` ist ein Handlebars-Template — damit greifst du auf Ergebnisse vorheriger Actions zu |
 
-```typescript
-import { io } from 'socket.io-client';
+<Aside type="note">
+Der `name` jeder Action ist super wichtig: Er bestimmt, unter welchem Key das Ergebnis gespeichert wird. Wähle also aussagekräftige Namen wie `title`, `productLinks` oder `priceData`.
+</Aside>
 
-const socket = io('http://localhost:3000');
+## ▶️ Scrape starten
 
-socket.on('scrape.started', (data) => {
-  console.log('Scrape started:', data);
-});
+### Über die UI
 
-socket.on('scrape.action', (data) => {
-  console.log('Action:', data.description);
-});
+<Steps>
 
-socket.on('scrape.completed', (data) => {
-  console.log('Scrape completed:', data.results);
-});
-```
+1. Öffne die UI im Browser:
+   - **Docker**: `http://localhost:8080`
+   - **Entwicklung**: `http://localhost:4200`
 
-### Event-Typen
+2. Du siehst dein Scrape "my-first-scrape" in der Übersicht — Scrape Dojo erkennt neue Config-Dateien automatisch (Hot Reload).
 
-```mermaid
-graph TB
-    Start[🚀 scrape.started] --> Action[⚡ scrape.action]
-    Action --> Progress[📊 scrape.progress]
-    Progress --> Action
-    Action --> Complete[✅ scrape.completed]
-    Action --> Error[❌ scrape.error]
-    
-    classDef start fill:#4299E1,stroke:#fff,stroke-width:2px,color:#fff
-    classDef action fill:#ED8936,stroke:#fff,stroke-width:2px,color:#fff
-    classDef complete fill:#48BB78,stroke:#fff,stroke-width:2px,color:#fff
-    classDef error fill:#E53E3E,stroke:#fff,stroke-width:2px,color:#fff
-    
-    class Start start
-    class Action,Progress action
-    class Complete complete
-    class Error error
-```
+3. Klicke auf das Scrape, um die Detailansicht zu öffnen.
 
-## Nächste Schritte
+4. Klicke auf **"Run"**, um das Scrape zu starten.
 
-<div class="not-content">
-  
-  **🎯 Lerne mehr über Actions**
-  - [Alle verfügbaren Actions](/user-guide/actions/)
-  - [Template-Syntax](/user-guide/templates/)
-  - [Datentransformation](/user-guide/jsonata/)
+5. Beobachte die Live-Ausführung in Echtzeit über Server-Sent Events (SSE) direkt in der UI. Du siehst jeden Step und jede Action mit Status und Ergebnis.
 
-  **🔐 Konfiguriere Authentifizierung**
-  - [JWT Setup](/configuration/jwt/)
-  - [OIDC/SSO Integration](/configuration/oidc/)
-  - [MFA einrichten](/configuration/mfa/)
+</Steps>
 
-  **🚀 Produktionsumgebung**
-  - [Docker Deployment](/architecture/deployment/)
-  - [Monitoring](/deployment/monitoring/)
-  - [Best Practices](/deployment/best-practices/)
+### Über die API
 
-</div>
-
-## Beispiel-Projekte
-
-### E-Commerce Scraper
-```bash
-# Beispiel für Amazon-Produktsuche
-config/sites/amazon-product-search.jsonc
-```
-
-### News Aggregator
-```bash
-# Beispiel für Nachrichten sammeln
-config/sites/news-aggregator.jsonc
-```
-
-### Social Media Monitor
-```bash
-# Beispiel für Social Media Posts
-config/sites/social-media-monitor.jsonc
-```
-
-## Troubleshooting
-
-### ❌ Port bereits belegt
+Du kannst Scrapes auch direkt per REST-API starten — praktisch für Automatisierung oder Debugging:
 
 ```bash
-# Prüfe welcher Prozess den Port nutzt
-lsof -i :3000  # macOS/Linux
-netstat -ano | findstr :3000  # Windows
-
-# Oder ändere den Port in .env
-SCRAPE_DOJO_PORT=3001
+# Scrape starten
+curl http://localhost:3000/api/scrape/my-first-scrape
 ```
 
-### ❌ Docker startet nicht
+<Aside type="note">
+Im Docker-Setup erreichst du die API über Port 3030: `http://localhost:3030/api/scrape/my-first-scrape`
+</Aside>
+
+Du kannst beim Start auch Variablen mitgeben:
 
 ```bash
-# Logs prüfen
-docker-compose logs api
-docker-compose logs ui
-
-# Container neu starten
-docker-compose down
-docker-compose up -d
+curl -X POST http://localhost:3000/api/scrape/my-first-scrape \
+  -H "Content-Type: application/json" \
+  -d '{ "variables": { "targetUrl": "https://example.org" } }'
 ```
 
-### ❌ Browser startet nicht
+## 🎯 Nächste Schritte
 
-```bash
-# Puppeteer im Headless-Modus
-PUPPETEER_HEADLESS=true
+Glückwunsch, dein erstes Scrape läuft! Jetzt kannst du tiefer einsteigen:
 
-# Puppeteer mit zusätzlichen Args
-PUPPETEER_ARGS=--no-sandbox,--disable-setuid-sandbox
-```
-
-## Hilfe & Support
-
-- 📖 [Vollständige Dokumentation](/architecture/overview/)
-- 🐛 [GitHub Issues](https://github.com/disane87/scrape-dojo/issues)
-- 💬 [Diskussionen](https://github.com/disane87/scrape-dojo/discussions)
-- 📧 Email: support@scrape-dojo.com
-
----
-
-**Viel Erfolg mit Scrape Dojo! 🥋**
+<CardGrid>
+  <LinkCard
+    title="📐 Konfigurationsformat"
+    description="Verstehe den vollständigen Aufbau von Scrape-Konfigurationen — Metadaten, Steps, Actions und mehr"
+    href="/scrape-dojo/de/user-guide/config-format/"
+  />
+  <LinkCard
+    title="⚡ Actions-Referenz"
+    description="Alle verfügbaren Actions mit Parametern und Beispielen"
+    href="/scrape-dojo/de/user-guide/actions/"
+  />
+  <LinkCard
+    title="🔧 Templates"
+    description="Handlebars-Templates und JSONata-Transformationen für dynamische Werte"
+    href="/scrape-dojo/de/user-guide/templates/"
+  />
+  <LinkCard
+    title="📚 Beispiele"
+    description="Praxisbeispiele für häufige Scraping-Szenarien"
+    href="/scrape-dojo/de/examples/"
+  />
+</CardGrid>

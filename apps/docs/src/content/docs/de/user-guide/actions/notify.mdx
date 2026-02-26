@@ -1,0 +1,108 @@
+---
+title: notify
+description: "Sende Benachrichtigungen an die UI"
+sidebar:
+  order: 54
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Willst du während eines Scrapes eine Nachricht an die UI schicken? Vielleicht eine Erfolgsmeldung, eine Warnung oder einfach ein "Hey, ich bin fertig!"? Die `notify`-Action sendet Benachrichtigungen in Echtzeit an die Benutzeroberfläche -- und optional auch als Browser-Notification.
+
+Das ist besonders nützlich bei langen Scrapes, damit du weißt, was gerade passiert, ohne ständig die Logs zu checken.
+
+## Parameter
+
+| Parameter | Typ | Pflicht | Beschreibung |
+|-----------|-----|---------|--------------|
+| `title` | `string` | Ja | Titel der Benachrichtigung |
+| `message` | `string` | Ja | Nachrichtentext |
+| `type` | `string` | Nein | Art der Benachrichtigung: `info`, `success`, `warning`, `error` (Standard: `info`) |
+| `browserNotification` | `boolean` | Nein | Browser-Notification anzeigen (Standard: `false`) |
+| `autoDismiss` | `number` | Nein | Automatisches Ausblenden nach X Millisekunden. `0` = manuelles Schließen (Standard: `5000`) |
+
+### Notification-Typen
+
+| Typ | Beschreibung |
+|-----|--------------|
+| `info` | Neutrale Information (blau) |
+| `success` | Erfolgsmeldung (grün) |
+| `warning` | Warnung (gelb) |
+| `error` | Fehlermeldung (rot) |
+
+## Beispiele
+
+**Info-Benachrichtigung:**
+
+```jsonc
+{
+  "name": "notifyStart",
+  "action": "notify",
+  "params": {
+    "title": "Scrape gestartet",
+    "message": "Der tägliche Report wird jetzt erstellt.",
+    "type": "info"
+  }
+}
+```
+
+**Erfolg mit Browser-Notification:**
+
+```jsonc
+{
+  "name": "notifyDone",
+  "action": "notify",
+  "params": {
+    "title": "Fertig!",
+    "message": "{{previousData.count}} Dateien erfolgreich heruntergeladen.",
+    "type": "success",
+    "browserNotification": true
+  }
+}
+```
+
+<Aside type="note">
+Browser-Notifications erfordern, dass der Benutzer die Berechtigung im Browser erteilt hat. Falls nicht, wird nur die UI-Benachrichtigung angezeigt.
+</Aside>
+
+**Warnung ohne Auto-Dismiss:**
+
+```jsonc
+{
+  "name": "notifyWarning",
+  "action": "notify",
+  "params": {
+    "title": "Achtung",
+    "message": "Einige Elemente konnten nicht extrahiert werden. Bitte Ergebnisse prüfen.",
+    "type": "warning",
+    "autoDismiss": 0
+  }
+}
+```
+
+**Fehler-Benachrichtigung:**
+
+```jsonc
+{
+  "name": "notifyError",
+  "action": "notify",
+  "params": {
+    "title": "Download fehlgeschlagen",
+    "message": "Die Datei {{previousData.filename}} konnte nicht heruntergeladen werden.",
+    "type": "error",
+    "browserNotification": true,
+    "autoDismiss": 0
+  }
+}
+```
+
+<Aside type="tip">
+Für wichtige Meldungen (Fehler, Warnungen) setze `autoDismiss: 0`, damit die Nachricht nicht automatisch verschwindet und der Benutzer sie bewusst bestätigen muss.
+</Aside>
+
+## Tipps
+
+- Die `notify`-Action gibt `true` zurück, wenn die Benachrichtigung erfolgreich gesendet wurde.
+- Wenn kein Events-Service verfügbar ist (z.B. bei API-only Ausführung), wird die Nachricht nur geloggt.
+- Kombiniere `notify` am Ende eines Scrapes mit `type: "success"` und `browserNotification: true`, damit du auch bei minimierten Browsern eine Benachrichtigung bekommst.
+- Notification-Titel und -Nachrichten unterstützen Handlebars-Templates -- nutze sie für dynamische Inhalte.

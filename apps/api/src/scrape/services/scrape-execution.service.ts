@@ -352,56 +352,26 @@ export class ScrapeExecutionService {
      */
     private buildDebugData(previousData: Map<string, any>): Record<string, any> {
         const debugData: Record<string, any> = {};
-        
+
         for (const [key, value] of previousData.entries()) {
             // Unwrap if value is wrapped in { result: ... }
             let unwrappedValue = value;
             if (value && typeof value === 'object' && 'result' in value && Object.keys(value).length === 1) {
                 unwrappedValue = value.result;
             }
-            
-            // Check if it's a loop result
+
+            // Summarize loop results instead of copying all iterations
             if (unwrappedValue && typeof unwrappedValue === 'object' && 'iterations' in unwrappedValue) {
-                debugData[key] = this.formatLoopIterations(unwrappedValue.iterations);
+                debugData[key] = {
+                    total: unwrappedValue.total,
+                    completed: unwrappedValue.iterations?.length ?? 0
+                };
             } else {
                 debugData[key] = unwrappedValue;
             }
         }
-        
-        return debugData;
-    }
 
-    /**
-     * Format loop iterations recursively
-     */
-    private formatLoopIterations(iterations: any[]): Record<string, any> {
-        const formatted: Record<string, any> = {};
-        
-        iterations.forEach((iteration, idx) => {
-            const iterationData: Record<string, any> = {};
-            
-            if (iteration.childActions) {
-                iteration.childActions.forEach((childAction: any) => {
-                    // Unwrap action result if it's wrapped in { result: ... }
-                    let actionResult = childAction.result;
-                    if (actionResult && typeof actionResult === 'object' && 'result' in actionResult && Object.keys(actionResult).length === 1) {
-                        actionResult = actionResult.result;
-                    }
-                    
-                    if (actionResult && typeof actionResult === 'object' && 'iterations' in actionResult) {
-                        // Nested loop
-                        iterationData[childAction.name] = this.formatLoopIterations(actionResult.iterations);
-                    } else {
-                        // Regular action result
-                        iterationData[childAction.name] = actionResult;
-                    }
-                });
-            }
-            
-            formatted[`iteration_${idx}`] = iterationData;
-        });
-        
-        return formatted;
+        return debugData;
     }
 
     /**

@@ -1,0 +1,91 @@
+---
+title: "navigate"
+description: "Öffne URLs und navigiere zwischen Seiten"
+sidebar:
+  order: 10
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Mit der `navigate`-Action steuerst du den Browser zu einer URL. Das ist meistens die erste Action in jedem Scrape — schließlich muss der Browser ja erstmal wissen, wo es hingehen soll. Du kannst dabei steuern, wann die Navigation als "fertig" gilt und wie lange maximal gewartet wird.
+
+## Parameter
+
+| Parameter | Typ | Pflicht | Default | Beschreibung |
+|-----------|-----|---------|---------|-------------|
+| `url` | `string` | Ja | — | Die Ziel-URL. Unterstützt Handlebars-Templates. |
+| `waitUntil` | `string` | Nein | `domcontentloaded` | Wann gilt die Seite als geladen? |
+| `timeout` | `number` | Nein | `30000` | Maximale Wartezeit in Millisekunden. |
+
+### waitUntil-Optionen
+
+| Wert | Beschreibung |
+|------|-------------|
+| `domcontentloaded` | DOM ist fertig geparst (schnellste Option) |
+| `load` | Alle Ressourcen (Bilder, Styles, etc.) sind geladen |
+| `networkidle0` | Kein Netzwerk-Traffic mehr seit 500ms (strengste Option) |
+| `networkidle2` | Maximal 2 offene Netzwerk-Verbindungen seit 500ms |
+
+## Beispiele
+
+### Einfache Navigation
+
+```jsonc
+{
+  "name": "startseite",
+  "action": "navigate",
+  "params": {
+    "url": "https://example.com"
+  }
+}
+```
+
+### Mit waitUntil
+
+Wenn die Seite viele dynamische Inhalte nachlädt, ist `networkidle0` eine gute Wahl:
+
+```jsonc
+{
+  "name": "dashboard",
+  "action": "navigate",
+  "params": {
+    "url": "https://example.com/dashboard",
+    "waitUntil": "networkidle0",
+    "timeout": 60000
+  }
+}
+```
+
+### Dynamische URL mit Handlebars
+
+Du kannst Variablen direkt in die URL einbauen:
+
+```jsonc
+{
+  "name": "jahresbericht",
+  "action": "navigate",
+  "params": {
+    "url": "https://example.com/report?year={{variables.targetYear}}&region={{variables.region}}"
+  }
+}
+```
+
+Oder auf Ergebnisse vorheriger Actions zugreifen:
+
+```jsonc
+{
+  "name": "detailseite",
+  "action": "navigate",
+  "params": {
+    "url": "{{previousData.produktLink}}"
+  }
+}
+```
+
+<Aside type="tip">
+Für SPAs (Single-Page-Apps) mit viel JavaScript empfiehlt sich `waitUntil: "networkidle0"`. Für klassische Webseiten reicht `domcontentloaded` völlig aus und ist deutlich schneller.
+</Aside>
+
+<Aside type="note">
+Falls die Navigation wegen eines "frame was detached"-Fehlers fehlschlägt, versucht Scrape Dojo automatisch einen Retry mit `domcontentloaded`. Das passiert manchmal bei Seiten mit iframes oder Redirects.
+</Aside>

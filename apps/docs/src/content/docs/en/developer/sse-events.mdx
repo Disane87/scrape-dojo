@@ -1,0 +1,320 @@
+---
+title: "📡 SSE Events"
+description: Server-Sent Events types and integration
+sidebar:
+  order: 8
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Scrape Dojo uses Server-Sent Events (SSE) for real-time updates during scrape executions. No polling, no WebSocket overhead — just an open HTTP stream where the backend tells you what's happening. Here you'll learn everything about the event types, the payload format, and how to integrate SSE into your own applications.
+
+## Endpoint
+
+```
+GET /api/events
+```
+
+The SSE endpoint delivers a standard EventStream (`text/event-stream`). The connection stays open and the server sends events as they occur.
+
+## Establishing a Connection
+
+### Without Authentication (Development)
+
+```javascript
+const eventSource = new EventSource('/api/events');
+
+eventSource.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+  console.log(`[${data.type}] ${data.scrapeId}: ${data.message}`);
+};
+
+eventSource.onerror = (error) => {
+  console.error('SSE connection error:', error);
+};
+```
+
+### With Authentication
+
+Since the EventSource API doesn't support custom headers, the JWT token is passed as a query parameter:
+
+```javascript
+const eventSource = new EventSource('/api/events?access_token=YOUR_JWT_TOKEN');
+
+eventSource.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+  console.log(`[${data.type}] ${data.scrapeId}: ${data.message}`);
+};
+```
+
+<Aside type="note">
+Access tokens have a short lifespan (default: 15 minutes). Plan for automatic reconnects when the token expires!
+</Aside>
+
+## Event Types
+
+| Type | Description |
+|------|-------------|
+| `scrape-start` | Scrape execution started |
+| `scrape-end` | Scrape completed or failed |
+| `step-status` | Step status changed (running/completed/error) |
+| `action-status` | Action status changed |
+| `loop-iteration` | Loop progress (index, total, current value) |
+| `otp-required` | OTP input required from user |
+| `otp-received` | OTP code received and processed |
+| `log` | Application log (various levels) |
+| `notification` | User notification |
+| `error` | General error |
+| `config-reload` | Configuration changed (development mode only) |
+
+## ScrapeEvent Interface
+
+All events follow this TypeScript interface:
+
+```typescript
+interface ScrapeEvent {
+  type: string;
+  scrapeId: string;
+  runId?: string;
+  stepName?: string;
+  stepIndex?: number;
+  actionName?: string;
+  actionIndex?: number;
+  actionType?: string;
+  status?: 'pending' | 'running' | 'completed' | 'error' | 'waiting' | 'skipped';
+  message?: string;
+  error?: string;
+  result?: unknown;
+  loopName?: string;
+  loopIndex?: number;
+  loopTotal?: number;
+  loopValue?: string;
+  loopPath?: Array<{ name: string; index: number }>;
+  timestamp: number;
+  logLevel?: 'log' | 'error' | 'warn' | 'debug' | 'verbose';
+  notification?: NotificationData;
+  variables?: {
+    runtime?: Record<string, any>;
+    database?: Record<string, any>;
+    final?: Record<string, any>;
+  };
+}
+```
+
+### Field Descriptions
+
+| Field | Description |
+|-------|-------------|
+| `type` | Event type (see table above) |
+| `scrapeId` | ID of the affected scrape |
+| `runId` | ID of the current run |
+| `stepName` / `stepIndex` | Name and index of the current step |
+| `actionName` / `actionIndex` / `actionType` | Details of the current action |
+| `status` | Current status of the element |
+| `message` | Human-readable message |
+| `error` | Error message (on errors) |
+| `result` | Result of an action (on completion) |
+| `loopName` / `loopIndex` / `loopTotal` / `loopValue` | Loop information |
+| `loopPath` | Nested loop hierarchy with name and index |
+| `timestamp` | Unix timestamp in milliseconds |
+| `logLevel` | Severity level for log events |
+| `notification` | Notification data (title, message, type) |
+| `variables` | Current variables (runtime, database, merged) |
+
+## Integration Examples
+
+### Vanilla JS — Event Listener
+
+```javascript
+const eventSource = new EventSource('/api/events');
+
+eventSource.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+
+  switch (data.type) {
+    case 'scrape-start':
+      console.log(`Scrape ${data.scrapeId} started (Run: ${data.runId})`);
+      break;
+
+    case 'step-status':
+      console.log(`Step "${data.stepName}": ${data.status}`);
+      break;
+
+    case 'action-status':
+      console.log(`Action "${data.actionName}" [${data.actionType}]: ${data.status}`);
+      break;
+
+    case 'loop-iteration':
+      console.log(`Loop "${data.loopName}": ${data.loopIndex + 1}/${data.loopTotal}`);
+      break;
+
+    case 'log':
+      console.log(`[${data.logLevel}] ${data.message}`);
+      break;
+
+    case 'scrape-end':
+      console.log(`Scrape ${data.scrapeId} finished: ${data.status}`);
+      if (data.error) console.error(`Error: ${data.error}`);
+      break;
+
+    case 'otp-required':
+      console.log('OTP input required!');
+      break;
+
+    case 'notification':
+      console.log(`Notification: ${data.notification?.title}`);
+      break;
+  }
+};
+```
+
+### Angular Service
+
+```typescript
+@Injectable({ providedIn: 'root' })
+export class ScrapeEventsService {
+  private eventSource: EventSource | null = null;
+  private eventsSubject = new Subject<ScrapeEvent>();
+
+  readonly events$ = this.eventsSubject.asObservable();
+
+  connect(token: string): void {
+    this.eventSource = new EventSource(
+      `/api/events?access_token=${token}`
+    );
+
+    this.eventSource.onmessage = (event) => {
+      const data: ScrapeEvent = JSON.parse(event.data);
+      this.eventsSubject.next(data);
+    };
+
+    this.eventSource.onerror = () => {
+      this.reconnect(token);
+    };
+  }
+
+  disconnect(): void {
+    this.eventSource?.close();
+    this.eventSource = null;
+  }
+
+  private reconnect(token: string): void {
+    this.disconnect();
+    setTimeout(() => this.connect(token), 3000);
+  }
+}
+```
+
+### RxJS — Filtered Event Handling
+
+```typescript
+// Only events for a specific scrape
+this.eventsService.events$
+  .pipe(
+    filter(event => event.scrapeId === 'my-scrape'),
+    filter(event => ['scrape-start', 'scrape-end', 'step-status'].includes(event.type))
+  )
+  .subscribe(event => {
+    this.updateUI(event);
+  });
+```
+
+### Reconnection with Exponential Backoff
+
+```javascript
+class SSEClient {
+  constructor(url) {
+    this.url = url;
+    this.reconnectAttempts = 0;
+    this.maxReconnectAttempts = 5;
+  }
+
+  connect() {
+    this.eventSource = new EventSource(this.url);
+
+    this.eventSource.onopen = () => {
+      this.reconnectAttempts = 0; // Reset on successful connection
+    };
+
+    this.eventSource.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      this.handleEvent(data);
+    };
+
+    this.eventSource.onerror = () => {
+      this.eventSource.close();
+
+      if (this.reconnectAttempts < this.maxReconnectAttempts) {
+        const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
+        console.log(`Reconnect in ${delay}ms (attempt ${this.reconnectAttempts + 1})`);
+        setTimeout(() => {
+          this.reconnectAttempts++;
+          this.connect();
+        }, delay);
+      } else {
+        console.error('Max reconnect attempts reached');
+      }
+    };
+  }
+
+  handleEvent(data) {
+    // Event processing
+  }
+}
+```
+
+## Event Flow Sequence
+
+A typical scrape run generates events in this order:
+
+```
+1. scrape-start          → Scrape is started
+2. step-status (running) → First step begins
+3. action-status (running)    → First action begins
+4. action-status (completed)  → First action completed
+5. ... more action-status events
+6. loop-iteration        → For loops: for each iteration
+7. step-status (completed)    → Step completed
+8. ... more steps
+9. scrape-end            → Scrape finished (completed/error)
+```
+
+On errors, the `status` is set to `error` and the `error` field contains the error message.
+
+## Testing via curl
+
+```bash
+# Terminal 1: Open SSE connection
+curl -N -H "Accept: text/event-stream" \
+  "http://localhost:3000/api/events?access_token=$TOKEN"
+
+# Terminal 2: Start a scrape
+curl -X POST http://localhost:3000/api/scrape/my-workflow \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### Expected Output
+
+```
+data: {"type":"scrape-start","scrapeId":"my-workflow","runId":"run-abc123","timestamp":1704067200000}
+
+data: {"type":"step-status","scrapeId":"my-workflow","stepName":"Extract","status":"running","timestamp":1704067201000}
+
+data: {"type":"action-status","scrapeId":"my-workflow","actionName":"open","actionType":"navigate","status":"completed","timestamp":1704067202000}
+
+data: {"type":"log","scrapeId":"my-workflow","message":"Navigated to https://example.com","logLevel":"log","timestamp":1704067203000}
+
+data: {"type":"scrape-end","scrapeId":"my-workflow","status":"completed","timestamp":1704067210000}
+```
+
+<Aside type="tip">
+SSE connections are unidirectional (server → client). For load-balancing scenarios, sticky sessions are required so the connection always goes to the same server.
+</Aside>
+
+---
+
+**Related topics:**
+- [Run History](/scrape-dojo/en/user-guide/run-history/)
+- [API Modules](/scrape-dojo/en/developer/api-modules/)
+- [Developer Guide](/scrape-dojo/en/developer/)
+- [API Reference](/scrape-dojo/en/developer/api-reference/)

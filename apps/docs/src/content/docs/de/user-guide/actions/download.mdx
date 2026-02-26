@@ -1,0 +1,111 @@
+---
+title: download
+description: "Lade Dateien herunter"
+sidebar:
+  order: 51
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Du willst PDFs, Bilder oder andere Dateien runterladen, die dein Scrape auf einer Seite findet? Die `download`-Action erledigt das für dich. Sie lädt Dateien von einer URL herunter und speichert sie lokal ab -- inklusive der Cookies aus der aktuellen Browser-Session, damit auch Dateien hinter einem Login funktionieren.
+
+Das Beste: Relative URLs werden automatisch aufgelöst und die Dateien werden sauber in Unterordner pro Scrape sortiert.
+
+## Parameter
+
+| Parameter | Typ | Pflicht | Beschreibung |
+|-----------|-----|---------|--------------|
+| `url` | `string` | Ja | Die URL der Datei. Unterstützt absolute URLs, relative URLs und `file://`-Pfade. Handlebars-Templates möglich. |
+| `path` | `string` | Ja | Zielverzeichnis für den Download (z.B. `./downloads/invoices`). |
+| `filename` | `string` | Ja | Dateiname für die gespeicherte Datei. Handlebars-Templates möglich. |
+
+<Aside type="note">
+Der `path` wird automatisch um einen Unterordner mit der `scrapeId` erweitert. Wenn du `./downloads` angibst und dein Scrape `amazon-invoices` heißt, landen die Dateien in `./downloads/amazon-invoices/`.
+</Aside>
+
+## URL-Auflösung
+
+Die Action ist schlau beim Umgang mit URLs:
+
+| URL-Typ | Beispiel | Verhalten |
+|---------|----------|-----------|
+| Absolut | `https://example.com/file.pdf` | Wird direkt verwendet |
+| Schema-relativ | `//cdn.example.com/file.pdf` | Schema der aktuellen Seite wird ergänzt |
+| Relativ | `/files/report.pdf` | Wird gegen die aktuelle Seiten-URL aufgelöst |
+| Lokal | `file:///tmp/generated.pdf` | Datei wird lokal kopiert |
+
+## Cookies & Authentifizierung
+
+Downloads verwenden automatisch die Cookies der aktuellen Browser-Session. Das heißt: Wenn dein Scrape sich vorher eingeloggt hat, funktionieren auch Downloads von geschützten Dateien.
+
+## Beispiele
+
+**PDF herunterladen:**
+
+```jsonc
+{
+  "name": "downloadInvoice",
+  "action": "download",
+  "params": {
+    "url": "https://example.com/invoices/2025-01.pdf",
+    "path": "./downloads/invoices",
+    "filename": "rechnung-2025-01.pdf"
+  }
+}
+```
+
+**Bild mit dynamischem Dateinamen:**
+
+```jsonc
+{
+  "name": "downloadImage",
+  "action": "download",
+  "params": {
+    "url": "{{previousData.imageUrl}}",
+    "path": "./downloads/images",
+    "filename": "{{previousData.productName}}.jpg"
+  }
+}
+```
+
+**Relative URL aus einer Extraktion:**
+
+```jsonc
+{
+  "steps": [
+    {
+      "name": "Dateien herunterladen",
+      "actions": [
+        {
+          "name": "pdfLink",
+          "action": "extract",
+          "params": {
+            "selector": "a.download-link",
+            "extractData": "href"
+          }
+        },
+        {
+          "name": "savePdf",
+          "action": "download",
+          "params": {
+            "url": "{{previousData.pdfLink}}",
+            "path": "./downloads/docs",
+            "filename": "dokument.pdf"
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+<Aside type="caution">
+Wenn der `filename` leer ist (z.B. weil ein Handlebars-Template nicht aufgelöst werden konnte), bricht die Action mit einem Fehler ab. Prüfe im Zweifelsfall vorher, ob der Wert vorhanden ist.
+</Aside>
+
+## Tipps
+
+- Der Rückgabewert ist der vollständige Pfad der gespeicherten Datei -- ideal für nachfolgende `fileExists`-Checks oder Logging.
+- Kombiniere `download` mit einer `loop`-Action, um mehrere Dateien von einer Seite herunterzuladen.
+- Im Docker-Setup: Mounte das Download-Verzeichnis als Volume, damit die Dateien persistiert werden.
+- Bei sehr großen Dateien kann der Download etwas dauern, da die Daten über den Browser-Kontext übertragen werden.

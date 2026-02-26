@@ -1,0 +1,406 @@
+---
+title: "Templates & Transformationen"
+description: "Handlebars-Templates, Custom Helpers und JSONata-Ausdrücke"
+sidebar:
+  order: 60
+---
+
+import { Card, CardGrid, Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+Scrape Dojo hat zwei mächtige Systeme für dynamische Werte und Datenverarbeitung an Bord: **Handlebars-Templates** für String-Interpolation und **JSONata-Ausdrücke** für Datentransformation. Die beiden ergänzen sich perfekt und du kannst sie sogar kombinieren.
+
+Lass uns mal reinschauen, was damit alles geht!
+
+## Handlebars-Templates
+
+Handlebars-Templates kommen überall dort zum Einsatz, wo du dynamische Werte in Strings einsetzen willst. Die Syntax ist simpel: doppelte geschweifte Klammern `{{ausdruck}}`.
+
+### Verfügbare Kontextobjekte
+
+| Objekt | Syntax | Beschreibung |
+|--------|--------|-------------|
+| `previousData` | `{{previousData.actionName}}` | Ergebnisse vorheriger Actions im selben Step. Der Key ist der `name` der jeweiligen Action. |
+| `currentData` | `{{currentData.loopName.value}}` | Aktuelles Element in einer Loop-Iteration. Enthält `value` (das Element) und `index` (die Position). |
+| `storedData` | `{{storedData.key}}` | Persistente Daten, die mit der `storeData`-Action gespeichert wurden. |
+| `variables` | `{{variables.name}}` | Laufzeit-Variablen (Run-Dialog) und Datenbank-Variablen. Laufzeitwerte haben Vorrang. |
+
+### Beispiele
+
+```jsonc
+{
+  // URL mit Variable
+  "name": "open",
+  "action": "navigate",
+  "params": { "url": "https://{{variables.domain}}/products" }
+}
+```
+
+```jsonc
+{
+  // Ergebnis einer vorherigen Action verwenden
+  "name": "logResult",
+  "action": "logger",
+  "params": { "message": "Gefunden: {{previousData.productTitle}}", "level": "log" }
+}
+```
+
+```jsonc
+{
+  // Innerhalb eines Loops
+  "name": "openItem",
+  "action": "navigate",
+  "params": { "url": "{{currentData.myLoop.value}}" }
+}
+```
+
+```jsonc
+{
+  // Gespeicherte Daten verwenden
+  "name": "logTotal",
+  "action": "logger",
+  "params": { "message": "Bisher: {{storedData.totalCount}} Einträge", "level": "log" }
+}
+```
+
+## Custom Helpers
+
+Neben der Standard-Handlebars-Syntax registriert Scrape Dojo eigene Helpers für häufige Operationen. Helpers werden innerhalb von `{{...}}` aufgerufen.
+
+### Mathematik
+
+| Helper | Signatur | Beschreibung | Beispiel |
+|--------|----------|-------------|---------|
+| `add` | `add(value, n)` | Addition | `{{add previousData.count 1}}` |
+| `subtract` | `subtract(value, n)` | Subtraktion | `{{subtract previousData.total 10}}` |
+| `multiply` | `multiply(value, n)` | Multiplikation | `{{multiply previousData.price 1.19}}` |
+
+**Anwendungsbeispiel:**
+
+```jsonc
+{
+  "name": "nextPage",
+  "action": "navigate",
+  "params": {
+    "url": "https://example.com/page/{{add currentData.pageLoop.index 1}}"
+  }
+}
+```
+
+### Vergleiche
+
+| Helper | Signatur | Beschreibung | Beispiel |
+|--------|----------|-------------|---------|
+| `eq` | `eq(a, b)` | Strikte Gleichheit (`===`) | `{{#if (eq previousData.status "ok")}}...{{/if}}` |
+| `ne` | `ne(a, b)` | Ungleichheit (`!==`) | `{{#if (ne previousData.count 0)}}...{{/if}}` |
+
+### Wertprüfungen
+
+| Helper | Signatur | Beschreibung | Beispiel |
+|--------|----------|-------------|---------|
+| `hasValue` | `hasValue(v)` | `true` wenn nicht `null` und nicht `undefined` | `{{#if (hasValue previousData.title)}}...{{/if}}` |
+| `hasNoValue` | `hasNoValue(v)` | `true` wenn `null` oder `undefined` | `{{#if (hasNoValue previousData.error)}}...{{/if}}` |
+| `isDefined` | `isDefined(v)` | `true` wenn nicht `undefined` | `{{#if (isDefined variables.maxItems)}}...{{/if}}` |
+| `isUndefined` | `isUndefined(v)` | `true` wenn `undefined` | `{{#if (isUndefined previousData.optional)}}...{{/if}}` |
+
+### Logik
+
+| Helper | Signatur | Beschreibung | Beispiel |
+|--------|----------|-------------|---------|
+| `not` | `not(v)` | Logische Negation | `{{#if (not previousData.disabled)}}...{{/if}}` |
+
+### Typ
+
+| Helper | Signatur | Beschreibung | Beispiel |
+|--------|----------|-------------|---------|
+| `typeof` | `typeof(v)` | Gibt den JavaScript-Typ zurück | `{{typeof previousData.result}}` |
+
+### Zeit
+
+| Helper | Signatur | Beschreibung | Beispiel |
+|--------|----------|-------------|---------|
+| `year` | `year()` | Gibt das aktuelle Jahr zurück | `{{year}}` |
+
+**Anwendungsbeispiel:**
+
+```jsonc
+{
+  "name": "archiveUrl",
+  "action": "navigate",
+  "params": {
+    "url": "https://example.com/archive/{{year}}"
+  }
+}
+```
+
+### JSONata-Integration
+
+| Helper | Signatur | Beschreibung |
+|--------|----------|-------------|
+| `jsonata` | `jsonata(data, expression)` | Führt einen JSONata-Ausdruck innerhalb eines Handlebars-Templates aus |
+
+Der `jsonata`-Helper ist die Brücke zwischen Handlebars und JSONata. Er führt einen JSONata-Ausdruck aus und gibt das Ergebnis als JSON-String zurück:
+
+```jsonc
+{
+  "name": "filteredCount",
+  "action": "logger",
+  "params": {
+    "message": "Aktive Einträge: {{jsonata previousData.items '$count($[active=true])'}}",
+    "level": "log"
+  }
+}
+```
+
+## JSONata-Ausdrücke
+
+[JSONata](https://jsonata.org/) ist eine mächtige Abfrage- und Transformationssprache für JSON-Daten. In Scrape Dojo wird JSONata primär in der `transform`-Action und in `break`-Bedingungen verwendet.
+
+### Grundprinzip
+
+Die `transform`-Action bekommt die bisherigen Daten als Kontext und wendet einen JSONata-Ausdruck darauf an:
+
+```jsonc
+{
+  "name": "transformedData",
+  "action": "transform",
+  "params": {
+    "expression": "previousData.items[price > 100]"
+  }
+}
+```
+
+### Datenkontext der transform-Action
+
+Die `transform`-Action bietet mehrere Wege, den Input-Kontext zu bestimmen:
+
+<Tabs>
+<TabItem label="Standard (alle previousData)">
+
+Ohne weitere Konfiguration werden alle `previousData` als Root-Objekt (`$`) verwendet. Die Felder sind sowohl direkt als auch unter `previousData.*` verfügbar:
+
+```jsonc
+{
+  "name": "filtered",
+  "action": "transform",
+  "params": {
+    "expression": "items[price > 50]"
+  }
+}
+```
+
+Hier ist `items` ein Key aus `previousData` (also eine vorherige Action mit `"name": "items"`).
+
+</TabItem>
+<TabItem label="previousDataKey (einzelner Key)">
+
+Mit `previousDataKey` wird der Wert eines einzelnen Keys direkt als Root (`$`) verwendet:
+
+```jsonc
+{
+  "name": "sorted",
+  "action": "transform",
+  "params": {
+    "previousDataKey": "products",
+    "expression": "$^(>price)"
+  }
+}
+```
+
+Hier wird `previousData.products` direkt als `$` verwendet. Der Ausdruck `$^(>price)` sortiert das Array absteigend nach `price`.
+
+</TabItem>
+<TabItem label="previousDataKeys (mehrere Keys)">
+
+Mit `previousDataKeys` werden mehrere Keys als Objekt an die Expression übergeben:
+
+```jsonc
+{
+  "name": "merged",
+  "action": "transform",
+  "params": {
+    "previousDataKeys": ["products", "categories"],
+    "expression": "products[category in categories]"
+  }
+}
+```
+
+</TabItem>
+<TabItem label="data (zusätzliche Werte)">
+
+Mit `data` kannst du zusätzliche Key-Value-Paare übergeben. Die Werte werden als Handlebars-Templates gerendert:
+
+```jsonc
+{
+  "name": "withMetadata",
+  "action": "transform",
+  "params": {
+    "expression": "{ 'items': items, 'scrapedAt': timestamp, 'source': source }",
+    "data": {
+      "timestamp": "{{year}}-01-01",
+      "source": "{{variables.shopName}}"
+    }
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
+### Häufige JSONata-Muster
+
+#### Arrays filtern
+
+```jsonc
+// Nur Elemente mit Preis über 100
+{ "expression": "previousData.products[price > 100]" }
+
+// Nur Elemente mit bestimmtem Status
+{ "expression": "previousData.orders[status = 'completed']" }
+
+// Elemente ausschließen
+{ "expression": "previousData.items[$not(deleted)]" }
+```
+
+#### Arrays sortieren
+
+```jsonc
+// Aufsteigend nach Name
+{ "expression": "previousData.products^(name)" }
+
+// Absteigend nach Preis
+{ "expression": "previousData.products^(>price)" }
+```
+
+#### Daten umstrukturieren
+
+```jsonc
+// Objekte umformen
+{
+  "expression": "previousData.products.{ 'titel': name, 'kosten': price * 1.19, 'verfügbar': stock > 0 }"
+}
+```
+
+#### Aggregation
+
+```jsonc
+// Summe berechnen
+{ "expression": "$sum(previousData.products.price)" }
+
+// Anzahl zählen
+{ "expression": "$count(previousData.products)" }
+
+// Durchschnitt
+{ "expression": "$average(previousData.products.price)" }
+```
+
+#### String-Operationen
+
+```jsonc
+// String-Matching
+{ "expression": "previousData.items[$contains(title, 'Sale')]" }
+
+// String zusammensetzen
+{ "expression": "previousData.firstName & ' ' & previousData.lastName" }
+```
+
+#### Range generieren (z.B. für Seitenzahlen)
+
+```jsonc
+// Array von 1 bis 10 erzeugen
+{ "expression": "[1..10]" }
+
+// Dynamischer Range
+{ "expression": "[1..previousData.totalPages]" }
+```
+
+#### Bedingte Logik
+
+```jsonc
+// Ternary-Operator
+{
+  "expression": "previousData.count > 0 ? previousData.items : []"
+}
+```
+
+### Break-Bedingungen mit JSONata
+
+Die `break`-Action verwendet JSONata-Ausdrücke, um zu entscheiden, ob ein Loop abgebrochen werden soll. Der Ausdruck muss einen truthy oder falsy Wert zurückgeben:
+
+```jsonc
+{
+  "name": "checkBreak",
+  "action": "break",
+  "params": {
+    "condition": "{{previousData.itemCount}} >= {{variables.maxItems}}"
+  }
+}
+```
+
+## Handlebars vs. JSONata -- Vergleich
+
+Hier nochmal auf einen Blick, wann du was verwendest:
+
+| Aspekt | Handlebars | JSONata |
+|--------|-----------|--------|
+| **Zweck** | String-Interpolation | Datentransformation |
+| **Syntax** | `{{...}}` | Eigene Ausdruckssprache |
+| **Verwendet in** | Allen String-Parametern | `transform`-Action, `break`-Bedingungen |
+| **Ergebnis** | String | Beliebiger JSON-Typ |
+| **Kontext** | previousData, currentData, storedData, variables | previousData als Root-Objekt |
+
+### Typisches Zusammenspiel
+
+1. **Handlebars** setzt dynamische Werte in Strings ein (URLs, Nachrichten, Selektoren).
+2. **JSONata** transformiert strukturierte Daten (Filtern, Sortieren, Umstrukturieren).
+3. Der `jsonata`-Handlebars-Helper verbindet beide Welten, wenn du eine Transformation innerhalb eines Strings brauchst.
+
+**Beispiel-Workflow:**
+
+```jsonc
+{
+  "steps": [
+    {
+      "name": "Daten verarbeiten",
+      "actions": [
+        {
+          // 1. Daten extrahieren
+          "name": "allProducts",
+          "action": "extractAll",
+          "params": { "selector": ".product", "attribute": "data-json" }
+        },
+        {
+          // 2. JSONata: Daten filtern und transformieren
+          "name": "expensiveProducts",
+          "action": "transform",
+          "params": {
+            "previousDataKey": "allProducts",
+            "expression": "$[price > 100].{ 'name': title, 'price': price, 'url': link }"
+          }
+        },
+        {
+          // 3. Handlebars: Dynamische URL mit Variable
+          "name": "saveResults",
+          "action": "storeData",
+          "params": {
+            "key": "products_{{variables.category}}",
+            "value": "{{previousData.expensiveProducts}}"
+          }
+        },
+        {
+          // 4. Handlebars + jsonata Helper: Zusammenfassung
+          "name": "summary",
+          "action": "logger",
+          "params": {
+            "message": "{{jsonata previousData.expensiveProducts '$count($)'}} teure Produkte gefunden",
+            "level": "log"
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+<Aside type="tip">
+Faustregel: Nutze Handlebars für einfache Werte-Einsetzung und JSONata für komplexe Datenoperationen. Wenn du beides brauchst, ist der `jsonata`-Helper deine Brücke.
+</Aside>

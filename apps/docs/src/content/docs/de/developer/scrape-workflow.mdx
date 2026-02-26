@@ -1,0 +1,232 @@
+---
+title: "🔄 Scrape-Workflow"
+description: Ausführungsablauf, Datenkontext und Template-System
+sidebar:
+  order: 3
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Hier erfährst du, was genau passiert, wenn ein Scrape gestartet wird — Schritt für Schritt. Vom Laden der Konfiguration über die Ausführung jeder einzelnen Action bis hin zum fertigen Ergebnis. Außerdem lernst du den Datenkontext kennen, der das Herzstück der Datenübergabe zwischen Actions ist.
+
+## Ausführungsablauf
+
+Wenn du einen Scrape startest (manuell oder per Scheduler), passiert Folgendes:
+
+| # | Schritt | Beschreibung |
+|---|---------|-------------|
+| 1 | **Config laden** | Die JSONC-Konfiguration wird gelesen und gegen das Schema validiert |
+| 2 | **Run erstellen** | Ein neuer Run-Eintrag wird in der Datenbank angelegt, Status: `running` |
+| 3 | **Variablen auflösen** | Runtime-Variablen, DB-Variablen und Config-Defaults werden zusammengeführt |
+| 4 | **Secrets entschlüsseln** | Referenzierte Secrets werden aus der DB geladen und entschlüsselt |
+| 5 | **Browser starten** | Puppeteer startet eine Chrome-Instanz (Headless mit Stealth Plugin) |
+| 6 | **SSE: `scrape-start`** | Event wird an alle verbundenen Clients gesendet |
+| 7 | **Steps iterieren** | Für jeden Step werden die Actions sequenziell ausgeführt |
+| 8 | **Actions ausführen** | Jede Action bekommt `page`, `params` und `context` — das Ergebnis wird in `previousData` gespeichert |
+| 9 | **Browser schließen** | Chrome-Instanz wird sauber beendet |
+| 10 | **SSE: `scrape-end`** | Finales Event mit Gesamtstatus (`completed` oder `error`) |
+
+<Aside type="note">
+Innerhalb eines Steps werden Actions **sequenziell** ausgeführt — eine nach der anderen. Steps selbst werden ebenfalls sequenziell abgearbeitet.
+</Aside>
+
+## Datenkontext
+
+Der Datenkontext ist das zentrale Konzept für die Kommunikation zwischen Actions. Jede Action kann auf verschiedene Datenquellen zugreifen:
+
+### previousData
+
+Enthält die Ergebnisse aller bisherigen Actions im aktuellen Step. Der `name` der Action ist der Key:
+
+```jsonc
+{
+  "name": "pageTitle",
+  "action": "extract",
+  "params": { "selector": "h1" }
+}
+// Ergebnis: previousData.pageTitle = "Willkommen"
+```
+
+Zugriff per Template: `{{previousData.pageTitle}}`
+
+### currentData
+
+Nur innerhalb von Loops verfügbar. Enthält das aktuelle Element und den Index:
+
+```jsonc
+{
+  "name": "myLoop",
+  "action": "loop",
+  "params": {
+    "elementKey": "links",
+    "actions": [
+      {
+        "name": "visitPage",
+        "action": "navigate",
+        // currentData.myLoop.value = aktuelles Element
+        // currentData.myLoop.index = aktuelle Position (0-basiert)
+        "params": { "url": "{{currentData.myLoop.value}}" }
+      }
+    ]
+  }
+}
+```
+
+### storedData
+
+Daten, die mit der `storeData`-Action in der Datenbank gespeichert wurden. Verfügbar über Runs hinweg:
+
+```jsonc
+{
+  "name": "lastResult",
+  "action": "storeData",
+  "params": {
+    "key": "myProject.lastRun",
+    "value": "{{previousData.results}}"
+  }
+}
+// Zugriff: {{storedData.myProject.lastRun}}
+```
+
+### variables und secrets
+
+| Quelle | Syntax | Herkunft |
+|--------|--------|----------|
+| Variablen | `{{variables.name}}` | UI-Dialog, DB-Variablen, Config-Defaults |
+| Secrets | `{{secrets.secretName}}` | Verschlüsselte Secrets aus der DB |
+
+<Aside type="caution">
+Secrets werden zur Laufzeit entschlüsselt und **nie** in Logs oder SSE-Events angezeigt. Sie sind nur innerhalb des Template-Renderings verfügbar.
+</Aside>
+
+## Template-System
+
+Alle String-Parameter in der Scrape-Konfiguration werden vor der Ausführung durch die Handlebars Template-Engine gerendert. Das bedeutet: Überall wo du `{{...}}` schreibst, wird der Wert zur Laufzeit eingesetzt.
+
+### Verfügbare Kontexte
+
+```handlebars
+{{previousData.actionName}}       // Ergebnis einer vorherigen Action
+{{currentData.loopName.value}}    // Aktuelles Loop-Element
+{{currentData.loopName.index}}    // Aktuelle Loop-Position
+{{storedData.key}}                // Persistierte Daten
+{{variables.varName}}             // Variablen
+{{secrets.secretName}}            // Verschlüsselte Secrets
+```
+
+### Beispiel
+
+```jsonc
+{
+  "name": "logResult",
+  "action": "logger",
+  "params": {
+    "message": "Produkt #{{currentData.productLoop.index}}: {{previousData.productName}} kostet {{previousData.productPrice}} EUR"
+  }
+}
+```
+
+## Verschachtelte Loops
+
+Scrape Dojo unterstützt Loops in Loops. Jeder Loop hat seinen eigenen Namespace in `currentData`:
+
+```jsonc
+{
+  "name": "categoryLoop",
+  "action": "loop",
+  "params": {
+    "elementKey": "categories",
+    "actions": [
+      {
+        "name": "openCategory",
+        "action": "navigate",
+        "params": { "url": "{{currentData.categoryLoop.value.url}}" }
+      },
+      {
+        "name": "getProducts",
+        "action": "extractAll",
+        "params": { "selector": ".product" }
+      },
+      {
+        "name": "productLoop",
+        "action": "loop",
+        "params": {
+          "elementKey": "getProducts",
+          "actions": [
+            {
+              "name": "logProduct",
+              "action": "logger",
+              "params": {
+                // Zugriff auf beide Loop-Ebenen
+                "message": "Kategorie {{currentData.categoryLoop.index}}, Produkt {{currentData.productLoop.index}}: {{currentData.productLoop.value}}"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
+```
+
+<Aside type="tip">
+In SSE-Events wird die `loopPath`-Eigenschaft gesetzt, damit die UI die verschachtelten Loops korrekt darstellen kann. Zum Beispiel: `[{name: "categoryLoop", index: 2}, {name: "productLoop", index: 5}]`.
+</Aside>
+
+## Fehlerbehandlung
+
+Es gibt mehrere Mechanismen, um mit Fehlern und Sonderfällen umzugehen:
+
+### optional-Flag
+
+Wenn eine Action fehlschlägt (z.B. Element nicht gefunden), bricht normalerweise der gesamte Scrape ab. Mit `"optional": true` wird der Fehler ignoriert und die nächste Action wird ausgeführt:
+
+```jsonc
+{
+  "name": "maybeBanner",
+  "action": "extract",
+  "params": { "selector": ".promo-banner" },
+  "optional": true
+}
+// Falls .promo-banner nicht existiert: previousData.maybeBanner = null
+```
+
+### breakLoop
+
+Bricht den aktuellen Loop ab, wenn eine JSONata-Bedingung erfüllt ist:
+
+```jsonc
+{
+  "name": "checkEnd",
+  "action": "break",
+  "params": {
+    "condition": "$count(previousData.results) >= 100"
+  }
+}
+```
+
+### skipIf
+
+Überspringt die aktuelle Loop-Iteration:
+
+```jsonc
+{
+  "name": "skipEmpty",
+  "action": "skipIf",
+  "params": {
+    "condition": "$not($exists(previousData.productName))"
+  }
+}
+```
+
+<Aside type="note">
+`skipIf` und `break` verwenden JSONata-Ausdrücke für die Bedingung. Du hast Zugriff auf `previousData`, `currentData`, `storedData` und `variables` innerhalb der Bedingung.
+</Aside>
+
+---
+
+**Verwandte Themen:**
+- [Templates und Transformationen](/scrape-dojo/de/user-guide/templates/)
+- [Actions-Referenz](/scrape-dojo/de/user-guide/actions/)
+- [Praxisbeispiele](/scrape-dojo/de/examples/)
+- [API-Module](/scrape-dojo/de/developer/api-modules/)

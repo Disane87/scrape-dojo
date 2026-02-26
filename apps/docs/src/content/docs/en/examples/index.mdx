@@ -1,0 +1,434 @@
+---
+title: "💡 Practical Examples"
+description: Real scrape configurations to learn from and adapt
+sidebar:
+  order: 1
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Learning is best done with real examples! Here you'll find three complete scrape configurations — from simple to complex. Each example is ready to use: copy the config into a `.jsonc` file under `config/sites/`, adjust the URLs, and start the scrape.
+
+## Example 1: Extract a Website Title
+
+A simple starter: open a website, extract the main title, display it as an artifact. Three actions, done.
+
+```jsonc
+{
+  "scrapes": [
+    {
+      "id": "title-extractor",
+      "metadata": {
+        "description": "Extracts the title of a website",
+        "version": "1.0.0",
+        "triggers": [{ "type": "manual" }]
+      },
+      "steps": [
+        {
+          "name": "Extract",
+          "actions": [
+            {
+              // Step 1: Open the website
+              "name": "open",
+              "action": "navigate",
+              "params": {
+                "url": "https://example.com"
+              }
+            },
+            {
+              // Step 2: Read the title → previousData.title
+              "name": "title",
+              "action": "extract",
+              "params": {
+                "selector": "h1"
+              }
+            },
+            {
+              // Step 3: Display the result in the UI
+              "name": "show",
+              "action": "artifacts",
+              "params": {
+                "data": "{{previousData.title}}"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+**How it works:**
+
+1. **`navigate`** opens the URL in the headless browser
+2. **`extract`** reads the text content of the `h1` element — the result ends up in `previousData.title`
+3. **`artifacts`** displays the result as an artifact in the run view
+
+<Aside type="tip">
+The `name` of each action determines the key in `previousData`. Here: `previousData.title` contains the extracted text. Choose descriptive names!
+</Aside>
+
+## Example 2: Scrape a Product List
+
+Now it gets interesting: open a product page, wait for it to load, collect all product cards, iterate over each one, extract data, transform it, and save it.
+
+```jsonc
+{
+  "scrapes": [
+    {
+      "id": "product-scraper",
+      "metadata": {
+        "description": "Extracts products with name and price",
+        "version": "1.0.0",
+        "triggers": [{ "type": "manual" }]
+      },
+      "steps": [
+        {
+          "name": "Load products",
+          "actions": [
+            {
+              "name": "open-shop",
+              "action": "navigate",
+              "params": {
+                "url": "https://shop.example.com/products"
+              }
+            },
+            {
+              // Wait until the products are rendered
+              "name": "wait-for-products",
+              "action": "waitForSelector",
+              "params": {
+                "selector": ".product-card",
+                "visible": true
+              }
+            },
+            {
+              // Collect all product cards as an array
+              "name": "get-product-elements",
+              "action": "extractAll",
+              "params": {
+                "selector": ".product-card"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Process products",
+          "actions": [
+            {
+              // Iterate over each product element
+              "name": "iterate-products",
+              "action": "loop",
+              "params": {
+                "elementKey": "get-product-elements",
+                "actions": [
+                  {
+                    "name": "extract-name",
+                    "action": "extract",
+                    "params": {
+                      "selector": ".product-title",
+                      "scope": "currentElement"
+                    }
+                  },
+                  {
+                    "name": "extract-price",
+                    "action": "extract",
+                    "params": {
+                      "selector": ".product-price",
+                      "scope": "currentElement"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              // Structure the raw data with JSONata
+              "name": "structure-data",
+              "action": "transform",
+              "params": {
+                "expression": "loopResults.{ 'name': extractName, 'price': $number($replace(extractPrice, '[^0-9,.]', '')) }"
+              }
+            },
+            {
+              // Save results to the database
+              "name": "save-results",
+              "action": "storeData",
+              "params": {
+                "key": "productScraper.products",
+                "value": "{{previousData.structureData}}"
+              }
+            },
+            {
+              // Display results as an artifact
+              "name": "show-results",
+              "action": "artifacts",
+              "params": {
+                "data": "{{previousData.structureData}}",
+                "title": "Extracted Products"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+**The flow in detail:**
+
+1. **`navigate`** — Open the product page
+2. **`waitForSelector`** — Wait until `.product-card` elements are visible (important for SPAs!)
+3. **`extractAll`** — Collect all product cards as an array
+4. **`loop`** — Iterate over each element and extract name + price
+5. **`transform`** — Convert the raw data into clean objects with a JSONata expression
+6. **`storeData`** — Persist the results in the database (available across runs)
+7. **`artifacts`** — Display the results as a table in the run view
+
+<Aside type="note">
+The `scope: "currentElement"` in the extract actions inside the loop ensures that the search is limited to the current product card element — not the entire page.
+</Aside>
+
+## Example 3: Login with File Download
+
+The full package: login with secrets, optional OTP handling, iterate through a document list, skip already existing files, and download new ones.
+
+```jsonc
+{
+  "scrapes": [
+    {
+      "id": "portal-downloader",
+      "metadata": {
+        "description": "Logs in and downloads files",
+        "version": "1.0.0",
+        "triggers": [{ "type": "manual" }],
+        "variables": [
+          {
+            "name": "email",
+            "type": "email",
+            "label": "Email Address",
+            // Value is automatically loaded from the encrypted secret
+            "secretRef": "portalEmail",
+            "description": "Login email (from secret)"
+          },
+          {
+            "name": "password",
+            "type": "password",
+            "label": "Password",
+            "secretRef": "portalPassword",
+            "description": "Login password (from secret)"
+          },
+          {
+            "name": "downloadFolder",
+            "type": "string",
+            "default": "downloads/portal",
+            "label": "Download Folder"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "name": "Login",
+          "actions": [
+            {
+              "name": "open-login",
+              "action": "navigate",
+              "params": {
+                "url": "https://portal.example.com/login"
+              }
+            },
+            {
+              "name": "wait-for-form",
+              "action": "waitForSelector",
+              "params": {
+                "selector": "form#login-form",
+                "visible": true
+              }
+            },
+            {
+              "name": "enter-email",
+              "action": "type",
+              "params": {
+                "selector": "input[name='email']",
+                "text": "{{variables.email}}"
+              }
+            },
+            {
+              "name": "enter-password",
+              "action": "type",
+              "params": {
+                "selector": "input[name='password']",
+                "text": "{{variables.password}}"
+              }
+            },
+            {
+              "name": "submit-login",
+              "action": "click",
+              "params": {
+                "selector": "button[type='submit']"
+              }
+            },
+            {
+              "name": "wait-after-login",
+              "action": "delay",
+              "params": {
+                "time": 3000
+              }
+            },
+            {
+              // Check if an OTP field is present
+              "name": "check-otp-field",
+              "action": "extract",
+              "params": {
+                "selector": "input[name='otp']",
+                "property": "tagName",
+                "optional": true
+              }
+            },
+            {
+              // If no OTP field → skip the rest of the step
+              "name": "skip-if-no-otp",
+              "action": "skipIf",
+              "params": {
+                "condition": "$not($exists(checkOtpField))"
+              }
+            },
+            {
+              // Wait for OTP input from the user (UI dialog)
+              "name": "wait-for-otp",
+              "action": "otpWait",
+              "params": {
+                "message": "Please enter OTP code",
+                "timeout": 120000
+              }
+            },
+            {
+              "name": "enter-otp",
+              "action": "type",
+              "params": {
+                "selector": "input[name='otp']",
+                "text": "{{previousData.waitForOtp}}"
+              }
+            },
+            {
+              "name": "submit-otp",
+              "action": "click",
+              "params": {
+                "selector": "button#verify-otp"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Download",
+          "actions": [
+            {
+              "name": "go-to-downloads",
+              "action": "navigate",
+              "params": {
+                "url": "https://portal.example.com/documents"
+              }
+            },
+            {
+              "name": "wait-for-list",
+              "action": "waitForSelector",
+              "params": {
+                "selector": ".document-list",
+                "visible": true
+              }
+            },
+            {
+              "name": "get-documents",
+              "action": "extractAll",
+              "params": {
+                "selector": ".document-item"
+              }
+            },
+            {
+              "name": "download-files",
+              "action": "loop",
+              "params": {
+                "elementKey": "get-documents",
+                "actions": [
+                  {
+                    "name": "extract-filename",
+                    "action": "extract",
+                    "params": {
+                      "selector": ".document-name",
+                      "scope": "currentElement"
+                    }
+                  },
+                  {
+                    // Check if the file already exists
+                    "name": "check-exists",
+                    "action": "fileExists",
+                    "params": {
+                      "path": "{{variables.downloadFolder}}/{{previousData.extractFilename}}"
+                    }
+                  },
+                  {
+                    // If yes → skip this iteration
+                    "name": "skip-if-exists",
+                    "action": "skipIf",
+                    "params": {
+                      "condition": "{{previousData.checkExists}}"
+                    }
+                  },
+                  {
+                    "name": "click-download",
+                    "action": "download",
+                    "params": {
+                      "selector": ".download-button",
+                      "scope": "currentElement",
+                      "folder": "{{variables.downloadFolder}}"
+                    }
+                  },
+                  {
+                    "name": "log-download",
+                    "action": "logger",
+                    "params": {
+                      "message": "Downloaded: {{previousData.extractFilename}}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "name": "log-complete",
+              "action": "logger",
+              "params": {
+                "message": "Download completed. {{previousData.getDocuments.length}} documents processed."
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Here's what happens:**
+
+1. **Login step**: Open the login page, enter email and password from secrets, submit the form
+2. **OTP handling**: If an OTP field is detected, the scrape waits for the code to be entered via the UI. If not → `skipIf` skips the OTP actions
+3. **Download step**: Load the document list and iterate over each document
+4. **Deduplication**: `fileExists` checks whether the file already exists — if so, `skipIf` kicks in and the download is skipped
+5. **Download**: New files are downloaded to the configured folder
+
+<Aside type="tip">
+**Secrets and variables**: The `email` and `password` variables use `secretRef` — the values are automatically loaded from the encrypted secrets. The user can still override them before starting in the UI dialog.
+</Aside>
+
+<Aside type="note">
+**Repeated execution**: Thanks to the `fileExists` + `skipIf` combo, this scrape is idempotent — it only downloads new files, no matter how many times you run it.
+</Aside>
+
+---
+
+**Related topics:**
+- [Actions Reference](/scrape-dojo/en/user-guide/actions/)
+- [Secrets and Variables](/scrape-dojo/en/user-guide/secrets-variables/)
+- [Templates and Transformations](/scrape-dojo/en/user-guide/templates/)
+- [Scrape Workflow](/scrape-dojo/en/developer/scrape-workflow/)

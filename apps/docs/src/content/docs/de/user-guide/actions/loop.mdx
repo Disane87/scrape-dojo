@@ -1,0 +1,167 @@
+---
+title: loop
+description: Iteriere über Listen und Element-Handles
+sidebar:
+  order: 30
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Du willst nicht eine Action für jedes Element einzeln schreiben? Klar, dafür gibt's `loop`. Damit iterierst du über Arrays oder ElementHandle-Listen, die du vorher z.B. mit `getAll` oder `extract` eingesammelt hast. Pro Durchgang wird dein Action-Block einmal ausgeführt — wie eine klassische `for`-Schleife, nur in JSON.
+
+## Parameter
+
+| Parameter | Typ | Pflicht | Beschreibung |
+|-----------|-----|---------|--------------|
+| `elementKey` | `string` | Ja | Key in `previousData`, der auf ein Array zeigt |
+| `actions` | `array` | Ja | Array von Actions, die pro Iteration ausgeführt werden |
+| `reverse` | `boolean` | Nein | Wenn `true`, wird das Array rückwärts durchlaufen |
+
+## currentData im Loop
+
+Innerhalb eines Loops steht dir `currentData` zur Verfügung. Darüber erreichst du das aktuelle Element und den Index:
+
+| Feld | Beschreibung |
+|------|-------------|
+| `currentData.<loopName>.value` | Der aktuelle Wert (Element, String, Objekt, …) |
+| `currentData.<loopName>.index` | Der aktuelle Index (0-basiert) |
+
+Wobei `<loopName>` der `name` deiner Loop-Action ist.
+
+<Aside type="tip">
+In Handlebars-Templates greifst du so darauf zu: `{{currentData.myLoop.value}}` bzw. `{{currentData.myLoop.index}}`.
+</Aside>
+
+## Beispiele
+
+**Über ElementHandles iterieren (getAll → loop → extract):**
+
+```jsonc
+{
+  "name": "allProducts",
+  "action": "getAll",
+  "params": { "selector": ".product-card" }
+}
+```
+
+```jsonc
+{
+  "name": "productLoop",
+  "action": "loop",
+  "params": {
+    "elementKey": "allProducts",
+    "actions": [
+      {
+        "name": "title",
+        "action": "extract",
+        "params": {
+          "selector": ".product-title",
+          "extractData": "innerText",
+          "elementHandle": "{{currentData.productLoop.value}}"
+        }
+      },
+      {
+        "name": "price",
+        "action": "extract",
+        "params": {
+          "selector": ".product-price",
+          "extractData": "innerText",
+          "elementHandle": "{{currentData.productLoop.value}}"
+        }
+      }
+    ]
+  }
+}
+```
+
+**Loop mit verschachtelten Actions:**
+
+```jsonc
+{
+  "name": "pageLoop",
+  "action": "loop",
+  "params": {
+    "elementKey": "pageUrls",
+    "actions": [
+      {
+        "name": "openPage",
+        "action": "navigate",
+        "params": { "url": "{{currentData.pageLoop.value}}" }
+      },
+      {
+        "name": "screenshot",
+        "action": "screenshot",
+        "params": { "filename": "page-{{currentData.pageLoop.index}}.png" }
+      }
+    ]
+  }
+}
+```
+
+**Verschachtelte Loops (outer/inner):**
+
+```jsonc
+{
+  "name": "categoryLoop",
+  "action": "loop",
+  "params": {
+    "elementKey": "categories",
+    "actions": [
+      {
+        "name": "openCategory",
+        "action": "navigate",
+        "params": { "url": "{{currentData.categoryLoop.value.url}}" }
+      },
+      {
+        "name": "getProducts",
+        "action": "getAll",
+        "params": { "selector": ".product" }
+      },
+      {
+        "name": "productLoop",
+        "action": "loop",
+        "params": {
+          "elementKey": "getProducts",
+          "actions": [
+            {
+              "name": "logItem",
+              "action": "logger",
+              "params": {
+                "message": "Kategorie {{currentData.categoryLoop.index}}, Produkt {{currentData.productLoop.index}}"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
+```
+
+<Aside type="note">
+In verschachtelten Loops hast du Zugriff auf **alle** übergeordneten `currentData`-Objekte. Die innere Loop kann also auf `currentData.categoryLoop.value` und `currentData.productLoop.value` gleichzeitig zugreifen.
+</Aside>
+
+**Rückwärts iterieren:**
+
+```jsonc
+{
+  "name": "reverseLoop",
+  "action": "loop",
+  "params": {
+    "elementKey": "items",
+    "reverse": true,
+    "actions": [
+      {
+        "name": "processItem",
+        "action": "logger",
+        "params": { "message": "Item: {{currentData.reverseLoop.value}}" }
+      }
+    ]
+  }
+}
+```
+
+<Aside type="caution">
+Wenn der `elementKey` auf ein leeres Array oder `undefined` zeigt, wird die Loop einfach übersprungen — kein Fehler, keine Iteration.
+</Aside>

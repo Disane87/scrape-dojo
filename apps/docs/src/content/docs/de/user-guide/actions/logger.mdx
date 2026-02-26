@@ -1,0 +1,104 @@
+---
+title: logger
+description: "Schreibe Log-Nachrichten"
+sidebar:
+  order: 53
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Debugging ohne Logs ist wie Autofahren mit geschlossenen Augen. Die `logger`-Action schreibt Nachrichten ins Log, die du in der Run-Historie und in Echtzeit in der UI sehen kannst. Nutze sie großzügig -- sie hilft dir enorm bei der Fehlersuche.
+
+Die Nachrichten unterstützen Handlebars-Templates, sodass du dynamische Werte direkt einbauen kannst.
+
+## Parameter
+
+| Parameter | Typ | Pflicht | Beschreibung |
+|-----------|-----|---------|--------------|
+| `message` | `string` | Ja | Die Log-Nachricht. Unterstützt Handlebars-Templates. |
+| `level` | `string` | Nein | Log-Level: `log`, `error`, `warn`, `debug`, `verbose` (Standard: `log`) |
+
+### Log-Levels
+
+| Level | Beschreibung |
+|-------|--------------|
+| `log` | Normale Informationsmeldung (Standard) |
+| `error` | Fehlermeldung -- wird rot hervorgehoben |
+| `warn` | Warnung -- wird gelb hervorgehoben |
+| `debug` | Debug-Info -- nur sichtbar bei aktiviertem Debug-Modus |
+| `verbose` | Detaillierte Info -- nur bei höchster Log-Stufe sichtbar |
+
+## Beispiele
+
+**Einfache Status-Meldung:**
+
+```jsonc
+{
+  "name": "logStart",
+  "action": "logger",
+  "params": {
+    "message": "Scrape gestartet, los geht's!",
+    "level": "log"
+  }
+}
+```
+
+**Fehlermeldung:**
+
+```jsonc
+{
+  "name": "logError",
+  "action": "logger",
+  "params": {
+    "message": "Konnte Element nicht finden -- Seite hat sich vermutlich geändert",
+    "level": "error"
+  }
+}
+```
+
+**Debug mit previousData:**
+
+```jsonc
+{
+  "name": "logDebug",
+  "action": "logger",
+  "params": {
+    "message": "Extrahierte Daten: {{previousData.extractedItems}}",
+    "level": "debug"
+  }
+}
+```
+
+**Fortschritt in einer Schleife:**
+
+```jsonc
+{
+  "name": "logProgress",
+  "action": "logger",
+  "params": {
+    "message": "Verarbeite Seite {{add currentData.pageLoop.index 1}} von {{variables.maxPages}}",
+    "level": "log"
+  }
+}
+```
+
+<Aside type="tip">
+Setze an wichtigen Stellen im Workflow Logger-Actions ein -- z.B. nach einer Extraktion, vor einem Download oder am Ende einer Schleife. In der Run-Historie siehst du dann genau, was passiert ist.
+</Aside>
+
+## Tipps
+
+- Die `logger`-Action gibt keinen Rückgabewert zurück (bzw. `undefined`).
+- Log-Nachrichten erscheinen sowohl in der Run-Historie als auch in den Echtzeit-SSE-Events.
+- Verwende `debug` und `verbose` für detaillierte Informationen, die du nur bei Bedarf sehen willst.
+- Du kannst mit dem `jsonata`-Handlebars-Helper auch berechnete Werte loggen:
+  ```jsonc
+  {
+    "name": "logCount",
+    "action": "logger",
+    "params": {
+      "message": "Gefunden: {{jsonata previousData.items '$count($)'}} Einträge",
+      "level": "log"
+    }
+  }
+  ```

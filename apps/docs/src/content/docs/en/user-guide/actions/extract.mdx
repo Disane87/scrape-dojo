@@ -1,0 +1,108 @@
+---
+title: extract
+description: Extract text or attributes from an element
+sidebar:
+  order: 20
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+The `extract` action is your Swiss army knife for reading data. Whether it's text, links, image URLs, or any HTML attribute — with `extract` you grab exactly what you need from a single element.
+
+By default, it extracts `textContent`, but you can query any DOM property or HTML attribute using the `property` parameter.
+
+## Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `selector` | `string` | Yes | CSS selector of the element to extract from |
+| `element` | `string` | No | Key from `previousData` to use an ElementHandle as context (instead of the whole page) |
+| `property` | `string` | No | The property to extract (default: `"textContent"`) |
+
+### Common property values
+
+| Property | Description | Typical element |
+|----------|-------------|-----------------|
+| `textContent` | Text content of the element (default) | Any element |
+| `innerHTML` | Inner HTML of the element | `<div>`, `<span>`, etc. |
+| `outerHTML` | Full HTML including the element itself | Any element |
+| `href` | Link URL | `<a>` |
+| `src` | Image/media URL | `<img>`, `<video>`, `<source>` |
+| `value` | Value of a form field | `<input>`, `<select>`, `<textarea>` |
+| `data-*` | Any data attribute | Any element |
+
+## Examples
+
+**Extract text:**
+
+```jsonc
+{
+  "type": "extract",
+  "description": "Read the product title",
+  "selector": "h1.product-title"
+}
+```
+
+**Extract a link URL:**
+
+```jsonc
+{
+  "type": "extract",
+  "description": "Get the detail page link",
+  "selector": "a.product-link",
+  "property": "href"
+}
+```
+
+**Extract an image URL:**
+
+```jsonc
+{
+  "type": "extract",
+  "description": "Get the product image URL",
+  "selector": "img.product-image",
+  "property": "src"
+}
+```
+
+**Extract a data attribute:**
+
+```jsonc
+{
+  "type": "extract",
+  "description": "Read the product ID from a data attribute",
+  "selector": ".product-card",
+  "property": "data-product-id"
+}
+```
+
+**Extract from an ElementHandle:**
+
+```jsonc
+[
+  {
+    "type": "get",
+    "description": "Get the product card",
+    "selector": ".product-card",
+    "outputKey": "card"
+  },
+  {
+    "type": "extract",
+    "description": "Read the price from the card",
+    "selector": ".price",
+    "element": "card",
+    "property": "textContent"
+  }
+]
+```
+
+<Aside type="tip">
+When you use `element`, the `selector` is resolved relative to that element — not the entire page. This is perfect when you've previously grabbed a specific element with `get`.
+</Aside>
+
+## Tips
+
+- If no `property` is specified, `textContent` is used automatically — so you don't have to set it explicitly every time.
+- The extracted text is automatically trimmed (whitespace at the beginning and end is removed).
+- If the element isn't found, `extract` returns `null` instead of throwing an error.
+- Combine `extract` with `get` to first isolate an element and then extract from it specifically.

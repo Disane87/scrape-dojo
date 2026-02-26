@@ -119,22 +119,12 @@ export class LoopAction extends BaseAction<LoopActionParams> {
                         this.storedData
                     );
 
-                    // Sammle Child-Action Daten
-                    const childActionData: any = {
+                    // Sammle Child-Action Daten (lightweight - keine result-Kopie)
+                    iterationData.childActions.push({
                         name: actionConfig.name,
                         actionType: actionConfig.action,
-                        status: 'completed',
-                        result: ret
-                    };
-
-                    // Bei verschachtelten Loops: Speichere die Iterations-Daten
-                    if (actionConfig.action === 'loop' && ret && ret.iterations) {
-                        childActionData.loopIterations = ret.iterations;
-                        childActionData.loopTotal = ret.total;
-                        childActionData.loopCurrent = ret.current;
-                    }
-
-                    iterationData.childActions.push(childActionData);
+                        status: 'completed'
+                    });
 
                     // Prüfe ob skipCurrentIteration gesetzt wurde (von skipIf Action)
                     if (this.data.skipCurrentIteration) {

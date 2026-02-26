@@ -1,0 +1,112 @@
+---
+title: "keyboardPress"
+description: "Press keys on the keyboard"
+sidebar:
+  order: 13
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+The `keyboardPress` action simulates a single key press — as if you pressed the key yourself. Super useful for closing dialogs with Escape, submitting forms with Enter, or navigating through dropdown menus.
+
+## Parameters
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `key` | `string` | Yes | — | Name of the key to press. |
+
+## Available Keys
+
+You can use all standard key names supported by Puppeteer. Here are the most common ones:
+
+| Key | Description |
+|-----|-------------|
+| `Enter` | Enter key |
+| `Escape` | Escape key — perfect for closing modals |
+| `Tab` | Jump to the next form element |
+| `Backspace` | Delete a character |
+| `ArrowUp` | Arrow up |
+| `ArrowDown` | Arrow down |
+| `ArrowLeft` | Arrow left |
+| `ArrowRight` | Arrow right |
+| `Space` | Space bar |
+| `Home` | Jump to the beginning of the line/page |
+| `End` | Jump to the end of the line/page |
+| `PageUp` | Scroll page up |
+| `PageDown` | Scroll page down |
+
+## Examples
+
+### Close a Dialog with Escape
+
+```jsonc
+{
+  "name": "closeDialog",
+  "action": "keyboardPress",
+  "params": {
+    "key": "Escape"
+  }
+}
+```
+
+### Submit a Form with Enter
+
+```jsonc
+{
+  "name": "submitForm",
+  "action": "keyboardPress",
+  "params": {
+    "key": "Enter"
+  }
+}
+```
+
+### Navigate Through a Dropdown
+
+Some dropdowns are best operated via the keyboard:
+
+```jsonc
+[
+  {
+    "name": "openDropdown",
+    "action": "click",
+    "params": {
+      "selector": ".dropdown-trigger"
+    }
+  },
+  {
+    "name": "nextEntry",
+    "action": "keyboardPress",
+    "params": {
+      "key": "ArrowDown"
+    }
+  },
+  {
+    "name": "selectEntry",
+    "action": "keyboardPress",
+    "params": {
+      "key": "Enter"
+    }
+  }
+]
+```
+
+### Tab to the Next Field
+
+```jsonc
+{
+  "name": "nextField",
+  "action": "keyboardPress",
+  "params": {
+    "key": "Tab"
+  }
+}
+```
+
+<Aside type="tip">
+`keyboardPress` is especially handy in combination with `click` and `type`. Sometimes it's easier to operate a dropdown via keyboard than to find the right CSS selector for the option.
+</Aside>
+
+<Aside type="note">
+The key press is executed on the currently focused page. Make sure the focus is on the right element — for example, via a preceding `click` or `type`.
+</Aside>

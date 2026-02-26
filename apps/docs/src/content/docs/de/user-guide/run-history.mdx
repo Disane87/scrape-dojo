@@ -1,155 +1,63 @@
 ---
-title: Run History & Debugging
-description: Workflow-Ausführungen verfolgen, analysieren und debuggen
+title: "Run History & Monitoring"
+description: "Ausführungshistorie, Debugging und Echtzeit-Monitoring"
+sidebar:
+  order: 63
 ---
 
-# Run History & Debugging
+import { Aside } from '@astrojs/starlight/components';
 
-Jede Workflow-Ausführung wird vollständig protokolliert und kann nachvollzogen werden. Die Run History ist essentiell für Monitoring, Debugging und Optimierung.
+Jeder Scrape, der in Scrape Dojo läuft, wird als "Run" protokolliert. Du bekommst eine lückenlose Historie mit allen Details -- was lief, wie lange es gedauert hat, was schiefgegangen ist und welche Daten extrahiert wurden. Dazu gibt's Echtzeit-Monitoring via SSE, damit du live zuschauen kannst.
 
-## Übersicht
+Kurz gesagt: Kein Scrape-Run geht verloren, und wenn mal was klemmt, findest du hier die Antworten.
 
-```mermaid
-graph TB
-    A[Workflow startet] --> B[Run erstellt]
-    B --> C[Steps ausgeführt]
-    C --> D[Actions protokolliert]
-    D --> E[Run abgeschlossen]
-    E --> F[Historie gespeichert]
-    F --> G{Zugriff}
-    G -->|UI| H[History Tab]
-    G -->|API| I[GET /api/runs]
-    G -->|Debug| J[Debug View]
-    
-    style A fill:#4f46e5,color:#fff
-    style F fill:#10b981,color:#fff
-    style J fill:#f59e0b,color:#fff
-```
+## Run-Felder
 
-## Run-Struktur
+Jeder Run zeichnet folgende Informationen auf:
 
-Jeder Run enthält:
-
-```mermaid
-classDiagram
-    class Run {
-        +String id
-        +String scrapeId
-        +RunStatus status
-        +RunTrigger trigger
-        +Date startTime
-        +Date endTime
-        +String error
-        +Step[] steps
-    }
-    
-    class Step {
-        +String name
-        +StepStatus status
-        +Date startTime
-        +Date endTime
-        +String error
-        +Action[] actions
-    }
-    
-    class Action {
-        +String action
-        +Object params
-        +ActionStatus status
-        +Any result
-        +String error
-    }
-    
-    Run "1" --> "*" Step
-    Step "1" --> "*" Action
-```
+| Feld | Beschreibung |
+|------|--------------|
+| `id` | Eindeutige Run-ID |
+| `scrapeId` | ID des ausgeführten Scrapes |
+| `status` | `running`, `completed`, `error` oder `aborted` |
+| `trigger` | Wie der Run gestartet wurde: `manual`, `scheduled` oder `api` |
+| `startTime` | Startzeitpunkt |
+| `endTime` | Endzeitpunkt |
+| `error` | Fehlermeldung (bei Status `error`) |
+| `steps` | Liste aller ausgeführten Steps mit deren Actions |
+| `logs` | Protokollierte Log-Einträge |
 
 ### Run-Status
 
-| Status | Bedeutung | Icon |
-|--------|-----------|------|
-| `running` | Läuft aktuell | 🔄 |
-| `completed` | Erfolgreich abgeschlossen | ✅ |
-| `error` | Mit Fehler beendet | ❌ |
-| `aborted` | Manuell abgebrochen | ⏹️ |
-
-### Trigger-Typen
-
-| Trigger | Beschreibung |
-|---------|--------------|
-| `manual` | Manuell über UI gestartet |
-| `scheduled` | Via Cron-Schedule ausgeführt |
-| `api` | Per Webhook/API ausgelöst |
+| Status | Bedeutung |
+|--------|-----------|
+| `running` | Wird aktuell ausgeführt |
+| `completed` | Erfolgreich abgeschlossen |
+| `error` | Mit Fehler beendet |
+| `aborted` | Manuell abgebrochen |
 
 ## Run History in der UI
 
-### History Tab
+Die UI zeigt dir eine Liste aller Runs mit Status, Dauer und Trigger-Typ. Ein Klick auf einen Run öffnet die Detailansicht.
 
-```mermaid
-sequenceDiagram
-    participant U as User
-    participant UI as UI
-    participant API as API
-    participant DB as Database
-    
-    U->>UI: Öffnet History Tab
-    UI->>API: GET /api/runs?scrapeId={id}
-    API->>DB: Query Runs
-    DB-->>API: Run-Daten
-    API-->>UI: RunHistoryItem[]
-    UI-->>U: Liste anzeigen
-    
-    U->>UI: Klickt auf Run
-    UI->>API: GET /api/runs/{runId}
-    API->>DB: Query Run Details
-    DB-->>API: Vollständige Daten
-    API-->>UI: RunHistoryItem mit Steps
-    UI-->>U: Detail-Ansicht
-```
+### Detailansicht
 
-### Run auswählen
-
-Im History Tab siehst du:
-
-- **Run ID**: Eindeutige Kennung (z.B. `run-1704067200000-abc123`)
-- **Status**: Visueller Indikator (grün/rot/gelb)
-- **Trigger**: Wie wurde gestartet
-- **Dauer**: Gesamtlaufzeit
-- **Zeitpunkt**: Start- und Endzeit
-- **Schritte**: Anzahl erfolgreicher/fehlgeschlagener Steps
-
-### Detail-Ansicht
-
-Klicke auf einen Run für Details:
-
-```mermaid
-graph LR
-    A[Run-Übersicht] --> B[Steps-Liste]
-    B --> C[Action-Details]
-    C --> D[Logs]
-    C --> E[Artifacts]
-    C --> F[Variables]
-    
-    style A fill:#4f46e5,color:#fff
-    style C fill:#10b981,color:#fff
-```
-
-**Enthält:**
-- Vollständige Step-Hierarchie (inkl. verschachtelte Loops)
-- Action-Parameter und Resultate
-- Error-Messages mit Stack Traces
-- Artifacts (Screenshots, Dateien, Daten)
-- Runtime-Variablen
+In der Detailansicht siehst du:
+- Vollständige Step-Hierarchie (einschließlich verschachtelter Loops)
+- Parameter und Ergebnisse jeder Action
+- Fehlermeldungen mit Kontext
+- Artefakte (extrahierte Daten, Screenshots)
+- Runtime-Variablen und deren Werte
 
 ## Run-Management via API
 
 ### Alle Runs abrufen
 
 ```bash
-# Alle Runs (limitiert)
+# Alle Runs (mit Limit)
 GET /api/runs?limit=50
 
-# Runs für bestimmten Scrape
+# Runs für einen bestimmten Scrape
 GET /api/runs?scrapeId=my-workflow&limit=100
 ```
 
@@ -177,41 +85,11 @@ GET /api/runs?scrapeId=my-workflow&limit=100
 GET /api/runs/{runId}
 ```
 
-**Response:**
-```json
-{
-  "id": "run-1704067200000-abc123",
-  "scrapeId": "my-workflow",
-  "status": "completed",
-  "trigger": "manual",
-  "startTime": "2025-01-11T10:00:00.000Z",
-  "endTime": "2025-01-11T10:05:30.000Z",
-  "error": null,
-  "steps": [
-    {
-      "name": "step-1",
-      "status": "completed",
-      "startTime": "2025-01-11T10:00:00.000Z",
-      "endTime": "2025-01-11T10:01:00.000Z",
-      "actions": [
-        {
-          "name": "navigate",
-          "action": "navigate",
-          "status": "completed",
-          "params": {
-            "url": "https://example.com"
-          },
-          "result": null
-        }
-      ]
-    }
-  ]
-}
-```
+Gibt den vollständigen Run mit allen Steps, Actions, Parametern und Ergebnissen zurück.
 
-### Debug-Daten abrufen
+## Debug-Daten
 
-Detaillierte Debug-Informationen mit vollständigen Daten:
+Der Debug-Endpoint ist dein bester Freund bei der Fehlersuche. Er liefert dir alle internen Daten eines Runs:
 
 ```bash
 GET /api/runs/{runId}/debug
@@ -220,349 +98,175 @@ GET /api/runs/{runId}/debug
 **Response:**
 ```json
 {
-  "run": { /* Run-Daten */ },
+  "run": {
+    "id": "run-abc123",
+    "status": "completed",
+    "steps": ["..."]
+  },
   "previousData": {
-    "step-1-navigate": null,
-    "step-2-extract": {
-      "title": "Example Page",
-      "price": "99.99"
+    "open-page": null,
+    "extract-title": {
+      "title": "Beispielseite",
+      "subtitle": "Willkommen"
+    },
+    "transform-data": {
+      "formatted": "Beispielseite - Willkommen"
     }
   },
   "storedData": {
     "lastUpdate": "2025-01-10",
-    "cache": { /* ... */ }
+    "cache": {}
   },
   "variables": {
-    "mode": "production",
-    "apiKey": "***"
+    "targetYear": 2025,
+    "region": "de"
   }
 }
 ```
 
-### Run löschen
+Die `previousData`-Sektion zeigt das Ergebnis jeder Action anhand ihres Namens. So kannst du nachvollziehen, welche Daten an jedem Punkt des Workflows verfügbar waren.
+
+## Artefakte
+
+Artefakte sind extrahierte Daten, die von `artifacts`-Actions während der Ausführung erzeugt wurden:
 
 ```bash
-# Einzelnen Run löschen
-DELETE /api/runs/{runId}
+GET /api/runs/{runId}/artifacts
+```
 
-# Alle Runs eines Scrapes löschen
-DELETE /api/scrapes/{scrapeId}/runs
+Artefakte werden in der UI als Karten, Tabellen oder JSON-Ansichten dargestellt, je nach Datentyp.
 
-# Alte Runs aufräumen (älter als X Tage)
+## Cleanup
+
+Damit deine Datenbank nicht überquillt, gibt es verschiedene Cleanup-Optionen.
+
+### Alte Runs löschen
+
+```bash
 POST /api/runs/cleanup
+Content-Type: application/json
+
 {
   "days": 30
 }
 ```
 
-## Debugging
+Löscht alle Runs, die älter als die angegebene Anzahl an Tagen sind.
 
-### Debug View in der UI
-
-Die Debug-Ansicht zeigt:
-
-1. **previousData**: Alle Zwischenergebnisse der Actions
-2. **storedData**: Persistent gespeicherte Daten
-3. **variables**: Runtime-Variablen
-4. **secrets**: Referenzen (keine Werte!)
-
-```mermaid
-graph TD
-    A[Run auswählen] --> B[Debug-Button klicken]
-    B --> C[Debug View öffnet]
-    C --> D[previousData Tab]
-    C --> E[storedData Tab]
-    C --> F[variables Tab]
-    
-    D --> G[JSON Viewer]
-    E --> G
-    F --> G
-    
-    style B fill:#f59e0b,color:#fff
-    style G fill:#10b981,color:#fff
-```
-
-### Häufige Debug-Szenarien
-
-#### 1. Action gibt falsches Ergebnis
-
-```bash
-# Prüfe previousData nach der Action
-GET /api/runs/{runId}/debug
-
-# Schaue in: previousData["action-name"]
-```
-
-**Beispiel:**
+**Response:**
 ```json
-{
-  "previousData": {
-    "extract-price": "€99,99"  // ❌ String statt Number
-  }
-}
-```
-
-**Lösung:** Füge Transform-Action hinzu:
-```jsonc
-{
-  "name": "clean-price",
-  "action": "transform",
-  "params": {
-    "previousDataKey": "extract-price",
-    "expression": "$number($replace($, '€', '') ~> $replace(',', '.'))"
-  }
-}
-```
-
-#### 2. Variable nicht verfügbar
-
-```bash
-GET /api/runs/{runId}/debug
-```
-
-Prüfe in `variables`:
-```json
-{
-  "variables": {
-    "mode": "development"
-    // ❌ "apiKey" fehlt!
-  }
-}
-```
-
-**Lösung:** Setze Variable in Environment oder UI.
-
-#### 3. Loop iteration fehlgeschlagen
-
-```json
-{
-  "steps": [
-    {
-      "name": "process-items",
-      "actions": [
-        {
-          "name": "loop-action",
-          "loopPath": [
-            { "name": "orders", "index": 0 },
-            { "name": "items", "index": 3 }  // ❌ Hier failed
-          ],
-          "status": "error",
-          "error": "Cannot read property 'price' of undefined"
-        }
-      ]
-    }
-  ]
-}
-```
-
-**Debug:** Prüfe `currentData.items[3]` im vorherigen Loop.
-
-### Error-Analyse
-
-```mermaid
-graph TD
-    A[Fehler aufgetreten] --> B{Error-Type?}
-    
-    B -->|Timeout| C[Selector falsch/Seite langsam]
-    B -->|Null/Undefined| D[Daten fehlen]
-    B -->|Transform Error| E[JSONata-Expression falsch]
-    B -->|Navigation Failed| F[URL/Auth-Problem]
-    
-    C --> G[Prüfe: waitForSelector + Delay]
-    D --> H[Prüfe: previousData/variables]
-    E --> I[Teste Expression auf jsonata.org]
-    F --> J[Prüfe: Logs + Network]
-    
-    style A fill:#ef4444,color:#fff
-    style G fill:#10b981,color:#fff
-    style H fill:#10b981,color:#fff
-    style I fill:#10b981,color:#fff
-    style J fill:#10b981,color:#fff
-```
-
-## Run Cleanup
-
-### Automatisches Cleanup
-
-```jsonc
-// .env
-SCRAPE_DOJO_RUN_RETENTION_DAYS=30
-```
-
-Alte Runs werden automatisch gelöscht.
-
-### Manuelles Cleanup
-
-```bash
-# Via API
-POST /api/runs/cleanup
-{
-  "days": 60,
-  "status": "completed"  // Optional: nur erfolgreiche
-}
-
-# Response
 {
   "deleted": 142,
-  "message": "Deleted 142 runs older than 60 days"
+  "message": "Deleted 142 runs older than 30 days"
 }
 ```
 
-### Selective Deletion
+### Einzelnen Run löschen
 
 ```bash
-# Nur fehlerhafte Runs löschen
+DELETE /api/runs/{runId}
+```
+
+### Alle Runs eines Scrapes löschen
+
+```bash
+DELETE /api/scrapes/{scrapeId}/runs
+```
+
+### Selektives Cleanup
+
+```bash
+# Nur fehlerhafte Runs löschen (älter als 7 Tage)
 POST /api/runs/cleanup
 {
   "days": 7,
   "status": "error"
 }
-
-# Alle Runs eines bestimmten Scrapes
-DELETE /api/scrapes/old-workflow/runs
 ```
 
-## Performance-Monitoring
+<Aside type="tip">
+Richte einen Cleanup-Zeitplan ein, z.B. "Runs älter als 30 Tage löschen". Gerade in Entwicklungsumgebungen sammeln sich schnell hunderte Runs an.
+</Aside>
 
-### Run-Statistiken
+## Echtzeit-Monitoring via SSE
 
-```bash
-# Letzte Runs für jeden Scrape
-GET /api/scrapes/stats
-```
+Während ein Scrape läuft, liefern Server-Sent Events (SSE) Live-Status-Updates direkt in die UI:
 
-**Response:**
-```json
-{
-  "workflow-1": {
-    "lastRun": "2025-01-11T10:00:00.000Z",
-    "lastStatus": "completed",
-    "avgDuration": 45000,
-    "successRate": 0.98
-  }
-}
-```
+| Event | Beschreibung |
+|-------|--------------|
+| `scrape-start` / `scrape-end` | Beginn und Ende des gesamten Scrapes |
+| `step-status` | Statusänderungen einzelner Steps |
+| `action-status` | Statusänderungen einzelner Actions |
+| `loop-iteration` | Fortschritt bei Loop-Actions |
+| `log` | Log-Nachrichten der Ausführung |
 
-### Slow Runs identifizieren
+Die UI aktualisiert sich automatisch anhand dieser Events und zeigt den Fortschritt in Echtzeit an.
 
-```bash
-# Runs sortiert nach Dauer
-GET /api/runs?limit=50&sort=duration&order=desc
-```
+<Aside type="note">
+Details zur SSE-Integration für eigene Clients findest du unter [SSE Events](/de/developer/sse-events/).
+</Aside>
 
-**Analyse:**
-- Welche Steps dauern am längsten?
-- Gibt es Timeouts?
-- Können Actions parallelisiert werden?
+## Fehleranalyse
+
+Hier sind die typischen Szenarien, denen du begegnen wirst, und wie du sie angehst:
+
+### Action gibt falsches Ergebnis
+
+1. Debug-Daten abrufen: `GET /api/runs/{runId}/debug`
+2. In `previousData` den Wert der betroffenen Action prüfen
+3. Selector, Transform-Expression oder Parameter anpassen
+
+### Variable nicht verfügbar
+
+1. Debug-Daten prüfen -- ist die Variable im `variables`-Objekt vorhanden?
+2. Variablen-Definition in `metadata.variables` prüfen
+3. Auflösungsreihenfolge beachten (Runtime > Database > Config Default)
+
+### Loop-Iteration fehlgeschlagen
+
+1. In der Detailansicht den `loopPath` prüfen (zeigt verschachtelte Position)
+2. `currentData` an der Fehlerstelle analysieren
+3. Optional: `optional: true` für fehlertolerante Extraktion verwenden
+
+### Timeout-Fehler
+
+1. Prüfen, ob der Selector korrekt ist und das Element existiert
+2. `waitForSelector`-Action vor der betroffenen Action hinzufügen
+3. Timeout-Wert erhöhen, falls die Seite langsam lädt
 
 ## Best Practices
 
-### 1. Retention Policy
-
-```bash
-# Production: 90 Tage
-SCRAPE_DOJO_RUN_RETENTION_DAYS=90
-
-# Development: 7 Tage
-SCRAPE_DOJO_RUN_RETENTION_DAYS=7
-```
-
-**Regel:** Erfolgreichekürzer, Fehler länger behalten.
-
-### 2. Logging
-
-Nutze `logger` Actions für wichtige Checkpoints:
-
-```jsonc
-{
-  "name": "log-progress",
-  "action": "logger",
-  "params": {
-    "message": "Checkpoint: {{currentData.items.length}} Items verarbeitet"
+- **Logger-Actions einsetzen** für wichtige Checkpoints im Workflow:
+  ```jsonc
+  {
+    "name": "log-progress",
+    "action": "logger",
+    "params": {
+      "message": "Verarbeitet: {{previousData.items.length}} Einträge"
+    }
   }
-}
-```
+  ```
 
-### 3. Artifacts speichern
-
-Bei komplexen Workflows:
-
-```jsonc
-{
-  "name": "save-intermediate-result",
-  "action": "artifacts",
-  "params": {
-    "type": "json",
-    "title": "Zwischenergebnis Step {{currentStep}}",
-    "data": "{{previousData.extractedData}}"
+- **Artefakte speichern** bei komplexen Workflows für Zwischenergebnisse:
+  ```jsonc
+  {
+    "name": "save-intermediate",
+    "action": "artifacts",
+    "params": {
+      "title": "Zwischenergebnis",
+      "data": "{{previousData.extractedData}}"
+    }
   }
-}
-```
+  ```
 
-### 4. Error-Handling
+- **Retention Policy** konfigurieren -- kürzere Aufbewahrung in Entwicklungsumgebungen, längere in Produktion
 
-```jsonc
-{
-  "name": "safe-extract",
-  "action": "extract",
-  "params": {
-    "selector": "div.price",
-    "attribute": "textContent",
-    "required": false  // Kein Fehler bei fehlendem Element
-  }
-}
-```
-
-### 5. Debug-Mode
-
-Während Entwicklung:
-
-```jsonc
-{
-  "metadata": {
-    "debug": true  // Speichert mehr Details
-  }
-}
-```
-
-## Troubleshooting
-
-### Run erscheint nicht in Historie
-
-**Ursachen:**
-1. Run noch nicht abgeschlossen (Status: `running`)
-2. Datenbankfehler beim Speichern
-3. UI-Cache nicht aktualisiert
-
-**Lösung:**
-```bash
-# Prüfe direkt via API
-GET /api/runs?scrapeId={id}&limit=100
-
-# Force-Reload in UI (Strg+Shift+R)
-```
-
-### Debug-Daten unvollständig
-
-**Ursache:** `previousData` wird bei sehr großen Runs gekürzt.
-
-**Lösung:**
-```bash
-# Erhöhe Limit
-SCRAPE_DOJO_MAX_PREVIOUS_DATA_SIZE=10485760  # 10MB
-```
-
-### Runs verschwinden zu schnell
-
-**Prüfe Retention:**
-```bash
-# .env
-SCRAPE_DOJO_RUN_RETENTION_DAYS=90
-```
+- **Fehlertolerante Extraktion** mit `optional: true` verwenden, wenn Elemente nicht immer vorhanden sind
 
 ---
 
 **Verwandte Themen:**
 - [Scheduling](/de/user-guide/scheduling/)
-- [Actions Reference](/de/user-guide/actions/)
-- [API Reference](/de/api/reference/)
+- [SSE Events](/de/developer/sse-events/)
+- [Actions-Übersicht](/de/user-guide/actions/)
+- [API-Referenz](/de/api/reference/)

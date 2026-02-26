@@ -70,24 +70,14 @@ export class TransformAction extends BaseAction<TransformActionParams> {
             const jsonata = require('jsonata');
             const expression = jsonata(this.params.expression);
             
-            // Debug: Zeige verfügbare Variablen
-            this.logger.debug(`🔍 Transform variables available: ${this.variables ? JSON.stringify(this.variables) : 'NONE'}`);
-            
-            // Binde Variablen als JSONata-Bindings, damit sie direkt verwendbar sind
-            // z.B. maxPages statt variables.maxPages
+            // Binde Variablen als JSONata-Bindings
             if (this.variables && Object.keys(this.variables).length > 0) {
                 for (const [key, value] of Object.entries(this.variables)) {
                     expression.assign(key, value);
-                    this.logger.debug(`  ✓ Bound variable: ${key} = ${value}`);
                 }
-                this.logger.log(`📌 Bound ${Object.keys(this.variables).length} variables to JSONata context: ${Object.keys(this.variables).join(', ')}`);
-            } else {
-                this.logger.warn(`⚠️ No variables available for JSONata binding!`);
             }
-            
-            const transformedData = await expression.evaluate(inputData);
 
-            this.logger.log(`Transformed data: ${JSON.stringify(transformedData)}`);
+            const transformedData = await expression.evaluate(inputData);
             return transformedData;
         } catch (error) {
             this.logger.error(`Error during data transformation: ${error.message}`);

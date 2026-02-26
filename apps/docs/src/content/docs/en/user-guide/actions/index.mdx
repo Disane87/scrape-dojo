@@ -1,0 +1,140 @@
+---
+title: "Actions Overview"
+description: "All actions at a glance — your toolbox for scraping"
+sidebar:
+  order: 3
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Actions are the heart of Scrape Dojo. Think of each action as an individual tool in your toolbox — you freely combine them to build exactly the scrape you need. From navigation to clicks to data extraction, everything's included.
+
+There are currently **22 actions** available, organized into six categories. Let's take a look!
+
+## All Actions by Category
+
+### Navigation
+
+| Action | Description |
+|--------|-------------|
+| [`navigate`](/en/user-guide/actions/navigate/) | Opens a URL in the browser |
+
+### Interaction
+
+| Action | Description |
+|--------|-------------|
+| [`click`](/en/user-guide/actions/click/) | Clicks on an element (button, link, etc.) |
+| [`type`](/en/user-guide/actions/type/) | Types text into an input field |
+| [`keyboardPress`](/en/user-guide/actions/keyboard-press/) | Presses a key on the keyboard |
+| `waitForOtp` | Waits for an OTP input from the user |
+
+### Extraction
+
+| Action | Description |
+|--------|-------------|
+| `extract` | Extracts text or an attribute from a single element |
+| `extractAll` | Extracts text or attributes from multiple elements |
+| `get` | Gets a single element handle for later interaction |
+| `getAll` | Gets multiple element handles for later interaction |
+
+### Data Processing
+
+| Action | Description |
+|--------|-------------|
+| `transform` | Transforms data using JSONata expressions |
+| `storeData` | Persistently stores data in the database |
+
+### Flow Control
+
+| Action | Description |
+|--------|-------------|
+| `loop` | Iterates over a list of elements or values |
+| `break` | Breaks out of the current loop |
+| `skipIf` | Skips subsequent actions when a condition is met |
+| `waitForSelector` | Waits until an element appears on the page |
+
+### Utility
+
+| Action | Description |
+|--------|-------------|
+| `delay` | Waits for a specified time (in ms) |
+| `download` | Downloads a file from a URL |
+| `screenshot` | Takes a screenshot of the page or an element |
+| `logger` | Writes a message to the log |
+| `notify` | Sends a notification to the user |
+| `artifacts` | Displays data as an artifact in the UI (auto-detects format) |
+| `fileExists` | Checks whether a file exists at a given path |
+
+## Structure of an Action
+
+Every action consists of three required fields:
+
+```jsonc
+{
+  "name": "myResult",
+  "action": "extract",
+  "params": {
+    "selector": "h1"
+  }
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | `string` | A freely chosen identifier. You use this name to access the result. |
+| `action` | `string` | The action type — determines what happens (e.g. `navigate`, `click`, `extract`). |
+| `params` | `object` | Parameters for the action. What goes in here depends on the action type. |
+
+<Aside type="caution">
+Don't mix up `name` and `action`! `name` is **your** identifier for data access, `action` is the **predefined** action type. Example: `"name": "productTitle"` and `"action": "extract"`.
+</Aside>
+
+## Data Flow with previousData
+
+Here's the genius part of Scrape Dojo: every action can access the results of all previous actions within the same step. This works via the `previousData` map.
+
+For example, if you define an action with `"name": "productTitle"`, its result is then available as `previousData.productTitle`:
+
+```jsonc
+{
+  "steps": [
+    {
+      "name": "Collect data",
+      "actions": [
+        {
+          "name": "titel",
+          "action": "extract",
+          "params": { "selector": "h1" }
+        },
+        {
+          "name": "logTitel",
+          "action": "logger",
+          "params": {
+            "message": "Found: {{previousData.titel}}"
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+<Aside type="note">
+The `previousData` map is **shared per step**. When you move to a new step, `previousData` starts empty again.
+</Aside>
+
+## Available Data Variables
+
+In your action's `params`, you can access various data sources using Handlebars syntax (`{{ }}`):
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `previousData` | Results from previous actions in the same step | `{{previousData.myResult}}` |
+| `currentData` | Current loop data (index, value) — only available inside a `loop` action | `{{currentData.myLoop.value}}` |
+| `storedData` | Persistently stored data (via `storeData`) | `{{storedData.myData}}` |
+| `variables` | Workflow variables (Runtime, Database, Config) | `{{variables.targetYear}}` |
+| `secrets` | Encrypted secrets | `{{secrets.myPassword}}` |
+
+<Aside type="tip">
+You can use these variables anywhere in your `params` — in URLs, selectors, text, conditions, and even nested within each other. Handlebars resolves them before the action executes.
+</Aside>

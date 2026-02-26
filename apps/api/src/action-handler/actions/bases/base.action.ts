@@ -65,43 +65,48 @@ export abstract class BaseAction<TParams extends Record<string, any>> implements
         );
         this.logger.debug(`⭐️ Action initialized`);
 
-        // this.params = this.compileDeep(this.originalParams, previousActions, this.data, this.logger);
-        for (const [key, value] of Object.entries(this.params)) {
-            if (typeof value === "string") {
-                this.logger.verbose(`Parameter ${key}: ${value}`);
-                
-                // Skip template parameter - it should be rendered later with the actual data context
-                if (key === 'template') {
-                    continue;
-                }
-                
-                const previousDataObject = Object.fromEntries(previousData);
-
-                // Kompilieren des Templates und Ausführen - nur currentData und storedData übergeben
-                const handlebarsContext = {
-                    previousData: previousDataObject,
+        // Build handlebars context once (lazy, only if needed)
+        let handlebarsContext: any = null;
+        const getHandlebarsContext = () => {
+            if (!handlebarsContext) {
+                handlebarsContext = {
+                    previousData: Object.fromEntries(previousData),
                     currentData: this.data?.currentData || {},
                     storedData: this.storedData,
                     variables: this.variables,
                 };
+            }
+            return handlebarsContext;
+        };
+
+        for (const [key, value] of Object.entries(this.params)) {
+            if (typeof value === "string") {
+                // Skip template parameter - it should be rendered later with the actual data context
+                if (key === 'template') {
+                    continue;
+                }
+
+                // Skip strings without any template syntax
+                if (!value.includes('{{')) {
+                    continue;
+                }
+
+                const ctx = getHandlebarsContext();
 
                 // Prüfe, ob der Wert eine direkte Referenz ist (z.B. "{{ previousData.xyz }}")
                 const directRefMatch = value.match(/^\{\{\s*([^}]+?)\s*\}\}$/);
                 if (directRefMatch) {
-                    // Direkte Referenz - hole den tatsächlichen Wert aus dem Context
                     const path = directRefMatch[1].trim();
-                    const resolvedValue = this.resolvePathInContext(path, handlebarsContext);
-                    
+                    const resolvedValue = this.resolvePathInContext(path, ctx);
+
                     if (resolvedValue !== undefined) {
                         (this.params as any)[key] = resolvedValue;
-                        this.logger.verbose(`Resolved direct reference ${key}: ${typeof resolvedValue === 'object' ? JSON.stringify(resolvedValue).substring(0, 100) : resolvedValue}`);
                         continue;
                     }
                 }
 
-                const templateResult = Handlebars.compile(value)(handlebarsContext);
+                const templateResult = Handlebars.compile(value)(ctx);
 
-                // Prüfung, ob die Rückgabe true/false ist und ggf. Konvertierung
                 if (typeof templateResult === "string") {
                     const lowerResult = templateResult.toLowerCase();
                     if (lowerResult === "true" || lowerResult === "false") {
@@ -114,10 +119,6 @@ export abstract class BaseAction<TParams extends Record<string, any>> implements
                 }
             }
         }
-
-        // Debug: Previous data am Ende ausgeben
-        const previousDataObject = Object.fromEntries(previousData);
-        this.logger.debug(`📦 Previous data: ${JSON.stringify(previousDataObject)}`);
 
     }
 

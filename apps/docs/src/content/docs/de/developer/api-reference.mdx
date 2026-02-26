@@ -1,0 +1,259 @@
+---
+title: "📡 API Referenz"
+description: Alle REST API Endpunkte
+sidebar:
+  order: 6
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Hier findest du die vollständige Referenz aller REST-API-Endpunkte von Scrape Dojo. Alle Routen sind unter dem Prefix `/api` erreichbar. Schnapp dir einen Token und leg los!
+
+<Aside type="tip">
+Die interaktive Swagger-Dokumentation ist unter `/api/docs` verfügbar, wenn die Anwendung läuft. Dort kannst du Endpunkte direkt ausprobieren.
+</Aside>
+
+## Authentifizierung
+
+Alle geschützten Endpunkte erfordern einen der folgenden Header:
+
+```
+Authorization: Bearer <access-token>
+X-API-Key: sdj_<api-key>
+```
+
+## Scrapes & Ausführung
+
+| Methode | Endpunkt | Beschreibung |
+|---------|----------|-------------|
+| `GET` | `/api/scrape` | Alle Scrape-Konfigurationen auflisten |
+| `GET` | `/api/scrape/:id` | Einzelne Scrape-Konfiguration laden |
+| `POST` | `/api/scrape/:id` | Scrape starten (manuell) |
+| `POST` | `/api/scrape/:id/stop` | Laufenden Scrape abbrechen |
+
+### Scrape starten
+
+```bash
+# Einfach starten
+curl -X POST http://localhost:3000/api/scrape/my-scrape \
+  -H "Authorization: Bearer $TOKEN"
+
+# Mit Runtime-Variablen
+curl -X POST http://localhost:3000/api/scrape/my-scrape \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"variables": {"year": "2026", "category": "electronics"}}'
+```
+
+## Runs
+
+| Methode | Endpunkt | Beschreibung |
+|---------|----------|-------------|
+| `GET` | `/api/scrape/:id/runs` | Alle Runs eines Scrapes auflisten |
+| `GET` | `/api/scrape/:id/runs/:runId` | Einzelnen Run mit Details laden |
+| `DELETE` | `/api/scrape/:id/runs/:runId` | Run löschen |
+| `DELETE` | `/api/scrape/:id/runs` | Alle Runs eines Scrapes löschen |
+
+### Run-Details abrufen
+
+```bash
+curl http://localhost:3000/api/scrape/my-scrape/runs/run-abc123 \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+## Daten & Scheduling
+
+| Methode | Endpunkt | Beschreibung |
+|---------|----------|-------------|
+| `GET` | `/api/scrape/:id/data` | Gespeicherte Daten eines Scrapes abrufen |
+| `DELETE` | `/api/scrape/:id/data` | Gespeicherte Daten löschen |
+| `GET` | `/api/scrape/:id/schedule` | Schedule-Konfiguration abrufen |
+| `PUT` | `/api/scrape/:id/schedule` | Schedule erstellen oder aktualisieren |
+| `DELETE` | `/api/scrape/:id/schedule` | Schedule löschen |
+
+### Schedule setzen
+
+```bash
+curl -X PUT http://localhost:3000/api/scrape/my-scrape/schedule \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "cronExpression": "0 8 * * *",
+    "timezone": "Europe/Berlin",
+    "enabled": true
+  }'
+```
+
+## Events & Logs (SSE)
+
+| Methode | Endpunkt | Beschreibung |
+|---------|----------|-------------|
+| `GET` | `/api/events` | SSE-Stream für Echtzeit-Events |
+| `GET` | `/api/scrape/:id/runs/:runId/logs` | Logs eines Runs abrufen |
+
+### SSE-Verbindung öffnen
+
+```bash
+curl -N -H "Accept: text/event-stream" \
+  "http://localhost:3000/api/events?access_token=$TOKEN"
+```
+
+<Aside type="note">
+Der SSE-Endpoint akzeptiert den Token als Query-Parameter (`?access_token=...`), da die EventSource-API keine Custom Headers unterstützt.
+</Aside>
+
+## OTP
+
+| Methode | Endpunkt | Beschreibung |
+|---------|----------|-------------|
+| `POST` | `/api/scrape/:id/otp` | OTP-Code an einen wartenden Scrape senden |
+
+### OTP senden
+
+```bash
+curl -X POST http://localhost:3000/api/scrape/my-scrape/otp \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"code": "123456"}'
+```
+
+## Secrets
+
+| Methode | Endpunkt | Beschreibung |
+|---------|----------|-------------|
+| `GET` | `/api/secrets` | Alle Secrets auflisten (nur Namen, keine Werte!) |
+| `POST` | `/api/secrets` | Neues Secret erstellen |
+| `PUT` | `/api/secrets/:name` | Secret aktualisieren |
+| `DELETE` | `/api/secrets/:name` | Secret löschen |
+
+### Secret erstellen
+
+```bash
+curl -X POST http://localhost:3000/api/secrets \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "portalPassword", "value": "geheimes-passwort"}'
+```
+
+<Aside type="caution">
+Secret-Werte werden verschlüsselt gespeichert und können über die API **nicht** im Klartext abgerufen werden. Die GET-Route liefert nur die Namen.
+</Aside>
+
+## Variablen
+
+| Methode | Endpunkt | Beschreibung |
+|---------|----------|-------------|
+| `GET` | `/api/variables` | Alle Variablen auflisten |
+| `POST` | `/api/variables` | Neue Variable erstellen |
+| `PUT` | `/api/variables/:name` | Variable aktualisieren |
+| `DELETE` | `/api/variables/:name` | Variable löschen |
+
+### Variable erstellen
+
+```bash
+curl -X POST http://localhost:3000/api/variables \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "defaultYear", "value": "2026"}'
+```
+
+## Auth
+
+| Methode | Endpunkt | Beschreibung |
+|---------|----------|-------------|
+| `POST` | `/api/auth/login` | Login mit Benutzername + Passwort |
+| `POST` | `/api/auth/register` | Neuen Benutzer registrieren |
+| `POST` | `/api/auth/refresh` | Access Token erneuern |
+| `POST` | `/api/auth/logout` | Logout (Token invalidieren) |
+| `GET` | `/api/auth/setup/status` | Prüfen ob Setup nötig ist |
+| `POST` | `/api/auth/setup` | Ersten Admin-Benutzer erstellen |
+| `POST` | `/api/auth/mfa/setup` | MFA aktivieren |
+| `POST` | `/api/auth/mfa/verify` | MFA-Setup bestätigen |
+| `POST` | `/api/auth/mfa/challenge` | MFA-Challenge beantworten |
+| `GET` | `/api/auth/oidc/authorize` | OIDC-Login starten |
+| `GET` | `/api/auth/oidc/callback` | OIDC-Callback verarbeiten |
+| `POST` | `/api/auth/api-keys` | API Key erstellen |
+| `GET` | `/api/auth/api-keys` | API Keys auflisten |
+| `DELETE` | `/api/auth/api-keys/:id` | API Key löschen |
+
+### Login-Beispiel
+
+```bash
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "admin", "password": "mein-passwort"}'
+```
+
+Antwort:
+
+```json
+{
+  "accessToken": "eyJhbGc...",
+  "refreshToken": "eyJhbGc...",
+  "mfaRequired": false
+}
+```
+
+## Users (Admin)
+
+| Methode | Endpunkt | Beschreibung |
+|---------|----------|-------------|
+| `GET` | `/api/auth/users` | Alle Benutzer auflisten |
+| `GET` | `/api/auth/users/me` | Eigenes Profil abrufen |
+| `PUT` | `/api/auth/users/:id` | Benutzer aktualisieren |
+| `DELETE` | `/api/auth/users/:id` | Benutzer löschen |
+
+## Sonstiges
+
+| Methode | Endpunkt | Beschreibung |
+|---------|----------|-------------|
+| `GET` | `/api/actions/metadata` | Metadaten aller verfügbaren Actions |
+| `GET` | `/api/files/download/:path` | Datei herunterladen |
+| `GET` | `/api/health` | Health-Check |
+
+### Health-Check
+
+```bash
+curl http://localhost:3000/api/health
+```
+
+```json
+{
+  "status": "ok",
+  "uptime": 12345,
+  "version": "1.0.0"
+}
+```
+
+## Fehlerformat
+
+Alle API-Fehler folgen einem einheitlichen Format:
+
+```json
+{
+  "statusCode": 400,
+  "message": "Beschreibung des Fehlers",
+  "error": "Bad Request"
+}
+```
+
+## HTTP Status Codes
+
+| Code | Bedeutung |
+|------|-----------|
+| `200` | Erfolgreich |
+| `201` | Ressource erstellt |
+| `400` | Ungültige Anfrage (fehlende Parameter, Validierungsfehler) |
+| `401` | Nicht authentifiziert (Token fehlt oder abgelaufen) |
+| `403` | Nicht autorisiert (keine Berechtigung) |
+| `404` | Ressource nicht gefunden |
+| `409` | Konflikt (z.B. Scrape läuft bereits) |
+| `429` | Zu viele Anfragen (Rate Limiting) |
+| `500` | Interner Serverfehler |
+
+---
+
+**Verwandte Themen:**
+- [Authentifizierung](/scrape-dojo/de/developer/authentication/)
+- [SSE Events](/scrape-dojo/de/developer/sse-events/)
+- [Umgebungsvariablen](/scrape-dojo/de/developer/environment-variables/)

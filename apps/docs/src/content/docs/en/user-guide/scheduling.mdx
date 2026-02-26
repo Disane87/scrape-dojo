@@ -1,0 +1,298 @@
+---
+title: "Scheduling"
+description: "Automatic execution with cron schedules"
+sidebar:
+  order: 62
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Sure, you can start your scrapes manually every time. But let's be honest -- that gets annoying after a while. Scrape Dojo offers you various trigger types to run your scrapes automatically. Whether time-based via cron, via an external webhook, or right at app startup.
+
+Set it up once and it runs on its own. That's how it should be!
+
+## Trigger Types
+
+| Type | Description |
+|------|-------------|
+| `manual` | Manual execution only via UI or API |
+| `cron` | Time-based execution using a cron expression |
+| `webhook` | Triggered by an external HTTP request |
+| `startup` | Automatic execution on application startup |
+
+Triggers are defined in the `metadata.triggers` array of the scrape configuration:
+
+```jsonc
+{
+  "scrapes": [
+    {
+      "id": "daily-report",
+      "metadata": {
+        "description": "Daily report",
+        "version": "1.0.0",
+        "triggers": [
+          { "type": "manual" },
+          { "type": "cron" }
+        ]
+      },
+      "steps": [
+        // ...
+      ]
+    }
+  ]
+}
+```
+
+## Cron Configuration
+
+A scrape with `"type": "cron"` in the triggers array can be configured with a cron expression via the UI or API.
+
+### Configure a Schedule via the API
+
+```bash
+PUT /api/scrapes/{scrapeId}/schedule
+Content-Type: application/json
+
+{
+  "scheduleEnabled": true,
+  "cronExpression": "0 9 * * *",
+  "timezone": "Europe/Berlin"
+}
+```
+
+### Retrieve a Schedule
+
+```bash
+GET /api/scrapes/{scrapeId}/schedule
+```
+
+**Response:**
+```json
+{
+  "scrapeId": "daily-report",
+  "manualEnabled": true,
+  "scheduleEnabled": true,
+  "cronExpression": "0 9 * * *",
+  "timezone": "Europe/Berlin",
+  "lastScheduledRun": 1705824000000,
+  "nextScheduledRun": 1705910400000
+}
+```
+
+### Retrieve All Schedules
+
+```bash
+GET /api/schedules
+```
+
+### Check Scheduler Status
+
+```bash
+GET /api/scheduler/status
+```
+
+**Response:**
+```json
+[
+  {
+    "scrapeId": "daily-report",
+    "cronExpression": "0 9 * * *",
+    "nextRun": "2025-01-22T09:00:00.000Z"
+  },
+  {
+    "scrapeId": "weekly-newsletter",
+    "cronExpression": "0 8 * * 1",
+    "nextRun": "2025-01-27T08:00:00.000Z"
+  }
+]
+```
+
+## Cron Syntax
+
+Scrape Dojo uses the standard POSIX cron syntax with 5 fields:
+
+```
+Minute  Hour  Day(Month)  Month  Weekday
+  *       *       *         *       *
+```
+
+### Fields
+
+| Field | Value Range | Description |
+|-------|-------------|-------------|
+| Minute | 0-59 | Minute of execution |
+| Hour | 0-23 | Hour of execution |
+| Day (Month) | 1-31 | Day of the month |
+| Month | 1-12 | Month of the year |
+| Weekday | 0-7 | Day of the week (0 and 7 = Sunday) |
+
+### Special Characters
+
+| Character | Meaning | Example |
+|-----------|---------|---------|
+| `*` | Any value | `* * * * *` = Every minute |
+| `*/n` | Every n units | `*/15 * * * *` = Every 15 minutes |
+| `n-m` | Range | `0 8-18 * * *` = Hourly from 8 AM to 6 PM |
+| `n,m` | List | `0,30 * * * *` = On the hour and half hour |
+| `n-m/x` | Range with step | `0 8-18/2 * * *` = Every 2 hours from 8 AM to 6 PM |
+
+### Examples
+
+```bash
+# Daily at 9:00 AM
+0 9 * * *
+
+# Every Monday at 9:00 AM
+0 9 * * 1
+
+# Every 30 minutes
+*/30 * * * *
+
+# Hourly on the hour
+0 * * * *
+
+# Weekdays at 6:00 AM (Monday to Friday)
+0 6 * * 1-5
+
+# On the 1st of every month at midnight
+0 0 1 * *
+
+# Every 2 hours between 8 AM and 6 PM
+0 8-18/2 * * *
+```
+
+<Aside type="tip">
+Not sure about the cron syntax? Check out [crontab.guru](https://crontab.guru/) -- you can test expressions live and get a human-readable description.
+</Aside>
+
+## Timezone
+
+The default timezone is `Europe/Berlin`. You can configure it individually per schedule:
+
+```bash
+PUT /api/scrapes/{scrapeId}/schedule
+{
+  "scheduleEnabled": true,
+  "cronExpression": "0 9 * * *",
+  "timezone": "America/New_York"
+}
+```
+
+All common IANA timezones are supported (e.g. `UTC`, `Europe/Berlin`, `America/New_York`, `Asia/Tokyo`).
+
+<Aside type="caution">
+Watch out for daylight saving time! `0 9 * * *` with `timezone: "UTC"` is 10:00 AM in Germany (CET) or 11:00 AM (CEST).
+</Aside>
+
+## Webhook Trigger
+
+The webhook trigger lets you start scrapes through external HTTP requests:
+
+```jsonc
+{
+  "metadata": {
+    "triggers": [
+      {
+        "type": "webhook",
+        "config": {
+          "webhookSecret": "my-secret-token"
+        }
+      }
+    ]
+  }
+}
+```
+
+Invocation:
+
+```bash
+curl -X POST http://localhost:3000/api/webhooks/{scrapeId} \
+  -H "Content-Type: application/json" \
+  -H "X-Webhook-Secret: my-secret-token" \
+  -d '{ "variables": { "orderId": "12345" } }'
+```
+
+<Aside type="note">
+You can pass variables via the request body, which are then available in the scrape as `{{variables.orderId}}`. This makes your webhooks dynamic.
+</Aside>
+
+## Startup Trigger
+
+The startup trigger automatically runs a scrape when the application starts:
+
+```jsonc
+{
+  "metadata": {
+    "triggers": [
+      {
+        "type": "startup",
+        "config": {
+          "delay": 5000
+        }
+      }
+    ]
+  }
+}
+```
+
+The optional `delay` value specifies the delay in milliseconds after application startup. This is useful so the app can fully boot up before the scrape kicks off.
+
+## Combining Triggers
+
+You can define multiple triggers for the same scrape -- no problem:
+
+```jsonc
+{
+  "metadata": {
+    "triggers": [
+      { "type": "manual" },
+      { "type": "cron" },
+      {
+        "type": "webhook",
+        "config": {
+          "webhookSecret": "my-secret"
+        }
+      }
+    ]
+  }
+}
+```
+
+The run history shows you which trigger initiated the execution (`manual`, `scheduled`, `api`).
+
+## Best Practices
+
+- **Set the timezone explicitly**, especially for international teams
+- **Don't choose intervals too short** -- at least 15 minutes is recommended
+- **Avoid overlap** -- make sure the scrape finishes before the next execution
+- **Test manually first**, then activate the schedule
+- **Check logs regularly**, especially after activating a new schedule
+- **Use webhook secrets** and make them accessible over HTTPS
+
+## Troubleshooting
+
+### Schedule Not Running
+
+1. Check if `scheduleEnabled: true` is set:
+   ```bash
+   GET /api/scrapes/{id}/schedule
+   ```
+2. Check scheduler status:
+   ```bash
+   GET /api/scheduler/status
+   ```
+3. Validate the cron expression (e.g. on [crontab.guru](https://crontab.guru/))
+4. Check API logs for error messages
+
+### Wrong Execution Time
+
+1. Check the timezone of the schedule configuration
+2. Verify server time and timezone via `/api/health`
+3. Note: `0 9 * * *` with `timezone: "UTC"` is 10:00 AM in Germany (CET) or 11:00 AM (CEST)
+
+---
+
+**Related topics:**
+- [Secrets & Variables](/en/user-guide/secrets-variables/)
+- [Run History & Monitoring](/en/user-guide/run-history/)
+- [API Reference](/en/api/reference/)

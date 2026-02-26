@@ -1,0 +1,87 @@
+---
+title: "click"
+description: "Click on buttons, links, and other elements"
+sidebar:
+  order: 11
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+The `click` action is your digital finger — use it to click on buttons, links, checkboxes, or any other element on the page. Especially handy: with the `optional` flag you can define clicks that won't fail if the element isn't there (perfect for cookie banners and the like).
+
+## Parameters
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `selector` | `string` | Yes* | — | CSS selector of the element to click. |
+| `element` | `string` | No | — | Path to an ElementHandle from `previousData` (e.g. `previousData.myElement`). |
+| `optional` | `boolean` | No | `false` | If `true`, no error is thrown when the element isn't found. |
+| `timeout` | `number` | No | `30000` | Maximum wait time in milliseconds until the element appears. |
+
+*Either `selector` or `element` must be provided. You can also use both together — in that case, the selector is searched within the element.
+
+## Examples
+
+### Simple Click
+
+```jsonc
+{
+  "name": "loginButton",
+  "action": "click",
+  "params": {
+    "selector": "button[type='submit']"
+  }
+}
+```
+
+### Optional Click (Cookie Banner)
+
+Perfect for elements that aren't always present:
+
+```jsonc
+{
+  "name": "cookieBanner",
+  "action": "click",
+  "params": {
+    "selector": "#cookie-accept-btn",
+    "optional": true,
+    "timeout": 5000
+  }
+}
+```
+
+If the cookie banner doesn't show up, the scrape just continues — no error, no drama.
+
+### Click with Element from previousData
+
+If you previously fetched an ElementHandle with `get` or `getAll`, you can click on it (or within it):
+
+```jsonc
+[
+  {
+    "name": "productCard",
+    "action": "get",
+    "params": {
+      "selector": ".product-card:first-child"
+    }
+  },
+  {
+    "name": "openDetails",
+    "action": "click",
+    "params": {
+      "element": "previousData.productCard",
+      "selector": ".details-link"
+    }
+  }
+]
+```
+
+Here, the product card is first fetched as an ElementHandle, and then the details link is clicked within that card.
+
+<Aside type="tip">
+Use `optional: true` generously for things like cookie banners, newsletter popups, or "close" buttons. This keeps your scrape robust, even when the page changes.
+</Aside>
+
+<Aside type="note">
+The action automatically waits until the element appears in the DOM (up to the `timeout`). So you don't need an extra `waitForSelector` before it, as long as you know the element will eventually show up.
+</Aside>

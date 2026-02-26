@@ -11,7 +11,7 @@ Scrape Dojo is a full-stack web scraping and browser automation platform. Users 
 - **Build system**: Nx 22.3.3 with pnpm
 - `apps/api/` — NestJS 11 backend (TypeScript, port 3000)
 - `apps/ui/` — Angular 21 frontend (TypeScript, Vite, Tailwind CSS 4)
-- `apps/docs/` — Docusaurus documentation site
+- `apps/docs/` — Astro Starlight documentation site (`de/` + `en/`)
 - `libs/shared/` — Shared types/interfaces (`@scrape-dojo/shared` via tsconfig paths)
 - `config/sites/` — Scrape configuration files (.jsonc)
 

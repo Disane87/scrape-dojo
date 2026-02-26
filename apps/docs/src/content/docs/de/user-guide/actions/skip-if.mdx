@@ -1,0 +1,104 @@
+---
+title: skipIf
+description: Überspringe Actions oder brich Schleifen bedingt ab
+sidebar:
+  order: 32
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Mit `skipIf` kannst du Actions in einer Loop-Iteration überspringen oder gleich die ganze Loop abbrechen — je nachdem, was du brauchst. Das ist perfekt für inkrementelles Scraping: Wenn du merkst, dass du eine Datei schon hast, überspringst du den Rest oder steigst komplett aus.
+
+## Parameter
+
+| Parameter | Typ | Pflicht | Beschreibung |
+|-----------|-----|---------|--------------|
+| `condition` | `string` | Ja | Key in `previousData` oder Pfad in `data`, dessen Wert geprüft wird |
+| `skipIfTrue` | `boolean` | Nein | Überspringen wenn Wert truthy ist (Standard: `true`) |
+| `breakLoop` | `boolean` | Nein | Wenn `true`, wird die gesamte Loop abgebrochen statt nur die Iteration zu überspringen |
+| `breakLevels` | `number` | Nein | Anzahl der Loop-Ebenen, die abgebrochen werden (Standard: 1). Nur relevant wenn `breakLoop: true` |
+| `message` | `string` | Nein | Nachricht, die beim Überspringen/Abbrechen geloggt wird |
+
+<Aside type="note">
+Der `condition`-Parameter ist kein JSONata-Ausdruck, sondern ein **Key-Lookup**: Der Wert wird in `previousData` (oder `data`) nachgeschlagen und auf Truthiness geprüft.
+</Aside>
+
+## Beispiele
+
+**Restliche Actions überspringen wenn Bedingung erfüllt:**
+
+```jsonc
+{
+  "name": "checkExists",
+  "action": "skipIf",
+  "params": {
+    "condition": "fileExists",
+    "skipIfTrue": true,
+    "message": "Datei existiert bereits, überspringe Download"
+  }
+}
+```
+
+Wenn `previousData.fileExists` truthy ist, werden alle nachfolgenden Actions in der aktuellen Loop-Iteration übersprungen und die nächste Iteration beginnt.
+
+**Loop abbrechen wenn Bedingung erfüllt:**
+
+```jsonc
+{
+  "name": "stopIfDownloaded",
+  "action": "skipIf",
+  "params": {
+    "condition": "fileExists",
+    "skipIfTrue": true,
+    "breakLoop": true,
+    "message": "Bereits heruntergeladen — Loop wird beendet"
+  }
+}
+```
+
+**Mehrere Loop-Ebenen abbrechen (breakLevels):**
+
+```jsonc
+{
+  "name": "orderLoop",
+  "action": "loop",
+  "params": {
+    "elementKey": "orders",
+    "actions": [
+      {
+        "name": "invoiceLoop",
+        "action": "loop",
+        "params": {
+          "elementKey": "invoices",
+          "actions": [
+            {
+              "name": "checkInvoice",
+              "action": "fileExists",
+              "params": { "path": "downloads/{{currentData.invoiceLoop.value.id}}.pdf" }
+            },
+            {
+              "name": "stopAll",
+              "action": "skipIf",
+              "params": {
+                "condition": "checkInvoice",
+                "skipIfTrue": true,
+                "breakLoop": true,
+                "breakLevels": 2,
+                "message": "Rechnung existiert — alle Loops beenden"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
+```
+
+<Aside type="tip">
+`breakLevels: 2` bricht sowohl die innere (`invoiceLoop`) als auch die äußere Loop (`orderLoop`) ab. Das ist super nützlich für inkrementelles Scraping, wo du bei der ersten bereits vorhandenen Datei komplett aufhören willst.
+</Aside>
+
+<Aside type="caution">
+`skipIf` ohne `breakLoop` funktioniert nur innerhalb einer Loop. Außerhalb einer Loop hat das Überspringen keine Wirkung.
+</Aside>

@@ -1,0 +1,112 @@
+---
+title: "keyboardPress"
+description: "Drücke Tasten auf der Tastatur"
+sidebar:
+  order: 13
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Die `keyboardPress`-Action simuliert einen einzelnen Tastendruck — als hättest du selbst die Taste gedrückt. Super nützlich, um Dialoge mit Escape zu schließen, Formulare mit Enter abzuschicken oder durch Dropdown-Menüs zu navigieren.
+
+## Parameter
+
+| Parameter | Typ | Pflicht | Default | Beschreibung |
+|-----------|-----|---------|---------|-------------|
+| `key` | `string` | Ja | — | Name der Taste, die gedrückt werden soll. |
+
+## Verfügbare Tasten
+
+Du kannst alle Standard-Tastennamen verwenden, die Puppeteer unterstützt. Hier die gängigsten:
+
+| Taste | Beschreibung |
+|-------|-------------|
+| `Enter` | Eingabetaste |
+| `Escape` | Escape-Taste — perfekt zum Schließen von Modals |
+| `Tab` | Zum nächsten Formularelement springen |
+| `Backspace` | Zeichen löschen |
+| `ArrowUp` | Pfeil nach oben |
+| `ArrowDown` | Pfeil nach unten |
+| `ArrowLeft` | Pfeil nach links |
+| `ArrowRight` | Pfeil nach rechts |
+| `Space` | Leertaste |
+| `Home` | Zum Anfang der Zeile/Seite |
+| `End` | Zum Ende der Zeile/Seite |
+| `PageUp` | Seite nach oben scrollen |
+| `PageDown` | Seite nach unten scrollen |
+
+## Beispiele
+
+### Dialog schließen mit Escape
+
+```jsonc
+{
+  "name": "dialogSchließen",
+  "action": "keyboardPress",
+  "params": {
+    "key": "Escape"
+  }
+}
+```
+
+### Formular mit Enter absenden
+
+```jsonc
+{
+  "name": "formularAbsenden",
+  "action": "keyboardPress",
+  "params": {
+    "key": "Enter"
+  }
+}
+```
+
+### Durch ein Dropdown navigieren
+
+Manche Dropdowns lassen sich am besten per Tastatur bedienen:
+
+```jsonc
+[
+  {
+    "name": "dropdownÖffnen",
+    "action": "click",
+    "params": {
+      "selector": ".dropdown-trigger"
+    }
+  },
+  {
+    "name": "nächsterEintrag",
+    "action": "keyboardPress",
+    "params": {
+      "key": "ArrowDown"
+    }
+  },
+  {
+    "name": "auswählen",
+    "action": "keyboardPress",
+    "params": {
+      "key": "Enter"
+    }
+  }
+]
+```
+
+### Tab zum nächsten Feld
+
+```jsonc
+{
+  "name": "nächstesFeld",
+  "action": "keyboardPress",
+  "params": {
+    "key": "Tab"
+  }
+}
+```
+
+<Aside type="tip">
+`keyboardPress` ist besonders praktisch in Kombination mit `click` und `type`. Manchmal ist es einfacher, ein Dropdown per Tastatur zu bedienen als den richtigen CSS-Selektor für die Option zu finden.
+</Aside>
+
+<Aside type="note">
+Der Tastendruck wird auf der aktuell fokussierten Seite ausgeführt. Stelle sicher, dass der Fokus auf dem richtigen Element liegt — z.B. durch einen vorherigen `click` oder `type`.
+</Aside>

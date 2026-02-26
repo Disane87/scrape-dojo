@@ -1,0 +1,105 @@
+---
+title: artifacts
+description: Display results as tables, JSON, cards, or images
+sidebar:
+  order: 42
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+With `artifacts` you make your scrape results visible — as a table, JSON viewer, card, or image, right in the UI. This is super useful for debugging, but also for nice dashboards and reports. The type is detected automatically, but you can also set it manually.
+
+## Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `data` | `any` | Yes | The data to display (supports Handlebars templates) |
+| `type` | `string` | No | Display type: `auto`, `json`, `table`, `text`, `file`, `image`, `link`, `card` (default: `auto`) |
+| `title` | `string` | No | Title of the artifact |
+| `description` | `string` | No | Description below the title |
+| `template` | `string` | No | Handlebars template for the `card` type |
+| `flush` | `boolean` | No | Compact list layout for cards |
+
+### Auto-Detection
+
+When `type` is set to `auto` (default), the best display type is determined automatically:
+
+| Data | Detected Type |
+|------|---------------|
+| Array of objects | `table` |
+| Object | `json` |
+| String with image extension (`.png`, `.jpg`, …) | `image` |
+| String with URL (`https://…`) | `link` |
+| String (JSON-parseable) | `json` |
+| Other string | `text` |
+
+## Examples
+
+**Table artifact:**
+
+```jsonc
+{
+  "name": "showProducts",
+  "action": "artifacts",
+  "params": {
+    "data": "{{previousData.products}}",
+    "title": "Found Products",
+    "description": "All extracted product data"
+  }
+}
+```
+
+If `products` is an array of objects, a table is rendered automatically.
+
+**JSON artifact:**
+
+```jsonc
+{
+  "name": "showRawData",
+  "action": "artifacts",
+  "params": {
+    "data": "{{previousData.apiResponse}}",
+    "type": "json",
+    "title": "API Response"
+  }
+}
+```
+
+**Card with Handlebars template:**
+
+```jsonc
+{
+  "name": "showProductCard",
+  "action": "artifacts",
+  "params": {
+    "data": "{{previousData.product}}",
+    "type": "card",
+    "title": "Product Details",
+    "template": "<h3>{{name}}</h3><p>Price: {{price}} €</p><p>{{description}}</p>"
+  }
+}
+```
+
+The `template` is rendered with the data from `data` — so you have direct access to the object's fields.
+
+**Image artifact:**
+
+```jsonc
+{
+  "name": "showScreenshot",
+  "action": "artifacts",
+  "params": {
+    "data": "{{previousData.screenshotPath}}",
+    "type": "image",
+    "title": "Page Screenshot"
+  }
+}
+```
+
+<Aside type="tip">
+Use `flush: true` on cards to get a compact list layout — ideal when you want to show many small cards in a row.
+</Aside>
+
+<Aside type="note">
+Artifacts are sent to the UI in real time. You see them immediately in the run details while the scrape is still running.
+</Aside>

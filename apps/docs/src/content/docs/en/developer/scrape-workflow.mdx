@@ -1,0 +1,232 @@
+---
+title: "🔄 Scrape Workflow"
+description: Execution flow, data context, and template system
+sidebar:
+  order: 3
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Here you'll learn what exactly happens when a scrape is started — step by step. From loading the configuration to executing each individual action to the final result. You'll also get to know the data context, which is the heart of data passing between actions.
+
+## Execution Flow
+
+When you start a scrape (manually or via the scheduler), here's what happens:
+
+| # | Step | Description |
+|---|------|-------------|
+| 1 | **Load config** | The JSONC configuration is read and validated against the schema |
+| 2 | **Create run** | A new run entry is created in the database, status: `running` |
+| 3 | **Resolve variables** | Runtime variables, DB variables, and config defaults are merged |
+| 4 | **Decrypt secrets** | Referenced secrets are loaded from the DB and decrypted |
+| 5 | **Start browser** | Puppeteer launches a Chrome instance (headless with Stealth Plugin) |
+| 6 | **SSE: `scrape-start`** | Event is sent to all connected clients |
+| 7 | **Iterate steps** | For each step, the actions are executed sequentially |
+| 8 | **Execute actions** | Each action receives `page`, `params`, and `context` — the result is stored in `previousData` |
+| 9 | **Close browser** | The Chrome instance is cleanly shut down |
+| 10 | **SSE: `scrape-end`** | Final event with overall status (`completed` or `error`) |
+
+<Aside type="note">
+Within a step, actions are executed **sequentially** — one after another. Steps themselves are also processed sequentially.
+</Aside>
+
+## Data Context
+
+The data context is the central concept for communication between actions. Each action can access different data sources:
+
+### previousData
+
+Contains the results of all previous actions in the current step. The `name` of the action is the key:
+
+```jsonc
+{
+  "name": "pageTitle",
+  "action": "extract",
+  "params": { "selector": "h1" }
+}
+// Result: previousData.pageTitle = "Welcome"
+```
+
+Access via template: `{{previousData.pageTitle}}`
+
+### currentData
+
+Only available inside loops. Contains the current element and the index:
+
+```jsonc
+{
+  "name": "myLoop",
+  "action": "loop",
+  "params": {
+    "elementKey": "links",
+    "actions": [
+      {
+        "name": "visitPage",
+        "action": "navigate",
+        // currentData.myLoop.value = current element
+        // currentData.myLoop.index = current position (0-based)
+        "params": { "url": "{{currentData.myLoop.value}}" }
+      }
+    ]
+  }
+}
+```
+
+### storedData
+
+Data that was saved to the database with the `storeData` action. Available across runs:
+
+```jsonc
+{
+  "name": "lastResult",
+  "action": "storeData",
+  "params": {
+    "key": "myProject.lastRun",
+    "value": "{{previousData.results}}"
+  }
+}
+// Access: {{storedData.myProject.lastRun}}
+```
+
+### variables and secrets
+
+| Source | Syntax | Origin |
+|--------|--------|--------|
+| Variables | `{{variables.name}}` | UI dialog, DB variables, config defaults |
+| Secrets | `{{secrets.secretName}}` | Encrypted secrets from the DB |
+
+<Aside type="caution">
+Secrets are decrypted at runtime and **never** shown in logs or SSE events. They're only available within template rendering.
+</Aside>
+
+## Template System
+
+All string parameters in the scrape configuration are rendered through the Handlebars template engine before execution. That means: wherever you write `{{...}}`, the value is inserted at runtime.
+
+### Available Contexts
+
+```handlebars
+{{previousData.actionName}}       // Result of a previous action
+{{currentData.loopName.value}}    // Current loop element
+{{currentData.loopName.index}}    // Current loop position
+{{storedData.key}}                // Persisted data
+{{variables.varName}}             // Variables
+{{secrets.secretName}}            // Encrypted secrets
+```
+
+### Example
+
+```jsonc
+{
+  "name": "logResult",
+  "action": "logger",
+  "params": {
+    "message": "Product #{{currentData.productLoop.index}}: {{previousData.productName}} costs {{previousData.productPrice}} EUR"
+  }
+}
+```
+
+## Nested Loops
+
+Scrape Dojo supports loops inside loops. Each loop has its own namespace in `currentData`:
+
+```jsonc
+{
+  "name": "categoryLoop",
+  "action": "loop",
+  "params": {
+    "elementKey": "categories",
+    "actions": [
+      {
+        "name": "openCategory",
+        "action": "navigate",
+        "params": { "url": "{{currentData.categoryLoop.value.url}}" }
+      },
+      {
+        "name": "getProducts",
+        "action": "extractAll",
+        "params": { "selector": ".product" }
+      },
+      {
+        "name": "productLoop",
+        "action": "loop",
+        "params": {
+          "elementKey": "getProducts",
+          "actions": [
+            {
+              "name": "logProduct",
+              "action": "logger",
+              "params": {
+                // Access both loop levels
+                "message": "Category {{currentData.categoryLoop.index}}, Product {{currentData.productLoop.index}}: {{currentData.productLoop.value}}"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
+```
+
+<Aside type="tip">
+In SSE events, the `loopPath` property is set so the UI can correctly display nested loops. For example: `[{name: "categoryLoop", index: 2}, {name: "productLoop", index: 5}]`.
+</Aside>
+
+## Error Handling
+
+There are several mechanisms for dealing with errors and edge cases:
+
+### optional Flag
+
+When an action fails (e.g., element not found), the entire scrape normally aborts. With `"optional": true`, the error is ignored and the next action is executed:
+
+```jsonc
+{
+  "name": "maybeBanner",
+  "action": "extract",
+  "params": { "selector": ".promo-banner" },
+  "optional": true
+}
+// If .promo-banner doesn't exist: previousData.maybeBanner = null
+```
+
+### breakLoop
+
+Breaks the current loop when a JSONata condition is met:
+
+```jsonc
+{
+  "name": "checkEnd",
+  "action": "break",
+  "params": {
+    "condition": "$count(previousData.results) >= 100"
+  }
+}
+```
+
+### skipIf
+
+Skips the current loop iteration:
+
+```jsonc
+{
+  "name": "skipEmpty",
+  "action": "skipIf",
+  "params": {
+    "condition": "$not($exists(previousData.productName))"
+  }
+}
+```
+
+<Aside type="note">
+`skipIf` and `break` use JSONata expressions for the condition. You have access to `previousData`, `currentData`, `storedData`, and `variables` within the condition.
+</Aside>
+
+---
+
+**Related topics:**
+- [Templates and Transformations](/scrape-dojo/en/user-guide/templates/)
+- [Actions Reference](/scrape-dojo/en/user-guide/actions/)
+- [Practical Examples](/scrape-dojo/en/examples/)
+- [API Modules](/scrape-dojo/en/developer/api-modules/)

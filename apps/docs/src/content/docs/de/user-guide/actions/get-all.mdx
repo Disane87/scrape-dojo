@@ -1,0 +1,119 @@
+---
+title: getAll
+description: Hole mehrere Element-Handles für Loops
+sidebar:
+  order: 23
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+`getAll` ist das Pendant zu `get`, holt aber **alle passenden Elemente** als Array von ElementHandles. Das ist besonders mächtig in Kombination mit der `loop`-Action — so kannst du über eine Liste von Elementen iterieren und für jedes einzelne Actions ausführen.
+
+Denk an eine Produktliste: Mit `getAll` holst du dir alle Produktkarten, und im Loop extrahierst du dann aus jeder Karte Name, Preis und Link.
+
+## Parameter
+
+| Parameter | Typ | Pflicht | Beschreibung |
+|-----------|-----|---------|--------------|
+| `selector` | `string` | Ja | CSS-Selektor — alle passenden Elemente werden als Handles zurückgegeben |
+| `element` | `string` | Nein | Key aus `previousData`, um den Selektor relativ zu einem anderen ElementHandle aufzulösen |
+
+<Aside type="note">
+`getAll` gibt ein **Array von ElementHandles** zurück — keinen Text! Nutze es zusammen mit `loop`, um über die Elemente zu iterieren, und `extract` innerhalb des Loops, um die Daten auszulesen.
+</Aside>
+
+## Beispiele
+
+**Alle Produkte holen und im Loop extrahieren:**
+
+```jsonc
+[
+  {
+    "type": "getAll",
+    "description": "Alle Produktkarten holen",
+    "selector": ".product-card",
+    "outputKey": "products"
+  },
+  {
+    "type": "loop",
+    "description": "Über jedes Produkt iterieren",
+    "loopOn": "products",
+    "actions": [
+      {
+        "type": "extract",
+        "description": "Produktname extrahieren",
+        "selector": ".product-name",
+        "element": "$loopItem",
+        "outputKey": "name"
+      },
+      {
+        "type": "extract",
+        "description": "Preis extrahieren",
+        "selector": ".product-price",
+        "element": "$loopItem",
+        "outputKey": "price"
+      },
+      {
+        "type": "extract",
+        "description": "Link extrahieren",
+        "selector": "a",
+        "element": "$loopItem",
+        "property": "href",
+        "outputKey": "link"
+      }
+    ]
+  }
+]
+```
+
+**Alle Tabellenzeilen holen:**
+
+```jsonc
+[
+  {
+    "type": "getAll",
+    "description": "Alle Zeilen der Bestelltabelle holen",
+    "selector": "table.orders tbody tr",
+    "outputKey": "rows"
+  },
+  {
+    "type": "loop",
+    "description": "Jede Bestellung verarbeiten",
+    "loopOn": "rows",
+    "actions": [
+      {
+        "type": "extract",
+        "description": "Bestellnummer",
+        "selector": "td:nth-child(1)",
+        "element": "$loopItem",
+        "outputKey": "orderNumber"
+      },
+      {
+        "type": "extract",
+        "description": "Bestelldatum",
+        "selector": "td:nth-child(2)",
+        "element": "$loopItem",
+        "outputKey": "orderDate"
+      },
+      {
+        "type": "extract",
+        "description": "Betrag",
+        "selector": "td:nth-child(3)",
+        "element": "$loopItem",
+        "outputKey": "amount"
+      }
+    ]
+  }
+]
+```
+
+<Aside type="tip">
+Im `loop` ist das aktuelle Element über `$loopItem` verfügbar. Verwende diesen Wert im `element`-Parameter deiner Actions, damit sie im Kontext des jeweiligen Elements arbeiten.
+</Aside>
+
+## Tipps
+
+- `getAll` wartet intern mit `waitForSelector` darauf, dass mindestens ein Element zum Selektor passt. Wenn keines gefunden wird, bekommst du ein leeres Array.
+- Die Kombination `getAll` + `loop` ist das Standardmuster, um Listen auf Webseiten zu scrapen. Du wirst es in fast jedem Scrape verwenden.
+- Achte darauf, dass dein CSS-Selektor spezifisch genug ist — `getAll` gibt wirklich *alle* passenden Elemente zurück.
+- Wenn du nur die Texte oder Attribute brauchst (ohne danach weitere Actions auf den Elementen auszuführen), ist `extractAll` die einfachere Wahl.

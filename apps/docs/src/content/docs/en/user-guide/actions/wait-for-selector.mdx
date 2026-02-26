@@ -1,0 +1,71 @@
+---
+title: waitForSelector
+description: Wait until an element appears on the page
+sidebar:
+  order: 14
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Sometimes your scrape just needs to hold on a moment until the page has finished loading. With `waitForSelector`, you tell Puppeteer: "Hey, hang on until this element shows up!" — and only then does it continue.
+
+This is super useful for pages that load content dynamically, e.g. after a click or scroll.
+
+## Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `selector` | `string` | Yes | CSS selector of the element to wait for |
+| `timeout` | `number` | No | Timeout in milliseconds (default: 30000) |
+| `optional` | `boolean` | No | If `true`, no error is thrown when the element doesn't appear |
+| `condition` | `string` | No | Handlebars template — the wait is only executed if the condition evaluates to `"true"` |
+
+<Aside type="tip">
+Set `optional: true` when you're not sure if the element will actually show up — e.g. for cookie banners or optional popups. That way your scrape won't abort, it'll just keep going.
+</Aside>
+
+## Examples
+
+**Wait for search results:**
+
+```jsonc
+{
+  "type": "waitForSelector",
+  "description": "Wait until the results have loaded",
+  "selector": ".search-results"
+}
+```
+
+**Wait for a popup (optional):**
+
+```jsonc
+{
+  "type": "waitForSelector",
+  "description": "Wait for cookie banner (if present)",
+  "selector": "#cookie-consent-dialog",
+  "timeout": 5000,
+  "optional": true
+}
+```
+
+**Conditional wait with condition:**
+
+```jsonc
+{
+  "type": "waitForSelector",
+  "description": "Only wait if login is needed",
+  "selector": "#otp-input",
+  "timeout": 10000,
+  "condition": "{{needsLogin}}"
+}
+```
+
+<Aside type="caution">
+If `optional` is set to `false` (default) and the element doesn't appear within the timeout, the entire scrape will abort with an error. So think carefully about whether you want to set `optional: true`.
+</Aside>
+
+## Tips
+
+- The default timeout of 30 seconds is enough for most pages. For slow APIs or large pages, feel free to bump it up.
+- Use `condition` together with variables or previous results to only run waits when they're actually needed.
+- `waitForSelector` returns `true` if the element was found, and `false` if it was optional and wasn't found.

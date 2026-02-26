@@ -1,0 +1,80 @@
+---
+title: storeData
+description: Store data for later access
+sidebar:
+  order: 41
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+With `storeData` you can save values that you want to reuse later in the same run or even in future runs. This is super handy for counters, intermediate results, or flags that you need across multiple steps.
+
+## Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `key` | `string` | Yes | Key under which the value is stored |
+| `value` | `any` | Yes | The value to store (supports Handlebars templates) |
+| `persist` | `boolean` | No | If `true`, the value is persisted in the database and survives all runs (job level) |
+| `attachToRun` | `boolean` | No | If `true`, the value is attached to the current run and shown in the run details (default: `true`) |
+
+### Storage Levels
+
+- **Runtime** (default): The value is available in the current run via `storedData.key`
+- **Run-Level** (`attachToRun: true`): The value is saved to the database and visible in the run detail view
+- **Job-Level** (`persist: true`): The value persists across all runs — perfect for incremental scraping
+
+<Aside type="note">
+When `persist: true` is set, `attachToRun` is automatically set to `false`. Job-level data belongs to the scrape, not to an individual run.
+</Aside>
+
+## Examples
+
+**Storing a simple value:**
+
+```jsonc
+{
+  "name": "saveTotal",
+  "action": "storeData",
+  "params": {
+    "key": "totalProducts",
+    "value": "{{previousData.productCount}}"
+  }
+}
+```
+
+After this you can access the value anywhere with `{{storedData.totalProducts}}`.
+
+**Persistent value (survives runs):**
+
+```jsonc
+{
+  "name": "saveLastPage",
+  "action": "storeData",
+  "params": {
+    "key": "lastProcessedPage",
+    "value": "{{currentData.pageLoop.index}}",
+    "persist": true
+  }
+}
+```
+
+On the next run you can pick up where you left off with `{{storedData.lastProcessedPage}}`.
+
+**Using a Handlebars template as value:**
+
+```jsonc
+{
+  "name": "saveStatus",
+  "action": "storeData",
+  "params": {
+    "key": "summary",
+    "value": "{{previousData.successCount}} of {{previousData.totalCount}} successful",
+    "attachToRun": true
+  }
+}
+```
+
+<Aside type="tip">
+Stored data with `attachToRun: true` shows up in the run detail view in the UI. Use this for a quick summary of your scrape results!
+</Aside>

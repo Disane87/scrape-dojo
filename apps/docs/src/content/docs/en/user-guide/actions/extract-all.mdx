@@ -1,0 +1,101 @@
+---
+title: extractAll
+description: Extract text or attributes from multiple elements
+sidebar:
+  order: 21
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Need more than just a single value — how about a whole list? Then `extractAll` is your friend. This action works just like `extract`, but returns an **array** — perfect for product lists, link collections, or tables.
+
+Just like with `extract`, it uses `textContent` by default, but you can query any property or attribute.
+
+## Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `selector` | `string` | Yes | CSS selector — all matching elements will be extracted |
+| `element` | `string` | No | Key from `previousData` to use an ElementHandle as context |
+| `property` | `string` | No | The property to extract (default: `"textContent"`) |
+
+<Aside type="note">
+`extractAll` always returns an **array of strings**. Empty values and whitespace-only strings are automatically filtered out.
+</Aside>
+
+## Examples
+
+**Extract all product names:**
+
+```jsonc
+{
+  "type": "extractAll",
+  "description": "Collect all product names on the page",
+  "selector": ".product-list .product-name",
+  "outputKey": "productNames"
+}
+```
+
+Result:
+```json
+["Laptop Pro 15", "Wireless Mouse", "USB-C Hub", "Monitor 27 Zoll"]
+```
+
+**Extract all links:**
+
+```jsonc
+{
+  "type": "extractAll",
+  "description": "Collect all product links",
+  "selector": ".product-list a.product-link",
+  "property": "href",
+  "outputKey": "productLinks"
+}
+```
+
+Result:
+```json
+[
+  "https://shop.example.com/laptop-pro",
+  "https://shop.example.com/wireless-mouse",
+  "https://shop.example.com/usb-c-hub"
+]
+```
+
+**Extract all data attributes:**
+
+```jsonc
+{
+  "type": "extractAll",
+  "description": "Collect all product IDs",
+  "selector": ".product-card",
+  "property": "data-product-id",
+  "outputKey": "productIds"
+}
+```
+
+**Extract from an ElementHandle:**
+
+```jsonc
+[
+  {
+    "type": "get",
+    "description": "Get the shopping cart container",
+    "selector": "#shopping-cart",
+    "outputKey": "cart"
+  },
+  {
+    "type": "extractAll",
+    "description": "All item names in the cart",
+    "selector": ".cart-item .item-name",
+    "element": "cart",
+    "outputKey": "cartItems"
+  }
+]
+```
+
+## Tips
+
+- If no elements are found, `extractAll` returns `null` — not an empty array. Keep that in mind for your further processing.
+- For `data-*` attributes, `getAttribute()` is used internally; for everything else, `getProperty()`. This happens automatically, you don't need to worry about it.
+- Combine `extractAll` with the `transform` action to further process the extracted data, e.g. with JSONata.

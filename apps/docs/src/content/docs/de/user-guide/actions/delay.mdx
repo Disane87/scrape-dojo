@@ -1,0 +1,52 @@
+---
+title: delay
+description: Warte eine bestimmte Zeit
+sidebar:
+  order: 33
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Manchmal muss man einfach kurz durchatmen — und das gilt auch für Scrapes. Mit `delay` legst du eine Pause ein, bevor die nächste Action losgeht. Das hilft z.B. bei Rate-Limiting, langsamen APIs oder wenn du nicht zu aggressiv auf eine Seite hämmern willst.
+
+## Parameter
+
+| Parameter | Typ | Pflicht | Beschreibung |
+|-----------|-----|---------|--------------|
+| `time` | `number` | Ja | Wartezeit in Millisekunden |
+| `condition` | `string` | Nein | Handlebars-Template — der Delay wird nur ausgeführt, wenn das Ergebnis `"true"` ist |
+
+## Beispiele
+
+**Einfacher Delay (2 Sekunden):**
+
+```jsonc
+{
+  "name": "wait",
+  "action": "delay",
+  "params": { "time": 2000 }
+}
+```
+
+**Bedingter Delay:**
+
+```jsonc
+{
+  "name": "conditionalWait",
+  "action": "delay",
+  "params": {
+    "time": 5000,
+    "condition": "{{previousData.needsWait}}"
+  }
+}
+```
+
+Hier wird nur gewartet, wenn `previousData.needsWait` den String `"true"` ergibt. Das ist praktisch, wenn du z.B. nur bei bestimmten Seiten eine Extra-Pause brauchst.
+
+<Aside type="tip">
+Für typisches Web-Scraping reichen 1000–3000ms zwischen den Requests. Bei APIs mit Rate-Limiting brauchst du eventuell mehr. Wenn du auf ein bestimmtes Element warten willst, nimm besser `waitForSelector` statt `delay` — das ist zuverlässiger.
+</Aside>
+
+<Aside type="caution">
+Die `condition` wird als Handlebars-Template evaluiert und muss exakt den String `"true"` ergeben. Ein truthy-Wert wie `"1"` oder `"yes"` reicht nicht aus.
+</Aside>

@@ -1,0 +1,84 @@
+---
+title: screenshot
+description: "Take a screenshot of the current page"
+sidebar:
+  order: 50
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Sometimes you just want to see what the browser is currently showing. The `screenshot` action snaps a photo of the current page and saves it as a PNG. Perfect for debugging or visually capturing results.
+
+The filename is generated automatically -- from a timestamp and the page title. So you don't have to worry about a thing.
+
+## Parameters
+
+The `screenshot` action has **no parameters**. Just call it and you're done.
+
+## How does the filename work?
+
+The generated filename follows this pattern:
+
+```
+YYYYMMDD-HHmmss-page-title.png
+```
+
+The page title gets sanitized (special characters are replaced with hyphens and everything is lowercased). For example:
+
+```
+20260226-143022-amazon-de-mein-konto.png
+```
+
+## Storage location
+
+Screenshots are saved in the `./screenshots/` directory. If the directory doesn't exist yet, it's created automatically.
+
+<Aside type="tip">
+In a Docker setup, you should mount the `./screenshots/` directory as a volume so the images survive a container restart.
+</Aside>
+
+## Examples
+
+**Simple screenshot:**
+
+```jsonc
+{
+  "name": "pagePhoto",
+  "action": "screenshot",
+  "params": {}
+}
+```
+
+**Screenshot after a navigation:**
+
+```jsonc
+{
+  "steps": [
+    {
+      "name": "Capture page",
+      "actions": [
+        {
+          "name": "openPage",
+          "action": "navigate",
+          "params": { "url": "https://example.com/dashboard" }
+        },
+        {
+          "name": "photo",
+          "action": "screenshot",
+          "params": {}
+        }
+      ]
+    }
+  ]
+}
+```
+
+<Aside type="note">
+The return value of the action is the full file path of the screenshot. You can use it via `previousData` in subsequent actions, e.g. to log it.
+</Aside>
+
+## Tips
+
+- Use screenshots before and after critical actions to document the page state.
+- When debugging: place a screenshot right before the failing action to see what the browser is showing at that point.
+- Screenshots are PNG files and can be several MB depending on the page size. Clean up the directory regularly.

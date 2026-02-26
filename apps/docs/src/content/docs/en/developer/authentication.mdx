@@ -1,0 +1,186 @@
+---
+title: "🔐 Authentication"
+description: JWT, OIDC/SSO, MFA, and API Keys
+sidebar:
+  order: 5
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Authentication in Scrape Dojo is flexible and modular. You can turn it off completely (for local development), use just password auth, or go all-in with MFA and SSO. Here you'll learn how all the auth mechanisms work and fit together.
+
+## Overview
+
+| Feature | Details |
+|---------|---------|
+| **Toggle** | `SCRAPE_DOJO_AUTH_ENABLED=true/false` — globally on/off |
+| **Global Guard** | `JwtAuthGuard` protects all endpoints (when auth is active) |
+| **Exceptions** | `@Public()` decorator for open endpoints (e.g., login, health) |
+| **Strategies** | Local (password), JWT, OIDC/SSO, MFA/TOTP, API Keys |
+
+When `AUTH_ENABLED=false`, all endpoints are accessible without authentication. That's handy for local development but obviously **not** suitable for production.
+
+## Local Auth
+
+The classic username/password authentication:
+
+| Aspect | Details |
+|--------|---------|
+| **Hashing** | bcrypt with salt rounds |
+| **Setup** | First user is created via `/api/auth/setup` |
+| **Login** | `POST /api/auth/login` with `username` + `password` |
+| **Register** | `POST /api/auth/register` (only if allowed by admin) |
+
+### Setup Flow (Initial Setup)
+
+On first launch, no user exists yet. The setup flow guides you through creating the admin account:
+
+```bash
+# Check if setup is needed
+curl http://localhost:3000/api/auth/setup/status
+
+# Create admin
+curl -X POST http://localhost:3000/api/auth/setup \
+  -H "Content-Type: application/json" \
+  -d '{"username": "admin", "password": "secure-password"}'
+```
+
+## JWT (JSON Web Tokens)
+
+After a successful login, you receive a token pair:
+
+| Token | Lifetime | Purpose |
+|-------|----------|---------|
+| **Access Token** | 15 minutes (default) | API access, sent as `Bearer` token in the header |
+| **Refresh Token** | 7 days (default) | Renews expired access tokens |
+
+### Token Payload
+
+```json
+{
+  "sub": "user-uuid",
+  "username": "admin",
+  "role": "admin",
+  "mfaVerified": true,
+  "iat": 1704067200,
+  "exp": 1704068100
+}
+```
+
+### Refreshing Tokens
+
+```bash
+curl -X POST http://localhost:3000/api/auth/refresh \
+  -H "Content-Type: application/json" \
+  -d '{"refreshToken": "your-refresh-token"}'
+```
+
+<Aside type="tip">
+You can customize the token lifetime via `SCRAPE_DOJO_AUTH_ACCESS_TOKEN_EXPIRY` and `SCRAPE_DOJO_AUTH_REFRESH_TOKEN_EXPIRY`.
+</Aside>
+
+## MFA / TOTP
+
+Multi-factor authentication with Time-based One-Time Passwords (TOTP) — compatible with Google Authenticator, Authy, 1Password, and other apps.
+
+### Setup Flow
+
+1. **Enable MFA**: `POST /api/auth/mfa/setup` — returns a TOTP secret and a QR code URI
+2. **Scan in authenticator**: The QR code is scanned in the authenticator app
+3. **Confirm**: `POST /api/auth/mfa/verify` with the first generated code
+4. **Done**: From now on, a TOTP code is required with every login
+
+### Login Flow with MFA
+
+1. `POST /api/auth/login` with username + password
+2. Response contains `mfaRequired: true` and a `challengeToken`
+3. `POST /api/auth/mfa/challenge` with `challengeToken` + `totpCode`
+4. Response contains the access/refresh token pair
+
+### Trusted Devices
+
+After a successful MFA verification, a device can be marked as "trusted". Then no TOTP code is required for that device (for a configurable period).
+
+<Aside type="note">
+With `SCRAPE_DOJO_AUTH_REQUIRE_MFA=true`, MFA is enforced for all users. Without this setting, MFA is optional.
+</Aside>
+
+## OIDC / SSO
+
+Scrape Dojo supports OpenID Connect for Single Sign-On with external identity providers.
+
+### Supported Providers
+
+| Provider | Tested | Notes |
+|----------|--------|-------|
+| **Keycloak** | Yes | Self-hosted, full OIDC support |
+| **Auth0** | Yes | Cloud-based |
+| **Google** | Yes | Google Workspace / Google Identity |
+| **Azure AD** | Yes | Microsoft Entra ID |
+| Other | — | Any standard OIDC provider should work |
+
+### OIDC Flow (8 Steps)
+
+1. **User clicks "Sign in with SSO"** in the UI
+2. **Frontend calls** `GET /api/auth/oidc/authorize`
+3. **Backend generates** an authorization URL with State + PKCE
+4. **Redirect** to the identity provider (login page)
+5. **User authenticates** with the provider
+6. **Provider redirects** back to `OIDC_REDIRECT_URI` with an auth code
+7. **Backend exchanges** the code for tokens and reads the profile
+8. **User is created** (or updated) and receives a local JWT pair
+
+### Environment Variables
+
+```bash
+SCRAPE_DOJO_AUTH_OIDC_ENABLED=true
+SCRAPE_DOJO_AUTH_OIDC_ISSUER_URL=https://accounts.google.com
+SCRAPE_DOJO_AUTH_OIDC_CLIENT_ID=your-client-id
+SCRAPE_DOJO_AUTH_OIDC_CLIENT_SECRET=your-client-secret
+SCRAPE_DOJO_AUTH_OIDC_REDIRECT_URI=https://scrape.example.com/api/auth/oidc/callback
+SCRAPE_DOJO_AUTH_OIDC_SCOPES=openid profile email
+SCRAPE_DOJO_AUTH_OIDC_PROVIDER_NAME=Google
+```
+
+<Aside type="caution">
+The `REDIRECT_URI` must exactly match the callback URL configured in the provider — including protocol and path.
+</Aside>
+
+## API Keys
+
+For automated access (CI/CD, monitoring, external systems), there are API keys:
+
+| Aspect | Details |
+|--------|---------|
+| **Format** | Prefix `sdj_` followed by a random string |
+| **Storage** | SHA256 hash in the database (plaintext is only shown once) |
+| **Header** | `X-API-Key: sdj_your-api-key` |
+| **Creation** | Via the UI (settings) or `POST /api/auth/api-keys` |
+
+### Usage
+
+```bash
+curl http://localhost:3000/api/scrape \
+  -H "X-API-Key: sdj_abc123def456"
+```
+
+API keys have the same permissions as the user who created them. They bypass the MFA check since they're intended for machine access.
+
+## Rate Limiting
+
+Auth endpoints are protected against brute-force attacks:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `SCRAPE_DOJO_AUTH_RATE_LIMIT_WINDOW_MS` | `60000` | Time window in milliseconds |
+| `SCRAPE_DOJO_AUTH_RATE_LIMIT_MAX` | `30` | Maximum requests per window |
+
+After exceeding the limit, a `429 Too Many Requests` is returned. The limit applies per IP address.
+
+---
+
+**Related topics:**
+- [API Modules](/scrape-dojo/en/developer/api-modules/)
+- [API Reference](/scrape-dojo/en/developer/api-reference/)
+- [Environment Variables](/scrape-dojo/en/developer/environment-variables/)
+- [Secrets and Variables](/scrape-dojo/en/user-guide/secrets-variables/)

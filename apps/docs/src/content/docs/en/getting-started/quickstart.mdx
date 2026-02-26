@@ -1,0 +1,297 @@
+---
+title: Quickstart
+description: Set up Scrape Dojo in 5 minutes and create your first scrape
+sidebar:
+  order: 1
+---
+
+import { Card, CardGrid, Aside, Tabs, TabItem, Steps, LinkCard } from '@astrojs/starlight/components';
+
+Want to jump right in? Perfect — this guide takes you from zero to your first working scrape in just a few minutes. We'll walk through installation, configuration, and your first test run together.
+
+## 📋 Prerequisites
+
+Before we get started, quickly check that you have the following tools installed:
+
+| Software | Version | Note |
+|----------|---------|------|
+| **Node.js** | 20+ | [nodejs.org](https://nodejs.org/) |
+| **pnpm** | 9+ | `npm install -g pnpm` |
+| **Chrome/Chromium** | Latest | Used by Puppeteer for browser automation |
+| **Docker** _(optional)_ | 24+ | Recommended for production — saves you a lot of config hassle |
+
+<Aside type="tip">
+If you just want to take a quick look, go with Docker. You'll have everything up and running in a few minutes without worrying about Node versions or dependencies.
+</Aside>
+
+## 🚀 Installation
+
+<Tabs>
+<TabItem label="🐳 Docker (recommended)">
+
+Docker is the easiest way to get Scrape Dojo up and running. No Node.js needed, no dependency chaos — just start the containers and you're good to go.
+
+<Steps>
+
+1. **Generate an encryption key**
+
+   The encryption key encrypts your secrets (passwords, API keys, etc.) in the database. You need a 256-bit hex key:
+
+   ```bash
+   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+   ```
+
+   <Aside type="caution">
+   Store this key safely (e.g., in a password manager). If you lose it, all stored secrets are gone for good!
+   </Aside>
+
+2. **Create a `docker-compose.yml`**
+
+   Create a `docker-compose.yml` in a new folder:
+
+   ```yaml
+   version: '3.8'
+   services:
+     api:
+       image: scrape-dojo/api:latest
+       ports:
+         - "3030:3000"
+       environment:
+         - SCRAPE_DOJO_ENCRYPTION_KEY=your_generated_key_here
+         - DB_TYPE=sqlite
+       volumes:
+         - ./data:/app/data
+         - ./downloads:/app/downloads
+         - ./logs:/app/logs
+         - ./config:/app/config
+         - ./browser-data:/app/browser-data
+       restart: unless-stopped
+
+     ui:
+       image: scrape-dojo/ui:latest
+       ports:
+         - "8080:80"
+       depends_on:
+         - api
+       restart: unless-stopped
+   ```
+
+3. **Start the containers**
+
+   ```bash
+   docker compose up -d
+   ```
+
+4. **Check the logs**
+
+   ```bash
+   docker compose logs -f
+   ```
+
+   If everything works, you'll see the startup messages from the API and UI after a few seconds.
+
+</Steps>
+
+<Aside type="tip">
+The API runs at `http://localhost:3030/api`, the UI at `http://localhost:8080`. Just open it in your browser and get going!
+</Aside>
+
+**📁 Volumes overview:**
+
+| Volume | What's inside? |
+|--------|----------------|
+| `./data` | SQLite database and persistent data |
+| `./downloads` | Downloaded files (PDFs, screenshots, etc.) |
+| `./logs` | Application log files |
+| `./config` | Your scrape configuration files (JSONC) |
+| `./browser-data` | Browser profile data (cookies, sessions — so you stay logged in) |
+
+</TabItem>
+<TabItem label="📦 From source">
+
+If you want to contribute to the code or have full control over everything, you can start Scrape Dojo directly from the source.
+
+<Steps>
+
+1. **Clone the repository**
+
+   ```bash
+   git clone https://github.com/disane87/scrape-dojo.git
+   cd scrape-dojo
+   ```
+
+2. **Install dependencies**
+
+   ```bash
+   pnpm install
+   ```
+
+   This takes a few minutes the first time — pnpm downloads all packages for the API, UI, and the shared library.
+
+3. **Configure the environment**
+
+   Create a `.env` file in the root directory:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   Open the `.env` and set at least the encryption key:
+
+   ```bash
+   SCRAPE_DOJO_ENCRYPTION_KEY=your_generated_key_here
+   ```
+
+   Generate the key:
+
+   ```bash
+   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+   ```
+
+4. **Start the application**
+
+   ```bash
+   # Everything at once (API + UI)
+   pnpm start
+
+   # Or individually, if you only need one:
+   pnpm start:api   # API on port 3000
+   pnpm start:ui    # UI on port 4200
+   ```
+
+</Steps>
+
+<Aside type="tip">
+In dev mode, the UI runs at `http://localhost:4200`. The dev server automatically proxies API requests to `http://localhost:3000` — so you don't need to worry about CORS or proxy config.
+</Aside>
+
+</TabItem>
+</Tabs>
+
+## ⚡ Your first scrape
+
+Now it gets exciting! Imagine you want to grab the title of a webpage. Create a new file `config/sites/my-first-scrape.jsonc`:
+
+```jsonc
+{
+  "$schema": "../scrapes.schema.json",
+  "scrapes": [
+    {
+      "id": "my-first-scrape",
+      "metadata": {
+        "description": "My first scrape — reads the page title",
+        "version": "1.0.0",
+        "author": "gh:@your-username",
+        "triggers": [{ "type": "manual" }]
+      },
+      "steps": [
+        {
+          "name": "Read title",
+          "actions": [
+            {
+              "name": "navigate",
+              "action": "navigate",
+              "params": { "url": "https://example.com" }
+            },
+            {
+              "name": "title",
+              "action": "extract",
+              "params": { "selector": "h1" }
+            },
+            {
+              "name": "logTitle",
+              "action": "logger",
+              "params": {
+                "message": "Found title: {{previousData.title}}",
+                "level": "log"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+### 🔍 What's happening here?
+
+The scrape runs three actions in sequence:
+
+| # | Action | What it does |
+|---|--------|--------------|
+| 1 | `navigate` | Opens `https://example.com` in the browser |
+| 2 | `extract` | Grabs the text from the `h1` element. The result is stored under `previousData.title` (the action's `name` is the key) |
+| 3 | `logger` | Outputs the title to the console. The `{{previousData.title}}` is a Handlebars template — that's how you access results from previous actions |
+
+<Aside type="note">
+The `name` of each action is super important: it determines which key the result is stored under. So pick descriptive names like `title`, `productLinks`, or `priceData`.
+</Aside>
+
+## ▶️ Start the scrape
+
+### Via the UI
+
+<Steps>
+
+1. Open the UI in your browser:
+   - **Docker**: `http://localhost:8080`
+   - **Development**: `http://localhost:4200`
+
+2. You'll see your scrape "my-first-scrape" in the overview — Scrape Dojo automatically picks up new config files (hot reload).
+
+3. Click on the scrape to open the detail view.
+
+4. Click **"Run"** to start the scrape.
+
+5. Watch the live execution in real-time via Server-Sent Events (SSE) right in the UI. You'll see every step and every action with its status and result.
+
+</Steps>
+
+### Via the API
+
+You can also start scrapes directly via the REST API — handy for automation or debugging:
+
+```bash
+# Start the scrape
+curl http://localhost:3000/api/scrape/my-first-scrape
+```
+
+<Aside type="note">
+In the Docker setup, the API is accessible on port 3030: `http://localhost:3030/api/scrape/my-first-scrape`
+</Aside>
+
+You can also pass variables when starting:
+
+```bash
+curl -X POST http://localhost:3000/api/scrape/my-first-scrape \
+  -H "Content-Type: application/json" \
+  -d '{ "variables": { "targetUrl": "https://example.org" } }'
+```
+
+## 🎯 Next steps
+
+Congrats, your first scrape is running! Now you can dive deeper:
+
+<CardGrid>
+  <LinkCard
+    title="📐 Configuration Format"
+    description="Understand the complete structure of scrape configurations — metadata, steps, actions, and more"
+    href="/scrape-dojo/en/user-guide/config-format/"
+  />
+  <LinkCard
+    title="⚡ Actions Reference"
+    description="All available actions with parameters and examples"
+    href="/scrape-dojo/en/user-guide/actions/"
+  />
+  <LinkCard
+    title="🔧 Templates"
+    description="Handlebars templates and JSONata transformations for dynamic values"
+    href="/scrape-dojo/en/user-guide/templates/"
+  />
+  <LinkCard
+    title="📚 Examples"
+    description="Practical examples for common scraping scenarios"
+    href="/scrape-dojo/en/examples/"
+  />
+</CardGrid>

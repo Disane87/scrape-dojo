@@ -1,0 +1,441 @@
+---
+title: "🛠️ Developer Guide"
+description: Develop custom actions and extend the system
+sidebar:
+  order: 1
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Want to extend Scrape Dojo? You're in the right place! In this guide, we'll show you how to build your own actions, integrate them into the system, and test them properly. The action system is intentionally kept simple — you only need one file and a few lines of code.
+
+## Creating a Custom Action
+
+### Step 1: Create a New File
+
+Create a new file in the directory `apps/api/src/action-handler/actions/`:
+
+```
+apps/api/src/action-handler/actions/my-custom.action.ts
+```
+
+### Step 2: Extend BaseAction with @ActionMetadata
+
+Every action inherits from `BaseAction` and uses the `@ActionMetadata` decorator. The decorator describes your action for the UI and the factory system:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `name` | String | Technical name of the action (e.g., `myCustomAction`) |
+| `displayName` | String | Display name in the UI |
+| `icon` | String | Icon name (Iconify format, e.g., `mdi:code-braces`) |
+| `color` | String | Color designation for the UI |
+| `category` | String | Category of the action (see table below) |
+| `description` | String | Brief description of the functionality |
+
+### Step 3: Implement the execute Method
+
+The central method of every action is `execute(page, params, context)`. It's called by the ActionHandler and receives:
+
+- **page** — The Puppeteer `Page` instance for browser interactions
+- **params** — Typed parameters from the scrape configuration
+- **context** — Execution context with access to:
+  - `previousData` — Results from previous actions
+  - `currentData` — Current data (e.g., in loops)
+  - `storedData` — Persisted data from earlier runs
+  - `variables` — Runtime and workflow variables
+  - `logger` — ScrapeLogger instance for structured logging
+
+### Step 4: Automatic Registration
+
+The action is automatically registered via the factory pattern. You just need to add the import in `apps/api/src/action-handler/actions/index.ts` — done.
+
+## Action Categories
+
+| Category | Description | Examples |
+|----------|-------------|----------|
+| `navigation` | Page navigation and URL control | navigate, reload, goBack |
+| `interaction` | Simulate user interactions | click, type, select, hover |
+| `extraction` | Extract data from web pages | extract, extractAll, screenshot |
+| `flow` | Control flow and logic | loop, skipIf, condition |
+| `data` | Data processing and transformation | transform, storeData, artifacts |
+| `utility` | Helper functions | delay, logger, notify, waitForSelector |
+
+## Example: Custom Action Skeleton
+
+```typescript
+import { ActionMetadata } from '../_decorators/action.decorator';
+import { BaseAction } from './bases/base.action';
+
+interface MyCustomParams {
+  selector: string;
+  attribute?: string;
+  timeout?: number;
+}
+
+@ActionMetadata({
+  name: 'myCustomAction',
+  displayName: 'My Custom Action',
+  icon: 'mdi:code-braces',
+  color: 'blue',
+  category: 'extraction',
+  description: 'Extracts custom data from a web page'
+})
+export class MyCustomAction extends BaseAction<MyCustomParams> {
+  async execute(page, params: MyCustomParams, context): Promise<any> {
+    const { selector, attribute = 'textContent', timeout = 30000 } = params;
+
+    // Validate parameters
+    if (!selector) {
+      throw new Error('Parameter "selector" is required');
+    }
+
+    // Wait for element
+    await page.waitForSelector(selector, { timeout });
+
+    // Extract data
+    const result = await page.$eval(selector, (el, attr) => {
+      return el[attr] || el.getAttribute(attr);
+    }, attribute);
+
+    // Logging
+    context.logger.log(`Extracted: ${result}`);
+
+    // Return result (will be stored in previousData)
+    return result;
+  }
+}
+```
+
+## Action with previousData
+
+Actions can access results from previous actions — this is one of the core mechanisms in Scrape Dojo:
+
+```typescript
+@ActionMetadata({
+  name: 'aggregateData',
+  displayName: 'Aggregate Data',
+  icon: 'mdi:chart-bar',
+  color: 'green',
+  category: 'data',
+  description: 'Aggregates data from previous actions'
+})
+export class AggregateDataAction extends BaseAction<AggregateParams> {
+  async execute(page, params: AggregateParams, context): Promise<any> {
+    // Access data from previous actions
+    const items = context.previousData.get('extractedItems');
+
+    if (!Array.isArray(items)) {
+      throw new Error('No items available for aggregation');
+    }
+
+    return {
+      total: items.length,
+      sum: items.reduce((acc, item) => acc + (item.value || 0), 0),
+      average: items.reduce((acc, item) => acc + (item.value || 0), 0) / items.length
+    };
+  }
+}
+```
+
+## Action with SSE Events
+
+Your action can send live events to the UI — perfect for progress indicators:
+
+```typescript
+@ActionMetadata({
+  name: 'progressAction',
+  displayName: 'Progress Action',
+  icon: 'mdi:progress-check',
+  color: 'orange',
+  category: 'utility',
+  description: 'Action with progress reporting'
+})
+export class ProgressAction extends BaseAction<ProgressParams> {
+  async execute(page, params: ProgressParams, context): Promise<any> {
+    const { items } = params;
+    const total = items.length;
+
+    for (let i = 0; i < total; i++) {
+      // Send SSE event
+      context.scrapeEventsService?.emitEvent({
+        type: 'log',
+        scrapeId: context.scrapeId,
+        runId: context.runId,
+        message: `Processing element ${i + 1}/${total}`
+      });
+
+      await this.processItem(items[i]);
+    }
+
+    return { processed: total };
+  }
+
+  private async processItem(item: any) {
+    // Processing logic
+  }
+}
+```
+
+## Registration
+
+### Add Import
+
+In `apps/api/src/action-handler/actions/index.ts`:
+
+```typescript
+import './my-custom.action';
+```
+
+### Extend the ActionName Type
+
+In `libs/shared/src/lib/interfaces.ts`:
+
+```typescript
+export type ActionName =
+  | 'navigate'
+  | 'click'
+  | 'extract'
+  // ... existing actions
+  | 'myCustomAction';  // Add new action
+```
+
+### Compile and Verify
+
+```bash
+# Restart the API
+pnpm start:api
+
+# Check metadata — your action should now show up
+curl http://localhost:3000/api/actions/metadata
+```
+
+## 🧪 Testing
+
+### Unit Tests with Vitest
+
+Create a test file right next to the action:
+
+```typescript
+// my-custom.action.spec.ts
+import { describe, it, expect, vi } from 'vitest';
+import { MyCustomAction } from './my-custom.action';
+
+describe('MyCustomAction', () => {
+  it('should extract data correctly', async () => {
+    const mockPage = {
+      waitForSelector: vi.fn().mockResolvedValue(true),
+      $eval: vi.fn().mockResolvedValue('Extracted Text')
+    };
+
+    const mockContext = {
+      logger: { log: vi.fn(), debug: vi.fn(), error: vi.fn() },
+      previousData: new Map(),
+      variables: {}
+    };
+
+    const action = new MyCustomAction();
+    const result = await action.execute(
+      mockPage as any,
+      { selector: '.title' },
+      mockContext as any
+    );
+
+    expect(result).toBe('Extracted Text');
+    expect(mockPage.waitForSelector).toHaveBeenCalledWith('.title', { timeout: 30000 });
+  });
+
+  it('should throw an error when selector is missing', async () => {
+    const action = new MyCustomAction();
+
+    await expect(
+      action.execute({} as any, { selector: '' } as any, {} as any)
+    ).rejects.toThrow('Parameter "selector" is required');
+  });
+});
+```
+
+### Running Tests
+
+```bash
+# All API tests
+pnpm test:api
+
+# Single test file
+npx nx test api -- --testPathPattern="my-custom.action"
+
+# Watch mode
+pnpm test:watch
+```
+
+### Integration Tests
+
+Test your action with a real scrape configuration in `config/sites/`:
+
+```jsonc
+{
+  "scrapes": [
+    {
+      "id": "test-my-action",
+      "metadata": {
+        "description": "Test the custom action",
+        "version": "1.0.0",
+        "triggers": [{ "type": "manual" }]
+      },
+      "steps": [
+        {
+          "name": "Test",
+          "actions": [
+            {
+              "action": "navigate",
+              "name": "open",
+              "params": {
+                "url": "https://example.com"
+              }
+            },
+            {
+              "action": "myCustomAction",
+              "name": "customResult",
+              "params": {
+                "selector": "h1",
+                "attribute": "textContent"
+              }
+            },
+            {
+              "action": "logger",
+              "name": "logResult",
+              "params": {
+                "message": "Result: {{previousData.customResult}}"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+## 🐛 Debugging
+
+### Logging in Actions
+
+Actions have access to the `ScrapeLogger`:
+
+```typescript
+context.logger.log('Info message');
+context.logger.debug('Debug details');
+context.logger.error('Error occurred');
+```
+
+### Browser DevTools
+
+For Puppeteer debugging, set these in your `.env`:
+
+```bash
+PUPPETEER_HEADLESS=false
+PUPPETEER_DEVTOOLS=true
+```
+
+<Aside type="tip">
+With `PUPPETEER_HEADLESS=false` you can see the browser live — super helpful when developing new actions!
+</Aside>
+
+### Tracking Events
+
+```typescript
+// In the action
+context.scrapeEventsService?.emitEvent({
+  type: 'log',
+  scrapeId: context.scrapeId,
+  runId: context.runId,
+  message: 'Debug message',
+  actionName: 'myCustomAction'
+});
+```
+
+## ✅ Best Practices
+
+### Validate Parameters
+
+Always check required parameters at the beginning of your `execute` method:
+
+```typescript
+async execute(page, params, context): Promise<any> {
+  const { selector, timeout = 30000 } = params;
+
+  if (!selector) {
+    throw new Error('Parameter "selector" is required');
+  }
+  // Continue with logic
+}
+```
+
+### Error Handling
+
+Catch errors and provide meaningful messages:
+
+```typescript
+async execute(page, params, context): Promise<any> {
+  try {
+    const element = await page.$(params.selector);
+
+    if (!element) {
+      context.logger.error(`Element not found: ${params.selector}`);
+      return null;
+    }
+
+    return await element.evaluate(el => el.textContent?.trim());
+  } catch (error) {
+    context.logger.error(`Action failed: ${error.message}`);
+    throw error;
+  }
+}
+```
+
+### Use TypeScript Types
+
+Type your parameters and return values — it helps with refactoring and makes the code more readable:
+
+```typescript
+interface StrictParams {
+  required: string;
+  optional?: number;
+  mode: 'fast' | 'detailed';
+}
+
+@ActionMetadata({ name: 'typedAction', /* ... */ })
+export class TypedAction extends BaseAction<StrictParams> {
+  async execute(page, params: StrictParams, context): Promise<{ success: boolean }> {
+    const { required, optional, mode } = params;
+    return { success: true };
+  }
+}
+```
+
+## Project Structure
+
+```
+apps/api/src/action-handler/
+  actions/
+    bases/
+      base.action.ts          # Base class for all actions
+    navigate.action.ts         # Navigate action
+    click.action.ts            # Click action
+    extract.action.ts          # Extract action
+    loop.action.ts             # Loop action
+    transform.action.ts        # Transform action
+    my-custom.action.ts        # Your custom action
+    index.ts                   # All imports
+  _decorators/
+    action.decorator.ts        # @ActionMetadata decorator
+  action.factory.ts            # Factory for action instances
+  action-handler.service.ts    # Orchestration
+```
+
+---
+
+**Related topics:**
+- [API Modules](/scrape-dojo/en/developer/api-modules/)
+- [Actions Reference](/scrape-dojo/en/user-guide/actions/)
+- [SSE Events](/scrape-dojo/en/developer/sse-events/)
+- [Environment Variables](/scrape-dojo/en/developer/environment-variables/)

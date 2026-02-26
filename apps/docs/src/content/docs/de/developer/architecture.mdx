@@ -1,0 +1,133 @@
+---
+title: "🏗️ Architektur"
+description: Tech Stack, Projektstruktur und Kommunikationsflüsse
+sidebar:
+  order: 2
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Du willst wissen, wie Scrape Dojo unter der Haube funktioniert? Hier bekommst du den kompletten Überblick — vom Tech Stack über die Projektstruktur bis hin zu den Kommunikationswegen zwischen Frontend und Backend. Perfekt, wenn du am System mitarbeiten oder einfach verstehen willst, wie alles zusammenhängt.
+
+## Tech Stack
+
+| Bereich | Technologie |
+|---------|-------------|
+| **Build-System** | Nx 22.3 Monorepo + pnpm |
+| **Backend** | NestJS 11, Puppeteer (mit Stealth Plugin), TypeORM, Handlebars, JSONata |
+| **Frontend** | Angular 21, Vite, Tailwind CSS 4, Transloco (i18n) |
+| **Datenbank** | SQLite (Standard), MySQL, PostgreSQL |
+| **Echtzeit** | Server-Sent Events (SSE) |
+| **Auth** | JWT, OIDC/SSO, MFA/TOTP, API Keys |
+| **Verschlüsselung** | AES-256-CBC für Secrets |
+| **Container** | Docker Multi-Stage Builds, Nginx, Docker Compose |
+
+## Projektstruktur
+
+```
+scrape-dojo/
+├── apps/
+│   ├── api/                    # NestJS Backend (Port 3000)
+│   │   ├── src/
+│   │   │   ├── action-handler/ # ~25 Actions + Factory Pattern
+│   │   │   ├── scrape/         # Core-Orchestrierung
+│   │   │   ├── database/       # TypeORM Multi-DB Support
+│   │   │   ├── auth/           # JWT, OIDC, MFA, API Keys
+│   │   │   ├── events/         # SSE Event-System
+│   │   │   ├── secrets/        # Verschlüsselte Secrets
+│   │   │   ├── variables/      # Globale Variablen
+│   │   │   ├── scheduler/      # Cron-basiertes Scheduling
+│   │   │   ├── puppeteer/      # Browser-Management
+│   │   │   └── main.ts         # Bootstrap + Middleware
+│   │   └── Dockerfile          # Multi-Stage (Puppeteer-Image)
+│   ├── ui/                     # Angular Frontend
+│   │   ├── src/
+│   │   │   ├── app/
+│   │   │   │   ├── store/      # BehaviorSubject-basierter State
+│   │   │   │   ├── services/   # API + SSE Services
+│   │   │   │   ├── guards/     # Auth Guards
+│   │   │   │   └── components/ # UI-Komponenten
+│   │   │   └── assets/i18n/    # Übersetzungen (en, de)
+│   │   ├── proxy.conf.json     # Dev-Proxy → localhost:3000
+│   │   └── Dockerfile          # nginx:alpine
+│   └── docs/                   # Astro Starlight Dokumentation
+├── libs/
+│   └── shared/                 # @scrape-dojo/shared Types
+├── config/
+│   ├── sites/                  # Scrape-Konfigurationen (.jsonc)
+│   └── scrapes.schema.json     # JSON Schema für Validierung
+├── docker-compose.yml
+└── nx.json                     # Nx Workspace Config
+```
+
+## Kommunikation
+
+### Development-Modus
+
+Im Dev-Modus läuft alles lokal. Der Angular Dev-Server (Vite) proxied alle `/api/*`-Requests an den NestJS-Backend-Server:
+
+```
+Browser → Angular Dev Server (Port 4200) → Proxy → NestJS API (Port 3000)
+```
+
+Die Proxy-Konfiguration liegt in `apps/ui/proxy.conf.json`:
+
+```json
+{
+  "/api": {
+    "target": "http://localhost:3000",
+    "secure": false
+  }
+}
+```
+
+### Docker / Production
+
+In Production übernimmt Nginx die Rolle des Reverse Proxies. Die Angular-SPA wird als statisches Bundle ausgeliefert:
+
+```
+Browser → Nginx (Port 80/443)
+           ├── /api/*  → NestJS API Container (Port 3000)
+           └── /*      → Angular SPA (statische Dateien)
+```
+
+<Aside type="note">
+Im Docker-Setup werden die Container über `docker-compose.yml` orchestriert. Persistente Volumes: `./data`, `./downloads`, `./logs`, `./config`, `./browser-data`.
+</Aside>
+
+## Echtzeit via SSE
+
+Server-Sent Events (SSE) sind der Kanal für Live-Updates vom Backend zur UI. Das funktioniert so:
+
+```
+NestJS EventsModule → SSE Stream (text/event-stream) → Angular ScrapeEventsService
+```
+
+Der SSE-Endpoint (`GET /api/events`) hält eine persistente Verbindung offen. Während ein Scrape läuft, schickt das Backend Events wie `scrape-start`, `step-status`, `action-status`, `loop-iteration` und `scrape-end` — alles in Echtzeit.
+
+Die UI nutzt den `ScrapeEventsService`, der auf diese Events lauscht und den Store aktualisiert. So siehst du live, was gerade passiert.
+
+## Datenfluss — von der Config zum Ergebnis
+
+Ein Scrape-Durchlauf folgt diesem Ablauf:
+
+| Schritt | Beschreibung |
+|---------|-------------|
+| **1. Config laden** | `ScrapeConfigService` liest die JSONC-Datei und validiert gegen das JSON Schema |
+| **2. Run erstellen** | `ScrapeService` erstellt einen neuen Run-Eintrag in der Datenbank |
+| **3. Browser starten** | `PuppeteerService` startet eine Chrome-Instanz mit Stealth Plugin |
+| **4. Steps ausführen** | `ScrapeExecutionService` iteriert über die Steps der Konfiguration |
+| **5. Actions ausführen** | Für jeden Step ruft der `ActionHandler` die Actions über die `ActionFactory` auf |
+| **6. Ergebnis speichern** | Ergebnisse werden in der DB gespeichert, SSE-Events an die UI gesendet, Browser geschlossen |
+
+<Aside type="tip">
+Details zum Ausführungsablauf findest du unter [Scrape-Workflow](/scrape-dojo/de/developer/scrape-workflow/).
+</Aside>
+
+---
+
+**Verwandte Themen:**
+- [API-Module](/scrape-dojo/de/developer/api-modules/)
+- [Scrape-Workflow](/scrape-dojo/de/developer/scrape-workflow/)
+- [SSE Events](/scrape-dojo/de/developer/sse-events/)
+- [Umgebungsvariablen](/scrape-dojo/de/developer/environment-variables/)

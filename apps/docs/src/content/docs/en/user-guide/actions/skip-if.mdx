@@ -1,0 +1,104 @@
+---
+title: skipIf
+description: Skip actions or break loops conditionally
+sidebar:
+  order: 32
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+With `skipIf` you can skip actions in a loop iteration or break out of the entire loop — depending on what you need. This is perfect for incremental scraping: if you notice you already have a file, you skip the rest or bail out completely.
+
+## Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `condition` | `string` | Yes | Key in `previousData` or path in `data` whose value is checked |
+| `skipIfTrue` | `boolean` | No | Skip when value is truthy (default: `true`) |
+| `breakLoop` | `boolean` | No | If `true`, breaks the entire loop instead of just skipping the iteration |
+| `breakLevels` | `number` | No | Number of loop levels to break out of (default: 1). Only relevant when `breakLoop: true` |
+| `message` | `string` | No | Message logged when skipping/breaking |
+
+<Aside type="note">
+The `condition` parameter is not a JSONata expression, but a **key lookup**: the value is looked up in `previousData` (or `data`) and checked for truthiness.
+</Aside>
+
+## Examples
+
+**Skip remaining actions when condition is met:**
+
+```jsonc
+{
+  "name": "checkExists",
+  "action": "skipIf",
+  "params": {
+    "condition": "fileExists",
+    "skipIfTrue": true,
+    "message": "File already exists, skipping download"
+  }
+}
+```
+
+If `previousData.fileExists` is truthy, all subsequent actions in the current loop iteration are skipped and the next iteration begins.
+
+**Break the loop when condition is met:**
+
+```jsonc
+{
+  "name": "stopIfDownloaded",
+  "action": "skipIf",
+  "params": {
+    "condition": "fileExists",
+    "skipIfTrue": true,
+    "breakLoop": true,
+    "message": "Already downloaded — ending loop"
+  }
+}
+```
+
+**Breaking multiple loop levels (breakLevels):**
+
+```jsonc
+{
+  "name": "orderLoop",
+  "action": "loop",
+  "params": {
+    "elementKey": "orders",
+    "actions": [
+      {
+        "name": "invoiceLoop",
+        "action": "loop",
+        "params": {
+          "elementKey": "invoices",
+          "actions": [
+            {
+              "name": "checkInvoice",
+              "action": "fileExists",
+              "params": { "path": "downloads/{{currentData.invoiceLoop.value.id}}.pdf" }
+            },
+            {
+              "name": "stopAll",
+              "action": "skipIf",
+              "params": {
+                "condition": "checkInvoice",
+                "skipIfTrue": true,
+                "breakLoop": true,
+                "breakLevels": 2,
+                "message": "Invoice exists — breaking all loops"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
+```
+
+<Aside type="tip">
+`breakLevels: 2` breaks out of both the inner (`invoiceLoop`) and the outer loop (`orderLoop`). This is super useful for incremental scraping where you want to stop completely at the first file that already exists.
+</Aside>
+
+<Aside type="caution">
+`skipIf` without `breakLoop` only works inside a loop. Outside of a loop, skipping has no effect.
+</Aside>

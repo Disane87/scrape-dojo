@@ -1,0 +1,101 @@
+---
+title: extractAll
+description: Extrahiere Text oder Attribute aus mehreren Elementen
+sidebar:
+  order: 21
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Brauchst du nicht nur einen Wert, sondern gleich eine ganze Liste? Dann ist `extractAll` dein Freund. Diese Action funktioniert wie `extract`, gibt aber ein **Array** zurück — perfekt für Produktlisten, Link-Sammlungen oder Tabellen.
+
+Genau wie bei `extract` wird standardmäßig `textContent` verwendet, aber du kannst jede Eigenschaft oder jedes Attribut abfragen.
+
+## Parameter
+
+| Parameter | Typ | Pflicht | Beschreibung |
+|-----------|-----|---------|--------------|
+| `selector` | `string` | Ja | CSS-Selektor — alle passenden Elemente werden extrahiert |
+| `element` | `string` | Nein | Key aus `previousData`, um einen ElementHandle als Kontext zu verwenden |
+| `property` | `string` | Nein | Die zu extrahierende Eigenschaft (Standard: `"textContent"`) |
+
+<Aside type="note">
+`extractAll` gibt immer ein **Array von Strings** zurück. Leere Werte und reine Whitespace-Strings werden automatisch herausgefiltert.
+</Aside>
+
+## Beispiele
+
+**Alle Produktnamen extrahieren:**
+
+```jsonc
+{
+  "type": "extractAll",
+  "description": "Alle Produktnamen auf der Seite sammeln",
+  "selector": ".product-list .product-name",
+  "outputKey": "productNames"
+}
+```
+
+Ergebnis:
+```json
+["Laptop Pro 15", "Wireless Mouse", "USB-C Hub", "Monitor 27 Zoll"]
+```
+
+**Alle Links extrahieren:**
+
+```jsonc
+{
+  "type": "extractAll",
+  "description": "Alle Produktlinks sammeln",
+  "selector": ".product-list a.product-link",
+  "property": "href",
+  "outputKey": "productLinks"
+}
+```
+
+Ergebnis:
+```json
+[
+  "https://shop.example.com/laptop-pro",
+  "https://shop.example.com/wireless-mouse",
+  "https://shop.example.com/usb-c-hub"
+]
+```
+
+**Alle data-Attribute extrahieren:**
+
+```jsonc
+{
+  "type": "extractAll",
+  "description": "Alle Produkt-IDs sammeln",
+  "selector": ".product-card",
+  "property": "data-product-id",
+  "outputKey": "productIds"
+}
+```
+
+**Aus einem ElementHandle extrahieren:**
+
+```jsonc
+[
+  {
+    "type": "get",
+    "description": "Warenkorb-Container holen",
+    "selector": "#shopping-cart",
+    "outputKey": "cart"
+  },
+  {
+    "type": "extractAll",
+    "description": "Alle Artikelnamen im Warenkorb",
+    "selector": ".cart-item .item-name",
+    "element": "cart",
+    "outputKey": "cartItems"
+  }
+]
+```
+
+## Tipps
+
+- Wenn keine Elemente gefunden werden, gibt `extractAll` `null` zurück — nicht ein leeres Array. Plane das in deiner weiteren Verarbeitung ein.
+- Für `data-*` Attribute wird intern `getAttribute()` verwendet, für alles andere `getProperty()`. Das passiert automatisch, du musst dich nicht darum kümmern.
+- Kombiniere `extractAll` mit der `transform`-Action, um die extrahierten Daten weiterzuverarbeiten, z.B. mit JSONata.

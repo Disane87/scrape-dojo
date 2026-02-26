@@ -1,0 +1,84 @@
+---
+title: screenshot
+description: "Mach einen Screenshot der aktuellen Seite"
+sidebar:
+  order: 50
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Manchmal willst du einfach sehen, was der Browser gerade anzeigt. Die `screenshot`-Action knipst ein Foto der aktuellen Seite und speichert es als PNG. Perfekt fürs Debugging oder um Ergebnisse visuell festzuhalten.
+
+Der Dateiname wird automatisch generiert -- aus einem Zeitstempel und dem Seitentitel. Du musst dich also um nichts kümmern.
+
+## Parameter
+
+Die `screenshot`-Action hat **keine Parameter**. Einfach aufrufen und fertig.
+
+## Wie funktioniert der Dateiname?
+
+Der generierte Dateiname folgt dem Muster:
+
+```
+YYYYMMDD-HHmmss-seitentitel.png
+```
+
+Dabei wird der Seitentitel bereinigt (Sonderzeichen werden durch Bindestriche ersetzt und alles in Kleinbuchstaben umgewandelt). Ein Beispiel:
+
+```
+20260226-143022-amazon-de-mein-konto.png
+```
+
+## Speicherort
+
+Screenshots werden im Verzeichnis `./screenshots/` gespeichert. Falls das Verzeichnis noch nicht existiert, wird es automatisch angelegt.
+
+<Aside type="tip">
+Im Docker-Setup solltest du das `./screenshots/`-Verzeichnis als Volume mounten, damit die Bilder auch nach einem Container-Neustart noch da sind.
+</Aside>
+
+## Beispiel
+
+**Einfacher Screenshot:**
+
+```jsonc
+{
+  "name": "seitenFoto",
+  "action": "screenshot",
+  "params": {}
+}
+```
+
+**Screenshot nach einer Navigation:**
+
+```jsonc
+{
+  "steps": [
+    {
+      "name": "Seite fotografieren",
+      "actions": [
+        {
+          "name": "openPage",
+          "action": "navigate",
+          "params": { "url": "https://example.com/dashboard" }
+        },
+        {
+          "name": "foto",
+          "action": "screenshot",
+          "params": {}
+        }
+      ]
+    }
+  ]
+}
+```
+
+<Aside type="note">
+Der Rückgabewert der Action ist der vollständige Dateipfad des Screenshots. Du kannst ihn über `previousData` in nachfolgenden Actions verwenden, z.B. um ihn zu loggen.
+</Aside>
+
+## Tipps
+
+- Nutze Screenshots vor und nach kritischen Aktionen, um den Seitenzustand zu dokumentieren.
+- Bei Fehlersuche: Setze einen Screenshot direkt vor die fehlerhafte Action, um zu sehen, was der Browser zu diesem Zeitpunkt anzeigt.
+- Screenshots sind PNG-Dateien und können je nach Seitengröße einige MB groß werden. Räume das Verzeichnis regelmäßig auf.

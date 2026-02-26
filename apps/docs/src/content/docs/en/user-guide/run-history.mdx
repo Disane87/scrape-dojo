@@ -1,0 +1,272 @@
+---
+title: "Run History & Monitoring"
+description: "Execution history, debugging, and real-time monitoring"
+sidebar:
+  order: 63
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Every scrape that runs in Scrape Dojo is recorded as a "run". You get a complete history with all the details -- what ran, how long it took, what went wrong, and what data was extracted. On top of that, there's real-time monitoring via SSE so you can watch live.
+
+In short: no scrape run is ever lost, and when something's stuck, you'll find the answers here.
+
+## Run Fields
+
+Each run records the following information:
+
+| Field | Description |
+|-------|-------------|
+| `id` | Unique run ID |
+| `scrapeId` | ID of the executed scrape |
+| `status` | `running`, `completed`, `error`, or `aborted` |
+| `trigger` | How the run was started: `manual`, `scheduled`, or `api` |
+| `startTime` | Start time |
+| `endTime` | End time |
+| `error` | Error message (when status is `error`) |
+| `steps` | List of all executed steps with their actions |
+| `logs` | Recorded log entries |
+
+### Run Status
+
+| Status | Meaning |
+|--------|---------|
+| `running` | Currently being executed |
+| `completed` | Successfully finished |
+| `error` | Finished with an error |
+| `aborted` | Manually cancelled |
+
+## Run History in the UI
+
+The UI shows you a list of all runs with status, duration, and trigger type. Clicking on a run opens the detail view.
+
+### Detail View
+
+In the detail view you'll see:
+- Complete step hierarchy (including nested loops)
+- Parameters and results of each action
+- Error messages with context
+- Artifacts (extracted data, screenshots)
+- Runtime variables and their values
+
+## Run Management via API
+
+### Retrieve All Runs
+
+```bash
+# All runs (with limit)
+GET /api/runs?limit=50
+
+# Runs for a specific scrape
+GET /api/runs?scrapeId=my-workflow&limit=100
+```
+
+**Response:**
+```json
+[
+  {
+    "id": "run-1704067200000-abc123",
+    "scrapeId": "my-workflow",
+    "status": "completed",
+    "trigger": "manual",
+    "startTime": "2025-01-11T10:00:00.000Z",
+    "endTime": "2025-01-11T10:05:30.000Z",
+    "duration": 330000,
+    "error": null,
+    "stepCount": 5,
+    "actionCount": 23
+  }
+]
+```
+
+### Retrieve a Single Run
+
+```bash
+GET /api/runs/{runId}
+```
+
+Returns the complete run with all steps, actions, parameters, and results.
+
+## Debug Data
+
+The debug endpoint is your best friend when troubleshooting. It gives you all the internal data of a run:
+
+```bash
+GET /api/runs/{runId}/debug
+```
+
+**Response:**
+```json
+{
+  "run": {
+    "id": "run-abc123",
+    "status": "completed",
+    "steps": ["..."]
+  },
+  "previousData": {
+    "open-page": null,
+    "extract-title": {
+      "title": "Example Page",
+      "subtitle": "Welcome"
+    },
+    "transform-data": {
+      "formatted": "Example Page - Welcome"
+    }
+  },
+  "storedData": {
+    "lastUpdate": "2025-01-10",
+    "cache": {}
+  },
+  "variables": {
+    "targetYear": 2025,
+    "region": "de"
+  }
+}
+```
+
+The `previousData` section shows the result of each action by its name. This lets you trace which data was available at each point in the workflow.
+
+## Artifacts
+
+Artifacts are extracted data produced by `artifacts` actions during execution:
+
+```bash
+GET /api/runs/{runId}/artifacts
+```
+
+Artifacts are displayed in the UI as cards, tables, or JSON views, depending on the data type.
+
+## Cleanup
+
+To keep your database from overflowing, there are several cleanup options.
+
+### Delete Old Runs
+
+```bash
+POST /api/runs/cleanup
+Content-Type: application/json
+
+{
+  "days": 30
+}
+```
+
+Deletes all runs older than the specified number of days.
+
+**Response:**
+```json
+{
+  "deleted": 142,
+  "message": "Deleted 142 runs older than 30 days"
+}
+```
+
+### Delete a Single Run
+
+```bash
+DELETE /api/runs/{runId}
+```
+
+### Delete All Runs for a Scrape
+
+```bash
+DELETE /api/scrapes/{scrapeId}/runs
+```
+
+### Selective Cleanup
+
+```bash
+# Delete only failed runs (older than 7 days)
+POST /api/runs/cleanup
+{
+  "days": 7,
+  "status": "error"
+}
+```
+
+<Aside type="tip">
+Set up a cleanup schedule, e.g. "delete runs older than 30 days". Especially in development environments, hundreds of runs can pile up quickly.
+</Aside>
+
+## Real-Time Monitoring via SSE
+
+While a scrape is running, Server-Sent Events (SSE) deliver live status updates directly to the UI:
+
+| Event | Description |
+|-------|-------------|
+| `scrape-start` / `scrape-end` | Start and end of the entire scrape |
+| `step-status` | Status changes of individual steps |
+| `action-status` | Status changes of individual actions |
+| `loop-iteration` | Progress of loop actions |
+| `log` | Log messages from the execution |
+
+The UI updates automatically based on these events and shows progress in real time.
+
+<Aside type="note">
+For details on SSE integration for your own clients, check out [SSE Events](/en/developer/sse-events/).
+</Aside>
+
+## Error Analysis
+
+Here are the typical scenarios you'll encounter and how to tackle them:
+
+### Action Returns Wrong Result
+
+1. Retrieve debug data: `GET /api/runs/{runId}/debug`
+2. Check the value of the affected action in `previousData`
+3. Adjust the selector, transform expression, or parameters
+
+### Variable Not Available
+
+1. Check debug data -- is the variable present in the `variables` object?
+2. Check the variable definition in `metadata.variables`
+3. Consider the resolution order (Runtime > Database > Config Default)
+
+### Loop Iteration Failed
+
+1. Check the `loopPath` in the detail view (shows nested position)
+2. Analyze `currentData` at the point of failure
+3. Optionally: use `optional: true` for fault-tolerant extraction
+
+### Timeout Error
+
+1. Check whether the selector is correct and the element exists
+2. Add a `waitForSelector` action before the affected action
+3. Increase the timeout value if the page loads slowly
+
+## Best Practices
+
+- **Use logger actions** for important checkpoints in the workflow:
+  ```jsonc
+  {
+    "name": "log-progress",
+    "action": "logger",
+    "params": {
+      "message": "Processed: {{previousData.items.length}} entries"
+    }
+  }
+  ```
+
+- **Save artifacts** for intermediate results in complex workflows:
+  ```jsonc
+  {
+    "name": "save-intermediate",
+    "action": "artifacts",
+    "params": {
+      "title": "Intermediate result",
+      "data": "{{previousData.extractedData}}"
+    }
+  }
+  ```
+
+- **Configure a retention policy** -- shorter retention in development environments, longer in production
+
+- **Use fault-tolerant extraction** with `optional: true` when elements may not always be present
+
+---
+
+**Related topics:**
+- [Scheduling](/en/user-guide/scheduling/)
+- [SSE Events](/en/developer/sse-events/)
+- [Actions Overview](/en/user-guide/actions/)
+- [API Reference](/en/api/reference/)

@@ -1,0 +1,108 @@
+---
+title: extract
+description: Extrahiere Text oder Attribute aus einem Element
+sidebar:
+  order: 20
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Die `extract`-Action ist dein Schweizer Taschenmesser zum Daten-Auslesen. Ob Texte, Links, Bild-URLs oder beliebige HTML-Attribute — mit `extract` holst du dir genau das, was du brauchst, aus einem einzelnen Element.
+
+Standardmäßig wird der `textContent` extrahiert, aber du kannst über den `property`-Parameter jede beliebige DOM-Eigenschaft oder jedes HTML-Attribut abfragen.
+
+## Parameter
+
+| Parameter | Typ | Pflicht | Beschreibung |
+|-----------|-----|---------|--------------|
+| `selector` | `string` | Ja | CSS-Selektor des Elements, aus dem extrahiert werden soll |
+| `element` | `string` | Nein | Key aus `previousData`, um einen ElementHandle als Kontext zu verwenden (statt der ganzen Seite) |
+| `property` | `string` | Nein | Die zu extrahierende Eigenschaft (Standard: `"textContent"`) |
+
+### Gängige property-Werte
+
+| Property | Beschreibung | Typisches Element |
+|----------|--------------|-------------------|
+| `textContent` | Textinhalt des Elements (Standard) | Jedes Element |
+| `innerHTML` | Inneres HTML des Elements | `<div>`, `<span>`, etc. |
+| `outerHTML` | Gesamtes HTML inkl. Element selbst | Jedes Element |
+| `href` | Link-URL | `<a>` |
+| `src` | Bild/Media-URL | `<img>`, `<video>`, `<source>` |
+| `value` | Wert eines Formularfelds | `<input>`, `<select>`, `<textarea>` |
+| `data-*` | Beliebiges data-Attribut | Jedes Element |
+
+## Beispiele
+
+**Text extrahieren:**
+
+```jsonc
+{
+  "type": "extract",
+  "description": "Produkttitel auslesen",
+  "selector": "h1.product-title"
+}
+```
+
+**Link-URL extrahieren:**
+
+```jsonc
+{
+  "type": "extract",
+  "description": "Link zur Detailseite holen",
+  "selector": "a.product-link",
+  "property": "href"
+}
+```
+
+**Bild-URL extrahieren:**
+
+```jsonc
+{
+  "type": "extract",
+  "description": "Produktbild-URL holen",
+  "selector": "img.product-image",
+  "property": "src"
+}
+```
+
+**Data-Attribut extrahieren:**
+
+```jsonc
+{
+  "type": "extract",
+  "description": "Produkt-ID aus data-Attribut lesen",
+  "selector": ".product-card",
+  "property": "data-product-id"
+}
+```
+
+**Aus einem ElementHandle extrahieren:**
+
+```jsonc
+[
+  {
+    "type": "get",
+    "description": "Produktkarte holen",
+    "selector": ".product-card",
+    "outputKey": "card"
+  },
+  {
+    "type": "extract",
+    "description": "Preis aus der Karte lesen",
+    "selector": ".price",
+    "element": "card",
+    "property": "textContent"
+  }
+]
+```
+
+<Aside type="tip">
+Wenn du `element` verwendest, wird der `selector` relativ zu diesem Element aufgelöst — nicht zur gesamten Seite. Das ist perfekt, wenn du vorher mit `get` ein bestimmtes Element geholt hast.
+</Aside>
+
+## Tipps
+
+- Wenn kein `property` angegeben wird, wird automatisch `textContent` verwendet — du musst es also nicht jedes Mal explizit setzen.
+- Der extrahierte Text wird automatisch getrimmt (Leerzeichen am Anfang und Ende werden entfernt).
+- Falls das Element nicht gefunden wird, gibt `extract` `null` zurück, anstatt einen Fehler zu werfen.
+- Kombiniere `extract` mit `get`, um zuerst ein Element zu isolieren und dann gezielt daraus zu extrahieren.

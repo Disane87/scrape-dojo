@@ -1,564 +1,142 @@
 ---
-title: Environment Variables
-description: Vollständige Referenz aller Konfigurationsoptionen
+title: "⚙️ Umgebungsvariablen"
+description: Alle Umgebungsvariablen und ihre Konfiguration
+sidebar:
+  order: 7
 ---
 
-# Environment Variables Referenz
+import { Aside } from '@astrojs/starlight/components';
 
-Komplette Übersicht aller unterstützten Environment-Variablen in Scrape Dojo.
+Hier findest du die vollständige Referenz aller Umgebungsvariablen in Scrape Dojo, sauber nach Kategorie sortiert. Kopier dir raus was du brauchst und pass es an dein Setup an. Am Ende der Seite gibt es eine fertige Production-Config und eine Sicherheits-Checkliste.
 
-## Kategorien
+## Runtime
 
-```mermaid
-mindmap
-  root((ENV Variables))
-    Runtime
-      NODE_ENV
-      PORT
-      DOCKER_ENV
-    Database
-      DB_TYPE
-      DB_DATABASE
-      DB_HOST
-    Auth
-      JWT_SECRET
-      MFA_ENABLED
-      OIDC_*
-    Security
-      ENCRYPTION_KEY
-      TRUST_PROXY
-      CORS_ORIGIN
-    Features
-      VAR_*
-      SECRET_*
-      EXPORT_OPENAPI
-```
+| Variable | Standard | Beschreibung |
+|----------|----------|-------------|
+| `NODE_ENV` | `development` | Node.js Umgebung (`development`, `production`, `test`) |
+| `SCRAPE_DOJO_NODE_ENV` | `development` | Scrape Dojo-spezifische Umgebung |
+| `SCRAPE_DOJO_PORT` | `3000` | API Server Port |
+| `SCRAPE_DOJO_DOCKER_ENV` | `false` | Docker-Modus aktivieren |
+| `SCRAPE_DOJO_TRUST_PROXY` | `1` | Reverse Proxy Trust Level |
+| `SCRAPE_DOJO_CORS_ORIGIN` | — | CORS Origins (kommasepariert) |
+| `EXPORT_OPENAPI` | `false` | OpenAPI Spec beim Start exportieren |
 
-## ⚡ Runtime / Server
+## Datenbank
 
-### NODE_ENV
+| Variable | Standard | Beschreibung |
+|----------|----------|-------------|
+| `DB_TYPE` | `sqlite` | Datenbank-Typ: `sqlite`, `mysql`, `postgres` |
+| `DB_DATABASE` | `./data/scrape-dojo.db` | Datenbank-Pfad (SQLite) oder Name (MySQL/PostgreSQL) |
+| `DB_SYNCHRONIZE` | `true` | TypeORM Schema-Sync (in Production `false` setzen!) |
+| `DB_LOGGING` | `false` | SQL Query Logging aktivieren |
+| `DB_HOST` | — | Datenbank-Host (nur MySQL/PostgreSQL) |
+| `DB_PORT` | `3306` | Datenbank-Port (nur MySQL/PostgreSQL) |
+| `DB_USERNAME` | — | Datenbank-Benutzer (nur MySQL/PostgreSQL) |
+| `DB_PASSWORD` | — | Datenbank-Passwort (nur MySQL/PostgreSQL) |
 
-- **Typ**: `development` | `production` | `test`
-- **Default**: `development`
-- **Beschreibung**: Betriebsmodus der Anwendung
-- **Auswirkung**:
-  - `development`: Ausführliche Logs, CORS permissiv
-  - `production`: Optimierte Performance, strikte Sicherheit
-  - `test`: E2E-Tests, In-Memory-DB
+<Aside type="caution">
+`DB_SYNCHRONIZE=true` ist praktisch in der Entwicklung, aber **niemals** in Production verwenden! TypeORM könnte dabei Daten verlieren.
+</Aside>
 
-```bash
-NODE_ENV=production
-```
+## Verschlüsselung
 
-### SCRAPE_DOJO_NODE_ENV
+| Variable | Standard | Beschreibung |
+|----------|----------|-------------|
+| `SCRAPE_DOJO_ENCRYPTION_KEY` | — | 256-Bit Hex Key (64 Zeichen) — **Pflicht in Production** |
+| `SCRAPE_DOJO_LOG_MAX_BYTES` | `5000000` | Maximale Log-Buffer Größe in Bytes (5 MB) |
 
-- **Typ**: `development` | `production`
-- **Default**: Wert von `NODE_ENV`
-- **Beschreibung**: Scrape Dojo-spezifischer Env-Mode
-- **Usage**: Health-Checks, Puppeteer-Config
+## Authentifizierung
 
-```bash
-SCRAPE_DOJO_NODE_ENV=production
-```
+| Variable | Standard | Beschreibung |
+|----------|----------|-------------|
+| `SCRAPE_DOJO_AUTH_ENABLED` | `true` | Authentifizierung global aktivieren |
+| `SCRAPE_DOJO_AUTH_REQUIRE_MFA` | `true` | Multi-Faktor-Authentifizierung erzwingen |
 
-### SCRAPE_DOJO_PORT
+## JWT
 
-- **Typ**: Number
-- **Default**: `3000`
-- **Beschreibung**: API Server Port
-- **Hinweis**: In Docker meist `3000` (intern), extern gemapped
+| Variable | Standard | Beschreibung |
+|----------|----------|-------------|
+| `SCRAPE_DOJO_AUTH_JWT_SECRET` | — | JWT Signing Secret (mindestens 32 Zeichen) |
+| `SCRAPE_DOJO_AUTH_REFRESH_TOKEN_SECRET` | — | Refresh Token Secret (mindestens 32 Zeichen) |
+| `SCRAPE_DOJO_AUTH_ACCESS_TOKEN_EXPIRY` | `15m` | Access Token Ablaufzeit (z.B. `15m`, `1h`, `1d`) |
+| `SCRAPE_DOJO_AUTH_REFRESH_TOKEN_EXPIRY` | `7d` | Refresh Token Ablaufzeit |
+| `SCRAPE_DOJO_AUTH_RATE_LIMIT_WINDOW_MS` | `60000` | Rate Limit Fenster in Millisekunden |
+| `SCRAPE_DOJO_AUTH_RATE_LIMIT_MAX` | `30` | Maximale Requests pro Rate-Limit-Fenster |
+| `SCRAPE_DOJO_AUTH_API_KEY` | — | Optionaler API Key für Service-Zugriff (Header: `X-API-Key`) |
 
-```bash
-SCRAPE_DOJO_PORT=3000
-```
+## MFA (Multi-Faktor-Authentifizierung)
 
-### SCRAPE_DOJO_DOCKER_ENV
+| Variable | Standard | Beschreibung |
+|----------|----------|-------------|
+| `SCRAPE_DOJO_AUTH_MFA_ISSUER` | `Scrape Dojo` | Anzeigename (Issuer) in Authenticator Apps |
+| `SCRAPE_DOJO_AUTH_MFA_CHALLENGE_SECRET` | — | Secret für Challenge-Token-Signierung |
+| `SCRAPE_DOJO_AUTH_MFA_ENCRYPTION_KEY` | — | Verschlüsselungskey für MFA-Secrets |
 
-- **Typ**: Boolean
-- **Default**: `false`
-- **Beschreibung**: Erkennt Docker-Umgebung
-- **Auto-Detection**: Wird meist automatisch gesetzt
+## OIDC / SSO
 
-```bash
-SCRAPE_DOJO_DOCKER_ENV=true
-```
+| Variable | Standard | Beschreibung |
+|----------|----------|-------------|
+| `SCRAPE_DOJO_AUTH_OIDC_ENABLED` | `false` | OIDC-Authentifizierung aktivieren |
+| `SCRAPE_DOJO_AUTH_OIDC_ISSUER_URL` | — | OIDC Provider URL (z.B. `https://accounts.google.com`) |
+| `SCRAPE_DOJO_AUTH_OIDC_CLIENT_ID` | — | OIDC Client ID |
+| `SCRAPE_DOJO_AUTH_OIDC_CLIENT_SECRET` | — | OIDC Client Secret |
+| `SCRAPE_DOJO_AUTH_OIDC_REDIRECT_URI` | `http://localhost:3000/auth/oidc/callback` | Callback URL nach Login |
+| `SCRAPE_DOJO_AUTH_OIDC_SCOPES` | `openid profile email` | Angeforderte OAuth Scopes (Leerzeichen-separiert) |
+| `SCRAPE_DOJO_AUTH_OIDC_PROVIDER_NAME` | `OIDC Provider` | Anzeigename des Providers in der UI |
 
-### SCRAPE_DOJO_TRUST_PROXY
+## 🔑 Keys generieren
 
-- **Typ**: Number | Boolean | String
-- **Default**: `1`
-- **Beschreibung**: Reverse Proxy Configuration (Express)
-- **Values**:
-  - `1` = Trust first proxy
-  - `2` = Trust first 2 proxies
-  - `true` = Trust all
-  - `loopback,linklocal` = Spezifische IPs
+Für die Verschlüsselungs- und Authentifizierungskeys brauchst du kryptographisch sichere Zufallswerte. So generierst du sie:
 
 ```bash
-SCRAPE_DOJO_TRUST_PROXY=1
+# Encryption Key generieren (256-Bit, 64 Hex-Zeichen)
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+# JWT Secret generieren
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+# MFA Challenge Secret generieren
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
-### SCRAPE_DOJO_CORS_ORIGIN
+<Aside type="caution">
+Generiere für jeden Zweck einen **eigenen** Key. Verwende niemals denselben Key für Encryption, JWT und MFA!
+</Aside>
 
-- **Typ**: String (comma-separated)
-- **Default**: Leer (permissiv in dev)
-- **Beschreibung**: Allowed CORS Origins
-- **Production**: Immer explizit setzen!
+## Variablen via ENV
 
-```bash
-SCRAPE_DOJO_CORS_ORIGIN=https://app.example.com,https://admin.example.com
-```
+Neben der Konfiguration der Anwendung kannst du auch globale Variablen über Umgebungsvariablen definieren. Das ist besonders praktisch für Docker-Deployments.
 
-### EXPORT_OPENAPI
-
-- **Typ**: Boolean
-- **Default**: `false`
-- **Beschreibung**: OpenAPI-Spec beim Start exportieren
-- **Output**: `dist/apps/api/openapi.json`
+**Prefix:** `SCRAPE_DOJO_VAR_`
 
 ```bash
-EXPORT_OPENAPI=true
-```
-
-### SCRAPE_DOJO_LOG_MAX_BYTES
-
-- **Typ**: Number
-- **Default**: `5000000` (5MB)
-- **Beschreibung**: Max. Größe des In-Memory Log-Buffers
-- **Hinweis**: Logs rotieren automatisch
-
-```bash
-SCRAPE_DOJO_LOG_MAX_BYTES=10000000
-```
-
----
-
-## 🗄️ Database
-
-### DB_TYPE
-
-- **Typ**: `sqlite` | `postgres` | `mysql`
-- **Default**: `sqlite`
-- **Beschreibung**: Datenbank-Typ
-- **Empfehlung**:
-  - Dev: `sqlite`
-  - Prod: `postgres`
-
-```bash
-DB_TYPE=sqlite
-```
-
-### DB_DATABASE
-
-- **Typ**: String
-- **Beschreibung**: Datenbank-Name oder Pfad
-- **SQLite**: Dateipfad (z.B. `./data/scrape-dojo.db`)
-- **PostgreSQL/MySQL**: Datenbank-Name
-
-```bash
-# SQLite
-DB_DATABASE=./data/scrape-dojo.db
-
-# PostgreSQL
-DB_DATABASE=scrape_dojo
-```
-
-### DB_HOST
-
-- **Typ**: String
-- **Default**: `localhost`
-- **Beschreibung**: Datenbank-Host
-- **Nur**: PostgreSQL / MySQL
-
-```bash
-DB_HOST=localhost
-# oder
-DB_HOST=postgres  # Docker-Service-Name
-```
-
-### DB_PORT
-
-- **Typ**: Number
-- **Default**:
-  - PostgreSQL: `5432`
-  - MySQL: `3306`
-- **Beschreibung**: Datenbank-Port
-
-```bash
-DB_PORT=5432
-```
-
-### DB_USERNAME
-
-- **Typ**: String
-- **Beschreibung**: Datenbank-Benutzername
-- **Nur**: PostgreSQL / MySQL
-
-```bash
-DB_USERNAME=scrape_dojo
-```
-
-### DB_PASSWORD
-
-- **Typ**: String
-- **Beschreibung**: Datenbank-Passwort
-- **Nur**: PostgreSQL / MySQL
-- **Sicherheit**: Nie committen!
-
-```bash
-DB_PASSWORD=super-secure-password
-```
-
-### DB_SYNCHRONIZE
-
-- **Typ**: Boolean
-- **Default**: `true` (dev), `false` (prod)
-- **Beschreibung**: Auto-Sync DB-Schema mit Entities
-- **⚠️ Production**: Immer `false` setzen!
-
-```bash
-DB_SYNCHRONIZE=false
-```
-
-### DB_LOGGING
-
-- **Typ**: Boolean
-- **Default**: `false`
-- **Beschreibung**: TypeORM SQL-Logging aktivieren
-- **Debug**: Auf `true` setzen
-
-```bash
-DB_LOGGING=true
-```
-
----
-
-## 🔐 Security & Encryption
-
-### SCRAPE_DOJO_ENCRYPTION_KEY
-
-- **Typ**: String (64 hex characters)
-- **Required**: ✅ **PRODUCTION**
-- **Beschreibung**: 256-bit AES Key für Secrets-Verschlüsselung
-- **Generate**:
-  ```bash
-  node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-  ```
-
-```bash
-SCRAPE_DOJO_ENCRYPTION_KEY=a1b2c3d4e5f6789...  # 64 hex chars
-```
-
----
-
-## 🔑 Authentication
-
-### SCRAPE_DOJO_AUTH_ENABLED
-
-- **Typ**: Boolean
-- **Default**: `true`
-- **Beschreibung**: Aktiviert globale Authentication
-- **⚠️ Production**: Niemals `false`!
-
-```bash
-SCRAPE_DOJO_AUTH_ENABLED=true
-```
-
-### SCRAPE_DOJO_AUTH_JWT_SECRET
-
-- **Typ**: String (min. 32 chars)
-- **Required**: ✅ wenn Auth enabled
-- **Beschreibung**: Secret für JWT-Signierung
-- **Generate**:
-  ```bash
-  node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-  ```
-
-```bash
-SCRAPE_DOJO_AUTH_JWT_SECRET=your-jwt-secret-at-least-32-chars
-```
-
-### SCRAPE_DOJO_AUTH_REFRESH_TOKEN_SECRET
-
-- **Typ**: String (min. 32 chars)
-- **Required**: ✅ wenn Auth enabled
-- **Beschreibung**: Secret für Refresh-Token-Signierung
-- **Hinweis**: Anders als JWT_SECRET!
-
-```bash
-SCRAPE_DOJO_AUTH_REFRESH_TOKEN_SECRET=your-refresh-secret
-```
-
-### SCRAPE_DOJO_AUTH_ACCESS_TOKEN_EXPIRY
-
-- **Typ**: String (Zeit-Format)
-- **Default**: `15m`
-- **Beschreibung**: Access-Token Lebensdauer
-- **Format**: `1h`, `30m`, `1d`, `7d`
-
-```bash
-SCRAPE_DOJO_AUTH_ACCESS_TOKEN_EXPIRY=15m
-```
-
-### SCRAPE_DOJO_AUTH_REFRESH_TOKEN_EXPIRY
-
-- **Typ**: String (Zeit-Format)
-- **Default**: `7d`
-- **Beschreibung**: Refresh-Token Lebensdauer
-
-```bash
-SCRAPE_DOJO_AUTH_REFRESH_TOKEN_EXPIRY=7d
-```
-
-### SCRAPE_DOJO_AUTH_API_KEY
-
-- **Typ**: String
-- **Optional**: Headless/Service Access
-- **Beschreibung**: API-Key für Services (statt JWT)
-- **Header**: `X-API-Key: <value>`
-
-```bash
-SCRAPE_DOJO_AUTH_API_KEY=service-api-key-123
-```
-
-### SCRAPE_DOJO_AUTH_RATE_LIMIT_WINDOW_MS
-
-- **Typ**: Number (Milliseconds)
-- **Default**: `60000` (1 Min)
-- **Beschreibung**: Rate-Limit Zeitfenster für Auth-Endpoints
-
-```bash
-SCRAPE_DOJO_AUTH_RATE_LIMIT_WINDOW_MS=60000
-```
-
-### SCRAPE_DOJO_AUTH_RATE_LIMIT_MAX
-
-- **Typ**: Number
-- **Default**: `30`
-- **Beschreibung**: Max. Requests pro Zeitfenster
-
-```bash
-SCRAPE_DOJO_AUTH_RATE_LIMIT_MAX=30
-```
-
----
-
-## 🔐 MFA (Multi-Factor Authentication)
-
-### SCRAPE_DOJO_AUTH_REQUIRE_MFA
-
-- **Typ**: Boolean
-- **Default**: `true`
-- **Beschreibung**: MFA für alle User erzwingen
-
-```bash
-SCRAPE_DOJO_AUTH_REQUIRE_MFA=true
-```
-
-### SCRAPE_DOJO_AUTH_MFA_ISSUER
-
-- **Typ**: String
-- **Default**: `Scrape Dojo`
-- **Beschreibung**: Anzeigename in Authenticator-Apps
-
-```bash
-SCRAPE_DOJO_AUTH_MFA_ISSUER=Scrape Dojo
-```
-
-### SCRAPE_DOJO_AUTH_MFA_CHALLENGE_SECRET
-
-- **Typ**: String (min. 32 chars)
-- **Required**: ✅ **PRODUCTION** wenn MFA enabled
-- **Beschreibung**: Secret für Challenge-Token-Signierung
-
-```bash
-SCRAPE_DOJO_AUTH_MFA_CHALLENGE_SECRET=mfa-challenge-secret
-```
-
-### SCRAPE_DOJO_AUTH_MFA_ENCRYPTION_KEY
-
-- **Typ**: String
-- **Required**: ✅ **PRODUCTION** wenn MFA enabled
-- **Beschreibung**: Verschlüsselung für MFA-Secrets
-- **Format**: Beliebiger String oder base64(32 bytes)
-
-```bash
-SCRAPE_DOJO_AUTH_MFA_ENCRYPTION_KEY=mfa-encryption-key
-```
-
----
-
-## 🌐 OIDC / SSO
-
-### SCRAPE_DOJO_AUTH_OIDC_ENABLED
-
-- **Typ**: Boolean
-- **Default**: `false`
-- **Beschreibung**: OIDC-Authentication aktivieren
-
-```bash
-SCRAPE_DOJO_AUTH_OIDC_ENABLED=true
-```
-
-### SCRAPE_DOJO_AUTH_OIDC_ISSUER_URL
-
-- **Typ**: String (URL)
-- **Required**: ✅ wenn OIDC enabled
-- **Beschreibung**: OIDC Provider Issuer URL
-- **Beispiele**:
-  - Keycloak: `https://keycloak.example.com/realms/your-realm`
-  - Auth0: `https://your-tenant.auth0.com`
-  - Google: `https://accounts.google.com`
-  - Azure AD: `https://login.microsoftonline.com/{tenant}/v2.0`
-
-```bash
-SCRAPE_DOJO_AUTH_OIDC_ISSUER_URL=https://accounts.google.com
-```
-
-### SCRAPE_DOJO_AUTH_OIDC_CLIENT_ID
-
-- **Typ**: String
-- **Required**: ✅ wenn OIDC enabled
-- **Beschreibung**: OIDC Client ID
-
-```bash
-SCRAPE_DOJO_AUTH_OIDC_CLIENT_ID=your-client-id
-```
-
-### SCRAPE_DOJO_AUTH_OIDC_CLIENT_SECRET
-
-- **Typ**: String
-- **Required**: ✅ wenn OIDC enabled
-- **Beschreibung**: OIDC Client Secret
-- **Sicherheit**: Nie committen!
-
-```bash
-SCRAPE_DOJO_AUTH_OIDC_CLIENT_SECRET=your-client-secret
-```
-
-### SCRAPE_DOJO_AUTH_OIDC_REDIRECT_URI
-
-- **Typ**: String (URL)
-- **Required**: ✅ wenn OIDC enabled
-- **Beschreibung**: Callback URL nach Login
-- **⚠️ Wichtig**: Muss exakt beim Provider registriert sein!
-
-```bash
-SCRAPE_DOJO_AUTH_OIDC_REDIRECT_URI=http://localhost:3000/auth/oidc/callback
-# Production:
-SCRAPE_DOJO_AUTH_OIDC_REDIRECT_URI=https://scrape.example.com/auth/oidc/callback
-```
-
-### SCRAPE_DOJO_AUTH_OIDC_SCOPES
-
-- **Typ**: String (space-separated)
-- **Default**: `openid profile email`
-- **Beschreibung**: Angeforderte OIDC Scopes
-
-```bash
-SCRAPE_DOJO_AUTH_OIDC_SCOPES=openid profile email
-```
-
-### SCRAPE_DOJO_AUTH_OIDC_PROVIDER_NAME
-
-- **Typ**: String
-- **Default**: `SSO Login`
-- **Beschreibung**: Anzeigename in UI
-
-```bash
-SCRAPE_DOJO_AUTH_OIDC_PROVIDER_NAME=Google Login
-```
-
----
-
-## 🔧 Variables & Secrets (Auto-Sync)
-
-### SCRAPE_DOJO_VAR_*
-
-- **Prefix**: `SCRAPE_DOJO_VAR_`
-- **Typ**: String
-- **Beschreibung**: Globale Variablen (plaintext)
-- **Auto-Sync**: Beim Start in DB gespeichert
-- **Naming**: `SCRAPE_DOJO_VAR_MY_VAR` → `myVar` (camelCase)
-
-```bash
-SCRAPE_DOJO_VAR_DEFAULT_YEAR=2025
+SCRAPE_DOJO_VAR_DEFAULT_YEAR=2026
 SCRAPE_DOJO_VAR_API_ENDPOINT=https://api.example.com
 SCRAPE_DOJO_VAR_DEBUG_MODE=true
 ```
 
-**Usage in Scrapes:**
-```handlebars
-{{variables.defaultYear}}
-{{variables.apiEndpoint}}
-{{variables.debugMode}}
-```
+Die Benennung wird automatisch in camelCase konvertiert:
+- `SCRAPE_DOJO_VAR_DEFAULT_YEAR` wird zu `defaultYear`
+- Zugriff in Scrapes: `{{variables.defaultYear}}`
 
-### SCRAPE_DOJO_SECRET_*
+## Secrets via ENV
 
-- **Prefix**: `SCRAPE_DOJO_SECRET_`
-- **Typ**: String
-- **Beschreibung**: Secrets (encrypted in DB)
-- **Auto-Sync**: Beim Start verschlüsselt gespeichert
-- **Naming**: `SCRAPE_DOJO_SECRET_MY_PASSWORD` → `myPassword`
+Secrets können ebenfalls über Umgebungsvariablen gesetzt werden. Beim Start werden sie automatisch verschlüsselt in der Datenbank gespeichert.
+
+**Prefix:** `SCRAPE_DOJO_SECRET_`
 
 ```bash
 SCRAPE_DOJO_SECRET_EMAIL=user@example.com
-SCRAPE_DOJO_SECRET_PASSWORD=super-secret
+SCRAPE_DOJO_SECRET_PASSWORD=geheimes-passwort
 SCRAPE_DOJO_SECRET_API_TOKEN=abc123xyz
 ```
 
-**Usage in Scrapes:**
-```handlebars
-{{secrets.email}}
-{{secrets.password}}
-{{secrets.apiToken}}
-```
+- `SCRAPE_DOJO_SECRET_EMAIL` wird zu `email`
+- Zugriff in Scrapes: `{{secrets.email}}`
 
----
+## 🏭 Production .env Beispiel
 
-## 📋 Übersichtstabelle
-
-| Variable | Required | Default | Category |
-|----------|----------|---------|----------|
-| `NODE_ENV` | ❌ | `development` | Runtime |
-| `SCRAPE_DOJO_PORT` | ❌ | `3000` | Runtime |
-| `SCRAPE_DOJO_TRUST_PROXY` | ❌ | `1` | Runtime |
-| `SCRAPE_DOJO_CORS_ORIGIN` | ⚠️ Prod | Leer | Runtime |
-| `DB_TYPE` | ❌ | `sqlite` | Database |
-| `DB_DATABASE` | ✅ | - | Database |
-| `DB_HOST` | ⚠️ Non-SQLite | `localhost` | Database |
-| `DB_PORT` | ⚠️ Non-SQLite | `5432`/`3306` | Database |
-| `DB_USERNAME` | ⚠️ Non-SQLite | - | Database |
-| `DB_PASSWORD` | ⚠️ Non-SQLite | - | Database |
-| `SCRAPE_DOJO_ENCRYPTION_KEY` | ✅ Prod | - | Security |
-| `SCRAPE_DOJO_AUTH_ENABLED` | ❌ | `true` | Auth |
-| `SCRAPE_DOJO_AUTH_JWT_SECRET` | ✅ Auth | - | Auth |
-| `SCRAPE_DOJO_AUTH_REFRESH_TOKEN_SECRET` | ✅ Auth | - | Auth |
-| `SCRAPE_DOJO_AUTH_ACCESS_TOKEN_EXPIRY` | ❌ | `15m` | Auth |
-| `SCRAPE_DOJO_AUTH_REFRESH_TOKEN_EXPIRY` | ❌ | `7d` | Auth |
-| `SCRAPE_DOJO_AUTH_REQUIRE_MFA` | ❌ | `true` | MFA |
-| `SCRAPE_DOJO_AUTH_MFA_ISSUER` | ❌ | `Scrape Dojo` | MFA |
-| `SCRAPE_DOJO_AUTH_MFA_CHALLENGE_SECRET` | ✅ MFA Prod | - | MFA |
-| `SCRAPE_DOJO_AUTH_MFA_ENCRYPTION_KEY` | ✅ MFA Prod | - | MFA |
-| `SCRAPE_DOJO_AUTH_OIDC_ENABLED` | ❌ | `false` | OIDC |
-| `SCRAPE_DOJO_AUTH_OIDC_ISSUER_URL` | ✅ OIDC | - | OIDC |
-| `SCRAPE_DOJO_AUTH_OIDC_CLIENT_ID` | ✅ OIDC | - | OIDC |
-| `SCRAPE_DOJO_AUTH_OIDC_CLIENT_SECRET` | ✅ OIDC | - | OIDC |
-| `SCRAPE_DOJO_AUTH_OIDC_REDIRECT_URI` | ✅ OIDC | - | OIDC |
-| `SCRAPE_DOJO_VAR_*` | ❌ | - | Variables |
-| `SCRAPE_DOJO_SECRET_*` | ❌ | - | Secrets |
-
-**Legend:**
-- ✅ = Immer required
-- ⚠️ = Conditional required
-- ❌ = Optional
-
----
-
-## 🚀 Production Setup
-
-### Minimal Production `.env`
+Hier eine minimale `.env` für den Produktivbetrieb:
 
 ```bash
 # Runtime
@@ -567,50 +145,49 @@ SCRAPE_DOJO_PORT=3000
 SCRAPE_DOJO_TRUST_PROXY=1
 SCRAPE_DOJO_CORS_ORIGIN=https://scrape.example.com
 
-# Database (PostgreSQL)
+# Datenbank (PostgreSQL)
 DB_TYPE=postgres
 DB_HOST=postgres
 DB_PORT=5432
 DB_USERNAME=scrape_dojo
-DB_PASSWORD=<SECURE_PASSWORD>
+DB_PASSWORD=<SICHERES_PASSWORT>
 DB_DATABASE=scrape_dojo
 DB_SYNCHRONIZE=false
 DB_LOGGING=false
 
-# Security
-SCRAPE_DOJO_ENCRYPTION_KEY=<64_HEX_CHARS>
+# Verschlüsselung
+SCRAPE_DOJO_ENCRYPTION_KEY=<64_HEX_ZEICHEN>
 
-# Auth
+# Authentifizierung
 SCRAPE_DOJO_AUTH_ENABLED=true
-SCRAPE_DOJO_AUTH_JWT_SECRET=<32+_CHARS>
-SCRAPE_DOJO_AUTH_REFRESH_TOKEN_SECRET=<32+_CHARS>
+SCRAPE_DOJO_AUTH_JWT_SECRET=<MINDESTENS_32_ZEICHEN>
+SCRAPE_DOJO_AUTH_REFRESH_TOKEN_SECRET=<MINDESTENS_32_ZEICHEN>
 SCRAPE_DOJO_AUTH_ACCESS_TOKEN_EXPIRY=15m
 SCRAPE_DOJO_AUTH_REFRESH_TOKEN_EXPIRY=7d
 
 # MFA
 SCRAPE_DOJO_AUTH_REQUIRE_MFA=true
-SCRAPE_DOJO_AUTH_MFA_CHALLENGE_SECRET=<32+_CHARS>
-SCRAPE_DOJO_AUTH_MFA_ENCRYPTION_KEY=<32+_CHARS>
-
-# Secrets (examples)
-SCRAPE_DOJO_SECRET_ADMIN_EMAIL=admin@example.com
-SCRAPE_DOJO_SECRET_ADMIN_PASSWORD=<SECURE_PASSWORD>
+SCRAPE_DOJO_AUTH_MFA_CHALLENGE_SECRET=<MINDESTENS_32_ZEICHEN>
+SCRAPE_DOJO_AUTH_MFA_ENCRYPTION_KEY=<MINDESTENS_32_ZEICHEN>
 ```
 
-### Security Checklist
+## ✅ Sicherheits-Checkliste
 
-- ✅ `NODE_ENV=production`
-- ✅ `DB_SYNCHRONIZE=false`
-- ✅ `SCRAPE_DOJO_CORS_ORIGIN` explizit gesetzt
-- ✅ Alle Secrets generiert mit `crypto.randomBytes()`
-- ✅ PostgreSQL statt SQLite
-- ✅ MFA aktiviert
-- ✅ `.env` in `.gitignore`
-- ✅ Secrets in Password Manager backed up
+Bevor du in Production gehst, prüfe diese Punkte:
+
+- [ ] `NODE_ENV=production` gesetzt
+- [ ] `DB_SYNCHRONIZE=false` in Production
+- [ ] `SCRAPE_DOJO_CORS_ORIGIN` explizit konfiguriert (nicht `*`)
+- [ ] Alle Secrets mit `crypto.randomBytes()` generiert
+- [ ] PostgreSQL statt SQLite verwenden
+- [ ] MFA aktiviert (`SCRAPE_DOJO_AUTH_REQUIRE_MFA=true`)
+- [ ] `.env`-Datei in `.gitignore` eingetragen
+- [ ] Secrets in einem Passwort-Manager gesichert
+- [ ] Rate Limiting konfiguriert
 
 ---
 
 **Verwandte Themen:**
-- [Deployment Guide](/de/architecture/deployment/)
-- [Secrets Management](/de/user-guide/secrets-variables/)
-- [Authentication](/de/architecture/authentication/)
+- [Authentifizierung](/scrape-dojo/de/developer/authentication/)
+- [Secrets und Variablen](/scrape-dojo/de/user-guide/secrets-variables/)
+- [Architektur](/scrape-dojo/de/developer/architecture/)

@@ -1,145 +1,114 @@
 ---
-title: Willkommen bei Scrape Dojo!
-description: Dein Web Scraping Framework - flexibel, deklarativ, mächtig
+title: Willkommen bei Scrape Dojo
+description: Deklaratives Web Scraping Framework -- flexibel, mächtig, self-hosted
 template: splash
 hero:
-  tagline: Web Scraping und Automatisierung mit JSON-basierten Workflows. Keine hundert Zeilen Puppeteer-Code mehr!
+  tagline: Beschreibe Web-Scraping-Workflows in JSON statt Code. 25+ Actions, Templates, Scheduling und Echtzeit-Monitoring -- alles self-hosted.
   actions:
-    - text: Schnellstart →
-      link: /scrape-dojo/getting-started/quickstart/
+    - text: Schnellstart
+      link: /scrape-dojo/de/getting-started/quickstart/
       icon: right-arrow
       variant: primary
-    - text: Beispiele ansehen
-      link: /scrape-dojo/examples/simple-scrape/
+    - text: Beispiele
+      link: /scrape-dojo/de/examples/
       icon: open-book
     - text: GitHub
       link: https://github.com/disane87/scrape-dojo
       icon: external
 ---
 
-import { Card, CardGrid, Aside } from '@astrojs/starlight/components';
+import { Card, CardGrid, Aside, LinkCard } from '@astrojs/starlight/components';
 
-## Das Problem
+## So funktioniert es
 
-Hast du jemals stundenlang Puppeteer-Code geschrieben, nur um Daten von einer einzigen Website zu scrapen? Oder musstest du denselben Code für zehn verschiedene Seiten duplizieren und anpassen? 😅
+Statt hunderte Zeilen Puppeteer-Code zu schreiben, beschreibst du deinen Workflow deklarativ:
 
-**Scrape Dojo** ist hier, um dir das Leben leichter zu machen. Stell dir vor, du könntest deine Web-Scraping-Workflows einfach in JSON beschreiben - so wie du deine Infrastruktur als Code definierst!
-
-## Die Lösung
-
-Aus hundert Zeilen Puppeteer-Code wird:
-
-```json
+```jsonc
 {
-  "id": "my-scrape",
-  "steps": [
-    {
-      "name": "Login",
-      "actions": [
-        {"action": "navigate", "params": {"url": "https://example.com"}},
-        {"action": "type", "params": {"selector": "#email", "text": "{{secrets.email}}"}},
-        {"action": "type", "params": {"selector": "#password", "text": "{{secrets.password}}"}},
-        {"action": "click", "params": {"selector": "button[type=submit]"}}
-      ]
+  "scrapes": [{
+    "id": "invoice-download",
+    "metadata": {
+      "description": "Rechnungen automatisch herunterladen",
+      "triggers": [{ "type": "cron" }]
     },
-    {
-      "name": "Extract",
+    "steps": [{
+      "name": "Login und Download",
       "actions": [
-        {
-          "action": "extract",
+        { "name": "open", "action": "navigate",
+          "params": { "url": "https://portal.example.com/login" } },
+        { "name": "email", "action": "type",
+          "params": { "selector": "#email", "text": "{{variables.email}}", "pressEnter": false } },
+        { "name": "password", "action": "type",
+          "params": { "selector": "#password", "text": "{{variables.password}}", "pressEnter": true } },
+        { "name": "invoices", "action": "extractAll",
+          "params": { "selector": ".invoice-link", "property": "href" } },
+        { "name": "downloadLoop", "action": "loop",
           "params": {
-            "selector": ".item",
-            "extractAll": true,
-            "properties": {
-              "title": ".title",
-              "price": ".price"
-            }
-          }
-        }
+            "elementKey": "invoices",
+            "actions": [
+              { "name": "dl", "action": "download",
+                "params": {
+                  "url": "{{currentData.downloadLoop.value}}",
+                  "path": "./invoices",
+                  "filename": "invoice-{{currentData.downloadLoop.index}}.pdf"
+                }}
+            ]
+          }}
       ]
-    }
-  ]
+    }]
+  }]
 }
 ```
 
-**Das war's!** 🎉 Secrets sind verschlüsselt, Logging ist automatisch, die UI zeigt dir alles in Echtzeit!
+Secrets sind AES-256-CBC verschluesselt, die UI zeigt den Fortschritt live per SSE, und Cron-Scheduling startet den Job automatisch.
 
-## Hauptfunktionen
+## Kernfunktionen
 
-<CardGrid stagger>
-  <Card title="🎯 JSON-basiert" icon="seti:json">
-    Definiere deine Scrapes deklarativ ohne repetitiven Code. Du sagst WAS, nicht WIE!
+<CardGrid>
+  <Card title="JSONC Konfiguration" icon="seti:json">
+    Workflows als JSON mit Kommentaren. Schema-Validierung, Hot Reload, kein Code noetig.
   </Card>
-  <Card title="🔄 Mächtiger Datenfluss" icon="setting">
-    Nutze Handlebars-Templates, JSONata-Transformationen und Variablen für flexible Workflows
+  <Card title="25+ Actions" icon="puzzle">
+    Navigate, Click, Type, Extract, Loop, Transform, Download, Screenshot, Notify und mehr.
   </Card>
-  <Card title="🤖 Automatisierung" icon="rocket">
-    Plane und automatisiere deine Web-Tasks mit Scheduling
+  <Card title="Templates und Transforms" icon="setting">
+    Handlebars fuer String-Interpolation, JSONata fuer Datentransformationen, 13 Custom Helpers.
   </Card>
-  <Card title="📊 Datenextraktion" icon="document">
-    Extrahiere strukturierte Daten aus Webseiten - von simpel bis komplex
+  <Card title="Cron-Scheduling" icon="rocket">
+    Automatische Ausfuehrung per Cron mit Timezone-Support. Plus Webhook- und Startup-Triggers.
   </Card>
-  <Card title="🛠️ Erweiterbar" icon="puzzle">
-    Loops, Bedingungen, Transformationen - alles dabei!
+  <Card title="Echtzeit-Monitoring" icon="laptop">
+    Angular 21 UI mit Live-Status per SSE, Run-History, Debug-Daten und Artefakt-Anzeige.
   </Card>
-  <Card title="🎨 Moderne UI" icon="laptop">
-    Intuitive Angular-basierte Benutzeroberfläche mit Live-Monitoring
+  <Card title="Security" icon="shield">
+    AES-256-CBC Secrets, JWT Auth, OIDC/SSO, MFA/TOTP, API Keys. Auth optional deaktivierbar.
   </Card>
-  <Card title="🔐 Security First" icon="shield">
-    AES-256-GCM Verschlüsselung, JWT, OIDC/SSO, MFA/TOTP
+  <Card title="Multi-Datenbank" icon="document">
+    SQLite (Standard), PostgreSQL oder MySQL via TypeORM. Docker-ready mit persistenten Volumes.
   </Card>
-  <Card title="🐳 Production Ready" icon="rocket">
-    Docker-Support, Multi-DB (SQLite, PostgreSQL, MySQL, MSSQL), Multi-User
+  <Card title="Erweiterbar" icon="add-document">
+    Eigene Actions in TypeScript erstellen. Factory-Pattern, Auto-Registrierung, voller Zugriff auf Puppeteer.
   </Card>
 </CardGrid>
 
-## Was kannst du damit machen?
+## Typische Anwendungsfaelle
 
-### 📄 Rechnungen automatisch herunterladen
-Jeden Monat PDFs von verschiedenen Portalen sammeln? Lass Scrape Dojo das machen!
+<CardGrid>
+  <LinkCard title="Rechnungen herunterladen" description="PDFs automatisch von Portalen sammeln, Duplikate erkennen, monatlich per Cron ausfuehren." href="/scrape-dojo/de/examples/" />
+  <LinkCard title="Preise ueberwachen" description="Produktdaten extrahieren, mit JSONata transformieren, strukturiert speichern und vergleichen." href="/scrape-dojo/de/examples/" />
+  <LinkCard title="Login-Flows automatisieren" description="Multi-Step-Logins mit verschluesselten Credentials, OTP-Handling und Session-Management." href="/scrape-dojo/de/user-guide/actions/navigation/" />
+  <LinkCard title="Daten aggregieren" description="Von mehreren Quellen scrapen, mit Loops und Transforms konsolidieren, persistent speichern." href="/scrape-dojo/de/user-guide/actions/data/" />
+</CardGrid>
 
-### 📊 Preise überwachen
-Produkt beobachten und Alarm bei Preisänderung bekommen.
-
-### 🔍 Daten aggregieren
-Informationen von mehreren Quellen sammeln und konsolidieren.
-
-### 🤖 E2E-Tests
-Nutze Scrape Dojo auch für automatisierte Browser-Tests!
-
-## Für wen ist Scrape Dojo?
-
-### ✅ Perfekt für dich, wenn du...
-
-- 📊 Regelmäßig Daten von Websites sammeln musst
-- 📄 Dokumente automatisch herunterladen willst
-- 🔄 Repetitive Browser-Tasks automatisieren möchtest
-- 🎯 Keine Lust auf Copy-Paste von Puppeteer-Code hast
-- 🏢 Ein Team-Tool für Web Scraping suchst
-
-<Aside type="caution" title="Verantwortung">
-⚠️ Scrape Dojo automatisiert echte Browser-Interaktionen. Bitte respektiere:
-- Website Terms of Service
-- robots.txt
-- Rate Limits
-- Datenschutzgesetze (DSGVO, etc.)
-
-Mit großer Macht kommt große Verantwortung! 🦸
+<Aside type="caution" title="Verantwortungsvoller Einsatz">
+Scrape Dojo automatisiert echte Browser-Interaktionen. Bitte respektiere Website Terms of Service, robots.txt, Rate Limits und Datenschutzgesetze (DSGVO).
 </Aside>
 
-## Los geht's! 🚀
+## Naechste Schritte
 
-Bereit, dein erstes Scraping-Projekt zu starten?
-
-1. 📦 **[Installation](./getting-started/installation)** - Docker oder lokal
-2. 🎯 **[Quickstart](./getting-started/quickstart)** - Deine erste Scrape in 5 Minuten
-3. 📚 **[Deep Dive](./getting-started/first-scrape)** - Verstehe die Konzepte
-4. 💡 **[Beispiele](./examples/simple-scrape)** - Lerne von echten Use Cases
-
-## Brauchst du Hilfe?
-
-- 📖 **Diese Docs** - Alles, was du wissen musst
-- 🐛 **[GitHub Issues](https://github.com/disane87/scrape-dojo/issues)** - Bug gefunden?
-- 💬 **[Discussions](https://github.com/disane87/scrape-dojo/discussions)** - Fragen? Ideen?
-- 📧 **[Email](mailto:mfranke87@icloud.com)** - Direkter Kontakt
-
+<CardGrid>
+  <LinkCard title="Schnellstart" description="Scrape Dojo in 5 Minuten einrichten -- Docker oder Source." href="/scrape-dojo/de/getting-started/quickstart/" />
+  <LinkCard title="Konfigurationsformat" description="JSONC-Struktur, Metadaten, Variablen, Triggers." href="/scrape-dojo/de/user-guide/config-format/" />
+  <LinkCard title="Actions-Referenz" description="Alle 25+ Actions mit Parametern und Beispielen." href="/scrape-dojo/de/user-guide/actions/" />
+  <LinkCard title="Architektur" description="Tech Stack, NestJS Module, Execution Flow." href="/scrape-dojo/de/architecture/" />
+</CardGrid>

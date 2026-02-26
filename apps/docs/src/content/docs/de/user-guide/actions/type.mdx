@@ -1,0 +1,91 @@
+---
+title: "type"
+description: "Gib Text in Eingabefelder ein"
+sidebar:
+  order: 12
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Mit der `type`-Action gibst du Text in Eingabefelder ein — genau so, wie du es manuell über die Tastatur tun würdest. Ideal für Login-Formulare, Suchfelder oder jede andere Texteingabe. Bonus: Du kannst Secrets einbinden und sogar Bedingungen definieren, wann getippt werden soll.
+
+## Parameter
+
+| Parameter | Typ | Pflicht | Default | Beschreibung |
+|-----------|-----|---------|---------|-------------|
+| `selector` | `string` | Ja | — | CSS-Selektor des Eingabefelds. |
+| `text` | `string` | Ja | — | Der Text, der eingegeben werden soll. Unterstützt Handlebars-Templates. |
+| `pressEnter` | `boolean` | Nein | `false` | Wenn `true`, wird nach der Eingabe Enter gedrückt (löst Navigation aus). |
+| `condition` | `string` | Nein | — | Handlebars-Bedingung. Die Action wird nur ausgeführt, wenn das Ergebnis `"true"` ist. |
+
+## Beispiele
+
+### Einfache Texteingabe
+
+```jsonc
+{
+  "name": "benutzername",
+  "action": "type",
+  "params": {
+    "selector": "input[name='username']",
+    "text": "max.mustermann@example.com"
+  }
+}
+```
+
+### Passwort aus Secrets
+
+Sensible Daten wie Passwörter solltest du nie direkt in die Config schreiben. Nutze stattdessen Secrets:
+
+```jsonc
+{
+  "name": "passwort",
+  "action": "type",
+  "params": {
+    "selector": "input[type='password']",
+    "text": "{{secrets.portalPassword}}"
+  }
+}
+```
+
+<Aside type="caution">
+Passwort-Felder werden im Log automatisch maskiert (`********`), wenn der Selektor das Wort "password" enthält. Trotzdem: Verwende immer Secrets statt Klartext!
+</Aside>
+
+### Eingabe mit Enter
+
+Praktisch für Suchfelder, die kein eigenes Submit-Button haben:
+
+```jsonc
+{
+  "name": "suche",
+  "action": "type",
+  "params": {
+    "selector": "input[name='search']",
+    "text": "Scrape Dojo",
+    "pressEnter": true
+  }
+}
+```
+
+### Bedingte Eingabe
+
+Manchmal willst du nur tippen, wenn eine bestimmte Bedingung erfüllt ist — z.B. wenn ein vorheriges Feld einen bestimmten Wert hat:
+
+```jsonc
+{
+  "name": "optionalesfeld",
+  "action": "type",
+  "params": {
+    "selector": "input[name='extra']",
+    "text": "{{variables.extraWert}}",
+    "condition": "{{isDefined previousData.emailFeld}}"
+  }
+}
+```
+
+Die `condition` wird als Handlebars-Template ausgewertet. Nur wenn das Ergebnis der String `"true"` ist, wird die Eingabe ausgeführt. Ansonsten wird die Action übersprungen.
+
+<Aside type="tip">
+Die `type`-Action leert das Eingabefeld vor dem Tippen automatisch. Du musst dir also keine Sorgen machen, dass alter Text stehen bleibt. Falls das direkte Tippen nicht funktioniert (manche React-Apps sind da eigen), versucht Scrape Dojo automatisch einen Fallback über JavaScript.
+</Aside>

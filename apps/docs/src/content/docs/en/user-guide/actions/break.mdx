@@ -1,0 +1,91 @@
+---
+title: break
+description: Break out of a loop when a condition is met
+sidebar:
+  order: 31
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Sometimes you want to exit a loop early — for example when you've found what you're looking for, or when a certain threshold is reached. That's exactly what `break` is for. You provide a JSONata condition, and if it evaluates to `true`, the current loop is immediately terminated.
+
+## Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `condition` | `string` | Yes | JSONata expression evaluated against `previousData`, `currentData`, and `storedData` |
+
+<Aside type="note">
+The `condition` is evaluated as a JSONata expression — not as a Handlebars template. You have access to `previousData`, `currentData`, and `storedData` as context objects.
+</Aside>
+
+## Examples
+
+**Break when price exceeds 100:**
+
+```jsonc
+{
+  "name": "priceLoop",
+  "action": "loop",
+  "params": {
+    "elementKey": "products",
+    "actions": [
+      {
+        "name": "getPrice",
+        "action": "extract",
+        "params": {
+          "selector": ".price",
+          "extractData": "innerText",
+          "transformData": "$number($replace($, ',', '.'))"
+        }
+      },
+      {
+        "name": "stopIfExpensive",
+        "action": "break",
+        "params": {
+          "condition": "previousData.getPrice > 100"
+        }
+      }
+    ]
+  }
+}
+```
+
+**Break on empty result:**
+
+```jsonc
+{
+  "name": "pageLoop",
+  "action": "loop",
+  "params": {
+    "elementKey": "pageNumbers",
+    "actions": [
+      {
+        "name": "loadPage",
+        "action": "navigate",
+        "params": { "url": "https://example.com/results?page={{currentData.pageLoop.value}}" }
+      },
+      {
+        "name": "results",
+        "action": "extract",
+        "params": {
+          "selector": ".result-item",
+          "extractData": "innerText",
+          "multiple": true
+        }
+      },
+      {
+        "name": "stopIfEmpty",
+        "action": "break",
+        "params": {
+          "condition": "$count(previousData.results) = 0"
+        }
+      }
+    ]
+  }
+}
+```
+
+<Aside type="tip">
+`break` only works inside a `loop` action. If the condition evaluates to `false`, nothing happens and the loop continues normally.
+</Aside>

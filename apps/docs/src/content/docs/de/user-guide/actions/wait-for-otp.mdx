@@ -1,0 +1,89 @@
+---
+title: waitForOtp
+description: Warte auf einen OTP-Code für Zwei-Faktor-Authentifizierung
+sidebar:
+  order: 15
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Zwei-Faktor-Authentifizierung ist super für die Sicherheit — aber beim Scrapen kann sie ganz schön nerven. Mit `waitForOtp` pausiert dein Scrape automatisch und wartet darauf, dass du den OTP-Code über die Web-UI eingibst. Danach geht's nahtlos weiter.
+
+Das Beste daran: Du kannst sogar alternative Verifizierungsmethoden definieren, falls der User lieber WhatsApp oder einen Passkey nutzen möchte.
+
+## Parameter
+
+| Parameter | Typ | Pflicht | Beschreibung |
+|-----------|-----|---------|--------------|
+| `selector` | `string` | Ja | CSS-Selektor des OTP-Eingabefelds, in das der Code getippt wird |
+| `detectSelector` | `string` | Nein | CSS-Selektor, um zu erkennen ob die OTP-Seite überhaupt angezeigt wird. Wenn das Element nicht gefunden wird, wird der Step übersprungen |
+| `timeout` | `number` | Nein | Timeout in Millisekunden für die OTP-Eingabe (Standard: 120000 = 2 Minuten) |
+| `pressEnter` | `boolean` | Nein | Nach der Eingabe automatisch Enter drücken (Standard: `true`) |
+| `message` | `string` | Nein | Nachricht, die dem Benutzer in der UI angezeigt wird (Standard: `"Bitte gib den OTP-Code ein:"`) |
+| `alternatives` | `array` | Nein | Alternative Verifizierungsmethoden (siehe unten) |
+
+### alternatives-Objekt
+
+Jedes Element im `alternatives`-Array hat folgende Struktur:
+
+| Feld | Typ | Pflicht | Beschreibung |
+|------|-----|---------|--------------|
+| `id` | `string` | Ja | Eindeutige ID, z.B. `"whatsapp"`, `"passkey"` |
+| `label` | `string` | Ja | Label, das dem User in der UI angezeigt wird |
+| `selector` | `string` | Ja | CSS-Selektor des Buttons auf der Seite, der die Alternative auslöst |
+| `icon` | `string` | Nein | Iconify Icon-Name, z.B. `"logos:whatsapp-icon"` |
+
+<Aside type="tip">
+Der `detectSelector` ist super praktisch, wenn die OTP-Seite nicht immer erscheint — z.B. wenn du schon eingeloggt bist oder ein Cookie vorhanden ist. So wird der Wait einfach übersprungen, ohne dass dein Scrape abbricht.
+</Aside>
+
+## Beispiele
+
+**Einfaches OTP-Warten:**
+
+```jsonc
+{
+  "type": "waitForOtp",
+  "description": "Warte auf 2FA-Code",
+  "selector": "input#otp-code",
+  "message": "Bitte gib den Code aus deiner Authenticator-App ein:"
+}
+```
+
+**Mit Erkennung und alternativen Methoden:**
+
+```jsonc
+{
+  "type": "waitForOtp",
+  "description": "2FA mit Alternativen",
+  "selector": "input[name='otp']",
+  "detectSelector": ".two-factor-challenge",
+  "timeout": 180000,
+  "pressEnter": true,
+  "message": "OTP-Code eingeben oder Alternative wählen:",
+  "alternatives": [
+    {
+      "id": "whatsapp",
+      "label": "Code per WhatsApp",
+      "selector": "button[data-method='whatsapp']",
+      "icon": "logos:whatsapp-icon"
+    },
+    {
+      "id": "passkey",
+      "label": "Passkey verwenden",
+      "selector": "button[data-method='passkey']",
+      "icon": "mdi:fingerprint"
+    }
+  ]
+}
+```
+
+<Aside type="note">
+Alternativen werden nur in der UI angezeigt, wenn der entsprechende Button-Selektor auf der Seite auch tatsächlich gefunden wird. So tauchen keine Optionen auf, die gar nicht verfügbar sind.
+</Aside>
+
+## Tipps
+
+- Der Standard-Timeout von 2 Minuten ist bewusst großzügig gewählt — SMS-Codes können manchmal etwas dauern.
+- Wenn `pressEnter` auf `true` steht, wartet Scrape Dojo nach dem Enter automatisch auf die Navigation. So verpasst du keinen Seitenwechsel.
+- Wenn kein OTP-Code eingegeben wird (Timeout oder Abbruch), gibt die Action `null` zurück und dein Scrape kann darauf reagieren.

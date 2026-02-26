@@ -1,0 +1,108 @@
+---
+title: notify
+description: "Send notifications to the UI"
+sidebar:
+  order: 54
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Want to send a message to the UI during a scrape? Maybe a success message, a warning, or just a "Hey, I'm done!"? The `notify` action sends notifications in real time to the user interface -- and optionally as a browser notification too.
+
+This is especially useful for long-running scrapes so you know what's going on without constantly checking the logs.
+
+## Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `title` | `string` | Yes | Title of the notification |
+| `message` | `string` | Yes | Message text |
+| `type` | `string` | No | Notification type: `info`, `success`, `warning`, `error` (default: `info`) |
+| `browserNotification` | `boolean` | No | Show a browser notification (default: `false`) |
+| `autoDismiss` | `number` | No | Auto-dismiss after X milliseconds. `0` = manual close (default: `5000`) |
+
+### Notification Types
+
+| Type | Description |
+|------|-------------|
+| `info` | Neutral information (blue) |
+| `success` | Success message (green) |
+| `warning` | Warning (yellow) |
+| `error` | Error message (red) |
+
+## Examples
+
+**Info notification:**
+
+```jsonc
+{
+  "name": "notifyStart",
+  "action": "notify",
+  "params": {
+    "title": "Scrape started",
+    "message": "The daily report is now being generated.",
+    "type": "info"
+  }
+}
+```
+
+**Success with browser notification:**
+
+```jsonc
+{
+  "name": "notifyDone",
+  "action": "notify",
+  "params": {
+    "title": "Done!",
+    "message": "{{previousData.count}} files downloaded successfully.",
+    "type": "success",
+    "browserNotification": true
+  }
+}
+```
+
+<Aside type="note">
+Browser notifications require the user to have granted permission in the browser. If not, only the UI notification is displayed.
+</Aside>
+
+**Warning without auto-dismiss:**
+
+```jsonc
+{
+  "name": "notifyWarning",
+  "action": "notify",
+  "params": {
+    "title": "Heads up",
+    "message": "Some elements could not be extracted. Please review the results.",
+    "type": "warning",
+    "autoDismiss": 0
+  }
+}
+```
+
+**Error notification:**
+
+```jsonc
+{
+  "name": "notifyError",
+  "action": "notify",
+  "params": {
+    "title": "Download failed",
+    "message": "The file {{previousData.filename}} could not be downloaded.",
+    "type": "error",
+    "browserNotification": true,
+    "autoDismiss": 0
+  }
+}
+```
+
+<Aside type="tip">
+For important messages (errors, warnings), set `autoDismiss: 0` so the message doesn't disappear automatically and the user has to acknowledge it manually.
+</Aside>
+
+## Tips
+
+- The `notify` action returns `true` if the notification was sent successfully.
+- If no events service is available (e.g. in API-only execution), the message is only logged.
+- Combine `notify` at the end of a scrape with `type: "success"` and `browserNotification: true` so you get a notification even when the browser is minimized.
+- Notification titles and messages support Handlebars templates -- use them for dynamic content.

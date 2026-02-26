@@ -1,0 +1,52 @@
+---
+title: delay
+description: Wait for a specified amount of time
+sidebar:
+  order: 33
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Sometimes you just need to take a breather — and that goes for scrapes too. With `delay` you add a pause before the next action kicks in. This helps with things like rate limiting, slow APIs, or when you don't want to hammer a site too aggressively.
+
+## Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `time` | `number` | Yes | Wait time in milliseconds |
+| `condition` | `string` | No | Handlebars template — the delay only runs if the result is `"true"` |
+
+## Examples
+
+**Simple delay (2 seconds):**
+
+```jsonc
+{
+  "name": "wait",
+  "action": "delay",
+  "params": { "time": 2000 }
+}
+```
+
+**Conditional delay:**
+
+```jsonc
+{
+  "name": "conditionalWait",
+  "action": "delay",
+  "params": {
+    "time": 5000,
+    "condition": "{{previousData.needsWait}}"
+  }
+}
+```
+
+Here the delay only triggers if `previousData.needsWait` evaluates to the string `"true"`. This is handy when you only need an extra pause on certain pages.
+
+<Aside type="tip">
+For typical web scraping, 1000–3000ms between requests is usually enough. For APIs with rate limiting you might need more. If you want to wait for a specific element, use `waitForSelector` instead of `delay` — it's more reliable.
+</Aside>
+
+<Aside type="caution">
+The `condition` is evaluated as a Handlebars template and must produce exactly the string `"true"`. A truthy value like `"1"` or `"yes"` won't cut it.
+</Aside>

@@ -1,0 +1,114 @@
+---
+title: fileExists
+description: "Prüfe ob eine Datei existiert"
+sidebar:
+  order: 52
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Bevor du eine Datei nochmal runterlädst oder einen aufwändigen Scrape-Schritt wiederholst, willst du vielleicht erstmal checken, ob die Datei schon da ist. Genau dafür gibt es `fileExists`. Die Action prüft, ob eine bestimmte Datei (oder ein Muster von Dateien) existiert und gibt `true` oder `false` zurück.
+
+Super praktisch für Deduplizierung -- also um doppelte Downloads zu vermeiden.
+
+## Parameter
+
+| Parameter | Typ | Pflicht | Beschreibung |
+|-----------|-----|---------|--------------|
+| `path` | `string` | Ja | Pfad zur Datei oder zum Verzeichnis |
+| `pattern` | `string` | Nein | Glob-Pattern für die Dateisuche (z.B. `*.pdf`, `invoice-*.pdf`) |
+
+## Rückgabewert
+
+Die Action gibt einen **Boolean** zurück:
+- `true` -- Datei (oder Pattern-Match) gefunden
+- `false` -- nichts gefunden
+
+Der Wert steht danach in `previousData` zur Verfügung.
+
+## Beispiele
+
+**Einzelne Datei prüfen:**
+
+```jsonc
+{
+  "name": "checkFile",
+  "action": "fileExists",
+  "params": {
+    "path": "./downloads/invoices/rechnung-2025-01.pdf"
+  }
+}
+```
+
+**Mit Glob-Pattern suchen:**
+
+```jsonc
+{
+  "name": "checkInvoice",
+  "action": "fileExists",
+  "params": {
+    "path": "./downloads/invoices/2025",
+    "pattern": "amazon-invoice-*.pdf"
+  }
+}
+```
+
+Hier wird im Verzeichnis `./downloads/invoices/2025` nach allen Dateien gesucht, die dem Muster `amazon-invoice-*.pdf` entsprechen.
+
+**Kombiniert mit skipIf (Deduplizierung):**
+
+```jsonc
+{
+  "steps": [
+    {
+      "name": "Download mit Check",
+      "actions": [
+        {
+          "name": "alreadyExists",
+          "action": "fileExists",
+          "params": {
+            "path": "./downloads/reports",
+            "pattern": "{{previousData.reportId}}-*.pdf"
+          }
+        },
+        {
+          "name": "skipDownload",
+          "action": "skipIf",
+          "params": {
+            "condition": "{{previousData.alreadyExists}}"
+          }
+        },
+        {
+          "name": "downloadReport",
+          "action": "download",
+          "params": {
+            "url": "{{previousData.reportUrl}}",
+            "path": "./downloads/reports",
+            "filename": "{{previousData.reportId}}-report.pdf"
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+<Aside type="tip">
+Das Muster `fileExists` + `skipIf` ist Gold wert, wenn du einen Scrape regelmäßig laufen lässt und nur neue Dateien herunterladen willst. So sparst du Bandbreite und Zeit.
+</Aside>
+
+## Glob-Pattern Referenz
+
+| Pattern | Beschreibung |
+|---------|--------------|
+| `*` | Beliebig viele Zeichen (außer `/`) |
+| `?` | Genau ein Zeichen |
+| `*.pdf` | Alle PDF-Dateien |
+| `invoice-2025-*.pdf` | Alle Rechnungen von 2025 |
+| `report-??.csv` | Reports mit zweistelliger Nummer |
+
+## Tipps
+
+- Bei Verwendung von `pattern` muss `path` ein **Verzeichnis** sein, nicht ein Dateipfad.
+- Ohne `pattern` wird `path` als vollständiger Dateipfad interpretiert.
+- Die Action gibt bei Fehlern (z.B. ungültiger Pfad) `false` zurück, statt den Scrape abzubrechen.

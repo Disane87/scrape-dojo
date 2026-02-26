@@ -1,0 +1,91 @@
+---
+title: "navigate"
+description: "Open URLs and navigate between pages"
+sidebar:
+  order: 10
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+The `navigate` action steers the browser to a URL. This is usually the first action in any scrape — after all, the browser needs to know where to go first. You can control when the navigation is considered "done" and how long to wait at most.
+
+## Parameters
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `url` | `string` | Yes | — | The target URL. Supports Handlebars templates. |
+| `waitUntil` | `string` | No | `domcontentloaded` | When is the page considered loaded? |
+| `timeout` | `number` | No | `30000` | Maximum wait time in milliseconds. |
+
+### waitUntil Options
+
+| Value | Description |
+|-------|-------------|
+| `domcontentloaded` | DOM is fully parsed (fastest option) |
+| `load` | All resources (images, styles, etc.) are loaded |
+| `networkidle0` | No network traffic for 500ms (strictest option) |
+| `networkidle2` | At most 2 open network connections for 500ms |
+
+## Examples
+
+### Simple Navigation
+
+```jsonc
+{
+  "name": "homepage",
+  "action": "navigate",
+  "params": {
+    "url": "https://example.com"
+  }
+}
+```
+
+### With waitUntil
+
+If the page loads a lot of dynamic content, `networkidle0` is a good choice:
+
+```jsonc
+{
+  "name": "dashboard",
+  "action": "navigate",
+  "params": {
+    "url": "https://example.com/dashboard",
+    "waitUntil": "networkidle0",
+    "timeout": 60000
+  }
+}
+```
+
+### Dynamic URL with Handlebars
+
+You can embed variables directly in the URL:
+
+```jsonc
+{
+  "name": "annualReport",
+  "action": "navigate",
+  "params": {
+    "url": "https://example.com/report?year={{variables.targetYear}}&region={{variables.region}}"
+  }
+}
+```
+
+Or access results from previous actions:
+
+```jsonc
+{
+  "name": "detailPage",
+  "action": "navigate",
+  "params": {
+    "url": "{{previousData.productLink}}"
+  }
+}
+```
+
+<Aside type="tip">
+For SPAs (Single-Page Apps) with lots of JavaScript, we recommend `waitUntil: "networkidle0"`. For classic websites, `domcontentloaded` is perfectly fine and much faster.
+</Aside>
+
+<Aside type="note">
+If navigation fails due to a "frame was detached" error, Scrape Dojo automatically retries with `domcontentloaded`. This sometimes happens with pages that use iframes or redirects.
+</Aside>

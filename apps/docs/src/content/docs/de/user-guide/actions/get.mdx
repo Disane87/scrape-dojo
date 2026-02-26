@@ -1,0 +1,101 @@
+---
+title: get
+description: Hole einen Element-Handle für spätere Aktionen
+sidebar:
+  order: 22
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Mit `get` holst du dir einen **ElementHandle** — also eine Referenz auf ein DOM-Element. Das ist kein Text, sondern ein "Zeiger" auf das Element selbst. Du kannst ihn dann an andere Actions wie `extract`, `click` oder `type` weitergeben, die dann im Kontext dieses Elements arbeiten.
+
+Stell dir das wie einen Lesezeichen-Finger vor: Du zeigst auf ein Element, und die nächsten Actions schauen sich dann nur diesen Bereich an.
+
+## Parameter
+
+| Parameter | Typ | Pflicht | Beschreibung |
+|-----------|-----|---------|--------------|
+| `selector` | `string` | Ja | CSS-Selektor des Elements, das geholt werden soll |
+| `element` | `string` | Nein | Key aus `previousData`, um den Selektor relativ zu einem anderen ElementHandle aufzulösen |
+
+<Aside type="caution">
+`get` gibt **keinen Text** zurück, sondern einen ElementHandle! Wenn du den Textinhalt brauchst, nutze stattdessen `extract`.
+</Aside>
+
+## Beispiele
+
+**Element holen und dann extrahieren:**
+
+```jsonc
+[
+  {
+    "type": "get",
+    "description": "Erste Produktkarte holen",
+    "selector": ".product-card:first-child",
+    "outputKey": "firstProduct"
+  },
+  {
+    "type": "extract",
+    "description": "Produktname aus der Karte lesen",
+    "selector": ".product-name",
+    "element": "firstProduct"
+  },
+  {
+    "type": "extract",
+    "description": "Preis aus der Karte lesen",
+    "selector": ".product-price",
+    "element": "firstProduct"
+  }
+]
+```
+
+**Element holen und darauf klicken:**
+
+```jsonc
+[
+  {
+    "type": "get",
+    "description": "Details-Button im ersten Ergebnis holen",
+    "selector": ".result:first-child .details-btn",
+    "outputKey": "detailsButton"
+  },
+  {
+    "type": "click",
+    "description": "Auf Details klicken",
+    "element": "detailsButton"
+  }
+]
+```
+
+**Verschachteltes Element holen:**
+
+```jsonc
+[
+  {
+    "type": "get",
+    "description": "Sidebar holen",
+    "selector": "aside.sidebar",
+    "outputKey": "sidebar"
+  },
+  {
+    "type": "get",
+    "description": "Erstes Widget in der Sidebar holen",
+    "selector": ".widget:first-child",
+    "element": "sidebar",
+    "outputKey": "firstWidget"
+  },
+  {
+    "type": "extract",
+    "description": "Widget-Titel lesen",
+    "selector": "h3",
+    "element": "firstWidget"
+  }
+]
+```
+
+## Tipps
+
+- `get` wartet intern mit `waitForSelector` auf das Element, bevor es den Handle zurückgibt. Du brauchst also kein zusätzliches `waitForSelector` davor.
+- Wenn das Element nicht gefunden wird, gibt `get` `null` zurück und loggt einen Fehler.
+- Nutze `outputKey`, um dem ElementHandle einen sprechenden Namen zu geben — so kannst du ihn in späteren Actions über den `element`-Parameter referenzieren.
+- ElementHandles sind perfekt, um den Scope einzuschränken: Statt auf der ganzen Seite nach `.price` zu suchen, holst du erst die Produktkarte und suchst dann darin.

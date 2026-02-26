@@ -1,0 +1,165 @@
+---
+title: "📦 API Module"
+description: NestJS Module, Services und ihre Aufgaben
+sidebar:
+  order: 4
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Das Backend von Scrape Dojo besteht aus mehreren NestJS-Modulen, die jeweils eine klar abgegrenzte Aufgabe übernehmen. Hier bekommst du einen Überblick über jedes Modul, seine Services und wie alles zusammenspielt. Perfekt, wenn du das System erweitern oder debuggen willst.
+
+## 1. ScrapeModule
+
+Das Herzstück der Anwendung. Hier wird alles rund um die Scrape-Ausführung orchestriert.
+
+| Service | Aufgabe |
+|---------|---------|
+| **ScrapeService** | Verwaltet Scrapes, startet Runs, koordiniert den gesamten Ablauf |
+| **ScrapeExecutionService** | Führt Steps und Actions sequenziell aus, verwaltet den Datenkontext |
+| **ScrapeConfigService** | Lädt und validiert JSONC-Konfigurationen aus `config/sites/` |
+
+Der `ScrapeService` ist der Einstiegspunkt für alle API-Aufrufe. Er erstellt Run-Einträge, delegiert die Ausführung an den `ScrapeExecutionService` und kümmert sich um Status-Updates.
+
+## 2. ActionHandler
+
+Das Action-System ist über ein Factory Pattern aufgebaut und unterstützt aktuell rund 25 Actions.
+
+| Komponente | Aufgabe |
+|------------|---------|
+| **ActionFactory** | Erstellt Action-Instanzen anhand des `action`-Feldes in der Config |
+| **@ActionMetadata** | Decorator für Action-Metadaten (Name, Icon, Kategorie etc.) |
+| **ActionHandlerService** | Orchestriert die Ausführung einer einzelnen Action |
+
+Jede Action erbt von `BaseAction` und implementiert die `execute(page, params, context)`-Methode. Neue Actions werden automatisch registriert, sobald sie den `@ActionMetadata`-Decorator verwenden und in `index.ts` importiert werden.
+
+<Aside type="tip">
+Eine Schritt-für-Schritt-Anleitung zum Erstellen eigener Actions findest du im [Entwicklerhandbuch](/scrape-dojo/de/developer/).
+</Aside>
+
+## 3. DatabaseModule
+
+Unterstützt drei Datenbank-Backends über TypeORM:
+
+| Backend | Einsatz |
+|---------|---------|
+| **SQLite** (sql.js) | Standard, ideal für Entwicklung und kleine Setups |
+| **MySQL** | Für mittlere bis große Installationen |
+| **PostgreSQL** | Empfohlen für Production |
+
+### Entities
+
+| Entity | Beschreibung |
+|--------|-------------|
+| `Run` | Ein einzelner Scrape-Durchlauf mit Status und Zeitstempeln |
+| `RunStep` | Ein Step innerhalb eines Runs |
+| `RunAction` | Eine ausgeführte Action mit Ergebnis |
+| `RunLog` | Log-Einträge eines Runs |
+| `ScrapeData` | Persistierte Daten (via `storeData`-Action) |
+| `ScrapeSchedule` | Scheduling-Einträge mit Cron-Expression |
+| `SecretEntity` | Verschlüsselte Secrets |
+| `VariableEntity` | Globale Variablen |
+| `UserEntity` | Benutzer mit Rollen und MFA-Status |
+
+## 4. AuthModule
+
+Das Auth-System ist modular aufgebaut und unterstützt mehrere Strategien:
+
+| Strategie | Beschreibung |
+|-----------|-------------|
+| **Local** | Benutzername + Passwort (bcrypt-gehashed) |
+| **JWT** | Access Token (15 Min) + Refresh Token (7 Tage) |
+| **OIDC/SSO** | OpenID Connect mit Keycloak, Auth0, Google, Azure AD |
+| **MFA/TOTP** | Zwei-Faktor-Authentifizierung mit Authenticator-Apps |
+| **API Keys** | Service-Zugriff über `X-API-Key`-Header (Format: `sdj_*`) |
+
+Die Authentifizierung wird über `SCRAPE_DOJO_AUTH_ENABLED` global aktiviert. Wenn aktiv, registriert sich der `JwtAuthGuard` als globaler Guard. Einzelne Endpunkte können mit `@Public()` davon ausgenommen werden.
+
+<Aside type="note">
+Details zu allen Auth-Flows findest du unter [Authentifizierung](/scrape-dojo/de/developer/authentication/).
+</Aside>
+
+## 5. EventsModule
+
+Stellt den SSE-Endpoint (`GET /api/events`) bereit für Echtzeit-Kommunikation:
+
+| Komponente | Aufgabe |
+|------------|---------|
+| **EventsController** | Hält SSE-Verbindungen offen, liefert Event-Stream aus |
+| **ScrapeEventsService** | Nimmt Events von anderen Services entgegen und verteilt sie an alle Clients |
+
+Event-Typen: `scrape-start`, `scrape-end`, `step-status`, `action-status`, `loop-iteration`, `otp-required`, `otp-received`, `log`, `notification`, `error`, `config-reload`.
+
+## 6. SecretsModule
+
+Verwaltet verschlüsselte Secrets mit AES-256-CBC:
+
+| Aspekt | Details |
+|--------|---------|
+| **Verschlüsselung** | AES-256-CBC mit `SCRAPE_DOJO_ENCRYPTION_KEY` |
+| **Speicherung** | Verschlüsselt in der Datenbank (SecretEntity) |
+| **Zugriff** | `{{secrets.name}}` in Templates — Entschlüsselung zur Laufzeit |
+| **ENV-Import** | `SCRAPE_DOJO_SECRET_*` Variablen werden beim Start importiert |
+
+<Aside type="caution">
+Ohne gesetzten `SCRAPE_DOJO_ENCRYPTION_KEY` startet die Anwendung mit einer Warnung und nutzt einen temporären Key. In Production ist dieser Key **Pflicht**.
+</Aside>
+
+## 7. VariablesModule
+
+Verwaltet globale Variablen, die in Scrape-Konfigurationen verwendet werden können:
+
+| Feature | Beschreibung |
+|---------|-------------|
+| **CRUD-API** | Erstellen, lesen, aktualisieren, löschen über `/api/variables` |
+| **ENV-Import** | `SCRAPE_DOJO_VAR_*` Variablen werden automatisch importiert |
+| **Naming** | `SCRAPE_DOJO_VAR_MY_VARIABLE` wird zu `myVariable` (camelCase) |
+| **Zugriff** | `{{variables.myVariable}}` in Templates |
+
+Variablen können auch zur Laufzeit über den UI-Dialog oder den API-Body beim Starten eines Scrapes gesetzt werden. Laufzeit-Werte haben Vorrang vor DB-Werten.
+
+## 8. SchedulerService
+
+Ermöglicht zeitgesteuerte Scrape-Ausführungen:
+
+| Feature | Beschreibung |
+|---------|-------------|
+| **Cron-Expressions** | Standardmäßige Cron-Syntax via `cron-parser` |
+| **Zeitzonen** | Voller Timezone-Support (z.B. `Europe/Berlin`) |
+| **Nächste Ausführung** | Berechnet automatisch den nächsten Zeitpunkt |
+| **Verwaltung** | Über die UI oder `/api/scrape/:id/schedule` API |
+
+Der Scheduler prüft regelmäßig, ob ein Scrape fällig ist, und startet ihn automatisch.
+
+## 9. PuppeteerService
+
+Verwaltet die Headless-Chrome-Instanzen:
+
+| Feature | Beschreibung |
+|---------|-------------|
+| **Stealth Plugin** | `puppeteer-extra-plugin-stealth` gegen Bot-Erkennung |
+| **Browser-Pool** | Erstellt und schließt Browser-Instanzen pro Scrape-Run |
+| **Downloads** | Konfiguriert Download-Verzeichnisse pro Scrape |
+| **Headless-Modus** | `PUPPETEER_HEADLESS=false` für Debug-Zwecke |
+| **User Data** | Persistente Browser-Daten in `./browser-data/` |
+
+## 10. Global Middleware
+
+In `main.ts` werden globale Middleware und Pipes konfiguriert:
+
+| Middleware | Aufgabe |
+|------------|---------|
+| **ValidationPipe** | Validiert DTOs mit `whitelist` und `transform` |
+| **Helmet** | Setzt Security-Header (CSP, HSTS, etc.) |
+| **CORS** | Cross-Origin-Requests (konfigurierbar über `SCRAPE_DOJO_CORS_ORIGIN`) |
+| **Rate Limiting** | Schützt Auth-Endpunkte vor Brute-Force (konfigurierbar) |
+
+Alle API-Routen sind unter dem Prefix `/api` erreichbar: `/api/scrape`, `/api/auth/*`, `/api/secrets`, `/api/variables`, `/api/files`, `/api/health`, `/api/docs` (Swagger).
+
+---
+
+**Verwandte Themen:**
+- [Architektur](/scrape-dojo/de/developer/architecture/)
+- [Authentifizierung](/scrape-dojo/de/developer/authentication/)
+- [SSE Events](/scrape-dojo/de/developer/sse-events/)
+- [Entwicklerhandbuch](/scrape-dojo/de/developer/)

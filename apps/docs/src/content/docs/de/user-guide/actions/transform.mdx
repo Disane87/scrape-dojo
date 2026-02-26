@@ -1,0 +1,113 @@
+---
+title: transform
+description: Transformiere Daten mit JSONata-Ausdrücken
+sidebar:
+  order: 40
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Rohdaten sind selten so, wie du sie am Ende haben willst. Mit `transform` kannst du Daten umbauen, filtern, zusammenführen und aufbereiten — alles mit JSONata-Ausdrücken. Das ist quasi dein Schweizer Taschenmesser für Datenverarbeitung innerhalb eines Scrapes.
+
+## Parameter
+
+| Parameter | Typ | Pflicht | Beschreibung |
+|-----------|-----|---------|--------------|
+| `expression` | `string` | Ja | JSONata-Ausdruck, der auf die Eingabedaten angewendet wird |
+| `previousDataKey` | `string` | Nein | Verwendet den Wert dieses Keys aus `previousData` als Root (`$`) |
+| `previousDataKeys` | `string[]` | Nein | Merged mehrere Keys zu einem Objekt als Root |
+| `data` | `object` | Nein | Zusätzliche Key-Value-Daten (Werte können Handlebars-Templates sein) |
+
+### Wie wird der Input bestimmt?
+
+Die Priorität ist:
+
+1. **`previousDataKey`** gesetzt → dieser einzelne Wert wird als `$` (Root) verwendet
+2. **`previousDataKeys`** gesetzt → ein Objekt mit den angegebenen Keys wird als Root verwendet
+3. **`data`** gesetzt → das Objekt wird als Root verwendet
+4. **Nichts davon** → alle `previousData` werden als Root verwendet (plus `previousData.xyz` für Kompatibilität)
+
+<Aside type="note">
+Innerhalb einer Loop steht `currentData` automatisch im Kontext zur Verfügung — du kannst also z.B. `currentData.myLoop.value` in der Expression verwenden.
+</Aside>
+
+## Beispiele
+
+**Feld-Mapping (Objekt umbauen):**
+
+```jsonc
+{
+  "name": "mapFields",
+  "action": "transform",
+  "params": {
+    "previousDataKey": "rawProduct",
+    "expression": "{ 'name': title, 'preis': price, 'link': url }"
+  }
+}
+```
+
+**Werte bereinigen ($replace, $number):**
+
+```jsonc
+{
+  "name": "cleanPrice",
+  "action": "transform",
+  "params": {
+    "previousDataKey": "rawPrice",
+    "expression": "$number($replace($replace($, '€', ''), ',', '.'))"
+  }
+}
+```
+
+Wandelt z.B. `"29,99 €"` in die Zahl `29.99` um.
+
+**Filtern ($filter):**
+
+```jsonc
+{
+  "name": "filterExpensive",
+  "action": "transform",
+  "params": {
+    "previousDataKey": "allProducts",
+    "expression": "$filter($, function($item) { $number($item.price) > 50 })"
+  }
+}
+```
+
+**Mehrere Ergebnisse kombinieren (previousDataKeys):**
+
+```jsonc
+{
+  "name": "combine",
+  "action": "transform",
+  "params": {
+    "previousDataKeys": ["titles", "prices", "links"],
+    "expression": "titles.$zip(prices, links).{ 'title': $[0], 'price': $[1], 'link': $[2] }"
+  }
+}
+```
+
+**Mit zusätzlichen Daten (data-Parameter):**
+
+```jsonc
+{
+  "name": "addMetadata",
+  "action": "transform",
+  "params": {
+    "previousDataKey": "products",
+    "data": {
+      "source": "amazon",
+      "scrapeDate": "{{now}}"
+    },
+    "expression": "$.{ 'title': title, 'price': price, 'source': $lookup($, 'source'), 'date': $lookup($, 'scrapeDate') }"
+  }
+}
+```
+
+<Aside type="tip">
+JSONata ist extrem mächtig. Schau dir die [JSONata-Dokumentation](https://jsonata.org) an, wenn du tiefer einsteigen willst. Besonders nützlich: `$map`, `$filter`, `$reduce`, `$replace`, `$join` und `$sort`.
+</Aside>
+
+<Aside type="caution">
+Wenn du `previousDataKey` benutzt, ist der Wert dieses Keys direkt das Root-Objekt (`$`). Du greifst also direkt auf die Felder zu — nicht über `previousData.keyName.feld`, sondern einfach `feld`.
+</Aside>

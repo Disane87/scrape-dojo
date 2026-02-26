@@ -1,0 +1,111 @@
+---
+title: download
+description: "Download files"
+sidebar:
+  order: 51
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Want to download PDFs, images, or other files that your scrape finds on a page? The `download` action takes care of that for you. It downloads files from a URL and saves them locally -- including cookies from the current browser session, so files behind a login work too.
+
+The best part: relative URLs are resolved automatically and files are neatly sorted into subfolders per scrape.
+
+## Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `url` | `string` | Yes | The file URL. Supports absolute URLs, relative URLs, and `file://` paths. Handlebars templates supported. |
+| `path` | `string` | Yes | Target directory for the download (e.g. `./downloads/invoices`). |
+| `filename` | `string` | Yes | Filename for the saved file. Handlebars templates supported. |
+
+<Aside type="note">
+The `path` is automatically extended with a subfolder using the `scrapeId`. If you specify `./downloads` and your scrape is called `amazon-invoices`, the files end up in `./downloads/amazon-invoices/`.
+</Aside>
+
+## URL Resolution
+
+The action is smart about handling URLs:
+
+| URL Type | Example | Behavior |
+|----------|---------|----------|
+| Absolute | `https://example.com/file.pdf` | Used directly |
+| Schema-relative | `//cdn.example.com/file.pdf` | Schema from the current page is added |
+| Relative | `/files/report.pdf` | Resolved against the current page URL |
+| Local | `file:///tmp/generated.pdf` | File is copied locally |
+
+## Cookies & Authentication
+
+Downloads automatically use the cookies from the current browser session. That means: if your scrape logged in beforehand, downloads of protected files will work too.
+
+## Examples
+
+**Download a PDF:**
+
+```jsonc
+{
+  "name": "downloadInvoice",
+  "action": "download",
+  "params": {
+    "url": "https://example.com/invoices/2025-01.pdf",
+    "path": "./downloads/invoices",
+    "filename": "invoice-2025-01.pdf"
+  }
+}
+```
+
+**Image with dynamic filename:**
+
+```jsonc
+{
+  "name": "downloadImage",
+  "action": "download",
+  "params": {
+    "url": "{{previousData.imageUrl}}",
+    "path": "./downloads/images",
+    "filename": "{{previousData.productName}}.jpg"
+  }
+}
+```
+
+**Relative URL from an extraction:**
+
+```jsonc
+{
+  "steps": [
+    {
+      "name": "Download files",
+      "actions": [
+        {
+          "name": "pdfLink",
+          "action": "extract",
+          "params": {
+            "selector": "a.download-link",
+            "extractData": "href"
+          }
+        },
+        {
+          "name": "savePdf",
+          "action": "download",
+          "params": {
+            "url": "{{previousData.pdfLink}}",
+            "path": "./downloads/docs",
+            "filename": "document.pdf"
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+<Aside type="caution">
+If the `filename` is empty (e.g. because a Handlebars template couldn't be resolved), the action will abort with an error. When in doubt, check beforehand whether the value exists.
+</Aside>
+
+## Tips
+
+- The return value is the full path of the saved file -- ideal for subsequent `fileExists` checks or logging.
+- Combine `download` with a `loop` action to download multiple files from a page.
+- In a Docker setup: mount the download directory as a volume so the files are persisted.
+- For very large files, the download may take a while since the data is transferred through the browser context.

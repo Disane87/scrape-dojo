@@ -1,166 +1,57 @@
 ---
-title: Examples
-description: Praktische Beispiele für häufige Scraping-Szenarien
+title: "💡 Praxisbeispiele"
+description: Echte Scrape-Konfigurationen zum Lernen und Anpassen
+sidebar:
+  order: 1
 ---
 
-# Beispiele
+import { Aside } from '@astrojs/starlight/components';
 
-Diese Beispiele zeigen häufige Scraping-Patterns basierend auf echten Use Cases.
+Lernen geht am besten mit echten Beispielen! Hier findest du drei vollständige Scrape-Konfigurationen — von einfach bis komplex. Jedes Beispiel ist sofort einsetzbar: Kopier die Config in eine `.jsonc`-Datei unter `config/sites/`, pass die URLs an und starte den Scrape.
 
-## Übersicht
+## Beispiel 1: Website-Titel extrahieren
 
-```mermaid
-mindmap
-  root((Beispiele))
-    E-Commerce
-      Login Flow
-      Produktsuche
-      Rechnungen
-    PDF Handling
-      Download
-      Multi-Page
-      Deduplizierung
-    Pagination
-      Infinite Scroll
-      Numbered Pages
-      Year Selection
-    Data Processing
-      Extract & Transform
-      Loop & Filter
-      Store Data
-```
-
----
-
-## E-Commerce Scraping
-
-### Login-Flow mit Conditional Logic
-
-Basierend auf dem Amazon-Scraper zeigt dieses Beispiel, wie man mit verschiedenen Login-Varianten umgeht.
+Ein einfacher Einstieg: Website öffnen, Haupttitel extrahieren, als Artefakt anzeigen. Drei Actions, fertig.
 
 ```jsonc
 {
-  "id": "ecommerce-login",
-  "steps": [
+  "scrapes": [
     {
-      "name": "Login",
-      "actions": [
+      "id": "title-extractor",
+      "metadata": {
+        "description": "Extrahiert den Titel einer Website",
+        "version": "1.0.0",
+        "triggers": [{ "type": "manual" }]
+      },
+      "steps": [
         {
-          "action": "navigate",
-          "name": "Open login page",
-          "params": {
-            "url": "https://example.com/login"
-          }
-        },
-        {
-          "action": "delay",
-          "name": "Wait for page",
-          "params": {
-            "time": 2000
-          }
-        },
-        {
-          "action": "extract",
-          "name": "Check if password field visible",
-          "params": {
-            "selector": "input[type='password']",
-            "property": "tagName",
-            "optional": true
-          }
-        },
-        {
-          "action": "type",
-          "name": "Enter email",
-          "params": {
-            "selector": "input[type='email']",
-            "text": "{{secrets.email}}"
-          }
-        },
-        {
-          "action": "skipIf",
-          "name": "Skip if password already visible",
-          "params": {
-            "condition": "$exists(passwordFieldVisible)"
-          }
-        },
-        {
-          "action": "click",
-          "name": "Submit email",
-          "params": {
-            "selector": "#continue-button"
-          }
-        },
-        {
-          "action": "delay",
-          "name": "Wait for password page",
-          "params": {
-            "time": 1000
-          }
-        },
-        {
-          "action": "type",
-          "name": "Enter password",
-          "params": {
-            "selector": "input[type='password']",
-            "text": "{{secrets.password}}"
-          }
-        },
-        {
-          "action": "click",
-          "name": "Submit login",
-          "params": {
-            "selector": "#login-button"
-          }
-        }
-      ]
-    }
-  ]
-}
-```
-
-### Produktdaten extrahieren
-
-```jsonc
-{
-  "id": "product-extraction",
-  "steps": [
-    {
-      "name": "Extract Products",
-      "actions": [
-        {
-          "action": "navigate",
-          "name": "Open product list",
-          "params": {
-            "url": "https://example.com/products"
-          }
-        },
-        {
-          "action": "extractAll",
-          "name": "Get all product cards",
-          "params": {
-            "selector": ".product-card"
-          }
-        },
-        {
-          "action": "transform",
-          "name": "Structure product data",
-          "params": {
-            "expression": `
-              extractedElements.{
-                "title": $trim($('.title').innerText),
-                "price": $number($replace($('.price').innerText, '[€,]', '')),
-                "image": $('.image').src,
-                "url": $('.link').href
+          "name": "Extract",
+          "actions": [
+            {
+              // Schritt 1: Website öffnen
+              "name": "open",
+              "action": "navigate",
+              "params": {
+                "url": "https://example.com"
               }
-            `
-          }
-        },
-        {
-          "action": "logger",
-          "name": "Log results",
-          "params": {
-            "message": "Found {{$count(structuredData)}} products"
-          }
+            },
+            {
+              // Schritt 2: Titel auslesen → previousData.title
+              "name": "title",
+              "action": "extract",
+              "params": {
+                "selector": "h1"
+              }
+            },
+            {
+              // Schritt 3: Ergebnis in der UI anzeigen
+              "name": "show",
+              "action": "artifacts",
+              "params": {
+                "data": "{{previousData.title}}"
+              }
+            }
+          ]
         }
       ]
     }
@@ -168,324 +59,376 @@ Basierend auf dem Amazon-Scraper zeigt dieses Beispiel, wie man mit verschiedene
 }
 ```
 
----
+**So funktioniert's:**
 
-## PDF Download mit Deduplizierung
+1. **`navigate`** öffnet die URL im Headless-Browser
+2. **`extract`** liest den Textinhalt des `h1`-Elements aus — das Ergebnis landet in `previousData.title`
+3. **`artifacts`** zeigt das Ergebnis als Artefakt in der Run-Ansicht an
 
-Basierend auf dem order-pdf-scraper: Downloads mit persistierter Tracking.
+<Aside type="tip">
+Der `name` jeder Action bestimmt den Key in `previousData`. Hier: `previousData.title` enthält den extrahierten Text. Wähle sprechende Namen!
+</Aside>
+
+## Beispiel 2: Produktliste scrapen
+
+Jetzt wird's spannender: Eine Produktseite öffnen, auf das Laden warten, alle Produktkarten einsammeln, über jede iterieren, Daten extrahieren, transformieren und speichern.
 
 ```jsonc
 {
-  "id": "pdf-downloader",
-  "metadata": {
-    "variables": [
-      {
-        "name": "selectedYear",
-        "type": "select",
-        "options": [
-          {"label": "2024", "value": "2024"},
-          {"label": "2025", "value": "2025"}
+  "scrapes": [
+    {
+      "id": "product-scraper",
+      "metadata": {
+        "description": "Extrahiert Produkte mit Name und Preis",
+        "version": "1.0.0",
+        "triggers": [{ "type": "manual" }]
+      },
+      "steps": [
+        {
+          "name": "Produkte laden",
+          "actions": [
+            {
+              "name": "open-shop",
+              "action": "navigate",
+              "params": {
+                "url": "https://shop.example.com/produkte"
+              }
+            },
+            {
+              // Warten bis die Produkte gerendert sind
+              "name": "wait-for-products",
+              "action": "waitForSelector",
+              "params": {
+                "selector": ".product-card",
+                "visible": true
+              }
+            },
+            {
+              // Alle Produktkarten als Array einsammeln
+              "name": "get-product-elements",
+              "action": "extractAll",
+              "params": {
+                "selector": ".product-card"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Produkte verarbeiten",
+          "actions": [
+            {
+              // Über jedes Produkt-Element iterieren
+              "name": "iterate-products",
+              "action": "loop",
+              "params": {
+                "elementKey": "get-product-elements",
+                "actions": [
+                  {
+                    "name": "extract-name",
+                    "action": "extract",
+                    "params": {
+                      "selector": ".product-title",
+                      "scope": "currentElement"
+                    }
+                  },
+                  {
+                    "name": "extract-price",
+                    "action": "extract",
+                    "params": {
+                      "selector": ".product-price",
+                      "scope": "currentElement"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              // Rohdaten mit JSONata strukturieren
+              "name": "structure-data",
+              "action": "transform",
+              "params": {
+                "expression": "loopResults.{ 'name': extractName, 'price': $number($replace(extractPrice, '[^0-9,.]', '')) }"
+              }
+            },
+            {
+              // Ergebnisse in der Datenbank speichern
+              "name": "save-results",
+              "action": "storeData",
+              "params": {
+                "key": "productScraper.products",
+                "value": "{{previousData.structureData}}"
+              }
+            },
+            {
+              // Ergebnisse als Artefakt anzeigen
+              "name": "show-results",
+              "action": "artifacts",
+              "params": {
+                "data": "{{previousData.structureData}}",
+                "title": "Extrahierte Produkte"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Der Ablauf im Detail:**
+
+1. **`navigate`** — Produktseite öffnen
+2. **`waitForSelector`** — Warten, bis `.product-card`-Elemente sichtbar sind (wichtig bei SPAs!)
+3. **`extractAll`** — Alle Produktkarten als Array einsammeln
+4. **`loop`** — Über jedes Element iterieren und Name + Preis extrahieren
+5. **`transform`** — Rohdaten mit einem JSONata-Ausdruck in saubere Objekte umwandeln
+6. **`storeData`** — Ergebnisse persistent in der Datenbank speichern (verfügbar über Runs hinweg)
+7. **`artifacts`** — Ergebnisse als Tabelle in der Run-Ansicht anzeigen
+
+<Aside type="note">
+Der `scope: "currentElement"` in den extract-Actions innerhalb des Loops sorgt dafür, dass nur innerhalb des aktuellen Produktkarten-Elements gesucht wird — nicht auf der gesamten Seite.
+</Aside>
+
+## Beispiel 3: Login mit Dateidownload
+
+Das volle Programm: Login mit Secrets, optionale OTP-Behandlung, Dokumentenliste durchgehen, bereits vorhandene Dateien überspringen und neue herunterladen.
+
+```jsonc
+{
+  "scrapes": [
+    {
+      "id": "portal-downloader",
+      "metadata": {
+        "description": "Loggt sich ein und lädt Dateien herunter",
+        "version": "1.0.0",
+        "triggers": [{ "type": "manual" }],
+        "variables": [
+          {
+            "name": "email",
+            "type": "email",
+            "label": "E-Mail-Adresse",
+            // Wert kommt automatisch aus dem verschlüsselten Secret
+            "secretRef": "portalEmail",
+            "description": "Login E-Mail (aus Secret)"
+          },
+          {
+            "name": "password",
+            "type": "password",
+            "label": "Passwort",
+            "secretRef": "portalPassword",
+            "description": "Login Passwort (aus Secret)"
+          },
+          {
+            "name": "downloadFolder",
+            "type": "string",
+            "default": "downloads/portal",
+            "label": "Download-Ordner"
+          }
         ]
-      }
-    ]
-  },
-  "steps": [
-    {
-      "name": "Initialize",
-      "actions": [
+      },
+      "steps": [
         {
-          "action": "transform",
-          "name": "Load seen IDs",
-          "params": {
-            "expression": "$string('{{storedData.pdfDownloader.seenIds}}')"
-          }
-        },
-        {
-          "action": "logger",
-          "name": "Log existing IDs",
-          "params": {
-            "message": "Already seen: {{seenIds}}"
-          }
-        }
-      ]
-    },
-    {
-      "name": "Download PDFs",
-      "actions": [
-        {
-          "action": "navigate",
-          "name": "Open page",
-          "params": {
-            "url": "https://example.com/documents?year={{variables.selectedYear}}"
-          }
-        },
-        {
-          "action": "extractAll",
-          "name": "Get document IDs",
-          "params": {
-            "selector": ".document",
-            "property": "data-id"
-          }
-        },
-        {
-          "action": "transform",
-          "name": "Filter new documents",
-          "params": {
-            "expression": `
-              $filter(documentIds, function($id) {
-                $not($contains(seenIds, $id))
-              })
-            `
-          }
-        },
-        {
-          "action": "loop",
-          "name": "Download each PDF",
-          "params": {
-            "elementKey": "newDocuments",
-            "actions": [
-              {
-                "action": "download",
-                "name": "Download PDF",
-                "params": {
-                  "selector": "[data-id='{{currentData}}'] .download-button",
-                  "folder": "downloads/{{variables.selectedYear}}"
-                }
-              },
-              {
-                "action": "storeData",
-                "name": "Mark as seen",
-                "params": {
-                  "key": "pdfDownloader.seenIds",
-                  "value": "{{seenIds}},{{currentData}}",
-                  "append": true
-                }
+          "name": "Login",
+          "actions": [
+            {
+              "name": "open-login",
+              "action": "navigate",
+              "params": {
+                "url": "https://portal.example.com/login"
               }
-            ]
-          }
+            },
+            {
+              "name": "wait-for-form",
+              "action": "waitForSelector",
+              "params": {
+                "selector": "form#login-form",
+                "visible": true
+              }
+            },
+            {
+              "name": "enter-email",
+              "action": "type",
+              "params": {
+                "selector": "input[name='email']",
+                "text": "{{variables.email}}"
+              }
+            },
+            {
+              "name": "enter-password",
+              "action": "type",
+              "params": {
+                "selector": "input[name='password']",
+                "text": "{{variables.password}}"
+              }
+            },
+            {
+              "name": "submit-login",
+              "action": "click",
+              "params": {
+                "selector": "button[type='submit']"
+              }
+            },
+            {
+              "name": "wait-after-login",
+              "action": "delay",
+              "params": {
+                "time": 3000
+              }
+            },
+            {
+              // Prüfen ob ein OTP-Feld vorhanden ist
+              "name": "check-otp-field",
+              "action": "extract",
+              "params": {
+                "selector": "input[name='otp']",
+                "property": "tagName",
+                "optional": true
+              }
+            },
+            {
+              // Falls kein OTP-Feld → Rest des Steps überspringen
+              "name": "skip-if-no-otp",
+              "action": "skipIf",
+              "params": {
+                "condition": "$not($exists(checkOtpField))"
+              }
+            },
+            {
+              // Auf OTP-Eingabe vom Benutzer warten (UI-Dialog)
+              "name": "wait-for-otp",
+              "action": "otpWait",
+              "params": {
+                "message": "Bitte OTP-Code eingeben",
+                "timeout": 120000
+              }
+            },
+            {
+              "name": "enter-otp",
+              "action": "type",
+              "params": {
+                "selector": "input[name='otp']",
+                "text": "{{previousData.waitForOtp}}"
+              }
+            },
+            {
+              "name": "submit-otp",
+              "action": "click",
+              "params": {
+                "selector": "button#verify-otp"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Download",
+          "actions": [
+            {
+              "name": "go-to-downloads",
+              "action": "navigate",
+              "params": {
+                "url": "https://portal.example.com/documents"
+              }
+            },
+            {
+              "name": "wait-for-list",
+              "action": "waitForSelector",
+              "params": {
+                "selector": ".document-list",
+                "visible": true
+              }
+            },
+            {
+              "name": "get-documents",
+              "action": "extractAll",
+              "params": {
+                "selector": ".document-item"
+              }
+            },
+            {
+              "name": "download-files",
+              "action": "loop",
+              "params": {
+                "elementKey": "get-documents",
+                "actions": [
+                  {
+                    "name": "extract-filename",
+                    "action": "extract",
+                    "params": {
+                      "selector": ".document-name",
+                      "scope": "currentElement"
+                    }
+                  },
+                  {
+                    // Prüfen ob Datei schon existiert
+                    "name": "check-exists",
+                    "action": "fileExists",
+                    "params": {
+                      "path": "{{variables.downloadFolder}}/{{previousData.extractFilename}}"
+                    }
+                  },
+                  {
+                    // Falls ja → diese Iteration überspringen
+                    "name": "skip-if-exists",
+                    "action": "skipIf",
+                    "params": {
+                      "condition": "{{previousData.checkExists}}"
+                    }
+                  },
+                  {
+                    "name": "click-download",
+                    "action": "download",
+                    "params": {
+                      "selector": ".download-button",
+                      "scope": "currentElement",
+                      "folder": "{{variables.downloadFolder}}"
+                    }
+                  },
+                  {
+                    "name": "log-download",
+                    "action": "logger",
+                    "params": {
+                      "message": "Heruntergeladen: {{previousData.extractFilename}}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "name": "log-complete",
+              "action": "logger",
+              "params": {
+                "message": "Download abgeschlossen. {{previousData.getDocuments.length}} Dokumente verarbeitet."
+              }
+            }
+          ]
         }
       ]
     }
   ]
 }
 ```
+
+**Das passiert hier:**
+
+1. **Login-Step**: Login-Seite öffnen, E-Mail und Passwort aus Secrets eintragen, Formular absenden
+2. **OTP-Handling**: Falls ein OTP-Feld erkannt wird, wartet der Scrape auf die Eingabe über die UI. Falls nicht → `skipIf` überspringt die OTP-Actions
+3. **Download-Step**: Dokumentenliste laden und über jedes Dokument iterieren
+4. **Deduplizierung**: `fileExists` prüft ob die Datei bereits existiert — falls ja, wird `skipIf` ausgelöst und der Download übersprungen
+5. **Download**: Neue Dateien werden in den konfigurierten Ordner heruntergeladen
+
+<Aside type="tip">
+**Secrets und Variablen**: Die Variablen `email` und `password` nutzen `secretRef` — die Werte werden automatisch aus den verschlüsselten Secrets geladen. Der Benutzer kann sie trotzdem vor dem Start im UI-Dialog überschreiben.
+</Aside>
+
+<Aside type="note">
+**Wiederholte Ausführung**: Durch die `fileExists` + `skipIf`-Kombination ist dieser Scrape idempotent — er lädt nur neue Dateien herunter, egal wie oft du ihn startest.
+</Aside>
 
 ---
 
-## Pagination Patterns
-
-### Multi-Page Scraping
-
-```jsonc
-{
-  "id": "multi-page-scraper",
-  "metadata": {
-    "variables": [
-      {
-        "name": "maxPages",
-        "type": "number",
-        "default": 5
-      }
-    ]
-  },
-  "steps": [
-    {
-      "name": "Setup",
-      "actions": [
-        {
-          "action": "transform",
-          "name": "Generate page numbers",
-          "params": {
-            "expression": "[1..$number($maxPages)]"
-          }
-        }
-      ]
-    },
-    {
-      "name": "Scrape Pages",
-      "actions": [
-        {
-          "action": "loop",
-          "name": "Loop through pages",
-          "params": {
-            "elementKey": "pages",
-            "actions": [
-              {
-                "action": "navigate",
-                "name": "Open page",
-                "params": {
-                  "url": "https://example.com/items?page={{currentData}}"
-                }
-              },
-              {
-                "action": "waitForSelector",
-                "name": "Wait for items",
-                "params": {
-                  "selector": ".item-list",
-                  "visible": true
-                }
-              },
-              {
-                "action": "extractAll",
-                "name": "Extract items",
-                "params": {
-                  "selector": ".item"
-                }
-              },
-              {
-                "action": "logger",
-                "name": "Log progress",
-                "params": {
-                  "message": "Page {{currentData}}/{{$maxPages}}: {{$count(extractedElements)}} items"
-                }
-              }
-            ]
-          }
-        }
-      ]
-    }
-  ]
-}
-```
-
-### Infinite Scroll
-
-```jsonc
-{
-  "id": "infinite-scroll",
-  "steps": [
-    {
-      "name": "Load all items",
-      "actions": [
-        {
-          "action": "navigate",
-          "name": "Open page",
-          "params": {
-            "url": "https://example.com/feed"
-          }
-        },
-        {
-          "action": "transform",
-          "name": "Scroll iterations",
-          "params": {
-            "expression": "[1..10]"
-          }
-        },
-        {
-          "action": "loop",
-          "name": "Scroll and wait",
-          "params": {
-            "elementKey": "iterations",
-            "actions": [
-              {
-                "action": "keyboardPress",
-                "name": "Scroll down",
-                "params": {
-                  "key": "End"
-                }
-              },
-              {
-                "action": "delay",
-                "name": "Wait for load",
-                "params": {
-                  "time": 2000
-                }
-              },
-              {
-                "action": "logger",
-                "name": "Log iteration",
-                "params": {
-                  "message": "Scroll {{currentData}}/10"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "action": "extractAll",
-          "name": "Extract all items",
-          "params": {
-            "selector": ".feed-item"
-          }
-        }
-      ]
-    }
-  ]
-}
-```
-
----
-
-## Data Processing
-
-### Extract, Transform, Store
-
-```jsonc
-{
-  "id": "data-pipeline",
-  "steps": [
-    {
-      "name": "Process Data",
-      "actions": [
-        {
-          "action": "navigate",
-          "name": "Open source",
-          "params": {
-            "url": "https://example.com/data"
-          }
-        },
-        {
-          "action": "extractAll",
-          "name": "Extract raw data",
-          "params": {
-            "selector": "table tr"
-          }
-        },
-        {
-          "action": "transform",
-          "name": "Clean and structure",
-          "params": {
-            "expression": `
-              extractedElements.{
-                "name": $trim($('td:nth-child(1)').innerText),
-                "value": $number($('td:nth-child(2)').innerText),
-                "date": $toMillis($('td:nth-child(3)').innerText, '[D].[M].[Y]')
-              }[value > 0]
-            `
-          }
-        },
-        {
-          "action": "transform",
-          "name": "Sort by value",
-          "params": {
-            "expression": "cleanedData^(>value)"
-          }
-        },
-        {
-          "action": "storeData",
-          "name": "Persist results",
-          "params": {
-            "key": "dataPipeline.results",
-            "value": "{{sortedData}}"
-          }
-        },
-        {
-          "action": "logger",
-          "name": "Summary",
-          "params": {
-            "message": "Processed {{$count(sortedData)}} records. Total: {{$sum(sortedData.value)}}"
-          }
-        }
-      ]
-    }
-  ]
-}
-```
-
----
-
-## Weiterführende Links
-
-- [Actions Reference](/de/user-guide/actions/) - Alle verfügbaren Actions
-- [JSONata Transformationen](/de/user-guide/jsonata/) - Daten transformieren
-- [Scrape Workflow](/de/architecture/scrape-workflow/) - Workflow verstehen
+**Verwandte Themen:**
+- [Actions-Referenz](/scrape-dojo/de/user-guide/actions/)
+- [Secrets und Variablen](/scrape-dojo/de/user-guide/secrets-variables/)
+- [Templates und Transformationen](/scrape-dojo/de/user-guide/templates/)
+- [Scrape-Workflow](/scrape-dojo/de/developer/scrape-workflow/)

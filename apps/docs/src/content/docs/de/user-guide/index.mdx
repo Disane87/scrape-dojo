@@ -1,85 +1,197 @@
 ---
-title: User Guide
-description: Benutzerhandbuch für Scrape Dojo
+title: Benutzerhandbuch
+description: Alles was du zum Scrapen brauchst — von der Config bis zum Monitoring
+sidebar:
+  order: 1
 ---
 
-# User Guide
+import { Card, CardGrid, Aside, Tabs, TabItem, LinkCard } from '@astrojs/starlight/components';
 
-Dieser Bereich enthält Anleitungen und Referenzen für die tägliche Arbeit mit Scrape Dojo.
+Willkommen im Benutzerhandbuch! Hier findest du alles, was du brauchst, um mit Scrape Dojo produktiv zu arbeiten. Egal ob du gerade erst anfängst oder schon komplexe Workflows baust — diese Seite gibt dir den Überblick und zeigt dir, wo du was findest.
 
-## Inhaltsverzeichnis
+Scrape Dojo ist eine deklarative Web-Scraping- und Browser-Automatisierungsplattform. Du definierst deine Scrapes als JSONC-Konfigurationen, und die Plattform kümmert sich um den Rest: Browser starten, Actions ausführen, Daten sammeln, Ergebnisse speichern.
 
-### Grundlagen
-- [Actions Reference](/de/user-guide/actions/) - Vollständige Referenz aller verfügbaren Actions
+## 🚀 Was Scrape Dojo kann
 
-### Erweitert
-- Template-Syntax - Handlebars und Variablen (Coming Soon)
-- JSONata Transformationen - Daten transformieren (Coming Soon)
-- Workflows - Komplexe Scrape-Workflows (Coming Soon)
+- **Websites automatisiert scrapen** — Navigation, Klicks, Formulareingaben, Datenextraktion
+- **Daten transformieren** — JSONata-Ausdrücke und Handlebars-Templates für flexible Datenverarbeitung
+- **Loops und bedingte Logik** — Über Listen iterieren, Aktionen überspringen oder abbrechen
+- **Dateien herunterladen** — PDFs, Bilder und andere Dateien automatisch speichern
+- **Echtzeit-Monitoring** — Live-Updates über Server-Sent Events (SSE) in der UI
+- **Scheduling** — Cron-basierte Automatisierung mit Zeitzonen-Support
+- **Secrets-Management** — Verschlüsselte Speicherung von Zugangsdaten (AES-256)
+- **Benachrichtigungen** — In-App- und Browser-Notifications bei wichtigen Ereignissen
 
-## Quick Reference
+## ⚡ Actions — Schnellreferenz
 
-```mermaid
-mindmap
-  root((Scrape Dojo))
-    Actions
-      Navigation
-        navigate
-        goBack
-        reload
-      Interaktion
-        click
-        type
-        select
-      Extraktion
-        extract
-        screenshot
-      Datenverarbeitung
-        transform
-        loop
-        condition
-    Templates
-      Variables
-      Secrets
-      Handlebars
-    Workflows
-      Events
-      Monitoring
-      Error Handling
-```
+Actions sind die Bausteine jedes Scrapes. Jede Action hat einen `name` (Bezeichner für Datenzugriff), ein `action`-Feld (Typ) und `params` (Parameter). Hier die Übersicht nach Kategorie:
 
-## Schnellzugriff
+### 🧭 Navigation
 
-### Häufigste Actions
+| Action | Beschreibung |
+|--------|-------------|
+| `navigate` | Navigiert zu einer URL |
 
-| Action | Verwendung | Beispiel |
-|--------|-----------|----------|
-| `navigate` | Seite öffnen | `{"type": "navigate", "url": "..."}` |
-| `click` | Element klicken | `{"type": "click", "selector": "..."}` |
-| `extract` | Daten extrahieren | `{"type": "extract", "selector": "..."}` |
-| `type` | Text eingeben | `{"type": "type", "value": "..."}` |
-| `wait` | Pause | `{"type": "wait", "timeout": 1000}` |
+### 👆 Interaktion
 
-### Template-Syntax
+| Action | Beschreibung |
+|--------|-------------|
+| `click` | Klickt auf ein Element |
+| `type` | Gibt Text in ein Eingabefeld ein |
+| `keyboardPress` | Drückt eine Taste auf der Tastatur |
+| `waitForSelector` | Wartet bis ein Element im DOM erscheint |
+| `waitForOtp` | Wartet auf eine OTP-Eingabe vom Benutzer (z.B. für 2FA-Login) |
 
-```handlebars
-{{variables.myVar}}     - Variable
-{{secrets.mySecret}}    - Secret
-{{previousData.field}}  - Vorheriges Ergebnis
-{{currentData}}         - Loop-Element
-```
+### 📥 Extraktion
 
-### JSONata Basics
+| Action | Beschreibung |
+|--------|-------------|
+| `extract` | Extrahiert Daten aus einem einzelnen Element |
+| `extractAll` | Extrahiert Daten aus mehreren Elementen (gibt Array zurück) |
+| `get` | HTTP-GET-Anfrage an eine URL |
+| `getAll` | Mehrere HTTP-GET-Anfragen parallel ausführen |
 
-```javascript
-previousData[price > 100]        // Filtern
-previousData^(>price)            // Sortieren
-previousData.{                   // Transformieren
-  "name": title,
-  "cost": price
+### 🔄 Ablaufsteuerung
+
+| Action | Beschreibung |
+|--------|-------------|
+| `loop` | Iteriert über eine Liste von Elementen |
+| `skipIf` | Überspringt die aktuelle Loop-Iteration (basierend auf JSONata-Bedingung) |
+| `break` | Bricht den aktuellen Loop ab (basierend auf JSONata-Bedingung) |
+| `delay` | Wartet eine bestimmte Zeit (Millisekunden) |
+
+### 📊 Datenverarbeitung
+
+| Action | Beschreibung |
+|--------|-------------|
+| `transform` | Transformiert Daten mit JSONata-Ausdrücken |
+| `storeData` | Speichert Daten persistent in der Datenbank |
+
+### 🔧 Utility
+
+| Action | Beschreibung |
+|--------|-------------|
+| `logger` | Schreibt eine Nachricht ins Log |
+| `screenshot` | Erstellt einen Screenshot der aktuellen Seite |
+| `download` | Lädt eine Datei herunter |
+| `fileExists` | Prüft ob eine Datei existiert |
+| `notify` | Sendet eine Benachrichtigung an die UI |
+| `display` | Erzeugt ein Artefakt (JSON, Tabelle, Bild etc.) für die Run-Ansicht |
+
+<Aside type="tip">
+Die vollständige Referenz mit allen Parametern und Beispielen findest du unter [Actions-Referenz](/scrape-dojo/de/user-guide/actions/).
+</Aside>
+
+## 📖 Zentrale Konzepte
+
+Hier sind die wichtigsten Themen, die du kennen solltest. Klick dich durch — jede Seite erklärt ein Konzept im Detail mit Beispielen:
+
+<CardGrid>
+  <LinkCard
+    title="📐 Konfigurationsformat"
+    description="JSONC-Aufbau: Scrapes, Metadaten, Steps und Actions"
+    href="/scrape-dojo/de/user-guide/config-format/"
+  />
+  <LinkCard
+    title="⚡ Actions-Referenz"
+    description="Alle Actions mit Parametern und Codebeispielen"
+    href="/scrape-dojo/de/user-guide/actions/"
+  />
+  <LinkCard
+    title="🔧 Templates und Transformationen"
+    description="Handlebars-Templates, Custom Helpers und JSONata"
+    href="/scrape-dojo/de/user-guide/templates/"
+  />
+  <LinkCard
+    title="🔒 Secrets und Variablen"
+    description="Verschlüsselte Secrets und Konfigurationsvariablen"
+    href="/scrape-dojo/de/user-guide/secrets-variables/"
+  />
+  <LinkCard
+    title="⏰ Scheduling"
+    description="Cron-basierte Automatisierung mit Zeitzonen-Support"
+    href="/scrape-dojo/de/user-guide/scheduling/"
+  />
+  <LinkCard
+    title="📜 Run History"
+    description="Ausführungsverlauf, Logs und Debugging"
+    href="/scrape-dojo/de/user-guide/run-history/"
+  />
+</CardGrid>
+
+## 🔀 Datenfluss
+
+Ein zentrales Konzept in Scrape Dojo: Jede Action kann auf Daten aus verschiedenen Quellen zugreifen. Der `name` einer Action bestimmt, unter welchem Key ihr Ergebnis gespeichert wird.
+
+### Datenquellen
+
+| Quelle | Template-Syntax | Was steckt drin? |
+|--------|----------------|------------------|
+| `previousData` | `{{previousData.actionName}}` | Ergebnisse vorheriger Actions im selben Step. Der `name` der Action ist der Key. |
+| `currentData` | `{{currentData.loopName.value}}` | Aktuelles Element in einer Loop-Iteration. Enthält `value` (das Element) und `index` (Position). |
+| `storedData` | `{{storedData.key}}` | Persistente Daten, die mit der `storeData`-Action gespeichert wurden. Verfügbar über den gesamten Run hinweg. |
+| `variables` | `{{variables.name}}` | Laufzeit-Variablen (aus dem Run-Dialog) und Datenbank-Variablen. Laufzeit-Werte haben Vorrang. |
+| `secrets` | `{{secrets.secretName}}` | Verschlüsselte Secrets aus der Datenbank. Werden zur Laufzeit entschlüsselt. |
+
+### Beispiel: Datenfluss in Aktion
+
+Stell dir vor, du willst Produkt-Links von einer Seite sammeln und dann jedes Produkt einzeln besuchen:
+
+```jsonc
+{
+  "steps": [
+    {
+      "name": "Produkte scrapen",
+      "actions": [
+        {
+          // Ergebnis: Liste von URLs → previousData.links
+          "name": "links",
+          "action": "extractAll",
+          "params": { "selector": ".product a", "attribute": "href" }
+        },
+        {
+          // Iteriert über previousData.links
+          "name": "productLoop",
+          "action": "loop",
+          "params": {
+            "elementKey": "links",
+            "actions": [
+              {
+                // currentData.productLoop.value = aktuelle URL
+                "name": "openPage",
+                "action": "navigate",
+                "params": { "url": "{{currentData.productLoop.value}}" }
+              },
+              {
+                // Ergebnis: Produkttitel → previousData.productTitle
+                "name": "productTitle",
+                "action": "extract",
+                "params": { "selector": "h1" }
+              },
+              {
+                "name": "logIt",
+                "action": "logger",
+                "params": {
+                  "message": "Produkt #{{currentData.productLoop.index}}: {{previousData.productTitle}}"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
 }
 ```
 
-## Weiterführende Links
+<Aside type="note">
+Der `name` jeder Action ist entscheidend: Er bestimmt, unter welchem Key das Ergebnis in `previousData` gespeichert wird. Wähle aussagekräftige Namen wie `productLinks`, `priceData` oder `pageTitle`.
+</Aside>
 
-Für detaillierte Informationen besuche die entsprechenden Unterseiten.
+### Variablen-Priorität
+
+Wenn eine Variable an mehreren Stellen definiert ist, gilt diese Reihenfolge (höchste Priorität zuerst):
+
+1. **Runtime** — Werte aus dem UI-Dialog oder API-Body beim Start
+2. **Database** — Über `/api/variables` oder `SCRAPE_DOJO_VAR_*` gespeichert
+3. **Config Defaults** — In `metadata.variables[].default` definiert

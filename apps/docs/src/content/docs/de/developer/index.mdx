@@ -1,210 +1,192 @@
 ---
-title: Developer Guide
-description: Entwickler-Dokumentation für Scrape Dojo
+title: "🛠️ Entwicklerhandbuch"
+description: Custom Actions entwickeln und das System erweitern
+sidebar:
+  order: 1
 ---
 
-# Developer Guide
+import { Aside } from '@astrojs/starlight/components';
 
-Dieser Guide richtet sich an Entwickler, die Scrape Dojo erweitern oder dazu beitragen möchten.
+Du willst Scrape Dojo erweitern? Hier bist du richtig! In diesem Handbuch zeigen wir dir, wie du eigene Actions baust, sie ins System integrierst und vernünftig testest. Das Action-System ist bewusst einfach gehalten — du brauchst nur eine Datei und ein paar Zeilen Code.
 
-## Übersicht
+## Custom Action erstellen
 
-```mermaid
-graph TB
-    Dev[Developer] --> Custom[Custom Actions]
-    Dev --> Contrib[Contributing]
-    Dev --> Debug[Debugging]
-    
-    Custom --> Create[Action erstellen]
-    Custom --> Register[Registrieren]
-    Custom --> Test[Testen]
-    
-    Contrib --> Setup[Dev Setup]
-    Contrib --> PR[Pull Requests]
-    
-    Debug --> Logs[Logging]
-    Debug --> Events[Events]
-    
-    classDef action fill:#4299E1,stroke:#fff,stroke-width:2px,color:#fff
-    class Create,Register,Test,Setup,PR,Logs,Events action
+### Schritt 1: Neue Datei anlegen
+
+Erstelle eine neue Datei im Verzeichnis `apps/api/src/action-handler/actions/`:
+
+```
+apps/api/src/action-handler/actions/my-custom.action.ts
 ```
 
----
+### Schritt 2: BaseAction erweitern mit @ActionMetadata
 
-## Custom Actions entwickeln
+Jede Action erbt von `BaseAction` und nutzt den `@ActionMetadata`-Decorator. Der Decorator beschreibt deine Action für die UI und das Factory-System:
 
-### Action-Struktur
+| Eigenschaft | Typ | Beschreibung |
+|-------------|-----|--------------|
+| `name` | String | Technischer Name der Action (z.B. `myCustomAction`) |
+| `displayName` | String | Anzeigename in der UI |
+| `icon` | String | Icon-Name (Iconify-Format, z.B. `mdi:code-braces`) |
+| `color` | String | Farbbezeichnung für die UI |
+| `category` | String | Kategorie der Action (siehe Tabelle unten) |
+| `description` | String | Kurzbeschreibung der Funktionalität |
 
-Alle Actions erben von `BaseAction` und verwenden den `@Action` Decorator.
+### Schritt 3: execute-Methode implementieren
 
-**Action Categories:**
-- `navigation` - Seitennavigation
-- `interaction` - User-Interaktion
-- `extraction` - Datenextraktion
-- `flow` - Kontrollfluss
-- `utility` - Hilfsfunktionen
-- `data` - Datenverarbeitung
+Die zentrale Methode jeder Action ist `execute(page, params, context)`. Sie wird vom ActionHandler aufgerufen und bekommt:
 
-### Beispiel: Einfache Action
+- **page** — Die Puppeteer `Page`-Instanz für Browser-Interaktionen
+- **params** — Typisierte Parameter aus der Scrape-Konfiguration
+- **context** — Ausführungskontext mit Zugriff auf:
+  - `previousData` — Ergebnisse vorheriger Actions
+  - `currentData` — Aktuelle Daten (z.B. in Loops)
+  - `storedData` — Persistierte Daten aus früheren Runs
+  - `variables` — Runtime- und Workflow-Variablen
+  - `logger` — ScrapeLogger-Instanz für strukturiertes Logging
+
+### Schritt 4: Automatische Registrierung
+
+Die Action wird automatisch über das Factory Pattern registriert. Du musst nur den Import in `apps/api/src/action-handler/actions/index.ts` hinzufügen — fertig.
+
+## Action-Kategorien
+
+| Kategorie | Beschreibung | Beispiele |
+|-----------|--------------|-----------|
+| `navigation` | Seitennavigation und URL-Steuerung | navigate, reload, goBack |
+| `interaction` | Benutzerinteraktionen simulieren | click, type, select, hover |
+| `extraction` | Daten aus Webseiten extrahieren | extract, extractAll, screenshot |
+| `flow` | Kontrollfluss und Logik | loop, skipIf, condition |
+| `data` | Datenverarbeitung und -transformation | transform, storeData, artifacts |
+| `utility` | Hilfsfunktionen | delay, logger, notify, waitForSelector |
+
+## Beispiel: Custom Action Skeleton
 
 ```typescript
-import { Action } from '../_decorators/action.decorator';
+import { ActionMetadata } from '../_decorators/action.decorator';
 import { BaseAction } from './bases/base.action';
 
-interface MyActionParams {
-  message: string;
-  count?: number;
+interface MyCustomParams {
+  selector: string;
+  attribute?: string;
+  timeout?: number;
 }
 
-@Action('myAction', {
-  displayName: 'My Custom Action',
-  icon: 'MessageSquare',
-  description: 'Does something custom',
+@ActionMetadata({
+  name: 'myCustomAction',
+  displayName: 'Meine Custom Action',
+  icon: 'mdi:code-braces',
   color: 'blue',
-  category: 'utility'
+  category: 'extraction',
+  description: 'Extrahiert benutzerdefinierte Daten von einer Webseite'
 })
-export class MyAction extends BaseAction<MyActionParams> {
-  async run(): Promise<any> {
-    const { message, count = 1 } = this.params;
-    
-    this.logger.log(`Executing custom action: ${message}`);
-    
-    // Deine Logik hier
-    for (let i = 0; i < count; i++) {
-      console.log(`${message} - ${i + 1}`);
+export class MyCustomAction extends BaseAction<MyCustomParams> {
+  async execute(page, params: MyCustomParams, context): Promise<any> {
+    const { selector, attribute = 'textContent', timeout = 30000 } = params;
+
+    // Parameter validieren
+    if (!selector) {
+      throw new Error('Parameter "selector" ist erforderlich');
     }
-    
-    return {
-      executed: true,
-      count
-    };
-  }
-}
-```
 
-### Action mit Puppeteer
+    // Auf Element warten
+    await page.waitForSelector(selector, { timeout });
 
-```typescript
-@Action('customExtract', {
-  displayName: 'Custom Extract',
-  icon: 'Search',
-  description: 'Extracts data with custom logic',
-  category: 'extraction'
-})
-export class CustomExtractAction extends BaseAction<CustomExtractParams> {
-  async run(): Promise<any> {
-    const { selector } = this.params;
-    
-    // Zugriff auf Puppeteer Page
-    const element = await this.page.$(selector);
-    
-    if (!element) {
-      throw new Error(`Element not found: ${selector}`);
-    }
-    
-    // Custom Extraktion
-    const data = await element.evaluate((el) => {
-      return {
-        text: el.textContent?.trim(),
-        html: el.innerHTML,
-        classes: Array.from(el.classList)
-      };
-    });
-    
-    this.logger.debug(`Extracted: ${JSON.stringify(data)}`);
-    
-    return data;
-  }
-}
-```
+    // Daten extrahieren
+    const result = await page.$eval(selector, (el, attr) => {
+      return el[attr] || el.getAttribute(attr);
+    }, attribute);
 
-### Action mit previousData
+    // Logging
+    context.logger.log(`Extrahiert: ${result}`);
 
-```typescript
-@Action('aggregateData', {
-  displayName: 'Aggregate Data',
-  description: 'Aggregates data from previous actions',
-  category: 'data'
-})
-export class AggregateDataAction extends BaseAction<AggregateParams> {
-  async run(): Promise<any> {
-    // Zugriff auf Daten vorheriger Actions
-    const items = this.previousData.get('extractedItems');
-    
-    if (!Array.isArray(items)) {
-      throw new Error('No items to aggregate');
-    }
-    
-    // Aggregation
-    const result = {
-      total: items.length,
-      sum: items.reduce((acc, item) => acc + (item.value || 0), 0),
-      average: items.reduce((acc, item) => acc + (item.value || 0), 0) / items.length
-    };
-    
+    // Ergebnis zurückgeben (wird in previousData gespeichert)
     return result;
   }
 }
 ```
 
-### Action mit Events
+## Action mit previousData
+
+Actions können auf Ergebnisse vorheriger Actions zugreifen — das ist einer der Kernmechanismen in Scrape Dojo:
 
 ```typescript
-@Action('progressAction', {
-  displayName: 'Progress Action',
-  description: 'Action with progress reporting',
-  category: 'utility'
+@ActionMetadata({
+  name: 'aggregateData',
+  displayName: 'Daten Aggregieren',
+  icon: 'mdi:chart-bar',
+  color: 'green',
+  category: 'data',
+  description: 'Aggregiert Daten aus vorherigen Actions'
 })
-export class ProgressAction extends BaseAction<ProgressParams> {
-  async run(): Promise<any> {
-    const { items } = this.params;
-    const total = items.length;
-    
-    for (let i = 0; i < total; i++) {
-      const item = items[i];
-      
-      // Event senden
-      this.data.scrapeEventsService?.emitEvent({
-        type: 'log',
-        scrapeId: this.data.scrapeId!,
-        runId: this.data.runId,
-        message: `Processing item ${i + 1}/${total}`
-      });
-      
-      // Verarbeitung
-      await this.processItem(item);
+export class AggregateDataAction extends BaseAction<AggregateParams> {
+  async execute(page, params: AggregateParams, context): Promise<any> {
+    // Zugriff auf Daten vorheriger Actions
+    const items = context.previousData.get('extractedItems');
+
+    if (!Array.isArray(items)) {
+      throw new Error('Keine Items zum Aggregieren vorhanden');
     }
-    
-    return { processed: total };
-  }
-  
-  private async processItem(item: any) {
-    // Deine Logik
+
+    return {
+      total: items.length,
+      sum: items.reduce((acc, item) => acc + (item.value || 0), 0),
+      average: items.reduce((acc, item) => acc + (item.value || 0), 0) / items.length
+    };
   }
 }
 ```
 
----
+## Action mit SSE Events
 
-## Action registrieren
-
-### 1. Action-Datei erstellen
-
-Erstelle eine neue Datei in `apps/api/src/action-handler/actions/`:
-
-```
-my-action.action.ts
-```
-
-### 2. In index.ts importieren
-
-Füge den Import in `apps/api/src/action-handler/actions/index.ts` hinzu:
+Deine Action kann live Events an die UI schicken — perfekt für Fortschrittsanzeigen:
 
 ```typescript
-import './my-action.action';
+@ActionMetadata({
+  name: 'progressAction',
+  displayName: 'Fortschritts-Action',
+  icon: 'mdi:progress-check',
+  color: 'orange',
+  category: 'utility',
+  description: 'Action mit Fortschrittsanzeige'
+})
+export class ProgressAction extends BaseAction<ProgressParams> {
+  async execute(page, params: ProgressParams, context): Promise<any> {
+    const { items } = params;
+    const total = items.length;
+
+    for (let i = 0; i < total; i++) {
+      // SSE-Event senden
+      context.scrapeEventsService?.emitEvent({
+        type: 'log',
+        scrapeId: context.scrapeId,
+        runId: context.runId,
+        message: `Verarbeite Element ${i + 1}/${total}`
+      });
+
+      await this.processItem(items[i]);
+    }
+
+    return { processed: total };
+  }
+
+  private async processItem(item: any) {
+    // Verarbeitungslogik
+  }
+}
 ```
 
-### 3. Action-Name zum Type hinzufügen
+## Registrierung
+
+### Import hinzufügen
+
+In `apps/api/src/action-handler/actions/index.ts`:
+
+```typescript
+import './my-custom.action';
+```
+
+### ActionName Type erweitern
 
 In `libs/shared/src/lib/interfaces.ts`:
 
@@ -213,76 +195,117 @@ export type ActionName =
   | 'navigate'
   | 'click'
   | 'extract'
-  // ... existing actions
-  | 'myAction';  // Füge deine Action hinzu
+  // ... bestehende Actions
+  | 'myCustomAction';  // Neue Action hinzufügen
 ```
 
-### 4. Kompilieren und testen
+### Kompilieren und prüfen
 
 ```bash
 # API neu starten
-pnpm nx serve api
+pnpm start:api
 
-# Testen via API
+# Metadata prüfen — deine Action sollte jetzt auftauchen
 curl http://localhost:3000/api/actions/metadata
 ```
 
----
+## 🧪 Testing
 
-## Testing
+### Unit Tests mit Vitest
 
-### Unit Tests
+Erstelle eine Testdatei direkt neben der Action:
 
 ```typescript
-import { Test } from '@nestjs/testing';
-import { MyAction } from './my-action.action';
+// my-custom.action.spec.ts
+import { describe, it, expect, vi } from 'vitest';
+import { MyCustomAction } from './my-custom.action';
 
-describe('MyAction', () => {
-  let action: MyAction;
-  
-  beforeEach(async () => {
-    const module = await Test.createTestingModule({
-      providers: [MyAction]
-    }).compile();
-    
-    action = module.get<MyAction>(MyAction);
+describe('MyCustomAction', () => {
+  it('sollte Daten korrekt extrahieren', async () => {
+    const mockPage = {
+      waitForSelector: vi.fn().mockResolvedValue(true),
+      $eval: vi.fn().mockResolvedValue('Extrahierter Text')
+    };
+
+    const mockContext = {
+      logger: { log: vi.fn(), debug: vi.fn(), error: vi.fn() },
+      previousData: new Map(),
+      variables: {}
+    };
+
+    const action = new MyCustomAction();
+    const result = await action.execute(
+      mockPage as any,
+      { selector: '.title' },
+      mockContext as any
+    );
+
+    expect(result).toBe('Extrahierter Text');
+    expect(mockPage.waitForSelector).toHaveBeenCalledWith('.title', { timeout: 30000 });
   });
-  
-  it('should execute correctly', async () => {
-    const params = { message: 'test', count: 3 };
-    const result = await action.run();
-    
-    expect(result.executed).toBe(true);
-    expect(result.count).toBe(3);
+
+  it('sollte bei fehlendem Selector einen Fehler werfen', async () => {
+    const action = new MyCustomAction();
+
+    await expect(
+      action.execute({} as any, { selector: '' } as any, {} as any)
+    ).rejects.toThrow('Parameter "selector" ist erforderlich');
   });
 });
 ```
 
-### Integration Tests
+### Tests ausführen
 
-Teste Actions in echten Scrape-Konfigurationen:
+```bash
+# Alle API-Tests
+pnpm test:api
+
+# Einzelne Testdatei
+npx nx test api -- --testPathPattern="my-custom.action"
+
+# Watch-Modus
+pnpm test:watch
+```
+
+### Integrationstests
+
+Teste deine Action mit einer echten Scrape-Konfiguration in `config/sites/`:
 
 ```jsonc
 {
-  "id": "test-my-action",
-  "steps": [
+  "scrapes": [
     {
-      "name": "Test",
-      "actions": [
+      "id": "test-my-action",
+      "metadata": {
+        "description": "Test der Custom Action",
+        "version": "1.0.0",
+        "triggers": [{ "type": "manual" }]
+      },
+      "steps": [
         {
-          "action": "myAction",
-          "name": "Test custom action",
-          "params": {
-            "message": "Hello World",
-            "count": 5
-          }
-        },
-        {
-          "action": "logger",
-          "name": "Log result",
-          "params": {
-            "message": "Result: {{previousData.myAction}}"
-          }
+          "name": "Test",
+          "actions": [
+            {
+              "action": "navigate",
+              "name": "open",
+              "params": { "url": "https://example.com" }
+            },
+            {
+              "action": "myCustomAction",
+              "name": "customResult",
+              "params": {
+                "selector": "h1",
+                "attribute": "textContent"
+              }
+            },
+            {
+              "action": "logger",
+              "name": "logResult",
+              "params": {
+                "message": "Ergebnis: {{previousData.customResult}}"
+              }
+            }
+          ]
         }
       ]
     }
@@ -290,208 +313,127 @@ Teste Actions in echten Scrape-Konfigurationen:
 }
 ```
 
----
+## 🐛 Debugging
 
-## Debugging
-
-### Logging
+### Logging in Actions
 
 Actions haben Zugriff auf den `ScrapeLogger`:
 
 ```typescript
-this.logger.log('Info message');
-this.logger.debug('Debug details');
-this.logger.error('Error occurred');
-this.logger.scrape('Scrape-specific log');
-```
-
-### Events tracken
-
-```typescript
-// In der Action
-this.data.scrapeEventsService?.emitEvent({
-  type: 'log',
-  scrapeId: this.data.scrapeId!,
-  runId: this.data.runId,
-  message: 'Custom event message',
-  actionName: this.name
-});
+context.logger.log('Info-Nachricht');
+context.logger.debug('Debug-Details');
+context.logger.error('Fehler aufgetreten');
 ```
 
 ### Browser DevTools
 
-Für Puppeteer-Debugging:
+Für Puppeteer-Debugging setze in der `.env`:
 
 ```bash
-# In .env
 PUPPETEER_HEADLESS=false
 PUPPETEER_DEVTOOLS=true
 ```
 
----
+<Aside type="tip">
+Mit `PUPPETEER_HEADLESS=false` siehst du den Browser live — super hilfreich beim Entwickeln neuer Actions!
+</Aside>
 
-## Contributing
-
-### Development Setup
-
-```bash
-# Repository klonen
-git clone https://github.com/disane87/scrape-dojo.git
-cd scrape-dojo
-
-# Dependencies installieren
-pnpm install
-
-# Dev Server starten
-pnpm start:api
-pnpm start:ui
-pnpm start:docs
-```
-
-### Code-Stil
-
-- **TypeScript strict mode** aktiviert
-- **ESLint** für Code-Qualität
-- **Prettier** für Formatierung
-
-```bash
-# Linting
-pnpm nx run-many -t lint
-
-# Tests
-pnpm nx test api
-```
-
-### Pull Requests
-
-1. **Fork** das Repository
-2. **Branch** erstellen: `git checkout -b feature/my-feature`
-3. **Commits** mit aussagekräftigen Nachrichten
-4. **Tests** hinzufügen/aktualisieren
-5. **Push** zum Fork
-6. **Pull Request** erstellen
-
-**PR Guidelines:**
-- Beschreibe was und warum
-- Füge Screenshots bei UI-Änderungen hinzu
-- Stelle sicher dass Tests durchlaufen
-- Dokumentiere neue Features
-
----
-
-## Projekt-Architektur
-
-### Monorepo-Struktur
-
-```
-scrape-dojo/
-├── apps/
-│   ├── api/              # NestJS Backend
-│   ├── ui/               # Angular Frontend
-│   └── docs/             # Astro Documentation
-├── libs/
-│   └── shared/           # Shared Types/Interfaces
-├── config/
-│   └── sites/            # Scrape Configurations
-└── nx.json               # Nx Configuration
-```
-
-### Action System
-
-```mermaid
-sequenceDiagram
-    participant Config as Scrape Config
-    participant Handler as ActionHandler
-    participant Factory as ActionFactory
-    participant Action as Custom Action
-    participant Page as Puppeteer Page
-    
-    Config->>Handler: Execute action
-    Handler->>Factory: Create action instance
-    Factory->>Action: new CustomAction()
-    Action->>Page: Interact with page
-    Page-->>Action: Result
-    Action-->>Handler: Return result
-    Handler-->>Config: previousData updated
-```
-
-### Event System
-
-Events werden über `ScrapeEventsService` versendet:
+### Events verfolgen
 
 ```typescript
-interface ScrapeEvent {
-  type: 'step-status' | 'action-status' | 'log' | 'error';
-  scrapeId: string;
-  runId?: string;
-  actionName?: string;
-  message?: string;
-  result?: unknown;
-}
+// In der Action
+context.scrapeEventsService?.emitEvent({
+  type: 'log',
+  scrapeId: context.scrapeId,
+  runId: context.runId,
+  message: 'Debug-Nachricht',
+  actionName: 'myCustomAction'
+});
 ```
 
----
+## ✅ Best Practices
 
-## Best Practices
+### Parameter validieren
 
-### 1. Action Parameters validieren
+Prüfe immer die Pflichtparameter am Anfang deiner `execute`-Methode:
 
 ```typescript
-async run(): Promise<any> {
-  const { selector, timeout = 30000 } = this.params;
-  
+async execute(page, params, context): Promise<any> {
+  const { selector, timeout = 30000 } = params;
+
   if (!selector) {
-    throw new Error('Selector parameter is required');
+    throw new Error('Parameter "selector" ist erforderlich');
   }
-  
-  // Deine Logik
+  // Weiter mit der Logik
 }
 ```
 
-### 2. Error Handling
+### Fehlerbehandlung
+
+Fange Fehler ab und gib sinnvolle Meldungen aus:
 
 ```typescript
-async run(): Promise<any> {
+async execute(page, params, context): Promise<any> {
   try {
-    const result = await this.page.$(this.params.selector);
-    
-    if (!result) {
-      this.logger.error(`Element not found: ${this.params.selector}`);
+    const element = await page.$(params.selector);
+
+    if (!element) {
+      context.logger.error(`Element nicht gefunden: ${params.selector}`);
       return null;
     }
-    
-    return result;
+
+    return await element.evaluate(el => el.textContent?.trim());
   } catch (error) {
-    this.logger.error(`Action failed: ${error.message}`);
+    context.logger.error(`Action fehlgeschlagen: ${error.message}`);
     throw error;
   }
 }
 ```
 
-### 3. TypeScript Types nutzen
+### TypeScript Types nutzen
+
+Typisiere deine Parameter und Rückgabewerte — das hilft beim Refactoring und macht den Code lesbarer:
 
 ```typescript
 interface StrictParams {
   required: string;
   optional?: number;
-  choices: 'option1' | 'option2';
+  mode: 'fast' | 'detailed';
 }
 
-@Action('typedAction', { /* metadata */ })
+@ActionMetadata({ name: 'typedAction', /* ... */ })
 export class TypedAction extends BaseAction<StrictParams> {
-  async run(): Promise<{ success: boolean }> {
-    // Type-safe params
-    const { required, optional, choices } = this.params;
+  async execute(page, params: StrictParams, context): Promise<{ success: boolean }> {
+    const { required, optional, mode } = params;
     return { success: true };
   }
 }
 ```
 
+## Projektstruktur
+
+```
+apps/api/src/action-handler/
+  actions/
+    bases/
+      base.action.ts          # Basis-Klasse für alle Actions
+    navigate.action.ts         # Navigate Action
+    click.action.ts            # Click Action
+    extract.action.ts          # Extract Action
+    loop.action.ts             # Loop Action
+    transform.action.ts        # Transform Action
+    my-custom.action.ts        # Deine Custom Action
+    index.ts                   # Alle Imports
+  _decorators/
+    action.decorator.ts        # @ActionMetadata Decorator
+  action.factory.ts            # Factory für Action-Instanzen
+  action-handler.service.ts    # Orchestrierung
+```
+
 ---
 
-## Weiterführende Links
-
-- [GitHub Repository](https://github.com/disane87/scrape-dojo)
-- [API Architecture](/de/architecture/api-modules/)
-- [Actions Reference](/de/user-guide/actions/)
-- [Contributing Guidelines](https://github.com/disane87/scrape-dojo/blob/main/CONTRIBUTING.md)
+**Verwandte Themen:**
+- [API-Module](/scrape-dojo/de/developer/api-modules/)
+- [Actions-Referenz](/scrape-dojo/de/user-guide/actions/)
+- [SSE Events](/scrape-dojo/de/developer/sse-events/)
+- [Umgebungsvariablen](/scrape-dojo/de/developer/environment-variables/)

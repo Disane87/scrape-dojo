@@ -1,0 +1,413 @@
+---
+title: Konfigurationsformat
+description: So baust du deine Scrape-Configs auf — JSONC, Metadaten, Steps und Actions
+sidebar:
+  order: 2
+---
+
+import { Card, CardGrid, Aside, Tabs, TabItem, Steps, LinkCard } from '@astrojs/starlight/components';
+
+Jedes Scrape in Scrape Dojo wird als JSONC-Datei definiert. JSONC ist JSON mit Kommentaren — du kannst also `//` und `/* */` verwenden, um dir Notizen zu machen. Hier erfährst du, wie eine Config aufgebaut ist und welche Felder dir zur Verfügung stehen.
+
+Die Configs liegen im Ordner `config/sites/` und werden beim Start automatisch geladen. Änderungen werden per Hot Reload erkannt — du musst die App also nicht neu starten, wenn du eine Config bearbeitest.
+
+## 📐 Grundstruktur
+
+Jede Config-Datei hat ein Root-Objekt mit einem `$schema`-Verweis (optional, aber empfohlen für Autocomplete in deinem Editor) und einem `scrapes`-Array. Eine Datei kann mehrere Scrapes enthalten:
+
+```jsonc
+{
+  // Schema für Autocomplete und Validierung in VS Code
+  "$schema": "../scrapes.schema.json",
+  "scrapes": [
+    {
+      "id": "mein-scrape",
+      "metadata": { /* ... */ },
+      "steps": [ /* ... */ ]
+    },
+    {
+      "id": "noch-ein-scrape",
+      "metadata": { /* ... */ },
+      "steps": [ /* ... */ ]
+    }
+  ]
+}
+```
+
+<Aside type="tip">
+Nutze den `$schema`-Verweis! Dein Editor (z.B. VS Code) gibt dir dann Autocomplete, Validierung und Hover-Dokumentation für alle Felder. Das spart dir viel Tipparbeit und Fehlersuche.
+</Aside>
+
+## 🏗️ Scrape-Objekt
+
+Jedes Scrape im `scrapes`-Array hat diese Struktur:
+
+| Feld | Typ | Pflicht | Beschreibung |
+|------|-----|---------|-------------|
+| `id` | `string` | ✅ | Eindeutiger Bezeichner. Wird in URLs und API-Aufrufen verwendet. |
+| `metadata` | `object` | — | Beschreibung, Author, Variablen, Trigger und mehr |
+| `steps` | `array` | ✅ | Array von Steps, die nacheinander ausgeführt werden |
+
+```jsonc
+{
+  "id": "amazon-price-tracker",
+  "metadata": {
+    "description": "Überwacht Preise auf Amazon",
+    "version": "2.1.0",
+    "author": "gh:@disane87"
+  },
+  "steps": [
+    // Steps hier...
+  ]
+}
+```
+
+<Aside type="note">
+Die `id` muss eindeutig über alle Config-Dateien hinweg sein. Verwende am besten kebab-case (z.B. `mein-cooles-scrape`).
+</Aside>
+
+## 📝 Metadata
+
+Die Metadata beschreibt dein Scrape und konfiguriert sein Verhalten. Alle Felder sind optional:
+
+| Feld | Typ | Beschreibung |
+|------|-----|-------------|
+| `description` | `string` | Kurzbeschreibung — wird in der UI angezeigt |
+| `version` | `string` | Versionsnummer (z.B. `"1.0.0"`) |
+| `author` | `string` | Autor des Scrapes (verschiedene Formate, siehe unten) |
+| `email` | `string` | E-Mail-Adresse des Autors |
+| `icon` | `string` | Icon-Name für die UI (Iconify/Lucide, z.B. `"Globe"`, `"ShoppingCart"`) |
+| `tags` | `string[]` | Tags zum Filtern und Kategorisieren |
+| `category` | `string` | Kategorie für die Sidebar-Gruppierung in der UI |
+| `disabled` | `boolean` | Wenn `true`, kann das Scrape nicht ausgeführt werden |
+| `variables` | `WorkflowVariable[]` | Variablen, die beim Start abgefragt werden |
+| `triggers` | `WorkflowTrigger[]` | Wie das Scrape gestartet werden kann |
+
+### 👤 Author-Formate
+
+Das `author`-Feld unterstützt verschiedene Formate. Scrape Dojo löst sie automatisch auf und zeigt Avatar, Name und Link in der UI an:
+
+| Format | Beispiel | Was passiert |
+|--------|---------|-------------|
+| **GitHub** | `"gh:@disane87"` | Avatar, Name und Profil-URL werden von GitHub geladen |
+| **E-Mail** | `"max@example.com"` | Avatar wird von Gravatar geladen |
+| **URL** | `"https://example.com/avatar.jpg"` | Direkte Avatar-URL |
+| **Name** | `"Max Mustermann"` | Nur der Name, kein Avatar |
+
+```jsonc
+{
+  "metadata": {
+    "author": "gh:@disane87",
+    // oder:
+    // "author": "max@example.com",
+    // "author": "https://example.com/avatar.jpg",
+    // "author": "Max Mustermann",
+  }
+}
+```
+
+## 🔧 Workflow-Variablen
+
+Variablen machen dein Scrape flexibel: Anstatt Werte fest in die Config zu schreiben, definierst du Variablen, die beim Start über einen Dialog oder per API übergeben werden.
+
+Stell dir vor, du hast ein Scrape das Daten für verschiedene Jahre und Regionen abruft — mit Variablen brauchst du dafür nur eine einzige Config:
+
+### Felder einer Variable
+
+| Feld | Typ | Pflicht | Beschreibung |
+|------|-----|---------|-------------|
+| `name` | `string` | ✅ | Eindeutiger Bezeichner (für Template-Zugriff: `{{variables.name}}`) |
+| `label` | `string` | ✅ | Anzeigename im UI-Dialog |
+| `type` | `string` | ✅ | Datentyp (siehe Tabelle unten) |
+| `description` | `string` | — | Hilfetext, der im Dialog angezeigt wird |
+| `required` | `boolean` | — | Muss ausgefüllt werden? (Standard: `false`) |
+| `default` | `string \| number \| boolean` | — | Standardwert |
+| `placeholder` | `string` | — | Platzhalter-Text im Eingabefeld |
+| `pattern` | `string` | — | Regex-Pattern zur Validierung (nur bei `string`) |
+| `options` | `array` | — | Statische Optionen für `select`-Typ |
+| `optionsExpression` | `string` | — | JSONata-Ausdruck für dynamische Optionen bei `select` |
+| `secretRef` | `string` | — | Name eines Secrets, dessen Wert als Default geladen wird |
+
+### Variablen-Typen
+
+| Typ | UI-Element | Beschreibung |
+|-----|-----------|-------------|
+| `string` | Textfeld | Freitext-Eingabe |
+| `password` | Passwortfeld | Verdeckte Eingabe |
+| `number` | Zahlenfeld | Numerischer Wert |
+| `boolean` | Checkbox | Wahr/Falsch |
+| `email` | E-Mail-Feld | E-Mail-Adresse mit Validierung |
+| `url` | URL-Feld | URL mit Validierung |
+| `select` | Dropdown | Auswahl aus vordefinierten Optionen |
+
+### Beispiel
+
+```jsonc
+{
+  "metadata": {
+    "variables": [
+      {
+        "name": "targetYear",
+        "label": "Zieljahr",
+        "type": "number",
+        "default": 2026,
+        "required": true,
+        "description": "Für welches Jahr sollen Daten abgerufen werden?"
+      },
+      {
+        "name": "region",
+        "label": "Region",
+        "type": "select",
+        "default": "de",
+        "options": [
+          { "value": "de", "label": "Deutschland" },
+          { "value": "at", "label": "Österreich" },
+          { "value": "ch", "label": "Schweiz" }
+        ]
+      },
+      {
+        "name": "maxPages",
+        "label": "Maximale Seitenanzahl",
+        "type": "number",
+        "default": 10,
+        "placeholder": "z.B. 10",
+        "description": "Wie viele Seiten sollen maximal gescrapt werden?"
+      },
+      {
+        "name": "loginEmail",
+        "label": "Login E-Mail",
+        "type": "email",
+        "secretRef": "portalEmail",
+        "description": "Wird automatisch aus dem Secret 'portalEmail' geladen"
+      }
+    ]
+  }
+}
+```
+
+<Aside type="tip">
+Variablen mit `secretRef` werden automatisch mit dem Wert des referenzierten Secrets befüllt. Der Benutzer kann den Wert trotzdem im UI-Dialog überschreiben — praktisch für Standardwerte, die man mal schnell ändern will.
+</Aside>
+
+### Dynamische Optionen mit `optionsExpression`
+
+Für `select`-Variablen kannst du Optionen auch dynamisch per JSONata-Ausdruck generieren. Im Ausdruck stehen `$year`, `$month` und `$day` als Kontext zur Verfügung:
+
+```jsonc
+{
+  "name": "year",
+  "label": "Jahr",
+  "type": "select",
+  "optionsExpression": "$map($reverse([0..9]), function($i) { {'value': $string($year - $i), 'label': $string($year - $i)} })"
+}
+```
+
+Das generiert ein Dropdown mit den letzten 10 Jahren — immer aktuell, ohne dass du die Config anpassen musst.
+
+## ⏰ Triggers
+
+Triggers bestimmen, wie ein Scrape gestartet werden kann. Du kannst mehrere Triggers kombinieren:
+
+| Typ | Beschreibung | `enabled`-Flag |
+|-----|-------------|----------------|
+| `manual` | Manueller Start über UI oder API | Optional (Standard: `true`) |
+| `cron` | Zeitgesteuert per Cron-Expression | Optional |
+| `webhook` | Auslösung durch externen HTTP-Request | Optional |
+| `startup` | Automatisch beim App-Start | Optional |
+
+Jeder Trigger hat ein optionales `enabled`-Feld. Damit kannst du einen Trigger temporär deaktivieren, ohne ihn aus der Config zu löschen.
+
+```jsonc
+{
+  "metadata": {
+    "triggers": [
+      { "type": "manual" },
+      {
+        "type": "cron",
+        "expression": "0 9 * * 1-5",
+        "timezone": "Europe/Berlin",
+        "description": "Werktags um 9 Uhr"
+      },
+      {
+        "type": "webhook",
+        "secret": "mein-geheimer-token",
+        "methods": ["POST"]
+      },
+      {
+        "type": "startup",
+        "delay": 5000,
+        "enabled": false
+      }
+    ]
+  }
+}
+```
+
+<Aside type="note">
+Details zu Scheduling, Cron-Syntax und Webhooks findest du auf der Seite [Scheduling](/scrape-dojo/de/user-guide/scheduling/).
+</Aside>
+
+## 📦 Steps und Actions
+
+Ein Scrape besteht aus einem oder mehreren **Steps**. Jeder Step hat einen `name` und ein `actions`-Array. Steps werden nacheinander ausgeführt:
+
+```jsonc
+{
+  "steps": [
+    {
+      "name": "Login",
+      "actions": [
+        // Actions für den Login...
+      ]
+    },
+    {
+      "name": "Daten sammeln",
+      "actions": [
+        // Actions für die Datenextraktion...
+      ]
+    },
+    {
+      "name": "Ergebnisse speichern",
+      "actions": [
+        // Actions zum Speichern...
+      ]
+    }
+  ]
+}
+```
+
+### Action-Struktur
+
+Jede Action hat drei Felder:
+
+| Feld | Typ | Beschreibung |
+|------|-----|-------------|
+| `name` | `string` | Eindeutiger Bezeichner im Step — dient als Key für `previousData` |
+| `action` | `string` | Typ der Action (z.B. `navigate`, `click`, `extract`) |
+| `params` | `object` | Parameter der Action (abhängig vom Typ) |
+
+```jsonc
+{
+  "name": "productTitle",
+  "action": "extract",
+  "params": {
+    "selector": "h1.product-name",
+    "attribute": "textContent"
+  }
+}
+```
+
+Das Ergebnis dieser Action ist dann unter `{{previousData.productTitle}}` verfügbar.
+
+## 🎯 Vollständiges Beispiel
+
+Hier ein komplettes Scrape mit allem Drum und Dran — Metadata, Variablen, Triggers, Steps und Actions:
+
+```jsonc
+{
+  "$schema": "../scrapes.schema.json",
+  "scrapes": [
+    {
+      "id": "news-headlines",
+      "metadata": {
+        "description": "Sammelt Schlagzeilen von einer Nachrichtenseite",
+        "version": "1.0.0",
+        "author": "gh:@disane87",
+        "icon": "Newspaper",
+        "tags": ["news", "headlines"],
+        "category": "Nachrichten",
+        "variables": [
+          {
+            "name": "maxHeadlines",
+            "label": "Maximale Schlagzeilen",
+            "type": "number",
+            "default": 10,
+            "required": true
+          }
+        ],
+        "triggers": [
+          { "type": "manual" },
+          {
+            "type": "cron",
+            "expression": "0 8 * * *",
+            "timezone": "Europe/Berlin",
+            "description": "Täglich um 8 Uhr"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "name": "Schlagzeilen laden",
+          "actions": [
+            {
+              "name": "openSite",
+              "action": "navigate",
+              "params": { "url": "https://example-news.com" }
+            },
+            {
+              "name": "wait",
+              "action": "waitForSelector",
+              "params": { "selector": ".headline" }
+            },
+            {
+              "name": "headlines",
+              "action": "extractAll",
+              "params": { "selector": ".headline" }
+            },
+            {
+              "name": "limitedHeadlines",
+              "action": "transform",
+              "params": {
+                "expression": "$filter(previousData.headlines, function($v, $i) { $i < variables.maxHeadlines })"
+              }
+            },
+            {
+              "name": "logCount",
+              "action": "logger",
+              "params": {
+                "message": "{{previousData.limitedHeadlines.length}} Schlagzeilen gefunden"
+              }
+            },
+            {
+              "name": "saveResults",
+              "action": "storeData",
+              "params": {
+                "key": "news.latestHeadlines",
+                "value": "{{previousData.limitedHeadlines}}",
+                "persist": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+## 🔄 Hot Reload
+
+Scrape Dojo überwacht den `config/sites/`-Ordner auf Änderungen. Wenn du eine Config-Datei bearbeitest, hinzufügst oder löschst, wird das automatisch erkannt:
+
+- **Neue Datei** → Scrape erscheint sofort in der UI
+- **Datei geändert** → Config wird neu geladen
+- **Datei gelöscht** → Scrape verschwindet aus der UI
+
+<Aside type="tip">
+Du musst die Anwendung also nie neu starten, wenn du an Configs arbeitest. Einfach speichern, und die UI aktualisiert sich automatisch via SSE.
+</Aside>
+
+## 📚 Weiter geht's
+
+<CardGrid>
+  <LinkCard
+    title="⚡ Actions-Referenz"
+    description="Alle verfügbaren Actions im Detail"
+    href="/scrape-dojo/de/user-guide/actions/"
+  />
+  <LinkCard
+    title="🔧 Templates"
+    description="Handlebars und JSONata für dynamische Werte"
+    href="/scrape-dojo/de/user-guide/templates/"
+  />
+</CardGrid>

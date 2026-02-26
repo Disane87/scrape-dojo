@@ -1,0 +1,193 @@
+---
+title: "⚙️ Environment Variables"
+description: All environment variables and their configuration
+sidebar:
+  order: 7
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Here you'll find the complete reference of all environment variables in Scrape Dojo, neatly sorted by category. Copy what you need and adapt it to your setup. At the bottom of the page there's a ready-made production config and a security checklist.
+
+## Runtime
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `NODE_ENV` | `development` | Node.js environment (`development`, `production`, `test`) |
+| `SCRAPE_DOJO_NODE_ENV` | `development` | Scrape Dojo-specific environment |
+| `SCRAPE_DOJO_PORT` | `3000` | API server port |
+| `SCRAPE_DOJO_DOCKER_ENV` | `false` | Enable Docker mode |
+| `SCRAPE_DOJO_TRUST_PROXY` | `1` | Reverse proxy trust level |
+| `SCRAPE_DOJO_CORS_ORIGIN` | — | CORS origins (comma-separated) |
+| `EXPORT_OPENAPI` | `false` | Export OpenAPI spec on startup |
+
+## Database
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `DB_TYPE` | `sqlite` | Database type: `sqlite`, `mysql`, `postgres` |
+| `DB_DATABASE` | `./data/scrape-dojo.db` | Database path (SQLite) or name (MySQL/PostgreSQL) |
+| `DB_SYNCHRONIZE` | `true` | TypeORM schema sync (set to `false` in production!) |
+| `DB_LOGGING` | `false` | Enable SQL query logging |
+| `DB_HOST` | — | Database host (MySQL/PostgreSQL only) |
+| `DB_PORT` | `3306` | Database port (MySQL/PostgreSQL only) |
+| `DB_USERNAME` | — | Database user (MySQL/PostgreSQL only) |
+| `DB_PASSWORD` | — | Database password (MySQL/PostgreSQL only) |
+
+<Aside type="caution">
+`DB_SYNCHRONIZE=true` is handy during development, but **never** use it in production! TypeORM could lose data in the process.
+</Aside>
+
+## Encryption
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `SCRAPE_DOJO_ENCRYPTION_KEY` | — | 256-bit hex key (64 characters) — **required in production** |
+| `SCRAPE_DOJO_LOG_MAX_BYTES` | `5000000` | Maximum log buffer size in bytes (5 MB) |
+
+## Authentication
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `SCRAPE_DOJO_AUTH_ENABLED` | `true` | Enable authentication globally |
+| `SCRAPE_DOJO_AUTH_REQUIRE_MFA` | `true` | Enforce multi-factor authentication |
+
+## JWT
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `SCRAPE_DOJO_AUTH_JWT_SECRET` | — | JWT signing secret (at least 32 characters) |
+| `SCRAPE_DOJO_AUTH_REFRESH_TOKEN_SECRET` | — | Refresh token secret (at least 32 characters) |
+| `SCRAPE_DOJO_AUTH_ACCESS_TOKEN_EXPIRY` | `15m` | Access token expiry (e.g., `15m`, `1h`, `1d`) |
+| `SCRAPE_DOJO_AUTH_REFRESH_TOKEN_EXPIRY` | `7d` | Refresh token expiry |
+| `SCRAPE_DOJO_AUTH_RATE_LIMIT_WINDOW_MS` | `60000` | Rate limit window in milliseconds |
+| `SCRAPE_DOJO_AUTH_RATE_LIMIT_MAX` | `30` | Maximum requests per rate limit window |
+| `SCRAPE_DOJO_AUTH_API_KEY` | — | Optional API key for service access (Header: `X-API-Key`) |
+
+## MFA (Multi-Factor Authentication)
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `SCRAPE_DOJO_AUTH_MFA_ISSUER` | `Scrape Dojo` | Display name (issuer) in authenticator apps |
+| `SCRAPE_DOJO_AUTH_MFA_CHALLENGE_SECRET` | — | Secret for challenge token signing |
+| `SCRAPE_DOJO_AUTH_MFA_ENCRYPTION_KEY` | — | Encryption key for MFA secrets |
+
+## OIDC / SSO
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `SCRAPE_DOJO_AUTH_OIDC_ENABLED` | `false` | Enable OIDC authentication |
+| `SCRAPE_DOJO_AUTH_OIDC_ISSUER_URL` | — | OIDC provider URL (e.g., `https://accounts.google.com`) |
+| `SCRAPE_DOJO_AUTH_OIDC_CLIENT_ID` | — | OIDC client ID |
+| `SCRAPE_DOJO_AUTH_OIDC_CLIENT_SECRET` | — | OIDC client secret |
+| `SCRAPE_DOJO_AUTH_OIDC_REDIRECT_URI` | `http://localhost:3000/auth/oidc/callback` | Callback URL after login |
+| `SCRAPE_DOJO_AUTH_OIDC_SCOPES` | `openid profile email` | Requested OAuth scopes (space-separated) |
+| `SCRAPE_DOJO_AUTH_OIDC_PROVIDER_NAME` | `OIDC Provider` | Display name of the provider in the UI |
+
+## 🔑 Generating Keys
+
+You'll need cryptographically secure random values for the encryption and authentication keys. Here's how to generate them:
+
+```bash
+# Generate encryption key (256-bit, 64 hex characters)
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+# Generate JWT secret
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+# Generate MFA challenge secret
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+<Aside type="caution">
+Generate a **separate** key for each purpose. Never use the same key for encryption, JWT, and MFA!
+</Aside>
+
+## Variables via ENV
+
+Besides configuring the application, you can also define global variables via environment variables. This is especially handy for Docker deployments.
+
+**Prefix:** `SCRAPE_DOJO_VAR_`
+
+```bash
+SCRAPE_DOJO_VAR_DEFAULT_YEAR=2026
+SCRAPE_DOJO_VAR_API_ENDPOINT=https://api.example.com
+SCRAPE_DOJO_VAR_DEBUG_MODE=true
+```
+
+The naming is automatically converted to camelCase:
+- `SCRAPE_DOJO_VAR_DEFAULT_YEAR` becomes `defaultYear`
+- Access in scrapes: `{{variables.defaultYear}}`
+
+## Secrets via ENV
+
+Secrets can also be set via environment variables. On startup, they're automatically encrypted and stored in the database.
+
+**Prefix:** `SCRAPE_DOJO_SECRET_`
+
+```bash
+SCRAPE_DOJO_SECRET_EMAIL=user@example.com
+SCRAPE_DOJO_SECRET_PASSWORD=secret-password
+SCRAPE_DOJO_SECRET_API_TOKEN=abc123xyz
+```
+
+- `SCRAPE_DOJO_SECRET_EMAIL` becomes `email`
+- Access in scrapes: `{{secrets.email}}`
+
+## 🏭 Production .env Example
+
+Here's a minimal `.env` for production use:
+
+```bash
+# Runtime
+NODE_ENV=production
+SCRAPE_DOJO_PORT=3000
+SCRAPE_DOJO_TRUST_PROXY=1
+SCRAPE_DOJO_CORS_ORIGIN=https://scrape.example.com
+
+# Database (PostgreSQL)
+DB_TYPE=postgres
+DB_HOST=postgres
+DB_PORT=5432
+DB_USERNAME=scrape_dojo
+DB_PASSWORD=<SECURE_PASSWORD>
+DB_DATABASE=scrape_dojo
+DB_SYNCHRONIZE=false
+DB_LOGGING=false
+
+# Encryption
+SCRAPE_DOJO_ENCRYPTION_KEY=<64_HEX_CHARACTERS>
+
+# Authentication
+SCRAPE_DOJO_AUTH_ENABLED=true
+SCRAPE_DOJO_AUTH_JWT_SECRET=<AT_LEAST_32_CHARACTERS>
+SCRAPE_DOJO_AUTH_REFRESH_TOKEN_SECRET=<AT_LEAST_32_CHARACTERS>
+SCRAPE_DOJO_AUTH_ACCESS_TOKEN_EXPIRY=15m
+SCRAPE_DOJO_AUTH_REFRESH_TOKEN_EXPIRY=7d
+
+# MFA
+SCRAPE_DOJO_AUTH_REQUIRE_MFA=true
+SCRAPE_DOJO_AUTH_MFA_CHALLENGE_SECRET=<AT_LEAST_32_CHARACTERS>
+SCRAPE_DOJO_AUTH_MFA_ENCRYPTION_KEY=<AT_LEAST_32_CHARACTERS>
+```
+
+## ✅ Security Checklist
+
+Before going to production, check these items:
+
+- [ ] `NODE_ENV=production` is set
+- [ ] `DB_SYNCHRONIZE=false` in production
+- [ ] `SCRAPE_DOJO_CORS_ORIGIN` explicitly configured (not `*`)
+- [ ] All secrets generated with `crypto.randomBytes()`
+- [ ] Using PostgreSQL instead of SQLite
+- [ ] MFA enabled (`SCRAPE_DOJO_AUTH_REQUIRE_MFA=true`)
+- [ ] `.env` file added to `.gitignore`
+- [ ] Secrets stored in a password manager
+- [ ] Rate limiting configured
+
+---
+
+**Related topics:**
+- [Authentication](/scrape-dojo/en/developer/authentication/)
+- [Secrets and Variables](/scrape-dojo/en/user-guide/secrets-variables/)
+- [Architecture](/scrape-dojo/en/developer/architecture/)

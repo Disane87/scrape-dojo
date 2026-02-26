@@ -41,50 +41,32 @@ export default defineConfig({
           customCss: ['./src/styles/global.css'],
           sidebar: [
               {
-                  label: 'Getting Started',
+                  label: '🚀 Getting Started',
                   translations: {
-                      de: 'Erste Schritte',
+                      de: '🚀 Erste Schritte',
                   },
                   autogenerate: { directory: 'getting-started' },
               },
               {
-                  label: 'User Guide',
+                  label: '📖 User Guide',
                   translations: {
-                      de: 'Benutzerhandbuch',
+                      de: '📖 Benutzerhandbuch',
                   },
                   autogenerate: { directory: 'user-guide' },
               },
               {
-                  label: 'Architecture',
+                  label: '💡 Examples',
                   translations: {
-                      de: 'Architektur',
-                  },
-                  autogenerate: { directory: 'architecture' },
-              },
-              {
-                  label: 'API Reference',
-                  translations: {
-                      de: 'API Referenz',
-                  },
-                  autogenerate: { directory: 'api' },
-              },
-              {
-                  label: 'Examples',
-                  translations: {
-                      de: 'Beispiele',
+                      de: '💡 Beispiele',
                   },
                   autogenerate: { directory: 'examples' },
               },
               {
-                  label: 'Developer',
+                  label: '🔧 Developer Guide',
                   translations: {
-                      de: 'Entwickler',
+                      de: '🔧 Entwicklerhandbuch',
                   },
                   autogenerate: { directory: 'developer' },
-              },
-              {
-                  label: 'Blog',
-                  link: '/blog/',
               },
           ],
       }),

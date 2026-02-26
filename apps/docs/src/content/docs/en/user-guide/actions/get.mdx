@@ -1,0 +1,101 @@
+---
+title: get
+description: Get an element handle for later actions
+sidebar:
+  order: 22
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+With `get`, you grab an **ElementHandle** — a reference to a DOM element. This isn't text, it's a "pointer" to the element itself. You can then pass it to other actions like `extract`, `click`, or `type`, which will then work within the context of that element.
+
+Think of it like a bookmark finger: you point at an element, and the following actions only look at that area.
+
+## Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `selector` | `string` | Yes | CSS selector of the element to get |
+| `element` | `string` | No | Key from `previousData` to resolve the selector relative to another ElementHandle |
+
+<Aside type="caution">
+`get` does **not** return text — it returns an ElementHandle! If you need the text content, use `extract` instead.
+</Aside>
+
+## Examples
+
+**Get an element and then extract from it:**
+
+```jsonc
+[
+  {
+    "type": "get",
+    "description": "Get the first product card",
+    "selector": ".product-card:first-child",
+    "outputKey": "firstProduct"
+  },
+  {
+    "type": "extract",
+    "description": "Read the product name from the card",
+    "selector": ".product-name",
+    "element": "firstProduct"
+  },
+  {
+    "type": "extract",
+    "description": "Read the price from the card",
+    "selector": ".product-price",
+    "element": "firstProduct"
+  }
+]
+```
+
+**Get an element and click on it:**
+
+```jsonc
+[
+  {
+    "type": "get",
+    "description": "Get the details button in the first result",
+    "selector": ".result:first-child .details-btn",
+    "outputKey": "detailsButton"
+  },
+  {
+    "type": "click",
+    "description": "Click on details",
+    "element": "detailsButton"
+  }
+]
+```
+
+**Get a nested element:**
+
+```jsonc
+[
+  {
+    "type": "get",
+    "description": "Get the sidebar",
+    "selector": "aside.sidebar",
+    "outputKey": "sidebar"
+  },
+  {
+    "type": "get",
+    "description": "Get the first widget in the sidebar",
+    "selector": ".widget:first-child",
+    "element": "sidebar",
+    "outputKey": "firstWidget"
+  },
+  {
+    "type": "extract",
+    "description": "Read the widget title",
+    "selector": "h3",
+    "element": "firstWidget"
+  }
+]
+```
+
+## Tips
+
+- `get` internally uses `waitForSelector` to wait for the element before returning the handle. So you don't need an extra `waitForSelector` beforehand.
+- If the element isn't found, `get` returns `null` and logs an error.
+- Use `outputKey` to give the ElementHandle a descriptive name — that way you can reference it in later actions via the `element` parameter.
+- ElementHandles are perfect for narrowing the scope: instead of searching the entire page for `.price`, first grab the product card and then search within it.

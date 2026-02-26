@@ -1,0 +1,71 @@
+---
+title: waitForSelector
+description: Warte bis ein Element auf der Seite erscheint
+sidebar:
+  order: 14
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Manchmal muss dein Scrape einfach kurz warten, bis die Seite fertig geladen hat. Mit `waitForSelector` sagst du Puppeteer: "Hey, warte mal, bis dieses Element da ist!" — und erst dann geht's weiter.
+
+Das ist super nützlich bei Seiten, die Inhalte dynamisch nachladen, z.B. nach einem Klick oder Scrollen.
+
+## Parameter
+
+| Parameter | Typ | Pflicht | Beschreibung |
+|-----------|-----|---------|--------------|
+| `selector` | `string` | Ja | CSS-Selektor des Elements, auf das gewartet werden soll |
+| `timeout` | `number` | Nein | Timeout in Millisekunden (Standard: 30000) |
+| `optional` | `boolean` | Nein | Wenn `true`, wird kein Fehler geworfen, falls das Element nicht erscheint |
+| `condition` | `string` | Nein | Handlebars-Template — der Wait wird nur ausgeführt, wenn die Bedingung `"true"` ergibt |
+
+<Aside type="tip">
+Setze `optional: true`, wenn du nicht sicher bist, ob das Element überhaupt auftaucht — z.B. bei Cookie-Bannern oder optionalen Popups. So bricht dein Scrape nicht ab, sondern macht einfach weiter.
+</Aside>
+
+## Beispiele
+
+**Auf Suchergebnisse warten:**
+
+```jsonc
+{
+  "type": "waitForSelector",
+  "description": "Warte bis die Ergebnisse geladen sind",
+  "selector": ".search-results"
+}
+```
+
+**Auf ein Popup warten (optional):**
+
+```jsonc
+{
+  "type": "waitForSelector",
+  "description": "Warte auf Cookie-Banner (falls vorhanden)",
+  "selector": "#cookie-consent-dialog",
+  "timeout": 5000,
+  "optional": true
+}
+```
+
+**Bedingter Wait mit Condition:**
+
+```jsonc
+{
+  "type": "waitForSelector",
+  "description": "Nur warten wenn Login nötig",
+  "selector": "#otp-input",
+  "timeout": 10000,
+  "condition": "{{needsLogin}}"
+}
+```
+
+<Aside type="caution">
+Wenn `optional` auf `false` steht (Standard) und das Element nicht innerhalb des Timeouts erscheint, wird der gesamte Scrape mit einem Fehler abgebrochen. Überlege dir also gut, ob du `optional: true` setzen willst.
+</Aside>
+
+## Tipps
+
+- Der Standard-Timeout von 30 Sekunden ist für die meisten Seiten ausreichend. Bei langsamen APIs oder großen Seiten kannst du ihn aber ruhig erhöhen.
+- Nutze `condition` zusammen mit Variablen oder vorherigen Ergebnissen, um Waits nur dann auszuführen, wenn sie wirklich nötig sind.
+- `waitForSelector` gibt `true` zurück, wenn das Element gefunden wurde, und `false`, wenn es optional war und nicht gefunden wurde.
