@@ -19,6 +19,7 @@ export default defineConfig({
           logo: {
               src: './public/scrape-dojo-app-icon-64x64.png',
           },
+          favicon: '/scrape-dojo-app-icon-64x64.png',
           social: [
               {
                   icon: 'github',
