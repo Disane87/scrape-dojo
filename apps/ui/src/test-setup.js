@@ -8,6 +8,10 @@ const testBed = getTestBed();
 testBed.resetTestEnvironment();
 testBed.initTestEnvironment(BrowserTestingModule, platformBrowserTesting());
 
+afterEach(() => {
+  testBed.resetTestingModule();
+});
+
 Object.defineProperty(window, 'CSS', { value: null });
 Object.defineProperty(window, 'getComputedStyle', {
   value: () => {
