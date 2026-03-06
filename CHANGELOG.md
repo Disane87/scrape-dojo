@@ -1,3 +1,9 @@
+## [1.0.11](https://github.com/disane87/scrape-dojo/compare/v1.0.10...v1.0.11) (2026-03-06)
+
+### Bug Fixes
+
+- bridge vitest globals to globalThis before Angular import ([050c110](https://github.com/disane87/scrape-dojo/commit/050c110b2123a8ac874848c98f652f63688835e0))
+
 ## [1.0.10](https://github.com/disane87/scrape-dojo/compare/v1.0.9...v1.0.10) (2026-03-06)
 
 ### Bug Fixes
