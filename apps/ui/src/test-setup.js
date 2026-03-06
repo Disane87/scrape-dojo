@@ -11,6 +11,14 @@ try {
   // Already initialized by @analogjs/vite-plugin-angular
 }
 
+// Angular's auto-cleanup (globalThis.afterEach) may not register in vitest's
+// jsdom environment. Manually reset _testModuleRef between tests to allow
+// configureTestingModule calls. Using resetTestingModule() would also destroy
+// DOM root elements, breaking component tests in CI.
+afterEach(() => {
+  getTestBed()._testModuleRef = null;
+});
+
 Object.defineProperty(window, 'CSS', { value: null });
 Object.defineProperty(window, 'getComputedStyle', {
   value: () => {
