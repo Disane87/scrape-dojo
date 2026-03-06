@@ -1,3 +1,9 @@
+## [1.0.7](https://github.com/disane87/scrape-dojo/compare/v1.0.6...v1.0.7) (2026-03-06)
+
+### Bug Fixes
+
+- reset TestBed environment before init to fix CI compatibility ([2b4c66e](https://github.com/disane87/scrape-dojo/commit/2b4c66e56313ecf105e5932b63457ba1ecc5e212))
+
 ## [1.0.6](https://github.com/disane87/scrape-dojo/compare/v1.0.5...v1.0.6) (2026-03-06)
 
 ### Bug Fixes
