@@ -1,3 +1,9 @@
+## [1.0.21](https://github.com/disane87/scrape-dojo/compare/v1.0.20...v1.0.21) (2026-03-06)
+
+### Bug Fixes
+
+- replace pnpm prune with separate prod-deps Docker stage ([6dc0b40](https://github.com/disane87/scrape-dojo/commit/6dc0b409a68ed87bdbd3439f6224e011667fb0d0))
+
 ## [1.0.20](https://github.com/disane87/scrape-dojo/compare/v1.0.19...v1.0.20) (2026-03-06)
 
 ### Bug Fixes
