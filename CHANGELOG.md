@@ -1,3 +1,9 @@
+## [1.0.17](https://github.com/disane87/scrape-dojo/compare/v1.0.16...v1.0.17) (2026-03-06)
+
+### Bug Fixes
+
+- force resetTestEnvironment to rebind DOCUMENT token per test file ([06f51bf](https://github.com/disane87/scrape-dojo/commit/06f51bff14db412164013d21fbcb404d3ce309fc))
+
 ## [1.0.16](https://github.com/disane87/scrape-dojo/compare/v1.0.15...v1.0.16) (2026-03-06)
 
 ### Bug Fixes
