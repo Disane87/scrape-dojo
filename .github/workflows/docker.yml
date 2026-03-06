@@ -13,9 +13,12 @@ concurrency:
   group: docker-${{ github.ref }}
   cancel-in-progress: false
 
+env:
+  NX_CLOUD_ACCESS_TOKEN: ''
+
 jobs:
   docker:
-    name: Build & Push Images
+    name: Build & Push Image
     runs-on: ubuntu-latest
 
     steps:
@@ -33,6 +36,9 @@ jobs:
         run: |
           echo "owner=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -43,22 +49,15 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build & push API image
+      - name: Build & push combined image
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: apps/api/Dockerfile
+          file: Dockerfile
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: |
-            ghcr.io/${{ steps.ghcr.outputs.owner }}/scrape-dojo:api-${{ steps.version.outputs.version }}
-            ghcr.io/${{ steps.ghcr.outputs.owner }}/scrape-dojo:api-latest
-
-      - name: Build & push UI image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: apps/ui/Dockerfile
-          push: true
-          tags: |
-            ghcr.io/${{ steps.ghcr.outputs.owner }}/scrape-dojo:ui-${{ steps.version.outputs.version }}
-            ghcr.io/${{ steps.ghcr.outputs.owner }}/scrape-dojo:ui-latest
+            ghcr.io/${{ steps.ghcr.outputs.owner }}/scrape-dojo:${{ steps.version.outputs.version }}
+            ghcr.io/${{ steps.ghcr.outputs.owner }}/scrape-dojo:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

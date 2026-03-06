@@ -5,7 +5,15 @@ sidebar:
   order: 1
 ---
 
-import { Card, CardGrid, Aside, Tabs, TabItem, Steps, LinkCard } from '@astrojs/starlight/components';
+import {
+  Card,
+  CardGrid,
+  Aside,
+  Tabs,
+  TabItem,
+  Steps,
+  LinkCard,
+} from '@astrojs/starlight/components';
 
 Want to jump right in? Perfect — this guide takes you from zero to your first working scrape in just a few minutes. We'll walk through installation, configuration, and your first test run together.
 
@@ -13,15 +21,17 @@ Want to jump right in? Perfect — this guide takes you from zero to your first 
 
 Before we get started, quickly check that you have the following tools installed:
 
-| Software | Version | Note |
-|----------|---------|------|
-| **Node.js** | 20+ | [nodejs.org](https://nodejs.org/) |
-| **pnpm** | 9+ | `npm install -g pnpm` |
-| **Chrome/Chromium** | Latest | Used by Puppeteer for browser automation |
-| **Docker** _(optional)_ | 24+ | Recommended for production — saves you a lot of config hassle |
+| Software                | Version | Note                                                          |
+| ----------------------- | ------- | ------------------------------------------------------------- |
+| **Node.js**             | 20+     | [nodejs.org](https://nodejs.org/)                             |
+| **pnpm**                | 9+      | `npm install -g pnpm`                                         |
+| **Chrome/Chromium**     | Latest  | Used by Puppeteer for browser automation                      |
+| **Docker** _(optional)_ | 24+     | Recommended for production — saves you a lot of config hassle |
 
 <Aside type="tip">
-If you just want to take a quick look, go with Docker. You'll have everything up and running in a few minutes without worrying about Node versions or dependencies.
+  If you just want to take a quick look, go with Docker. You'll have everything
+  up and running in a few minutes without worrying about Node versions or
+  dependencies.
 </Aside>
 
 ## 🚀 Installation
@@ -42,37 +52,31 @@ Docker is the easiest way to get Scrape Dojo up and running. No Node.js needed, 
    ```
 
    <Aside type="caution">
-   Store this key safely (e.g., in a password manager). If you lose it, all stored secrets are gone for good!
+     Store this key safely (e.g., in a password manager). If you lose it, all
+     stored secrets are gone for good!
    </Aside>
 
 2. **Create a `docker-compose.yml`**
 
    Create a `docker-compose.yml` in a new folder:
 
+   The image is published to **GitHub Container Registry (GHCR)** with multi-arch support (`linux/amd64` + `linux/arm64`). A single container runs both API and UI.
+
    ```yaml
-   version: '3.8'
    services:
-     api:
-       image: scrape-dojo/api:latest
+     scrape-dojo:
+       image: ghcr.io/disane87/scrape-dojo:latest
        ports:
-         - "3030:3000"
+         - '8080:80'
        environment:
          - SCRAPE_DOJO_ENCRYPTION_KEY=your_generated_key_here
          - DB_TYPE=sqlite
        volumes:
-         - ./data:/app/data
-         - ./downloads:/app/downloads
-         - ./logs:/app/logs
-         - ./config:/app/config
-         - ./browser-data:/app/browser-data
-       restart: unless-stopped
-
-     ui:
-       image: scrape-dojo/ui:latest
-       ports:
-         - "8080:80"
-       depends_on:
-         - api
+         - ./data:/home/pptruser/app/data
+         - ./downloads:/home/pptruser/app/downloads
+         - ./logs:/home/pptruser/app/logs
+         - ./config:/home/pptruser/app/config
+         - ./browser-data:/home/pptruser/app/browser-data
        restart: unless-stopped
    ```
 
@@ -93,17 +97,18 @@ Docker is the easiest way to get Scrape Dojo up and running. No Node.js needed, 
 </Steps>
 
 <Aside type="tip">
-The API runs at `http://localhost:3030/api`, the UI at `http://localhost:8080`. Just open it in your browser and get going!
+  Everything runs at `http://localhost:8080` — UI and API (`/api`) on the same
+  port. Just open it in your browser and get going!
 </Aside>
 
 **📁 Volumes overview:**
 
-| Volume | What's inside? |
-|--------|----------------|
-| `./data` | SQLite database and persistent data |
-| `./downloads` | Downloaded files (PDFs, screenshots, etc.) |
-| `./logs` | Application log files |
-| `./config` | Your scrape configuration files (JSONC) |
+| Volume           | What's inside?                                                   |
+| ---------------- | ---------------------------------------------------------------- |
+| `./data`         | SQLite database and persistent data                              |
+| `./downloads`    | Downloaded files (PDFs, screenshots, etc.)                       |
+| `./logs`         | Application log files                                            |
+| `./config`       | Your scrape configuration files (JSONC)                          |
 | `./browser-data` | Browser profile data (cookies, sessions — so you stay logged in) |
 
 </TabItem>
@@ -162,7 +167,9 @@ If you want to contribute to the code or have full control over everything, you 
 </Steps>
 
 <Aside type="tip">
-In dev mode, the UI runs at `http://localhost:4200`. The dev server automatically proxies API requests to `http://localhost:3000` — so you don't need to worry about CORS or proxy config.
+  In dev mode, the UI runs at `http://localhost:4200`. The dev server
+  automatically proxies API requests to `http://localhost:3000` — so you don't
+  need to worry about CORS or proxy config.
 </Aside>
 
 </TabItem>
@@ -182,7 +189,7 @@ Now it gets exciting! Imagine you want to grab the title of a webpage. Create a 
         "description": "My first scrape — reads the page title",
         "version": "1.0.0",
         "author": "gh:@your-username",
-        "triggers": [{ "type": "manual" }]
+        "triggers": [{ "type": "manual" }],
       },
       "steps": [
         {
@@ -191,26 +198,26 @@ Now it gets exciting! Imagine you want to grab the title of a webpage. Create a 
             {
               "name": "navigate",
               "action": "navigate",
-              "params": { "url": "https://example.com" }
+              "params": { "url": "https://example.com" },
             },
             {
               "name": "title",
               "action": "extract",
-              "params": { "selector": "h1" }
+              "params": { "selector": "h1" },
             },
             {
               "name": "logTitle",
               "action": "logger",
               "params": {
                 "message": "Found title: {{previousData.title}}",
-                "level": "log"
-              }
-            }
-          ]
-        }
-      ]
-    }
-  ]
+                "level": "log",
+              },
+            },
+          ],
+        },
+      ],
+    },
+  ],
 }
 ```
 
@@ -218,14 +225,16 @@ Now it gets exciting! Imagine you want to grab the title of a webpage. Create a 
 
 The scrape runs three actions in sequence:
 
-| # | Action | What it does |
-|---|--------|--------------|
-| 1 | `navigate` | Opens `https://example.com` in the browser |
-| 2 | `extract` | Grabs the text from the `h1` element. The result is stored under `previousData.title` (the action's `name` is the key) |
-| 3 | `logger` | Outputs the title to the console. The `{{previousData.title}}` is a Handlebars template — that's how you access results from previous actions |
+| #   | Action     | What it does                                                                                                                                  |
+| --- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `navigate` | Opens `https://example.com` in the browser                                                                                                    |
+| 2   | `extract`  | Grabs the text from the `h1` element. The result is stored under `previousData.title` (the action's `name` is the key)                        |
+| 3   | `logger`   | Outputs the title to the console. The `{{previousData.title}}` is a Handlebars template — that's how you access results from previous actions |
 
 <Aside type="note">
-The `name` of each action is super important: it determines which key the result is stored under. So pick descriptive names like `title`, `productLinks`, or `priceData`.
+  The `name` of each action is super important: it determines which key the
+  result is stored under. So pick descriptive names like `title`,
+  `productLinks`, or `priceData`.
 </Aside>
 
 ## ▶️ Start the scrape
@@ -258,7 +267,8 @@ curl http://localhost:3000/api/scrape/my-first-scrape
 ```
 
 <Aside type="note">
-In the Docker setup, the API is accessible on port 3030: `http://localhost:3030/api/scrape/my-first-scrape`
+  In the Docker setup, the API is accessible via nginx on port 8080:
+  `http://localhost:8080/api/scrape/my-first-scrape`
 </Aside>
 
 You can also pass variables when starting:

@@ -1,0 +1,104 @@
+# ============================================
+# Scrape Dojo - Combined Dockerfile
+# Single image: API (NestJS + Puppeteer) + UI (Angular via nginx)
+# Multi-arch: linux/amd64, linux/arm64
+# ============================================
+
+# Stage 1: Build everything
+FROM node:22-slim AS builder
+
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+WORKDIR /app
+
+# Copy workspace config files
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY nx.json tsconfig.json tsconfig.build.json ./
+COPY jest.preset.js ./
+COPY nest-cli.json ./
+COPY .postcssrc.json ./
+
+# Copy all source
+COPY apps ./apps
+COPY libs ./libs
+COPY config ./config
+
+# Install ALL dependencies (needed for build)
+RUN pnpm install --frozen-lockfile
+
+# Build API and UI in parallel
+RUN pnpm nx build api --configuration=production --verbose && \
+    pnpm nx build ui --configuration=production --verbose
+
+# Prune to production-only dependencies
+RUN CI=true pnpm prune --prod
+
+# Stage 2: Production - Puppeteer base with nginx
+FROM ghcr.io/puppeteer/puppeteer:23.11.1 AS production
+
+# Switch to root for system package installation
+USER root
+
+# Install nginx and supervisor
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends nginx supervisor && \
+    rm -rf /var/lib/apt/lists/*
+
+# Mark as Docker environment
+ENV DOCKER_ENV=true
+ENV NODE_ENV=production
+
+# Disable Chrome crash reporting
+ENV CHROME_CRASHPAD_HANDLER_TRACING_ENABLED=false
+ENV GOOGLE_CRASH_HANDLER_URL=""
+
+# API listens on 3000 internally, nginx on 80
+ENV SCRAPE_DOJO_PORT=3000
+
+WORKDIR /home/pptruser/app
+
+# Create runtime directories
+RUN mkdir -p /home/pptruser/app/data \
+    /home/pptruser/app/downloads \
+    /home/pptruser/app/documents \
+    /home/pptruser/app/logs \
+    /home/pptruser/app/browser-data \
+    /home/pptruser/app/dist \
+    /home/pptruser/app/config
+
+# Copy built API
+COPY --from=builder --chown=pptruser:pptruser /app/dist/apps/api ./dist
+COPY --from=builder --chown=pptruser:pptruser /app/node_modules ./node_modules
+
+# Copy config files
+COPY --chown=pptruser:pptruser config ./config
+
+# Copy built UI to nginx html directory
+COPY --from=builder /app/dist/apps/ui/browser /usr/share/nginx/html
+
+# Copy nginx config for combined mode
+COPY apps/ui/nginx.combined.conf /etc/nginx/nginx.conf
+
+# Copy supervisor config
+COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Set permissions for nginx directories
+RUN chown -R pptruser:pptruser /var/log/nginx /var/lib/nginx /run && \
+    chown -R pptruser:pptruser /home/pptruser/app && \
+    chown -R pptruser:pptruser /usr/share/nginx/html
+
+# Switch to non-root user
+USER pptruser
+
+# Install Chrome for Puppeteer
+RUN npx puppeteer browsers install chrome --path /home/pptruser/.cache/puppeteer
+
+# Expose single port
+EXPOSE 80
+
+# Health check via nginx
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+    CMD node -e "require('http').get('http://localhost:80/api/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"
+
+# Start both services via supervisor
+CMD ["supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

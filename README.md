@@ -16,6 +16,7 @@ _Master the art of web scraping with JSON-powered workflows_
 [![Nx](https://img.shields.io/badge/Nx-143055?style=for-the-badge&logo=nx&logoColor=white)](https://nx.dev/)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
+[![GHCR](https://img.shields.io/badge/GHCR-API%20%7C%20UI-blue?style=for-the-badge&logo=github)](https://github.com/Disane87/scrape-dojo/pkgs/container/scrape-dojo)
 ![GitHub Stars](https://img.shields.io/github/stars/Disane87/scrape-dojo?style=for-the-badge&logo=github)
 ![GitHub Issues](https://img.shields.io/github/issues/Disane87/scrape-dojo?style=for-the-badge&logo=github)
 
@@ -118,6 +119,14 @@ Glad you asked! Here's what Scrape Dojo brings to the table:
 
 The easiest way! Docker Compose brings you a complete environment with API + UI + persistence.
 
+The image is published to **GitHub Container Registry (GHCR)** with multi-arch support (`linux/amd64` + `linux/arm64`):
+
+```
+ghcr.io/disane87/scrape-dojo:latest
+```
+
+A single container runs both the API (NestJS + Puppeteer) and UI (Angular via nginx).
+
 #### 1️⃣ Prerequisites
 
 - Docker & Docker Compose installed
@@ -149,27 +158,27 @@ SCRAPE_DOJO_ENCRYPTION_KEY=<your-generated-key>
 #### 3️⃣ Start It Up
 
 ```bash
-docker-compose up -d
-docker-compose logs -f
+docker compose up -d
+docker compose logs -f
 ```
 
 #### 4️⃣ You're Ready!
 
 - 🎨 **UI**: http://localhost:8080
-- 🚀 **API**: http://localhost:3030
-- 📚 **API Docs**: http://localhost:3030/api
+- 🚀 **API**: http://localhost:8080/api
+- 📚 **API Docs**: http://localhost:8080/api
 
 #### 5️⃣ Persistence & Volumes
 
 Docker Compose automatically mounts:
 
-| Directory | Purpose |
-|-----------|---------|
-| `./data` | Database & state |
-| `./downloads` | Downloads & artifacts |
-| `./logs` | Application logs |
+| Directory        | Purpose                 |
+| ---------------- | ----------------------- |
+| `./data`         | Database & state        |
+| `./downloads`    | Downloads & artifacts   |
+| `./logs`         | Application logs        |
 | `./browser-data` | Browser profile & cache |
-| `./config` | Scrape configurations |
+| `./config`       | Scrape configurations   |
 
 ---
 
@@ -179,8 +188,8 @@ Perfect for development! Full control at your fingertips.
 
 #### 1️⃣ Prerequisites
 
-- Node.js 18+
-- pnpm 8+
+- Node.js 20+
+- pnpm 9+
 
 > [!NOTE]
 > 💡 First startup might take a while - Puppeteer downloads browser binaries!
@@ -219,9 +228,9 @@ pnpm start
 
 This automatically starts:
 
-- 🎨 **UI**: http://localhost:3000
-- 🚀 **API**: http://localhost:3333 (direct)
-- 📚 **Docs** (optional): http://localhost:3001 (`pnpm nx serve docs`)
+- 🎨 **UI**: http://localhost:4200
+- 🚀 **API**: http://localhost:3000
+- 📚 **Docs** (optional): http://localhost:4321 (`pnpm nx dev docs`)
 
 > [!TIP]
 > 💡 In VS Code, check out the pre-configured tasks! Look for "Tasks" → "Start All Dev Servers"
@@ -236,31 +245,71 @@ The complete list of supported environment variables is documented in `.env.exam
 
 #### Required ✅
 
-| Variable | Description |
-|----------|-------------|
+| Variable                     | Description                                   |
+| ---------------------------- | --------------------------------------------- |
 | `SCRAPE_DOJO_ENCRYPTION_KEY` | 64 hex chars (256-bit) for secrets encryption |
 
-#### Common Settings (Selection) ⚙️
+#### Runtime / Server
 
-**Runtime/Server:**
+| Variable                    | Default                 | Description                                                 |
+| --------------------------- | ----------------------- | ----------------------------------------------------------- |
+| `NODE_ENV`                  | `development`           | Node.js environment (`development` / `production` / `test`) |
+| `SCRAPE_DOJO_NODE_ENV`      | `development`           | App-specific environment (used by health & puppeteer)       |
+| `SCRAPE_DOJO_PORT`          | `3000`                  | API server port                                             |
+| `SCRAPE_DOJO_DOCKER_ENV`    | `false`                 | Enable Docker mode                                          |
+| `SCRAPE_DOJO_TRUST_PROXY`   | `1`                     | Reverse proxy trust level                                   |
+| `SCRAPE_DOJO_CORS_ORIGIN`   | —                       | CORS origins (comma-separated)                              |
+| `SCRAPE_DOJO_FRONTEND_URL`  | `http://localhost:4200` | Frontend URL for OIDC redirects                             |
+| `EXPORT_OPENAPI`            | `false`                 | Export OpenAPI spec on startup                              |
+| `SCRAPE_DOJO_LOG_MAX_BYTES` | `5000000`               | Max in-memory log buffer size (bytes)                       |
 
-- `NODE_ENV` - Environment (development/production)
-- `SCRAPE_DOJO_PORT` - API port (default: 3000)
-- `SCRAPE_DOJO_TRUST_PROXY` - Reverse proxy configuration
-- `SCRAPE_DOJO_CORS_ORIGIN` - Allowed CORS origins
+#### Database
 
-**Database:**
+| Variable         | Default                 | Description                                      |
+| ---------------- | ----------------------- | ------------------------------------------------ |
+| `DB_TYPE`        | `sqlite`                | Database type: `sqlite`, `mysql`, `postgres`     |
+| `DB_DATABASE`    | `./data/scrape-dojo.db` | Database path (SQLite) or name                   |
+| `DB_HOST`        | —                       | Database host (MySQL/PostgreSQL)                 |
+| `DB_PORT`        | `3306` / `5432`         | Database port (MySQL/PostgreSQL)                 |
+| `DB_USERNAME`    | —                       | Database user (MySQL/PostgreSQL)                 |
+| `DB_PASSWORD`    | —                       | Database password (MySQL/PostgreSQL)             |
+| `DB_SYNCHRONIZE` | `true`                  | TypeORM schema sync (**`false` in production!**) |
+| `DB_LOGGING`     | `false`                 | Enable SQL query logging                         |
 
-- `DB_TYPE` - Database type (sqlite/postgres/mysql)
-- `DB_DATABASE` - Database name (for sqlite: file path)
-- `DB_HOST` / `DB_PORT` / `DB_USERNAME` / `DB_PASSWORD` - Connection parameters
+#### Authentication
 
-**Auth:**
+| Variable                                  | Default | Description                                      |
+| ----------------------------------------- | ------- | ------------------------------------------------ |
+| `SCRAPE_DOJO_AUTH_ENABLED`                | `true`  | Enable authentication globally                   |
+| `SCRAPE_DOJO_AUTH_REQUIRE_MFA`            | `true`  | Enforce MFA (TOTP) for all users                 |
+| `SCRAPE_DOJO_AUTH_JWT_SECRET`             | —       | JWT signing secret (min 32 chars)                |
+| `SCRAPE_DOJO_AUTH_REFRESH_TOKEN_SECRET`   | —       | Refresh token secret (min 32 chars)              |
+| `SCRAPE_DOJO_AUTH_ACCESS_TOKEN_EXPIRY`    | `15m`   | Access token expiry (`15m`, `1h`, `7d`)          |
+| `SCRAPE_DOJO_AUTH_REFRESH_TOKEN_EXPIRY`   | `7d`    | Refresh token expiry                             |
+| `SCRAPE_DOJO_AUTH_RATE_LIMIT_WINDOW_MS`   | `60000` | Rate limit window (ms)                           |
+| `SCRAPE_DOJO_AUTH_RATE_LIMIT_MAX`         | `30`    | Max requests per window                          |
+| `SCRAPE_DOJO_AUTH_API_KEY`                | —       | API key for headless access (`X-API-Key` header) |
+| `SCRAPE_DOJO_AUTH_TRUSTED_DEVICE_RISK_IP` | `true`  | Device trust IP risk checking                    |
 
-- `SCRAPE_DOJO_AUTH_ENABLED` - Enable auth (true/false)
-- `SCRAPE_DOJO_AUTH_JWT_SECRET` - JWT secret
-- `SCRAPE_DOJO_AUTH_API_KEY` - API key for headless access
-- `SCRAPE_DOJO_AUTH_OIDC_*` - OIDC/SSO configuration
+#### MFA (TOTP)
+
+| Variable                                | Default       | Description                        |
+| --------------------------------------- | ------------- | ---------------------------------- |
+| `SCRAPE_DOJO_AUTH_MFA_ISSUER`           | `Scrape Dojo` | Issuer shown in authenticator apps |
+| `SCRAPE_DOJO_AUTH_MFA_CHALLENGE_SECRET` | —             | Challenge token signing secret     |
+| `SCRAPE_DOJO_AUTH_MFA_ENCRYPTION_KEY`   | —             | Encryption key for MFA secrets     |
+
+#### OIDC / SSO
+
+| Variable                              | Default                                    | Description                |
+| ------------------------------------- | ------------------------------------------ | -------------------------- |
+| `SCRAPE_DOJO_AUTH_OIDC_ENABLED`       | `false`                                    | Enable OIDC authentication |
+| `SCRAPE_DOJO_AUTH_OIDC_ISSUER_URL`    | —                                          | OIDC provider URL          |
+| `SCRAPE_DOJO_AUTH_OIDC_CLIENT_ID`     | —                                          | OIDC client ID             |
+| `SCRAPE_DOJO_AUTH_OIDC_CLIENT_SECRET` | —                                          | OIDC client secret         |
+| `SCRAPE_DOJO_AUTH_OIDC_REDIRECT_URI`  | `http://localhost:3000/auth/oidc/callback` | Callback URL               |
+| `SCRAPE_DOJO_AUTH_OIDC_SCOPES`        | `openid profile email`                     | Requested scopes           |
+| `SCRAPE_DOJO_AUTH_OIDC_PROVIDER_NAME` | `OIDC Provider`                            | Display name in UI         |
 
 ---
 
@@ -270,11 +319,11 @@ Scrape Dojo supports a layered variable system for maximum flexibility!
 
 #### Types of Variables
 
-| Type | Environment Prefix | Encrypted | Usage |
-|------|-------------------|-----------|-------|
-| Global Variables | `SCRAPE_DOJO_VAR_*` | ❌ | Public values |
-| Secrets | `SCRAPE_DOJO_SECRET_*` | ✅ | Sensitive data |
-| Workflow Variables | - | ❌ | Defined per scrape |
+| Type               | Environment Prefix     | Encrypted | Usage              |
+| ------------------ | ---------------------- | --------- | ------------------ |
+| Global Variables   | `SCRAPE_DOJO_VAR_*`    | ❌        | Public values      |
+| Secrets            | `SCRAPE_DOJO_SECRET_*` | ✅        | Sensitive data     |
+| Workflow Variables | -                      | ❌        | Defined per scrape |
 
 #### Resolution Order (highest priority first)
 
@@ -306,18 +355,18 @@ SCRAPE_DOJO_SECRET_API_TOKEN=abc123xyz
       "action": "type",
       "params": {
         "selector": "#email",
-        "text": "{{secrets.email}}"
-      }
+        "text": "{{secrets.email}}",
+      },
     },
     {
       "name": "Password",
       "action": "type",
       "params": {
         "selector": "#password",
-        "text": "{{secrets.password}}"
-      }
-    }
-  ]
+        "text": "{{secrets.password}}",
+      },
+    },
+  ],
 }
 ```
 
@@ -338,10 +387,10 @@ On first startup, you can create an admin user:
 
 ```bash
 # Check if setup is required
-curl http://localhost:3333/api/auth/setup-required
+curl http://localhost:3000/api/auth/setup-required
 
 # Create admin
-curl -X POST http://localhost:3333/api/auth/setup \
+curl -X POST http://localhost:3000/api/auth/setup \
   -H "Content-Type: application/json" \
   -d '{
     "email": "admin@example.com",
@@ -358,7 +407,7 @@ curl -X POST http://localhost:3333/api/auth/setup \
 If `SCRAPE_DOJO_AUTH_API_KEY` is set, services can access via `X-API-Key`:
 
 ```bash
-curl http://localhost:3333/api/scrapes \
+curl http://localhost:3000/api/scrapes \
   -H "X-API-Key: <your-api-key>"
 ```
 
@@ -409,7 +458,7 @@ config/
       "id": "my-scrape",
       "metadata": {
         "description": "Example scrape",
-        "version": "1.0.0"
+        "version": "1.0.0",
       },
       "steps": [
         {
@@ -418,18 +467,18 @@ config/
             {
               "name": "Navigate",
               "action": "navigate",
-              "params": { "url": "https://example.com" }
+              "params": { "url": "https://example.com" },
             },
             {
               "name": "Extract Title",
               "action": "extract",
-              "params": { "selector": "h1" }
-            }
-          ]
-        }
-      ]
-    }
-  ]
+              "params": { "selector": "h1" },
+            },
+          ],
+        },
+      ],
+    },
+  ],
 }
 ```
 
@@ -460,16 +509,16 @@ The heart of the data flow system! Each action can access data from previous act
     {
       "name": "pageTitle",
       "action": "extract",
-      "params": { "selector": "h1" }
+      "params": { "selector": "h1" },
     },
     {
       "name": "logTitle",
       "action": "logger",
       "params": {
-        "message": "Title: {{previousData.pageTitle}}"
-      }
-    }
-  ]
+        "message": "Title: {{previousData.pageTitle}}",
+      },
+    },
+  ],
 }
 ```
 
@@ -492,7 +541,7 @@ Loops are your friends for repeated actions! 🔁
   "name": "processOrders",
   "action": "loop",
   "params": {
-    "items": "{{previousData.orders}}"
+    "items": "{{previousData.orders}}",
   },
   "actions": [
     {
@@ -500,10 +549,10 @@ Loops are your friends for repeated actions! 🔁
       "action": "download",
       "params": {
         "url": "https://example.com/order/{{currentData.processOrders.value.id}}.pdf",
-        "filename": "order-{{currentData.processOrders.index}}.pdf"
-      }
-    }
-  ]
+        "filename": "order-{{currentData.processOrders.index}}.pdf",
+      },
+    },
+  ],
 }
 ```
 
@@ -523,22 +572,33 @@ Easily inject dynamic values!
 #### Built-in Variables
 
 ```handlebars
-{{previousData.x}}      # Data from previous actions
-{{currentData.x}}       # Loop context
-{{variables.x}}         # Workflow variables
-{{secrets.x}}           # Encrypted secrets
+{{previousData.x}}
+# Data from previous actions
+{{currentData.x}}
+# Loop context
+{{variables.x}}
+# Workflow variables
+{{secrets.x}}
+# Encrypted secrets
 ```
 
 #### Helpers
 
 ```handlebars
-{{add 1 2}}             # 3
-{{subtract 2025 1}}     # 2024
-{{multiply 10 2}}       # 20
-{{divide 100 10}}       # 10
-{{not true}}            # false
-{{eq a b}}              # a === b
-{{concat "Hello" " " "World"}}  # "Hello World"
+{{add 1 2}}
+# 3
+{{subtract 2025 1}}
+# 2024
+{{multiply 10 2}}
+# 20
+{{divide 100 10}}
+# 10
+{{not true}}
+# false
+{{eq a b}}
+# a === b
+{{concat 'Hello' ' ' 'World'}}
+# "Hello World"
 ```
 
 #### Example
@@ -547,8 +607,8 @@ Easily inject dynamic values!
 {
   "action": "logger",
   "params": {
-    "message": "Processing order #{{currentData.orders.index}} - Total: {{multiply currentData.orders.value.price 1.19}}€"
-  }
+    "message": "Processing order #{{currentData.orders.index}} - Total: {{multiply currentData.orders.value.price 1.19}}€",
+  },
 }
 ```
 
@@ -566,8 +626,8 @@ For complex data processing, Scrape Dojo uses [JSONata](https://jsonata.org/)!
   "action": "transform",
   "params": {
     "data": "{{previousData.rawOrders}}",
-    "expression": "$map($, function($v) { {'id': $v.orderId, 'total': $number($v.price)} })"
-  }
+    "expression": "$map($, function($v) { {'id': $v.orderId, 'total': $number($v.price)} })",
+  },
 }
 ```
 
@@ -588,24 +648,24 @@ For complex data processing, Scrape Dojo uses [JSONata](https://jsonata.org/)!
 The UI uses action metadata to drive forms/validation. You can also query them directly:
 
 ```bash
-curl http://localhost:3333/api/actions/metadata
+curl http://localhost:3000/api/actions/metadata
 ```
 
 #### Commonly Used Actions
 
-| Action | Description |
-|--------|-------------|
-| `navigate` | Navigate to a URL |
-| `click` | Click on an element |
-| `type` | Type text into an input field |
-| `extract` | Extract data from the DOM |
-| `transform` | Transform data with JSONata |
-| `loop` | Iterate over an array |
-| `condition` | Conditional execution |
-| `wait` | Wait x milliseconds |
-| `download` | Download a file |
-| `screenshot` | Take a screenshot |
-| `logger` | Log a message |
+| Action       | Description                   |
+| ------------ | ----------------------------- |
+| `navigate`   | Navigate to a URL             |
+| `click`      | Click on an element           |
+| `type`       | Type text into an input field |
+| `extract`    | Extract data from the DOM     |
+| `transform`  | Transform data with JSONata   |
+| `loop`       | Iterate over an array         |
+| `condition`  | Conditional execution         |
+| `wait`       | Wait x milliseconds           |
+| `download`   | Download a file               |
+| `screenshot` | Take a screenshot             |
+| `logger`     | Log a message                 |
 
 Full list in the API documentation! 📚
 
@@ -625,7 +685,7 @@ Let's scrape a simple website!
       "id": "example-scrape",
       "metadata": {
         "description": "Scrape example.com title",
-        "version": "1.0.0"
+        "version": "1.0.0",
       },
       "steps": [
         {
@@ -635,28 +695,28 @@ Let's scrape a simple website!
               "name": "GoToPage",
               "action": "navigate",
               "params": {
-                "url": "https://example.com"
-              }
+                "url": "https://example.com",
+              },
             },
             {
               "name": "GetTitle",
               "action": "extract",
               "params": {
-                "selector": "h1"
-              }
+                "selector": "h1",
+              },
             },
             {
               "name": "LogTitle",
               "action": "logger",
               "params": {
-                "message": "Found title: {{previousData.GetTitle}}"
-              }
-            }
-          ]
-        }
-      ]
-    }
-  ]
+                "message": "Found title: {{previousData.GetTitle}}",
+              },
+            },
+          ],
+        },
+      ],
+    },
+  ],
 }
 ```
 
@@ -683,27 +743,27 @@ Process multiple items? No problem!
         "extractAll": true,
         "properties": {
           "name": ".product-name",
-          "price": ".product-price"
-        }
-      }
+          "price": ".product-price",
+        },
+      },
     },
     {
       "name": "ProcessProducts",
       "action": "loop",
       "params": {
-        "items": "{{previousData.GetProducts}}"
+        "items": "{{previousData.GetProducts}}",
       },
       "actions": [
         {
           "name": "LogProduct",
           "action": "logger",
           "params": {
-            "message": "Product {{currentData.ProcessProducts.index}}: {{currentData.ProcessProducts.value.name}} - {{currentData.ProcessProducts.value.price}}"
-          }
-        }
-      ]
-    }
-  ]
+            "message": "Product {{currentData.ProcessProducts.index}}: {{currentData.ProcessProducts.value.name}} - {{currentData.ProcessProducts.value.price}}",
+          },
+        },
+      ],
+    },
+  ],
 }
 ```
 
@@ -721,38 +781,38 @@ Automatically download PDFs!
     {
       "name": "Login",
       "action": "navigate",
-      "params": { "url": "https://example.com/login" }
+      "params": { "url": "https://example.com/login" },
     },
     {
       "name": "EnterEmail",
       "action": "type",
       "params": {
         "selector": "#email",
-        "text": "{{secrets.email}}"
-      }
+        "text": "{{secrets.email}}",
+      },
     },
     {
       "name": "EnterPassword",
       "action": "type",
       "params": {
         "selector": "#password",
-        "text": "{{secrets.password}}"
-      }
+        "text": "{{secrets.password}}",
+      },
     },
     {
       "name": "Submit",
       "action": "click",
-      "params": { "selector": "button[type=submit]" }
+      "params": { "selector": "button[type=submit]" },
     },
     {
       "name": "DownloadInvoice",
       "action": "download",
       "params": {
         "url": "https://example.com/invoice/123.pdf",
-        "filename": "invoice-{{variables.orderNumber}}.pdf"
-      }
-    }
-  ]
+        "filename": "invoice-{{variables.orderNumber}}.pdf",
+      },
+    },
+  ],
 }
 ```
 
@@ -797,9 +857,9 @@ scrape-dojo/
 - 📋 Scrape management
 - 📈 Run history
 
-**docs/ (Docusaurus)**
+**docs/ (Astro Starlight)**
 
-- 📚 Project documentation
+- 📚 Project documentation (EN + DE)
 - 🔗 API reference
 - 💡 Guides & tutorials
 
@@ -814,7 +874,7 @@ The complete API documentation is available via **OpenAPI/Swagger**:
 Start the API and open:
 
 ```
-http://localhost:3333/api
+http://localhost:3000/api
 ```
 
 Here you'll find:
@@ -829,7 +889,7 @@ Here you'll find:
 Raw OpenAPI spec:
 
 ```
-http://localhost:3333/api/openapi.json
+http://localhost:3000/api/openapi.json
 ```
 
 ---
@@ -919,10 +979,10 @@ SCRAPE_DOJO_TRUST_PROXY=1
 
 ```bash
 # Check logs
-docker-compose logs api
+docker compose logs api
 
 # Check auth status
-curl http://localhost:3333/api/auth/status
+curl http://localhost:3000/api/auth/status
 ```
 
 See also: `docs/AUTH.md`

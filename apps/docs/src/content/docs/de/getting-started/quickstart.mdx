@@ -5,7 +5,15 @@ sidebar:
   order: 1
 ---
 
-import { Card, CardGrid, Aside, Tabs, TabItem, Steps, LinkCard } from '@astrojs/starlight/components';
+import {
+  Card,
+  CardGrid,
+  Aside,
+  Tabs,
+  TabItem,
+  Steps,
+  LinkCard,
+} from '@astrojs/starlight/components';
 
 Du willst direkt loslegen? Perfekt — dieser Guide bringt dich in wenigen Minuten von Null auf dein erstes funktionierendes Scrape. Wir gehen zusammen durch Installation, Konfiguration und den ersten Testlauf.
 
@@ -13,15 +21,17 @@ Du willst direkt loslegen? Perfekt — dieser Guide bringt dich in wenigen Minut
 
 Bevor es losgeht, check kurz ob du folgende Tools installiert hast:
 
-| Software | Version | Hinweis |
-|----------|---------|---------|
-| **Node.js** | 20+ | [nodejs.org](https://nodejs.org/) |
-| **pnpm** | 9+ | `npm install -g pnpm` |
-| **Chrome/Chromium** | Aktuell | Wird von Puppeteer für die Browser-Automatisierung genutzt |
-| **Docker** _(optional)_ | 24+ | Empfohlen für Produktion — damit sparst du dir viel Konfig-Arbeit |
+| Software                | Version | Hinweis                                                           |
+| ----------------------- | ------- | ----------------------------------------------------------------- |
+| **Node.js**             | 20+     | [nodejs.org](https://nodejs.org/)                                 |
+| **pnpm**                | 9+      | `npm install -g pnpm`                                             |
+| **Chrome/Chromium**     | Aktuell | Wird von Puppeteer für die Browser-Automatisierung genutzt        |
+| **Docker** _(optional)_ | 24+     | Empfohlen für Produktion — damit sparst du dir viel Konfig-Arbeit |
 
 <Aside type="tip">
-Wenn du nur mal schnell reinschauen willst, nimm Docker. Damit hast du alles in ein paar Minuten am Laufen, ohne dich um Node-Versionen oder Dependencies zu kümmern.
+  Wenn du nur mal schnell reinschauen willst, nimm Docker. Damit hast du alles
+  in ein paar Minuten am Laufen, ohne dich um Node-Versionen oder Dependencies
+  zu kümmern.
 </Aside>
 
 ## 🚀 Installation
@@ -42,37 +52,31 @@ Docker ist der einfachste Weg, Scrape Dojo zum Laufen zu bringen. Kein Node.js n
    ```
 
    <Aside type="caution">
-   Bewahre diesen Key sicher auf (z.B. in einem Passwort-Manager). Wenn du ihn verlierst, sind alle gespeicherten Secrets unwiderruflich weg!
+     Bewahre diesen Key sicher auf (z.B. in einem Passwort-Manager). Wenn du ihn
+     verlierst, sind alle gespeicherten Secrets unwiderruflich weg!
    </Aside>
 
 2. **`docker-compose.yml` erstellen**
 
    Erstelle eine `docker-compose.yml` in einem neuen Ordner:
 
+   Das Image wird in der **GitHub Container Registry (GHCR)** mit Multi-Arch Support (`linux/amd64` + `linux/arm64`) bereitgestellt. Ein einzelner Container enthält API und UI.
+
    ```yaml
-   version: '3.8'
    services:
-     api:
-       image: scrape-dojo/api:latest
+     scrape-dojo:
+       image: ghcr.io/disane87/scrape-dojo:latest
        ports:
-         - "3030:3000"
+         - '8080:80'
        environment:
          - SCRAPE_DOJO_ENCRYPTION_KEY=dein_generierter_key_hier
          - DB_TYPE=sqlite
        volumes:
-         - ./data:/app/data
-         - ./downloads:/app/downloads
-         - ./logs:/app/logs
-         - ./config:/app/config
-         - ./browser-data:/app/browser-data
-       restart: unless-stopped
-
-     ui:
-       image: scrape-dojo/ui:latest
-       ports:
-         - "8080:80"
-       depends_on:
-         - api
+         - ./data:/home/pptruser/app/data
+         - ./downloads:/home/pptruser/app/downloads
+         - ./logs:/home/pptruser/app/logs
+         - ./config:/home/pptruser/app/config
+         - ./browser-data:/home/pptruser/app/browser-data
        restart: unless-stopped
    ```
 
@@ -93,17 +97,18 @@ Docker ist der einfachste Weg, Scrape Dojo zum Laufen zu bringen. Kein Node.js n
 </Steps>
 
 <Aside type="tip">
-Die API läuft unter `http://localhost:3030/api`, die UI unter `http://localhost:8080`. Einfach im Browser öffnen und loslegen!
+  Alles läuft unter `http://localhost:8080` — UI und API (`/api`) auf dem selben
+  Port. Einfach im Browser öffnen und loslegen!
 </Aside>
 
 **📁 Volumes im Überblick:**
 
-| Volume | Was steckt drin? |
-|--------|------------------|
-| `./data` | SQLite-Datenbank und persistente Daten |
-| `./downloads` | Heruntergeladene Dateien (PDFs, Screenshots etc.) |
-| `./logs` | Log-Dateien der Anwendung |
-| `./config` | Deine Scrape-Konfigurationsdateien (JSONC) |
+| Volume           | Was steckt drin?                                                      |
+| ---------------- | --------------------------------------------------------------------- |
+| `./data`         | SQLite-Datenbank und persistente Daten                                |
+| `./downloads`    | Heruntergeladene Dateien (PDFs, Screenshots etc.)                     |
+| `./logs`         | Log-Dateien der Anwendung                                             |
+| `./config`       | Deine Scrape-Konfigurationsdateien (JSONC)                            |
 | `./browser-data` | Browser-Profildaten (Cookies, Sessions — damit du eingeloggt bleibst) |
 
 </TabItem>
@@ -162,7 +167,9 @@ Wenn du am Code mitarbeiten oder alles selbst kontrollieren willst, kannst du Sc
 </Steps>
 
 <Aside type="tip">
-Im Dev-Modus läuft die UI unter `http://localhost:4200`. Der Dev-Server leitet API-Anfragen automatisch an `http://localhost:3000` weiter — du musst dich also nicht um CORS oder Proxy-Konfig kümmern.
+  Im Dev-Modus läuft die UI unter `http://localhost:4200`. Der Dev-Server leitet
+  API-Anfragen automatisch an `http://localhost:3000` weiter — du musst dich
+  also nicht um CORS oder Proxy-Konfig kümmern.
 </Aside>
 
 </TabItem>
@@ -182,7 +189,7 @@ Jetzt wird's spannend! Stell dir vor, du willst den Titel einer Webseite auslese
         "description": "Mein erstes Scrape — liest den Seitentitel aus",
         "version": "1.0.0",
         "author": "gh:@dein-username",
-        "triggers": [{ "type": "manual" }]
+        "triggers": [{ "type": "manual" }],
       },
       "steps": [
         {
@@ -191,26 +198,26 @@ Jetzt wird's spannend! Stell dir vor, du willst den Titel einer Webseite auslese
             {
               "name": "navigate",
               "action": "navigate",
-              "params": { "url": "https://example.com" }
+              "params": { "url": "https://example.com" },
             },
             {
               "name": "title",
               "action": "extract",
-              "params": { "selector": "h1" }
+              "params": { "selector": "h1" },
             },
             {
               "name": "logTitle",
               "action": "logger",
               "params": {
                 "message": "Gefundener Titel: {{previousData.title}}",
-                "level": "log"
-              }
-            }
-          ]
-        }
-      ]
-    }
-  ]
+                "level": "log",
+              },
+            },
+          ],
+        },
+      ],
+    },
+  ],
 }
 ```
 
@@ -218,14 +225,16 @@ Jetzt wird's spannend! Stell dir vor, du willst den Titel einer Webseite auslese
 
 Das Scrape führt drei Actions nacheinander aus:
 
-| # | Action | Was sie macht |
-|---|--------|---------------|
-| 1 | `navigate` | Öffnet `https://example.com` im Browser |
-| 2 | `extract` | Holt den Text aus dem `h1`-Element. Das Ergebnis landet unter `previousData.title` (der `name` der Action ist der Key) |
-| 3 | `logger` | Gibt den Titel in der Konsole aus. Das `{{previousData.title}}` ist ein Handlebars-Template — damit greifst du auf Ergebnisse vorheriger Actions zu |
+| #   | Action     | Was sie macht                                                                                                                                       |
+| --- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `navigate` | Öffnet `https://example.com` im Browser                                                                                                             |
+| 2   | `extract`  | Holt den Text aus dem `h1`-Element. Das Ergebnis landet unter `previousData.title` (der `name` der Action ist der Key)                              |
+| 3   | `logger`   | Gibt den Titel in der Konsole aus. Das `{{previousData.title}}` ist ein Handlebars-Template — damit greifst du auf Ergebnisse vorheriger Actions zu |
 
 <Aside type="note">
-Der `name` jeder Action ist super wichtig: Er bestimmt, unter welchem Key das Ergebnis gespeichert wird. Wähle also aussagekräftige Namen wie `title`, `productLinks` oder `priceData`.
+  Der `name` jeder Action ist super wichtig: Er bestimmt, unter welchem Key das
+  Ergebnis gespeichert wird. Wähle also aussagekräftige Namen wie `title`,
+  `productLinks` oder `priceData`.
 </Aside>
 
 ## ▶️ Scrape starten
@@ -258,7 +267,8 @@ curl http://localhost:3000/api/scrape/my-first-scrape
 ```
 
 <Aside type="note">
-Im Docker-Setup erreichst du die API über Port 3030: `http://localhost:3030/api/scrape/my-first-scrape`
+  Im Docker-Setup erreichst du die API über nginx auf Port 8080:
+  `http://localhost:8080/api/scrape/my-first-scrape`
 </Aside>
 
 Du kannst beim Start auch Variablen mitgeben:

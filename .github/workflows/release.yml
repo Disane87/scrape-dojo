@@ -14,6 +14,9 @@ concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false
 
+env:
+  NX_CLOUD_ACCESS_TOKEN: ''
+
 jobs:
   semantic_release:
     name: Semantic Release
@@ -28,7 +31,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: 10
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -40,10 +43,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build API
-        run: pnpm nx build api
+        run: pnpm nx build api --skip-nx-cache
 
       - name: Build UI
-        run: pnpm nx build ui
+        run: pnpm nx build ui --skip-nx-cache
 
       - name: Semantic Release
         env:

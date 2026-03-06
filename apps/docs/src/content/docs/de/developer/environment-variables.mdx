@@ -1,5 +1,5 @@
 ---
-title: "⚙️ Umgebungsvariablen"
+title: '⚙️ Umgebungsvariablen'
 description: Alle Umgebungsvariablen und ihre Konfiguration
 sidebar:
   order: 7
@@ -11,78 +11,81 @@ Hier findest du die vollständige Referenz aller Umgebungsvariablen in Scrape Do
 
 ## Runtime
 
-| Variable | Standard | Beschreibung |
-|----------|----------|-------------|
-| `NODE_ENV` | `development` | Node.js Umgebung (`development`, `production`, `test`) |
-| `SCRAPE_DOJO_NODE_ENV` | `development` | Scrape Dojo-spezifische Umgebung |
-| `SCRAPE_DOJO_PORT` | `3000` | API Server Port |
-| `SCRAPE_DOJO_DOCKER_ENV` | `false` | Docker-Modus aktivieren |
-| `SCRAPE_DOJO_TRUST_PROXY` | `1` | Reverse Proxy Trust Level |
-| `SCRAPE_DOJO_CORS_ORIGIN` | — | CORS Origins (kommasepariert) |
-| `EXPORT_OPENAPI` | `false` | OpenAPI Spec beim Start exportieren |
+| Variable                   | Standard                | Beschreibung                                           |
+| -------------------------- | ----------------------- | ------------------------------------------------------ |
+| `NODE_ENV`                 | `development`           | Node.js Umgebung (`development`, `production`, `test`) |
+| `SCRAPE_DOJO_NODE_ENV`     | `development`           | Scrape Dojo-spezifische Umgebung                       |
+| `SCRAPE_DOJO_PORT`         | `3000`                  | API Server Port                                        |
+| `SCRAPE_DOJO_DOCKER_ENV`   | `false`                 | Docker-Modus aktivieren                                |
+| `SCRAPE_DOJO_TRUST_PROXY`  | `1`                     | Reverse Proxy Trust Level                              |
+| `SCRAPE_DOJO_CORS_ORIGIN`  | —                       | CORS Origins (kommasepariert)                          |
+| `SCRAPE_DOJO_FRONTEND_URL` | `http://localhost:4200` | Frontend URL für OIDC Redirects                        |
+| `EXPORT_OPENAPI`           | `false`                 | OpenAPI Spec beim Start exportieren                    |
 
 ## Datenbank
 
-| Variable | Standard | Beschreibung |
-|----------|----------|-------------|
-| `DB_TYPE` | `sqlite` | Datenbank-Typ: `sqlite`, `mysql`, `postgres` |
-| `DB_DATABASE` | `./data/scrape-dojo.db` | Datenbank-Pfad (SQLite) oder Name (MySQL/PostgreSQL) |
-| `DB_SYNCHRONIZE` | `true` | TypeORM Schema-Sync (in Production `false` setzen!) |
-| `DB_LOGGING` | `false` | SQL Query Logging aktivieren |
-| `DB_HOST` | — | Datenbank-Host (nur MySQL/PostgreSQL) |
-| `DB_PORT` | `3306` | Datenbank-Port (nur MySQL/PostgreSQL) |
-| `DB_USERNAME` | — | Datenbank-Benutzer (nur MySQL/PostgreSQL) |
-| `DB_PASSWORD` | — | Datenbank-Passwort (nur MySQL/PostgreSQL) |
+| Variable         | Standard                | Beschreibung                                         |
+| ---------------- | ----------------------- | ---------------------------------------------------- |
+| `DB_TYPE`        | `sqlite`                | Datenbank-Typ: `sqlite`, `mysql`, `postgres`         |
+| `DB_DATABASE`    | `./data/scrape-dojo.db` | Datenbank-Pfad (SQLite) oder Name (MySQL/PostgreSQL) |
+| `DB_SYNCHRONIZE` | `true`                  | TypeORM Schema-Sync (in Production `false` setzen!)  |
+| `DB_LOGGING`     | `false`                 | SQL Query Logging aktivieren                         |
+| `DB_HOST`        | —                       | Datenbank-Host (nur MySQL/PostgreSQL)                |
+| `DB_PORT`        | `3306`                  | Datenbank-Port (nur MySQL/PostgreSQL)                |
+| `DB_USERNAME`    | —                       | Datenbank-Benutzer (nur MySQL/PostgreSQL)            |
+| `DB_PASSWORD`    | —                       | Datenbank-Passwort (nur MySQL/PostgreSQL)            |
 
 <Aside type="caution">
-`DB_SYNCHRONIZE=true` ist praktisch in der Entwicklung, aber **niemals** in Production verwenden! TypeORM könnte dabei Daten verlieren.
+  `DB_SYNCHRONIZE=true` ist praktisch in der Entwicklung, aber **niemals** in
+  Production verwenden! TypeORM könnte dabei Daten verlieren.
 </Aside>
 
 ## Verschlüsselung
 
-| Variable | Standard | Beschreibung |
-|----------|----------|-------------|
-| `SCRAPE_DOJO_ENCRYPTION_KEY` | — | 256-Bit Hex Key (64 Zeichen) — **Pflicht in Production** |
-| `SCRAPE_DOJO_LOG_MAX_BYTES` | `5000000` | Maximale Log-Buffer Größe in Bytes (5 MB) |
+| Variable                     | Standard  | Beschreibung                                             |
+| ---------------------------- | --------- | -------------------------------------------------------- |
+| `SCRAPE_DOJO_ENCRYPTION_KEY` | —         | 256-Bit Hex Key (64 Zeichen) — **Pflicht in Production** |
+| `SCRAPE_DOJO_LOG_MAX_BYTES`  | `5000000` | Maximale Log-Buffer Größe in Bytes (5 MB)                |
 
 ## Authentifizierung
 
-| Variable | Standard | Beschreibung |
-|----------|----------|-------------|
-| `SCRAPE_DOJO_AUTH_ENABLED` | `true` | Authentifizierung global aktivieren |
-| `SCRAPE_DOJO_AUTH_REQUIRE_MFA` | `true` | Multi-Faktor-Authentifizierung erzwingen |
+| Variable                       | Standard | Beschreibung                             |
+| ------------------------------ | -------- | ---------------------------------------- |
+| `SCRAPE_DOJO_AUTH_ENABLED`     | `true`   | Authentifizierung global aktivieren      |
+| `SCRAPE_DOJO_AUTH_REQUIRE_MFA` | `true`   | Multi-Faktor-Authentifizierung erzwingen |
 
 ## JWT
 
-| Variable | Standard | Beschreibung |
-|----------|----------|-------------|
-| `SCRAPE_DOJO_AUTH_JWT_SECRET` | — | JWT Signing Secret (mindestens 32 Zeichen) |
-| `SCRAPE_DOJO_AUTH_REFRESH_TOKEN_SECRET` | — | Refresh Token Secret (mindestens 32 Zeichen) |
-| `SCRAPE_DOJO_AUTH_ACCESS_TOKEN_EXPIRY` | `15m` | Access Token Ablaufzeit (z.B. `15m`, `1h`, `1d`) |
-| `SCRAPE_DOJO_AUTH_REFRESH_TOKEN_EXPIRY` | `7d` | Refresh Token Ablaufzeit |
-| `SCRAPE_DOJO_AUTH_RATE_LIMIT_WINDOW_MS` | `60000` | Rate Limit Fenster in Millisekunden |
-| `SCRAPE_DOJO_AUTH_RATE_LIMIT_MAX` | `30` | Maximale Requests pro Rate-Limit-Fenster |
-| `SCRAPE_DOJO_AUTH_API_KEY` | — | Optionaler API Key für Service-Zugriff (Header: `X-API-Key`) |
+| Variable                                  | Standard | Beschreibung                                                 |
+| ----------------------------------------- | -------- | ------------------------------------------------------------ |
+| `SCRAPE_DOJO_AUTH_JWT_SECRET`             | —        | JWT Signing Secret (mindestens 32 Zeichen)                   |
+| `SCRAPE_DOJO_AUTH_REFRESH_TOKEN_SECRET`   | —        | Refresh Token Secret (mindestens 32 Zeichen)                 |
+| `SCRAPE_DOJO_AUTH_ACCESS_TOKEN_EXPIRY`    | `15m`    | Access Token Ablaufzeit (z.B. `15m`, `1h`, `1d`)             |
+| `SCRAPE_DOJO_AUTH_REFRESH_TOKEN_EXPIRY`   | `7d`     | Refresh Token Ablaufzeit                                     |
+| `SCRAPE_DOJO_AUTH_RATE_LIMIT_WINDOW_MS`   | `60000`  | Rate Limit Fenster in Millisekunden                          |
+| `SCRAPE_DOJO_AUTH_RATE_LIMIT_MAX`         | `30`     | Maximale Requests pro Rate-Limit-Fenster                     |
+| `SCRAPE_DOJO_AUTH_API_KEY`                | —        | Optionaler API Key für Service-Zugriff (Header: `X-API-Key`) |
+| `SCRAPE_DOJO_AUTH_TRUSTED_DEVICE_RISK_IP` | `true`   | Device-Trust IP-Risikoprüfung aktivieren                     |
 
 ## MFA (Multi-Faktor-Authentifizierung)
 
-| Variable | Standard | Beschreibung |
-|----------|----------|-------------|
-| `SCRAPE_DOJO_AUTH_MFA_ISSUER` | `Scrape Dojo` | Anzeigename (Issuer) in Authenticator Apps |
-| `SCRAPE_DOJO_AUTH_MFA_CHALLENGE_SECRET` | — | Secret für Challenge-Token-Signierung |
-| `SCRAPE_DOJO_AUTH_MFA_ENCRYPTION_KEY` | — | Verschlüsselungskey für MFA-Secrets |
+| Variable                                | Standard      | Beschreibung                               |
+| --------------------------------------- | ------------- | ------------------------------------------ |
+| `SCRAPE_DOJO_AUTH_MFA_ISSUER`           | `Scrape Dojo` | Anzeigename (Issuer) in Authenticator Apps |
+| `SCRAPE_DOJO_AUTH_MFA_CHALLENGE_SECRET` | —             | Secret für Challenge-Token-Signierung      |
+| `SCRAPE_DOJO_AUTH_MFA_ENCRYPTION_KEY`   | —             | Verschlüsselungskey für MFA-Secrets        |
 
 ## OIDC / SSO
 
-| Variable | Standard | Beschreibung |
-|----------|----------|-------------|
-| `SCRAPE_DOJO_AUTH_OIDC_ENABLED` | `false` | OIDC-Authentifizierung aktivieren |
-| `SCRAPE_DOJO_AUTH_OIDC_ISSUER_URL` | — | OIDC Provider URL (z.B. `https://accounts.google.com`) |
-| `SCRAPE_DOJO_AUTH_OIDC_CLIENT_ID` | — | OIDC Client ID |
-| `SCRAPE_DOJO_AUTH_OIDC_CLIENT_SECRET` | — | OIDC Client Secret |
-| `SCRAPE_DOJO_AUTH_OIDC_REDIRECT_URI` | `http://localhost:3000/auth/oidc/callback` | Callback URL nach Login |
-| `SCRAPE_DOJO_AUTH_OIDC_SCOPES` | `openid profile email` | Angeforderte OAuth Scopes (Leerzeichen-separiert) |
-| `SCRAPE_DOJO_AUTH_OIDC_PROVIDER_NAME` | `OIDC Provider` | Anzeigename des Providers in der UI |
+| Variable                              | Standard                                   | Beschreibung                                           |
+| ------------------------------------- | ------------------------------------------ | ------------------------------------------------------ |
+| `SCRAPE_DOJO_AUTH_OIDC_ENABLED`       | `false`                                    | OIDC-Authentifizierung aktivieren                      |
+| `SCRAPE_DOJO_AUTH_OIDC_ISSUER_URL`    | —                                          | OIDC Provider URL (z.B. `https://accounts.google.com`) |
+| `SCRAPE_DOJO_AUTH_OIDC_CLIENT_ID`     | —                                          | OIDC Client ID                                         |
+| `SCRAPE_DOJO_AUTH_OIDC_CLIENT_SECRET` | —                                          | OIDC Client Secret                                     |
+| `SCRAPE_DOJO_AUTH_OIDC_REDIRECT_URI`  | `http://localhost:3000/auth/oidc/callback` | Callback URL nach Login                                |
+| `SCRAPE_DOJO_AUTH_OIDC_SCOPES`        | `openid profile email`                     | Angeforderte OAuth Scopes (Leerzeichen-separiert)      |
+| `SCRAPE_DOJO_AUTH_OIDC_PROVIDER_NAME` | `OIDC Provider`                            | Anzeigename des Providers in der UI                    |
 
 ## 🔑 Keys generieren
 
@@ -100,7 +103,8 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
 <Aside type="caution">
-Generiere für jeden Zweck einen **eigenen** Key. Verwende niemals denselben Key für Encryption, JWT und MFA!
+  Generiere für jeden Zweck einen **eigenen** Key. Verwende niemals denselben
+  Key für Encryption, JWT und MFA!
 </Aside>
 
 ## Variablen via ENV
@@ -116,6 +120,7 @@ SCRAPE_DOJO_VAR_DEBUG_MODE=true
 ```
 
 Die Benennung wird automatisch in camelCase konvertiert:
+
 - `SCRAPE_DOJO_VAR_DEFAULT_YEAR` wird zu `defaultYear`
 - Zugriff in Scrapes: `{{variables.defaultYear}}`
 
@@ -188,6 +193,7 @@ Bevor du in Production gehst, prüfe diese Punkte:
 ---
 
 **Verwandte Themen:**
+
 - [Authentifizierung](/de/developer/authentication/)
 - [Secrets und Variablen](/de/user-guide/secrets-variables/)
 - [Architektur](/de/developer/architecture/)
