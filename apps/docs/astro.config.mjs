@@ -17,7 +17,7 @@ export default defineConfig({
           title: 'Scrape Dojo',
           description: 'Web Scraping Framework Documentation',
           logo: {
-              src: './public/logos/scrape-dojo-app-icon-64x64.png',
+              src: './public/scrape-dojo-app-icon-64x64.png',
           },
           social: [
               {
