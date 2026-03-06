@@ -1,3 +1,9 @@
+## [1.0.13](https://github.com/disane87/scrape-dojo/compare/v1.0.12...v1.0.13) (2026-03-06)
+
+### Bug Fixes
+
+- remove Object.defineProperty polyfills that corrupt JSDOM on Linux ([371c53c](https://github.com/disane87/scrape-dojo/commit/371c53cdfe52992798ae0727d508f1809ee1d30b))
+
 ## [1.0.12](https://github.com/disane87/scrape-dojo/compare/v1.0.11...v1.0.12) (2026-03-06)
 
 ### Bug Fixes
