@@ -1,3 +1,9 @@
+## [1.0.3](https://github.com/disane87/scrape-dojo/compare/v1.0.2...v1.0.3) (2026-03-06)
+
+### Bug Fixes
+
+- run vitest directly with --root for UI tests in CI ([79d5e42](https://github.com/disane87/scrape-dojo/commit/79d5e4245f23d5f79f91cf905abb7b3b4b534548))
+
 ## [1.0.2](https://github.com/disane87/scrape-dojo/compare/v1.0.1...v1.0.2) (2026-03-06)
 
 ### Bug Fixes
