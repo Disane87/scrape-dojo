@@ -154,6 +154,7 @@
     "@vitest/ui": "^4.0.16",
     "autoprefixer": "^10.4.0",
     "clsx": "^2.1.1",
+    "conventional-changelog-conventionalcommits": "^9.3.0",
     "docusaurus-plugin-openapi-docs": "^4.5.1",
     "docusaurus-theme-openapi-docs": "^4.5.1",
     "eslint": "^8.57.0",

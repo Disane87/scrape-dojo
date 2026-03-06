@@ -309,6 +309,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      conventional-changelog-conventionalcommits:
+        specifier: ^9.3.0
+        version: 9.3.0
       docusaurus-plugin-openapi-docs:
         specifier: ^4.5.1
         version: 4.5.1(@docusaurus/plugin-content-docs@3.9.2(@mdx-js/react@3.1.1(@types/react@19.2.7)(react@19.2.3))(@rspack/core@1.6.8(@swc/helpers@0.5.17))(@swc/core@1.15.7(@swc/helpers@0.5.17))(lightningcss@1.30.2)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@5.9.3))(@docusaurus/utils-validation@3.9.2(@swc/core@1.15.7(@swc/helpers@0.5.17))(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(@docusaurus/utils@3.9.2(@swc/core@1.15.7(@swc/helpers@0.5.17))(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(encoding@0.1.13)(react@19.2.3)
@@ -6821,6 +6824,10 @@ packages:
 
   conventional-changelog-angular@8.1.0:
     resolution: {integrity: sha512-GGf2Nipn1RUCAktxuVauVr1e3r8QrLP/B0lEUsFktmGqc3ddbQkhoJZHJctVU829U1c6mTSWftrVOCHaL85Q3w==}
+    engines: {node: '>=18'}
+
+  conventional-changelog-conventionalcommits@9.3.0:
+    resolution: {integrity: sha512-kYFx6gAyjSIMwNtASkI3ZE99U1fuVDJr0yTYgVy+I2QG46zNZfl2her+0+eoviG82c5WQvW1jMt1eOQTeJLodA==}
     engines: {node: '>=18'}
 
   conventional-changelog-writer@8.2.0:
@@ -22987,6 +22994,10 @@ snapshots:
   content-type@1.0.5: {}
 
   conventional-changelog-angular@8.1.0:
+    dependencies:
+      compare-func: 2.0.0
+
+  conventional-changelog-conventionalcommits@9.3.0:
     dependencies:
       compare-func: 2.0.0
 
