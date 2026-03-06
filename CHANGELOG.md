@@ -1,3 +1,9 @@
+## [1.0.20](https://github.com/disane87/scrape-dojo/compare/v1.0.19...v1.0.20) (2026-03-06)
+
+### Bug Fixes
+
+- integrate Docker build into Release workflow ([88a3edf](https://github.com/disane87/scrape-dojo/commit/88a3edf24f61047cc250b40380b1f0ddf2843408))
+
 ## [1.0.19](https://github.com/disane87/scrape-dojo/compare/v1.0.18...v1.0.19) (2026-03-06)
 
 ### Bug Fixes
