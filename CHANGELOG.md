@@ -1,3 +1,9 @@
+## [1.0.18](https://github.com/disane87/scrape-dojo/compare/v1.0.17...v1.0.18) (2026-03-06)
+
+### Bug Fixes
+
+- force test file isolation to prevent stale DOCUMENT in TestBed ([85fc887](https://github.com/disane87/scrape-dojo/commit/85fc887d0892af27bf034d4c051dec8792974dc7))
+
 ## [1.0.17](https://github.com/disane87/scrape-dojo/compare/v1.0.16...v1.0.17) (2026-03-06)
 
 ### Bug Fixes
