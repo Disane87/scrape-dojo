@@ -1,3 +1,9 @@
+## [1.0.19](https://github.com/disane87/scrape-dojo/compare/v1.0.18...v1.0.19) (2026-03-06)
+
+### Bug Fixes
+
+- trigger Docker workflow on release event instead of tag push ([5879d0c](https://github.com/disane87/scrape-dojo/commit/5879d0c4063f1ad35dd35df48cd8443d8bdbf813))
+
 ## [1.0.18](https://github.com/disane87/scrape-dojo/compare/v1.0.17...v1.0.18) (2026-03-06)
 
 ### Bug Fixes
