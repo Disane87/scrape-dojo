@@ -1,4 +1,5 @@
 import { getTestBed } from '@angular/core/testing';
+import { TestComponentRenderer } from '@angular/core/testing';
 import {
   BrowserTestingModule,
   platformBrowserTesting,
@@ -12,16 +13,30 @@ try {
   console.log('[test-setup] initTestEnvironment caught:', e.message);
 }
 
-// Debug: check if document operations work
-const debugDiv = document.createElement('div');
-debugDiv.setAttribute('id', 'debug-test');
-document.body.appendChild(debugDiv);
-const found = document.querySelector('#debug-test');
-console.log('[test-setup] document.querySelector works:', !!found);
-if (debugDiv.ownerDocument !== document) {
-  console.log('[test-setup] WARNING: ownerDocument mismatch!');
+// Monkey-patch TestComponentRenderer to debug root element creation
+const origCreateComponent = testBed.constructor.prototype.createComponent;
+if (origCreateComponent && !origCreateComponent._patched) {
+  testBed.constructor.prototype.createComponent = function (type) {
+    const renderer = this.inject(TestComponentRenderer);
+    const origInsert = renderer.insertRootElement?.bind(renderer);
+    if (origInsert) {
+      renderer.insertRootElement = function (rootElId) {
+        origInsert(rootElId);
+        const found = document.querySelector(`#${rootElId}`);
+        console.log(
+          `[test-setup] insertRootElement('${rootElId}') - found in document: ${!!found}, body.children: ${document.body.children.length}`,
+        );
+        if (!found) {
+          console.log(
+            `[test-setup] body.innerHTML: ${document.body.innerHTML.substring(0, 200)}`,
+          );
+        }
+      };
+    }
+    return origCreateComponent.call(this, type);
+  };
+  testBed.constructor.prototype.createComponent._patched = true;
 }
-document.body.removeChild(debugDiv);
 
 afterEach(() => {
   getTestBed()._testModuleRef = null;
