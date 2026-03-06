@@ -1,3 +1,9 @@
+## [1.0.5](https://github.com/disane87/scrape-dojo/compare/v1.0.4...v1.0.5) (2026-03-06)
+
+### Bug Fixes
+
+- guard TestBed initialization to prevent double-init in CI ([f4b0142](https://github.com/disane87/scrape-dojo/commit/f4b01428799b57d81b40707e96a91f2ef3c0aede))
+
 ## [1.0.4](https://github.com/disane87/scrape-dojo/compare/v1.0.3...v1.0.4) (2026-03-06)
 
 ### Bug Fixes
