@@ -196,5 +196,6 @@
     "*.{ts,tsx,json,html,css,scss,md}": [
       "prettier --write"
     ]
-  }
+  },
+  "version": "1.0.0"
 }
