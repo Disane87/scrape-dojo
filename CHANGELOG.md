@@ -1,3 +1,9 @@
+## [1.0.6](https://github.com/disane87/scrape-dojo/compare/v1.0.5...v1.0.6) (2026-03-06)
+
+### Bug Fixes
+
+- guard style.transform defineProperty for Linux CI environments ([2850134](https://github.com/disane87/scrape-dojo/commit/28501347915aafba861eb018ad25feb0964d6552))
+
 ## [1.0.5](https://github.com/disane87/scrape-dojo/compare/v1.0.4...v1.0.5) (2026-03-06)
 
 ### Bug Fixes
