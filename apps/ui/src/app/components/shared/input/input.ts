@@ -1,11 +1,29 @@
-import { Component, computed, input, output, forwardRef, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import {
+  Component,
+  computed,
+  input,
+  output,
+  forwardRef,
+  CUSTOM_ELEMENTS_SCHEMA,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/forms';
+import {
+  ControlValueAccessor,
+  NG_VALUE_ACCESSOR,
+  FormsModule,
+} from '@angular/forms';
 import { toIconify } from '../../../utils/icon.utils';
 import 'iconify-icon';
 
 export type InputSize = 'sm' | 'md' | 'lg';
-export type InputType = 'text' | 'password' | 'email' | 'number' | 'search' | 'url' | 'tel';
+export type InputType =
+  | 'text'
+  | 'password'
+  | 'email'
+  | 'number'
+  | 'search'
+  | 'url'
+  | 'tel';
 
 @Component({
   selector: 'app-input',
@@ -18,7 +36,8 @@ export type InputType = 'text' | 'password' | 'email' | 'number' | 'search' | 'u
       provide: NG_VALUE_ACCESSOR,
       useExisting: forwardRef(() => InputComponent),
       multi: true,
-    }],
+    },
+  ],
 })
 export class InputComponent implements ControlValueAccessor {
   protected readonly toIconify = toIconify;
@@ -60,11 +79,12 @@ export class InputComponent implements ControlValueAccessor {
   protected _value = '';
 
   // ControlValueAccessor callbacks
-  private onChange: (value: string) => void = () => { };
-  private onTouched: () => void = () => { };
+  private onChange: (value: string) => void = () => {};
+  private onTouched: () => void = () => {};
 
   inputClasses = computed(() => {
-    const base = 'bg-dojo-bg border border-dojo-border rounded-md text-dojo-text placeholder-dojo-text-muted focus:outline-none focus:border-dojo-accent focus:ring-1 focus:ring-dojo-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+    const base =
+      'bg-dojo-bg border border-dojo-border rounded-md text-dojo-text placeholder-dojo-text-muted focus:outline-none focus:border-dojo-accent focus:ring-1 focus:ring-dojo-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
 
     const sizes: Record<InputSize, string> = {
       sm: 'px-2.5 py-1.5 text-sm',
@@ -113,6 +133,7 @@ export class InputComponent implements ControlValueAccessor {
     this.onTouched = fn;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   setDisabledState(isDisabled: boolean): void {
     // Handled by disabled input
   }

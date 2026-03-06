@@ -23,26 +23,35 @@ import { ActionExecutionStrategy } from '../action-handler/strategies/action-exe
 import { ScrapeLogger } from '../_logger/scrape-logger.service';
 
 @Module({
-    imports: [SecretsModule, forwardRef(() => DatabaseModule), forwardRef(() => VariablesModule)],
-    controllers: [ScrapeController, ScrapeUIController, ActionsController],
-    providers: [
-        ScrapeService,
-        ScrapeEventsService,
-        AuthorResolverService,
-        SchedulerService,
-        ActionHandlerService,
-        PuppeteerService,
-        ScrapeConfigService,
-        ScrapeVariablesSyncService,
-        ScrapeSecretsResolverService,
-        ScrapeExecutionService,
-        ScrapeDataService,
-        ScrapeValidationService,
-        ActionFactory,
-        VariableResolutionStrategy,
-        ActionExecutionStrategy,
-        ScrapeLogger
-    ],
-    exports: [ScrapeService, ScrapeEventsService, AuthorResolverService, SchedulerService]
+  imports: [
+    SecretsModule,
+    forwardRef(() => DatabaseModule),
+    forwardRef(() => VariablesModule),
+  ],
+  controllers: [ScrapeController, ScrapeUIController, ActionsController],
+  providers: [
+    ScrapeService,
+    ScrapeEventsService,
+    AuthorResolverService,
+    SchedulerService,
+    ActionHandlerService,
+    PuppeteerService,
+    ScrapeConfigService,
+    ScrapeVariablesSyncService,
+    ScrapeSecretsResolverService,
+    ScrapeExecutionService,
+    ScrapeDataService,
+    ScrapeValidationService,
+    ActionFactory,
+    VariableResolutionStrategy,
+    ActionExecutionStrategy,
+    ScrapeLogger,
+  ],
+  exports: [
+    ScrapeService,
+    ScrapeEventsService,
+    AuthorResolverService,
+    SchedulerService,
+  ],
 })
-export class ScrapeModule { }
+export class ScrapeModule {}

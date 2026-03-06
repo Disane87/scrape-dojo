@@ -2,7 +2,12 @@ import { Component, input, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 export type ProgressBarSize = 'xs' | 'sm' | 'md';
-export type ProgressBarStatus = 'default' | 'running' | 'success' | 'failed' | 'warning';
+export type ProgressBarStatus =
+  | 'default'
+  | 'running'
+  | 'success'
+  | 'failed'
+  | 'warning';
 
 @Component({
   selector: 'app-progress-bar',
@@ -10,10 +15,7 @@ export type ProgressBarStatus = 'default' | 'running' | 'success' | 'failed' | '
   imports: [CommonModule],
   template: `
     <div [class]="containerClasses()">
-      <div
-        [class]="barClasses()"
-        [style.width.%]="percentage()"
-      ></div>
+      <div [class]="barClasses()" [style.width.%]="percentage()"></div>
     </div>
   `,
 })
@@ -63,7 +65,8 @@ export class ProgressBarComponent {
       warning: 'bg-dojo-orange',
     };
 
-    const animation = this.animated() && this.status() === 'running' ? 'animate-pulse' : '';
+    const animation =
+      this.animated() && this.status() === 'running' ? 'animate-pulse' : '';
 
     return `${base} ${statuses[this.status()]} ${animation}`;
   });

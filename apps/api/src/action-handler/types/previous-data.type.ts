@@ -1,1 +1,1 @@
-export type PreviousData = Map<string, Array<unknown>>
+export type PreviousData = Map<string, Array<unknown>>;

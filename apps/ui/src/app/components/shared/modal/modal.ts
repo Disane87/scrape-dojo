@@ -1,4 +1,10 @@
-import { Component, computed, input, output, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import {
+  Component,
+  computed,
+  input,
+  output,
+  CUSTOM_ELEMENTS_SCHEMA,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IconButtonComponent } from '../icon-button/icon-button';
 import { toIconify } from '../../../utils/icon.utils';
@@ -39,7 +45,8 @@ export class ModalComponent {
   closed = output<void>();
 
   modalClasses = computed(() => {
-    const base = 'relative bg-dojo-surface border border-dojo-border rounded-lg shadow-xl flex flex-col';
+    const base =
+      'relative bg-dojo-surface border border-dojo-border rounded-lg shadow-xl flex flex-col';
 
     const sizes: Record<ModalSize, string> = {
       sm: 'w-full max-w-sm max-h-[80vh]',

@@ -3,7 +3,7 @@ import {
   provideBrowserGlobalErrorListeners,
   APP_INITIALIZER,
   inject,
-  isDevMode
+  isDevMode,
 } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
@@ -31,10 +31,10 @@ export const appConfig: ApplicationConfig = {
         fallbackLang: 'en',
         missingHandler: {
           useFallbackTranslation: true,
-          logMissingKey: isDevMode()
-        }
+          logMissingKey: isDevMode(),
+        },
       },
-      loader: TranslocoHttpLoader
+      loader: TranslocoHttpLoader,
     }),
     // Initialize language service to set up language from localStorage/env/browser
     {
@@ -50,7 +50,7 @@ export const appConfig: ApplicationConfig = {
         };
       },
       multi: true,
-      deps: [LanguageService, TranslocoService]
+      deps: [LanguageService, TranslocoService],
     },
     // Theme: prefer OS theme when not authenticated; lock/persist on login
     {
@@ -59,20 +59,20 @@ export const appConfig: ApplicationConfig = {
         inject(ThemeAuthBridgeService);
         return () => void 0;
       },
-      multi: true
+      multi: true,
     },
     // Central Store + ActionMetadata load in parallel
     {
       provide: APP_INITIALIZER,
       useFactory: initializeStore,
       deps: [StoreService],
-      multi: true
+      multi: true,
     },
     {
       provide: APP_INITIALIZER,
       useFactory: initializeAppData,
       deps: [AppDataService],
-      multi: true
-    }
+      multi: true,
+    },
   ],
 };

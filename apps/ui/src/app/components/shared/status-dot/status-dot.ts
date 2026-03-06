@@ -1,16 +1,21 @@
 import { Component, input, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-export type StatusDotStatus = 'default' | 'live' | 'success' | 'warning' | 'danger' | 'info' | 'unsaved';
+export type StatusDotStatus =
+  | 'default'
+  | 'live'
+  | 'success'
+  | 'warning'
+  | 'danger'
+  | 'info'
+  | 'unsaved';
 export type StatusDotSize = 'xs' | 'sm' | 'md';
 
 @Component({
   selector: 'app-status-dot',
   standalone: true,
   imports: [CommonModule],
-  template: `
-    <span [class]="dotClasses()" [title]="title()"></span>
-  `,
+  template: ` <span [class]="dotClasses()" [title]="title()"></span> `,
 })
 export class StatusDotComponent {
   /** Status type */

@@ -1,4 +1,12 @@
-export type DisplayType = 'auto' | 'json' | 'table' | 'text' | 'file' | 'image' | 'link' | 'card';
+export type DisplayType =
+  | 'auto'
+  | 'json'
+  | 'table'
+  | 'text'
+  | 'file'
+  | 'image'
+  | 'link'
+  | 'card';
 
 export interface DisplayArtifact {
   type: DisplayType;

@@ -1,4 +1,10 @@
-import { Component, computed, input, output, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import {
+  Component,
+  computed,
+  input,
+  output,
+  CUSTOM_ELEMENTS_SCHEMA,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IconButtonComponent } from '../icon-button/icon-button';
 import 'iconify-icon';

@@ -1,4 +1,6 @@
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { createGlobPatternsForDependencies } = require('@nx/angular/tailwind');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { join } = require('path');
 
 /**

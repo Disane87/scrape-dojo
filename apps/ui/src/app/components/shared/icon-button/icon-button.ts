@@ -1,4 +1,9 @@
-import { Component, computed, input, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import {
+  Component,
+  computed,
+  input,
+  CUSTOM_ELEMENTS_SCHEMA,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { toIconify } from '../../../utils/icon.utils';
 import 'iconify-icon';
@@ -35,12 +40,16 @@ export class IconButtonComponent {
   loading = input<boolean>(false);
 
   buttonClasses = computed(() => {
-    const base = 'inline-flex items-center justify-center rounded-md transition-colors focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed';
+    const base =
+      'inline-flex items-center justify-center rounded-md transition-colors focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed';
 
     const variants: Record<IconButtonVariant, string> = {
-      default: 'text-dojo-text-muted hover:text-dojo-text hover:bg-dojo-surface-2',
-      danger: 'text-dojo-text-muted hover:text-dojo-danger hover:bg-dojo-danger/10',
-      success: 'text-dojo-text-muted hover:text-dojo-success hover:bg-dojo-success/10',
+      default:
+        'text-dojo-text-muted hover:text-dojo-text hover:bg-dojo-surface-2',
+      danger:
+        'text-dojo-text-muted hover:text-dojo-danger hover:bg-dojo-danger/10',
+      success:
+        'text-dojo-text-muted hover:text-dojo-success hover:bg-dojo-success/10',
       ghost: 'text-dojo-text-muted hover:text-dojo-text',
     };
 

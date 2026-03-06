@@ -1,4 +1,10 @@
-import { Component, inject, signal, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import {
+  Component,
+  inject,
+  signal,
+  OnInit,
+  CUSTOM_ELEMENTS_SCHEMA,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -29,10 +35,11 @@ import 'iconify-icon';
     BadgeComponent,
     ModalComponent,
     AlertComponent,
-    EmptyStateComponent],
+    EmptyStateComponent,
+  ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './secrets-manager.html',
-  styleUrl: './secrets-manager.scss'
+  styleUrl: './secrets-manager.scss',
 })
 export class SecretsManagerComponent implements OnInit {
   private secretsService = inject(SecretsService);
@@ -61,9 +68,9 @@ export class SecretsManagerComponent implements OnInit {
 
   ngOnInit() {
     this.loadSecrets();
-    
+
     // Check for secretName in route params
-    this.route.params.subscribe(params => {
+    this.route.params.subscribe((params) => {
       const secretName = params['secretName'];
       if (secretName) {
         this.openCreateModal(secretName);
@@ -133,7 +140,8 @@ export class SecretsManagerComponent implements OnInit {
     try {
       if (editing) {
         // Update - only include value if it was changed
-        const updates: { name?: string; value?: string; description?: string } = { name, description };
+        const updates: { name?: string; value?: string; description?: string } =
+          { name, description };
         if (value) {
           updates.value = value;
         }
@@ -144,7 +152,11 @@ export class SecretsManagerComponent implements OnInit {
       }
       this.closeModal();
     } catch (e) {
-      this.formError.set(e instanceof Error ? e.message : this.transloco.translate('common.save_failed'));
+      this.formError.set(
+        e instanceof Error
+          ? e.message
+          : this.transloco.translate('common.save_failed'),
+      );
     } finally {
       this.saving.set(false);
     }
@@ -173,7 +185,7 @@ export class SecretsManagerComponent implements OnInit {
       month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   }
 }

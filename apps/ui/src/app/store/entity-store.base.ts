@@ -59,7 +59,9 @@ export abstract class EntityStore<T extends Entity> {
     try {
       const entities = await this.config.loadFn();
       this._entities.set(entities);
-      console.log(`✅ ${this.config.storeName} loaded: ${entities.length} items`);
+      console.log(
+        `✅ ${this.config.storeName} loaded: ${entities.length} items`,
+      );
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
       this._error.set(errorMsg);
@@ -73,7 +75,7 @@ export abstract class EntityStore<T extends Entity> {
    * Entity nach ID finden
    */
   getById(id: string): Signal<T | undefined> {
-    return computed(() => this._entities().find(e => e.id === id));
+    return computed(() => this._entities().find((e) => e.id === id));
   }
 
   /**
@@ -87,7 +89,7 @@ export abstract class EntityStore<T extends Entity> {
    * Entity hinzufügen
    */
   add(entity: T): void {
-    this._entities.update(entities => [entity, ...entities]);
+    this._entities.update((entities) => [entity, ...entities]);
     console.log(`➕ ${this.config.storeName}: Added ${entity.id}`);
   }
 
@@ -95,8 +97,8 @@ export abstract class EntityStore<T extends Entity> {
    * Entity aktualisieren
    */
   update(id: string, updates: Partial<T>): void {
-    this._entities.update(entities =>
-      entities.map(e => e.id === id ? { ...e, ...updates } : e)
+    this._entities.update((entities) =>
+      entities.map((e) => (e.id === id ? { ...e, ...updates } : e)),
     );
     console.log(`🔄 ${this.config.storeName}: Updated ${id}`);
   }
@@ -105,8 +107,8 @@ export abstract class EntityStore<T extends Entity> {
    * Entity mit Custom-Updater aktualisieren
    */
   updateWith(id: string, updater: (entity: T) => T): void {
-    this._entities.update(entities =>
-      entities.map(e => e.id === id ? updater(e) : e)
+    this._entities.update((entities) =>
+      entities.map((e) => (e.id === id ? updater(e) : e)),
     );
     console.log(`🔄 ${this.config.storeName}: Updated ${id} (custom)`);
   }
@@ -115,7 +117,7 @@ export abstract class EntityStore<T extends Entity> {
    * Entity entfernen
    */
   remove(id: string): void {
-    this._entities.update(entities => entities.filter(e => e.id !== id));
+    this._entities.update((entities) => entities.filter((e) => e.id !== id));
     console.log(`🗑️ ${this.config.storeName}: Removed ${id}`);
   }
 
@@ -131,6 +133,7 @@ export abstract class EntityStore<T extends Entity> {
    * SSE Event verarbeiten
    * Wird von konkreten Stores überschrieben
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   handleEvent(event: ScrapeEvent): void {
     // Override in subclass
   }

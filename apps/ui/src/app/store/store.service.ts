@@ -27,7 +27,7 @@ export class StoreService {
     // SSE-Events an alle Stores verteilen
     this.eventsService.events$
       .pipe(takeUntilDestroyed())
-      .subscribe(event => this.handleEvent(event));
+      .subscribe((event) => this.handleEvent(event));
 
     // React to login/logout without requiring a full page reload.
     effect(() => {
@@ -73,7 +73,7 @@ export class StoreService {
       await Promise.all([
         this.scrapes.load(),
         this.runs.load(),
-        this.variables.load()
+        this.variables.load(),
       ]);
 
       console.log('✅ All stores initialized');
@@ -109,10 +109,7 @@ export class StoreService {
    * Alle Stores neu laden
    */
   async reload(): Promise<void> {
-    await Promise.all([
-      this.scrapes.load(),
-      this.runs.load()
-    ]);
+    await Promise.all([this.scrapes.load(), this.runs.load()]);
   }
 
   /**
@@ -128,6 +125,8 @@ export class StoreService {
 /**
  * Factory für APP_INITIALIZER
  */
-export function initializeStore(storeService: StoreService): () => Promise<void> {
+export function initializeStore(
+  storeService: StoreService,
+): () => Promise<void> {
   return () => storeService.initialize();
 }

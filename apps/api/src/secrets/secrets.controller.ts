@@ -1,5 +1,22 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, HttpException, HttpStatus, Logger } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiParam } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  HttpException,
+  HttpStatus,
+  Logger,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBody,
+  ApiParam,
+} from '@nestjs/swagger';
 import { SecretsService, SecretListItem } from './secrets.service';
 import { CreateSecretDto, UpdateSecretDto } from './dto';
 
@@ -37,11 +54,15 @@ export class SecretsController {
   @ApiResponse({ status: 400, description: 'Invalid input or duplicate name' })
   async createSecret(@Body() body: CreateSecretDto): Promise<SecretListItem> {
     try {
-      return await this.secretsService.createSecret(body.name, body.value, body.description);
+      return await this.secretsService.createSecret(
+        body.name,
+        body.value,
+        body.description,
+      );
     } catch (error) {
       throw new HttpException(
         error instanceof Error ? error.message : 'Failed to create secret',
-        HttpStatus.BAD_REQUEST
+        HttpStatus.BAD_REQUEST,
       );
     }
   }
@@ -52,7 +73,10 @@ export class SecretsController {
   @ApiBody({ type: UpdateSecretDto })
   @ApiResponse({ status: 200, description: 'Secret updated' })
   @ApiResponse({ status: 404, description: 'Secret not found' })
-  async updateSecret(@Param('id') id: string, @Body() body: UpdateSecretDto): Promise<SecretListItem> {
+  async updateSecret(
+    @Param('id') id: string,
+    @Body() body: UpdateSecretDto,
+  ): Promise<SecretListItem> {
     try {
       const updated = await this.secretsService.updateSecret(id, body);
       if (!updated) {
@@ -63,7 +87,7 @@ export class SecretsController {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         error instanceof Error ? error.message : 'Failed to update secret',
-        HttpStatus.BAD_REQUEST
+        HttpStatus.BAD_REQUEST,
       );
     }
   }
@@ -88,7 +112,7 @@ export class SecretsController {
   @ApiResponse({ status: 200, description: 'Secret linked to workflow' })
   async linkToWorkflow(
     @Param('id') id: string,
-    @Param('workflowId') workflowId: string
+    @Param('workflowId') workflowId: string,
   ): Promise<{ success: boolean }> {
     try {
       await this.secretsService.linkToWorkflow(id, workflowId);
@@ -96,7 +120,7 @@ export class SecretsController {
     } catch (error) {
       throw new HttpException(
         error instanceof Error ? error.message : 'Failed to link secret',
-        HttpStatus.BAD_REQUEST
+        HttpStatus.BAD_REQUEST,
       );
     }
   }
@@ -108,7 +132,7 @@ export class SecretsController {
   @ApiResponse({ status: 200, description: 'Secret unlinked from workflow' })
   async unlinkFromWorkflow(
     @Param('id') id: string,
-    @Param('workflowId') workflowId: string
+    @Param('workflowId') workflowId: string,
   ): Promise<{ success: boolean }> {
     await this.secretsService.unlinkFromWorkflow(id, workflowId);
     return { success: true };

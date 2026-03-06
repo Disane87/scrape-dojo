@@ -33,57 +33,65 @@ import type { StringValue } from 'ms';
 
 @Global()
 @Module({
-    imports: [
-        TypeOrmModule.forFeature([UserEntity, TrustedDeviceEntity, ApiKeyEntity]),
-        PassportModule.register({ defaultStrategy: 'jwt' }),
-        JwtModule.registerAsync({
-            imports: [ConfigModule],
-            inject: [ConfigService],
-            useFactory: (configService: ConfigService) => {
-                const nodeEnv = configService.get<string>('NODE_ENV', 'development');
-                const secret = configService.get<string>('SCRAPE_DOJO_AUTH_JWT_SECRET', 'jwt-secret-change-me');
-                if (nodeEnv === 'production' && secret === 'jwt-secret-change-me') {
-                    throw new Error('SCRAPE_DOJO_AUTH_JWT_SECRET must be set in production');
-                }
+  imports: [
+    TypeOrmModule.forFeature([UserEntity, TrustedDeviceEntity, ApiKeyEntity]),
+    PassportModule.register({ defaultStrategy: 'jwt' }),
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const nodeEnv = configService.get<string>('NODE_ENV', 'development');
+        const secret = configService.get<string>(
+          'SCRAPE_DOJO_AUTH_JWT_SECRET',
+          'jwt-secret-change-me',
+        );
+        if (nodeEnv === 'production' && secret === 'jwt-secret-change-me') {
+          throw new Error(
+            'SCRAPE_DOJO_AUTH_JWT_SECRET must be set in production',
+          );
+        }
 
-                return {
-                secret,
-                signOptions: {
-                    expiresIn: configService.get<string>('SCRAPE_DOJO_AUTH_ACCESS_TOKEN_EXPIRY', '15m') as StringValue,
-                },
-                };
-            },
-        }),
-    ],
-    controllers: [AuthController, UsersController],
-    providers: [
-        // Services
-        AuthService,
-        UserService,
-        OidcService,
-        MfaService,
-        DeviceService,
-        ApiKeysService,
-        // Strategies
-        JwtStrategy,
-        LocalStrategy,
-        // Guards (available globally via exports)
-        JwtAuthGuard,
-        RolesGuard,
-        ApiKeyGuard,
-    ],
-    exports: [
-        AuthService,
-        UserService,
-        OidcService,
-        MfaService,
-        DeviceService,
-        ApiKeysService,
-        JwtAuthGuard,
-        RolesGuard,
-        ApiKeyGuard,
-        PassportModule,
-        JwtModule,
-    ],
+        return {
+          secret,
+          signOptions: {
+            expiresIn: configService.get<string>(
+              'SCRAPE_DOJO_AUTH_ACCESS_TOKEN_EXPIRY',
+              '15m',
+            ) as StringValue,
+          },
+        };
+      },
+    }),
+  ],
+  controllers: [AuthController, UsersController],
+  providers: [
+    // Services
+    AuthService,
+    UserService,
+    OidcService,
+    MfaService,
+    DeviceService,
+    ApiKeysService,
+    // Strategies
+    JwtStrategy,
+    LocalStrategy,
+    // Guards (available globally via exports)
+    JwtAuthGuard,
+    RolesGuard,
+    ApiKeyGuard,
+  ],
+  exports: [
+    AuthService,
+    UserService,
+    OidcService,
+    MfaService,
+    DeviceService,
+    ApiKeysService,
+    JwtAuthGuard,
+    RolesGuard,
+    ApiKeyGuard,
+    PassportModule,
+    JwtModule,
+  ],
 })
 export class AuthModule {}

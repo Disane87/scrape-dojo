@@ -7,32 +7,32 @@ import { UserMenuComponent } from '../../auth/components/user-menu/user-menu.com
 import 'iconify-icon';
 
 @Component({
-    selector: 'app-top-nav',
-    standalone: true,
-    imports: [CommonModule, ButtonComponent, TranslocoModule, UserMenuComponent],
-    schemas: [CUSTOM_ELEMENTS_SCHEMA],
-    templateUrl: './top-nav.html',
+  selector: 'app-top-nav',
+  standalone: true,
+  imports: [CommonModule, ButtonComponent, TranslocoModule, UserMenuComponent],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  templateUrl: './top-nav.html',
 })
 export class TopNavComponent {
-    private router = inject(Router);
+  private router = inject(Router);
 
-    openApiDocs(): void {
-        this.router.navigate([{ outlets: { modal: ['api-docs'] } }]);
-    }
+  openApiDocs(): void {
+    this.router.navigate([{ outlets: { modal: ['api-docs'] } }]);
+  }
 
-    openSecrets(): void {
-        this.router.navigate([{ outlets: { modal: ['secrets'] } }]);
-    }
+  openSecrets(): void {
+    this.router.navigate([{ outlets: { modal: ['secrets'] } }]);
+  }
 
-    openVariables(): void {
-        this.router.navigate([{ outlets: { modal: ['variables-modal'] } }]);
-    }
+  openVariables(): void {
+    this.router.navigate([{ outlets: { modal: ['variables-modal'] } }]);
+  }
 
-    openStatus(): void {
-        this.router.navigate([{ outlets: { modal: ['status'] } }]);
-    }
+  openStatus(): void {
+    this.router.navigate([{ outlets: { modal: ['status'] } }]);
+  }
 
-    openSettings(): void {
-        this.router.navigate([{ outlets: { modal: ['settings-modal'] } }]);
-    }
+  openSettings(): void {
+    this.router.navigate([{ outlets: { modal: ['settings-modal'] } }]);
+  }
 }

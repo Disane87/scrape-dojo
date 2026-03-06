@@ -20,7 +20,7 @@ import { TextArtifactComponent } from './components/text-artifact.component';
     FileArtifactComponent,
     ImageArtifactComponent,
     LinkArtifactComponent,
-    TextArtifactComponent
+    TextArtifactComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   template: `
@@ -49,24 +49,33 @@ import { TextArtifactComponent } from './components/text-artifact.component';
       }
     }
   `,
-  styles: [`
-    :host {
-      display: block;
-    }
-  `]
+  styles: [
+    `
+      :host {
+        display: block;
+      }
+    `,
+  ],
 })
 export class ArtifactViewerComponent {
   artifact = input.required<DisplayArtifact>();
 
   getIcon(): string {
     switch (this.artifact().type) {
-      case 'card': return 'lucide:layout-grid';
-      case 'table': return 'lucide:table';
-      case 'json': return 'lucide:braces';
-      case 'file': return 'lucide:file-text';
-      case 'image': return 'lucide:image';
-      case 'link': return 'lucide:link';
-      default: return 'lucide:eye';
+      case 'card':
+        return 'lucide:layout-grid';
+      case 'table':
+        return 'lucide:table';
+      case 'json':
+        return 'lucide:braces';
+      case 'file':
+        return 'lucide:file-text';
+      case 'image':
+        return 'lucide:image';
+      case 'link':
+        return 'lucide:link';
+      default:
+        return 'lucide:eye';
     }
   }
 }

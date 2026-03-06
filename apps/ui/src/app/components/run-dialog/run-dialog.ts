@@ -7,7 +7,7 @@ import {
   inject,
   OnInit,
   CUSTOM_ELEMENTS_SCHEMA,
-  DestroyRef
+  DestroyRef,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
@@ -23,7 +23,14 @@ import 'iconify-icon';
 export interface WorkflowVariable {
   name: string;
   label: string;
-  type: 'string' | 'password' | 'number' | 'boolean' | 'email' | 'url' | 'select';
+  type:
+    | 'string'
+    | 'password'
+    | 'number'
+    | 'boolean'
+    | 'email'
+    | 'url'
+    | 'select';
   required?: boolean;
   default?: any;
   defaultValue?: any; // Alias für default (verwendet in Workflow-Definitionen)
@@ -71,21 +78,23 @@ export class RunDialogComponent implements OnInit {
   error = signal<string | null>(null);
 
   // Computed
-  hasRequiredVariables = computed(() => this.variables().some((v) => v.required && !v.secretRef));
+  hasRequiredVariables = computed(() =>
+    this.variables().some((v) => v.required && !v.secretRef),
+  );
 
-  requiredVariablesCount = computed(() =>
-    this.variables().filter((v) => v.required && !v.secretRef).length
+  requiredVariablesCount = computed(
+    () => this.variables().filter((v) => v.required && !v.secretRef).length,
   );
 
   canSubmit = computed(() => {
     const values = this.variableValues();
     const missingSecretsCount = this.missingSecrets().length;
-    
+
     // Prüfe ob fehlende required Secrets vorhanden sind
     if (missingSecretsCount > 0) {
       return false;
     }
-    
+
     // Prüfe normale (nicht-secret) required Variablen
     return this.variables()
       .filter((v) => v.required && !v.secretRef)
@@ -104,34 +113,38 @@ export class RunDialogComponent implements OnInit {
     return missingSecrets.includes(variable.secretRef);
   }
 
-  constructor() {
-  }
+  constructor() {}
 
   ngOnInit() {
     // Load workflowId from route params and variables from Router state
-    this.route.params.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
-      const id = params['workflowId'];
-      if (id) {
-        this.workflowId.set(id);
-        
-        // Load variables from Router state (passed from Dashboard)
-        // Note: getCurrentNavigation() is null after navigation completes, use window.history.state
-        const state = (window.history.state as any);
-        console.log('🔍 Router state:', state);
-        
-        if (state?.variables) {
-          console.log('📋 Loading variables from router state:', state.variables);
-          this.variables.set(state.variables);
-          this.workflowName.set(state.workflowName || id);
-          
-          // Now load and merge with DB variables
-          this.loadAndMergeVariables();
-          this.loadSecrets();
-        } else {
-          console.warn('⚠️ No variables in router state');
+    this.route.params
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((params) => {
+        const id = params['workflowId'];
+        if (id) {
+          this.workflowId.set(id);
+
+          // Load variables from Router state (passed from Dashboard)
+          // Note: getCurrentNavigation() is null after navigation completes, use window.history.state
+          const state = window.history.state as any;
+          console.log('🔍 Router state:', state);
+
+          if (state?.variables) {
+            console.log(
+              '📋 Loading variables from router state:',
+              state.variables,
+            );
+            this.variables.set(state.variables);
+            this.workflowName.set(state.workflowName || id);
+
+            // Now load and merge with DB variables
+            this.loadAndMergeVariables();
+            this.loadSecrets();
+          } else {
+            console.warn('⚠️ No variables in router state');
+          }
         }
-      }
-    });
+      });
   }
 
   /**
@@ -140,9 +153,9 @@ export class RunDialogComponent implements OnInit {
   private loadAndMergeVariables() {
     const id = this.workflowId();
     const vars = this.variables();
-    
+
     if (!id || vars.length === 0) return;
-    
+
     // Hole DB-Variablen für diesen Workflow
     const dbVariables = this.store.variables.getByWorkflow(id);
     console.log('📊 DB Variables for workflow:', id, dbVariables);
@@ -152,7 +165,7 @@ export class RunDialogComponent implements OnInit {
     const values: Record<string, any> = {};
     for (const v of vars) {
       // Prüfe ob es eine DB-Variable mit diesem Namen gibt
-      const dbVar = dbVariables.find(dv => dv.name === v.name);
+      const dbVar = dbVariables.find((dv) => dv.name === v.name);
 
       if (dbVar) {
         // Verwende Wert aus DB (konvertiere je nach Typ)
@@ -183,20 +196,19 @@ export class RunDialogComponent implements OnInit {
   async loadSecrets() {
     this.loading.set(true);
     const vars = this.variables();
-    
+
     try {
       const secrets = await this.secretsService.getSecrets();
       this.secrets.set(secrets);
 
-
       // Build lookup for secretRef and check for missing/empty required secrets
       const lookup: Record<string, string> = {};
       const missingSecrets: string[] = [];
-      
+
       for (const v of vars) {
         if (v.secretRef) {
           const secret = secrets.find((s) => s.name === v.secretRef);
-          
+
           if (!secret) {
             // Secret nicht gefunden - markiere als fehlend
             console.warn(`⚠️ Secret not found: ${v.secretRef}`);
@@ -217,11 +229,10 @@ export class RunDialogComponent implements OnInit {
           }
         }
       }
-      
+
       this.secretLookup.set(lookup);
       this.missingSecrets.set(missingSecrets);
-      
-      
+
       // Log missing required secrets
       if (missingSecrets.length > 0) {
         console.warn('⚠️ Missing required secrets:', missingSecrets);
@@ -235,12 +246,15 @@ export class RunDialogComponent implements OnInit {
 
   updateValue(name: string, value: any) {
     // Konvertiere number-Typen zu echten Numbers
-    const variable = this.variables().find(v => v.name === name);
+    const variable = this.variables().find((v) => v.name === name);
     let convertedValue = value;
 
     if (variable?.type === 'number') {
       // Wenn leer, setze auf undefined statt 0
-      convertedValue = value === '' || value === null || value === undefined ? undefined : Number(value);
+      convertedValue =
+        value === '' || value === null || value === undefined
+          ? undefined
+          : Number(value);
     }
 
     this.variableValues.update((v) => ({ ...v, [name]: convertedValue }));
@@ -248,7 +262,7 @@ export class RunDialogComponent implements OnInit {
 
   getPlaceholder(variable: WorkflowVariable): string {
     if (variable.secretRef) {
-      const secret = this.secrets().find(s => s.name === variable.secretRef);
+      const secret = this.secrets().find((s) => s.name === variable.secretRef);
       if (!secret) {
         return `⚠️ Secret "${variable.secretRef}" not found - create it first!`;
       }
@@ -301,17 +315,21 @@ export class RunDialogComponent implements OnInit {
    */
   navigateToSecret(secretName: string | undefined) {
     if (!secretName) return;
-    
+
     // Close dialog first
     this.cancel();
-    
+
     // Navigate to modal outlet with secret name
-    this.router.navigate([{ outlets: { modal: ['secrets', 'create', secretName] } }]);
+    this.router.navigate([
+      { outlets: { modal: ['secrets', 'create', secretName] } },
+    ]);
   }
 
   async submit() {
     if (!this.canSubmit()) {
-      this.error.set(this.transloco.translate('validation.fill_required_fields'));
+      this.error.set(
+        this.transloco.translate('validation.fill_required_fields'),
+      );
       return;
     }
 
@@ -350,7 +368,7 @@ export class RunDialogComponent implements OnInit {
         scrapeId,
         status: 'running',
         startTime: Date.now(),
-        steps: []
+        steps: [],
       };
       this.store.runs.add(runItem);
 
@@ -361,17 +379,19 @@ export class RunDialogComponent implements OnInit {
       this.scrapeService.runScrape(scrapeId, runId, values).subscribe({
         next: (response) => {
           this.store.runs.update(runId, {
-            status: response.success ? ('success' as const) : ('failed' as const),
-            endTime: Date.now()
+            status: response.success
+              ? ('success' as const)
+              : ('failed' as const),
+            endTime: Date.now(),
           });
         },
         error: (err) => {
           this.store.runs.update(runId, {
             status: 'failed' as const,
             endTime: Date.now(),
-            error: err.message
+            error: err.message,
           });
-        }
+        },
       });
 
       this.closed.emit({

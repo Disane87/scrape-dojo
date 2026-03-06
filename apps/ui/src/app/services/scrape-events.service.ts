@@ -1,11 +1,11 @@
 import { Injectable, NgZone, inject } from '@angular/core';
-import { Observable, Subject } from 'rxjs';
+import { Subject } from 'rxjs';
 import { ScrapeEvent } from '@scrape-dojo/shared';
 import { NotificationService } from './notification.service';
 import { AuthService } from '../auth/services/auth.service';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ScrapeEventsService {
   private ngZone = inject(NgZone);
@@ -65,14 +65,16 @@ export class ScrapeEventsService {
         this.closeEventSource();
 
         if (this.retryCount >= this.maxRetries) {
-          console.error(`SSE: max retries (${this.maxRetries}) reached, giving up`);
+          console.error(
+            `SSE: max retries (${this.maxRetries}) reached, giving up`,
+          );
           return;
         }
 
         // Exponential backoff: 3s, 6s, 12s, 24s, 30s (capped)
         const delay = Math.min(
           this.baseRetryDelay * Math.pow(2, this.retryCount),
-          this.maxRetryDelay
+          this.maxRetryDelay,
         );
         this.retryCount++;
 
@@ -92,14 +94,21 @@ export class ScrapeEventsService {
   private handleNotification(event: ScrapeEvent): void {
     switch (event.type) {
       case 'scrape-start':
-        this.notificationService.notifyWorkflowStarted(event.scrapeId || 'unknown');
+        this.notificationService.notifyWorkflowStarted(
+          event.scrapeId || 'unknown',
+        );
         break;
       case 'scrape-end':
       case 'scrape-complete':
         if (!event.error) {
-          this.notificationService.notifyWorkflowSuccess(event.scrapeId || 'unknown');
+          this.notificationService.notifyWorkflowSuccess(
+            event.scrapeId || 'unknown',
+          );
         } else {
-          this.notificationService.notifyWorkflowFailed(event.scrapeId || 'unknown', event.error);
+          this.notificationService.notifyWorkflowFailed(
+            event.scrapeId || 'unknown',
+            event.error,
+          );
         }
         break;
     }
@@ -126,6 +135,9 @@ export class ScrapeEventsService {
   }
 
   isConnected(): boolean {
-    return this.eventSource !== null && this.eventSource.readyState === EventSource.OPEN;
+    return (
+      this.eventSource !== null &&
+      this.eventSource.readyState === EventSource.OPEN
+    );
   }
 }

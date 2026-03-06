@@ -1,4 +1,13 @@
-import { Entity, Column, PrimaryColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, Unique } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
+  Unique,
+} from 'typeorm';
 import { SecretEntity } from './secret.entity';
 
 @Entity('variables')
@@ -28,13 +37,21 @@ export class VariableEntity {
   @Column({ nullable: true })
   secretId?: string;
 
-  @ManyToOne(() => SecretEntity, secret => secret.variables, { nullable: true })
+  @ManyToOne(() => SecretEntity, (secret) => secret.variables, {
+    nullable: true,
+  })
   @JoinColumn({ name: 'secretId' })
   secret?: SecretEntity;
 
-  @CreateDateColumn({ type: 'bigint', transformer: { to: (value) => value, from: (value) => Number(value) } })
+  @CreateDateColumn({
+    type: 'bigint',
+    transformer: { to: (value) => value, from: (value) => Number(value) },
+  })
   createdAt: number;
 
-  @UpdateDateColumn({ type: 'bigint', transformer: { to: (value) => value, from: (value) => Number(value) } })
+  @UpdateDateColumn({
+    type: 'bigint',
+    transformer: { to: (value) => value, from: (value) => Number(value) },
+  })
   updatedAt: number;
 }

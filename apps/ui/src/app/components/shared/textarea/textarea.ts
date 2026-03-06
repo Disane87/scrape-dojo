@@ -1,6 +1,10 @@
 import { Component, computed, input, output, forwardRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/forms';
+import {
+  ControlValueAccessor,
+  NG_VALUE_ACCESSOR,
+  FormsModule,
+} from '@angular/forms';
 
 export type TextareaSize = 'sm' | 'md' | 'lg';
 
@@ -49,11 +53,12 @@ export class TextareaComponent implements ControlValueAccessor {
   protected _value = '';
 
   // ControlValueAccessor callbacks
-  private onChange: (value: string) => void = () => { };
-  private onTouched: () => void = () => { };
+  private onChange: (value: string) => void = () => {};
+  private onTouched: () => void = () => {};
 
   textareaClasses = computed(() => {
-    const base = 'bg-dojo-bg border border-dojo-border rounded-md text-dojo-text placeholder-dojo-text-muted focus:outline-none focus:border-dojo-accent focus:ring-1 focus:ring-dojo-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+    const base =
+      'bg-dojo-bg border border-dojo-border rounded-md text-dojo-text placeholder-dojo-text-muted focus:outline-none focus:border-dojo-accent focus:ring-1 focus:ring-dojo-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
 
     const sizes: Record<TextareaSize, string> = {
       sm: 'px-2.5 py-1.5 text-sm',
@@ -97,6 +102,7 @@ export class TextareaComponent implements ControlValueAccessor {
     this.onTouched = fn;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   setDisabledState(isDisabled: boolean): void {
     // Handled by disabled input
   }

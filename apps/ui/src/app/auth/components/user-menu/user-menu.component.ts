@@ -1,4 +1,12 @@
-import { Component, inject, CUSTOM_ELEMENTS_SCHEMA, ElementRef, output, signal, viewChild } from '@angular/core';
+import {
+  Component,
+  inject,
+  CUSTOM_ELEMENTS_SCHEMA,
+  ElementRef,
+  output,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { TranslocoModule } from '@jsverse/transloco';
@@ -9,11 +17,11 @@ import { LanguageService } from '../../../services/language.service';
 import 'iconify-icon';
 
 @Component({
-    selector: 'app-user-menu',
-    standalone: true,
-    imports: [CommonModule, RouterLink, TranslocoModule],
-    schemas: [CUSTOM_ELEMENTS_SCHEMA],
-    template: `
+  selector: 'app-user-menu',
+  standalone: true,
+  imports: [CommonModule, RouterLink, TranslocoModule],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  template: `
         @if (authService.isAuthenticated()) {
             <details #menu class="relative">
                 <summary
@@ -219,104 +227,104 @@ import 'iconify-icon';
     `,
 })
 export class UserMenuComponent {
-    authService = inject(AuthService);
-    private themeService = inject(ThemeService);
-    private notificationService = inject(NotificationService);
-    private languageService = inject(LanguageService);
+  authService = inject(AuthService);
+  private themeService = inject(ThemeService);
+  private notificationService = inject(NotificationService);
+  private languageService = inject(LanguageService);
 
-    showApiDocs = output<void>();
-    showStatus = output<void>();
-    showSettings = output<void>();
+  showApiDocs = output<void>();
+  showStatus = output<void>();
+  showSettings = output<void>();
 
-    private readonly menu = viewChild<ElementRef<HTMLDetailsElement>>('menu');
+  private readonly menu = viewChild<ElementRef<HTMLDetailsElement>>('menu');
 
-    notificationsSupported = signal(this.notificationService.isSupported());
-    notificationsEnabled = signal(this.notificationService.isEnabled());
-    currentLanguage = signal(this.languageService.getLanguage());
+  notificationsSupported = signal(this.notificationService.isSupported());
+  notificationsEnabled = signal(this.notificationService.isEnabled());
+  currentLanguage = signal(this.languageService.getLanguage());
 
-    onLanguageChange(event: Event): void {
-        const value = (event.target as HTMLSelectElement | null)?.value;
-        if (value === 'de' || value === 'en') {
-            this.setLanguage(value);
-        }
+  onLanguageChange(event: Event): void {
+    const value = (event.target as HTMLSelectElement | null)?.value;
+    if (value === 'de' || value === 'en') {
+      this.setLanguage(value);
     }
+  }
 
-    currentTheme(): Theme {
-        return this.themeService.theme();
+  currentTheme(): Theme {
+    return this.themeService.theme();
+  }
+
+  setTheme(theme: Theme): void {
+    this.themeService.setTheme(theme);
+  }
+
+  getInitials(): string {
+    const user = this.authService.user();
+    if (!user) return '?';
+
+    const name = user.displayName || user.username || user.email;
+    const parts = name.split(/[\s@]+/);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
     }
+    return name.substring(0, 2).toUpperCase();
+  }
 
-    setTheme(theme: Theme): void {
-        this.themeService.setTheme(theme);
+  logout(): void {
+    this.closeMenu();
+    this.authService.logout();
+  }
+
+  openStatus(): void {
+    this.closeMenu();
+    this.showStatus.emit();
+  }
+
+  openApiDocs(): void {
+    this.closeMenu();
+    this.showApiDocs.emit();
+  }
+
+  openSettings(): void {
+    this.closeMenu();
+    this.showSettings.emit();
+  }
+
+  cycleTheme(): void {
+    this.themeService.cycleTheme();
+  }
+
+  themeIcon(): string {
+    const theme = this.themeService.theme();
+    if (theme === 'light') return 'mdi:white-balance-sunny';
+    if (theme === 'dark') return 'mdi:moon-waning-crescent';
+    return 'mdi:monitor';
+  }
+
+  themeLabelKey(): string {
+    const theme = this.themeService.theme();
+    if (theme === 'light') return 'common.theme_light';
+    if (theme === 'dark') return 'common.theme_dark';
+    return 'common.theme_system';
+  }
+
+  toggleNotifications(): void {
+    const next = !this.notificationsEnabled();
+    this.notificationsEnabled.set(next);
+    this.notificationService.setEnabled(next);
+    if (next) {
+      this.notificationService.requestPermission();
     }
+  }
 
-    getInitials(): string {
-        const user = this.authService.user();
-        if (!user) return '?';
+  setLanguage(lang: string): void {
+    this.languageService.setLanguage(lang);
+    this.currentLanguage.set(lang);
+  }
 
-        const name = user.displayName || user.username || user.email;
-        const parts = name.split(/[\s@]+/);
-        if (parts.length >= 2) {
-            return (parts[0][0] + parts[1][0]).toUpperCase();
-        }
-        return name.substring(0, 2).toUpperCase();
+  closeMenu(): void {
+    const el = this.menu()?.nativeElement;
+    if (el && el.open) {
+      el.open = false;
     }
-
-    logout(): void {
-        this.closeMenu();
-        this.authService.logout();
-    }
-
-    openStatus(): void {
-        this.closeMenu();
-        this.showStatus.emit();
-    }
-
-    openApiDocs(): void {
-        this.closeMenu();
-        this.showApiDocs.emit();
-    }
-
-    openSettings(): void {
-        this.closeMenu();
-        this.showSettings.emit();
-    }
-
-    cycleTheme(): void {
-        this.themeService.cycleTheme();
-    }
-
-    themeIcon(): string {
-        const theme = this.themeService.theme();
-        if (theme === 'light') return 'mdi:white-balance-sunny';
-        if (theme === 'dark') return 'mdi:moon-waning-crescent';
-        return 'mdi:monitor';
-    }
-
-    themeLabelKey(): string {
-        const theme = this.themeService.theme();
-        if (theme === 'light') return 'common.theme_light';
-        if (theme === 'dark') return 'common.theme_dark';
-        return 'common.theme_system';
-    }
-
-    toggleNotifications(): void {
-        const next = !this.notificationsEnabled();
-        this.notificationsEnabled.set(next);
-        this.notificationService.setEnabled(next);
-        if (next) {
-            this.notificationService.requestPermission();
-        }
-    }
-
-    setLanguage(lang: string): void {
-        this.languageService.setLanguage(lang);
-        this.currentLanguage.set(lang);
-    }
-
-    closeMenu(): void {
-        const el = this.menu()?.nativeElement;
-        if (el && el.open) {
-            el.open = false;
-        }
-    }
+  }
 }

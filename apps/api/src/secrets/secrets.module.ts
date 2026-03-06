@@ -9,4 +9,4 @@ import { DatabaseModule } from '../database/database.module';
   controllers: [SecretsController],
   exports: [SecretsService],
 })
-export class SecretsModule { }
+export class SecretsModule {}

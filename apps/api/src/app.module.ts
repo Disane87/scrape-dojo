@@ -47,8 +47,13 @@ import { ConfigService } from '@nestjs/config';
     // Global JWT Auth Guard - can be disabled via SCRAPE_DOJO_AUTH_ENABLED=false
     {
       provide: APP_GUARD,
-      useFactory: (configService: ConfigService, jwtAuthGuard: JwtAuthGuard) => {
-        const authEnabled = configService.get<string>('SCRAPE_DOJO_AUTH_ENABLED', 'true') === 'true';
+      useFactory: (
+        configService: ConfigService,
+        jwtAuthGuard: JwtAuthGuard,
+      ) => {
+        const authEnabled =
+          configService.get<string>('SCRAPE_DOJO_AUTH_ENABLED', 'true') ===
+          'true';
         if (!authEnabled) {
           return { canActivate: () => true };
         }
@@ -63,7 +68,7 @@ export class AppModule implements OnModuleInit {
   constructor(
     private moduleRef: ModuleRef,
     private eventsService: ScrapeEventsService,
-  ) { }
+  ) {}
 
   onModuleInit() {
     // EventLogger mit dem EventsService verbinden

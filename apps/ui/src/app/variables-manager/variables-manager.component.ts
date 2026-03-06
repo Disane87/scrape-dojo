@@ -1,4 +1,10 @@
-import { Component, inject, signal, CUSTOM_ELEMENTS_SCHEMA, OnInit } from '@angular/core';
+import {
+  Component,
+  inject,
+  signal,
+  CUSTOM_ELEMENTS_SCHEMA,
+  OnInit,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -25,11 +31,11 @@ import 'iconify-icon';
     IconButtonComponent,
     ModalComponent,
     AlertComponent,
-    EmptyStateComponent
+    EmptyStateComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './variables-manager.component.html',
-  styleUrl: './variables-manager.component.scss'
+  styleUrl: './variables-manager.component.scss',
 })
 export class VariablesManagerComponent implements OnInit {
   readonly store = inject(StoreService);
@@ -62,7 +68,7 @@ export class VariablesManagerComponent implements OnInit {
   }>({
     name: '',
     value: '',
-    description: ''
+    description: '',
   });
 
   openCreateDialog(): void {
@@ -71,7 +77,7 @@ export class VariablesManagerComponent implements OnInit {
     this.formData.set({
       name: '',
       value: '',
-      description: ''
+      description: '',
     });
     this.showDialog.set(true);
   }
@@ -82,13 +88,13 @@ export class VariablesManagerComponent implements OnInit {
     this.formData.set({
       name: variable.name,
       value: variable.value,
-      description: variable.description
+      description: variable.description,
     });
     this.showDialog.set(true);
   }
 
   updateFormData(field: string, value: any): void {
-    this.formData.update(current => ({ ...current, [field]: value }));
+    this.formData.update((current) => ({ ...current, [field]: value }));
   }
 
   confirmDelete(id: string): void {
@@ -132,7 +138,7 @@ export class VariablesManagerComponent implements OnInit {
         // Update
         await this.store.variables.updateVariable(this.editingVariable()!.id, {
           value: data.value.trim(),
-          description: data.description?.trim()
+          description: data.description?.trim(),
         });
       } else {
         // Create (immer global)
@@ -141,7 +147,7 @@ export class VariablesManagerComponent implements OnInit {
           value: data.value.trim(),
           description: data.description?.trim(),
           scope: 'global',
-          workflowId: undefined
+          workflowId: undefined,
         });
       }
 
@@ -149,7 +155,11 @@ export class VariablesManagerComponent implements OnInit {
       this.closeDialog();
     } catch (error) {
       console.error('Failed to save variable:', error);
-      this.formError.set(error instanceof Error ? error.message : this.transloco.translate('common.save_failed'));
+      this.formError.set(
+        error instanceof Error
+          ? error.message
+          : this.transloco.translate('common.save_failed'),
+      );
     } finally {
       this.saving.set(false);
     }
@@ -167,8 +177,10 @@ export class VariablesManagerComponent implements OnInit {
   getSecretRefForVariable(variableName: string): string | undefined {
     // Suche in allen Workflows nach einer Definition mit dieser Variable
     for (const scrape of this.store.scrapes.entities()) {
-      const definitions = this.store.variables.getWorkflowDefinitions(scrape.id);
-      const definition = definitions.find(d => d.name === variableName);
+      const definitions = this.store.variables.getWorkflowDefinitions(
+        scrape.id,
+      );
+      const definition = definitions.find((d) => d.name === variableName);
       if (definition?.secretRef) {
         return definition.secretRef;
       }
@@ -184,7 +196,7 @@ export class VariablesManagerComponent implements OnInit {
       month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   }
 

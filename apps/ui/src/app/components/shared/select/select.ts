@@ -1,6 +1,17 @@
-import { Component, computed, input, output, forwardRef , CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import {
+  Component,
+  computed,
+  input,
+  output,
+  forwardRef,
+  CUSTOM_ELEMENTS_SCHEMA,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/forms';
+import {
+  ControlValueAccessor,
+  NG_VALUE_ACCESSOR,
+  FormsModule,
+} from '@angular/forms';
 import 'iconify-icon';
 
 export type SelectSize = 'sm' | 'md' | 'lg';
@@ -16,14 +27,15 @@ export interface SelectOption {
   selector: 'app-select',
   standalone: true,
   imports: [CommonModule, FormsModule],
-    schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './select.html',
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
       useExisting: forwardRef(() => SelectComponent),
       multi: true,
-    }],
+    },
+  ],
 })
 export class SelectComponent implements ControlValueAccessor {
   /** Select options */
@@ -51,11 +63,12 @@ export class SelectComponent implements ControlValueAccessor {
   protected _value: string | number = '';
 
   // ControlValueAccessor callbacks
-  private onChange: (value: string | number) => void = () => { };
-  private onTouched: () => void = () => { };
+  private onChange: (value: string | number) => void = () => {};
+  private onTouched: () => void = () => {};
 
   selectClasses = computed(() => {
-    const base = 'appearance-none border border-dojo-border rounded-md text-dojo-text focus:outline-none focus:border-dojo-accent focus:ring-1 focus:ring-dojo-accent cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed pr-8';
+    const base =
+      'appearance-none border border-dojo-border rounded-md text-dojo-text focus:outline-none focus:border-dojo-accent focus:ring-1 focus:ring-dojo-accent cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed pr-8';
 
     const variants: Record<SelectVariant, string> = {
       default: 'bg-dojo-bg',
@@ -96,6 +109,7 @@ export class SelectComponent implements ControlValueAccessor {
     this.onTouched = fn;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   setDisabledState(isDisabled: boolean): void {
     // Handled by disabled input
   }

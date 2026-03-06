@@ -17,7 +17,12 @@ export class ScrapesStore extends EntityStore<ScrapeListItem> {
     super({
       storeName: 'Scrapes',
       loadFn: () => firstValueFrom(this.scrapeService.getScrapes()),
-      eventTypes: ['scrape-start', 'scrape-end', 'scrape-complete', 'config-reload']
+      eventTypes: [
+        'scrape-start',
+        'scrape-end',
+        'scrape-complete',
+        'config-reload',
+      ],
     });
   }
 
@@ -58,8 +63,8 @@ export class ScrapesStore extends EntityStore<ScrapeListItem> {
     this.update(event.scrapeId, {
       lastRun: {
         status: 'running',
-        startTime: Date.now()
-      }
+        startTime: Date.now(),
+      },
     } as Partial<ScrapeListItem>);
   }
 
@@ -76,15 +81,18 @@ export class ScrapesStore extends EntityStore<ScrapeListItem> {
       lastRun: {
         status: event.error ? 'failed' : 'completed',
         startTime: event.timestamp || Date.now(),
-        endTime: Date.now()
-      }
+        endTime: Date.now(),
+      },
     } as Partial<ScrapeListItem>);
   }
 
   /**
    * Scrape mit LastRun aus RunHistory aktualisieren
    */
-  updateLastRunFromHistory(scrapeId: string, lastRun: ScrapeListItem['lastRun']): void {
+  updateLastRunFromHistory(
+    scrapeId: string,
+    lastRun: ScrapeListItem['lastRun'],
+  ): void {
     this.update(scrapeId, { lastRun } as Partial<ScrapeListItem>);
   }
 }

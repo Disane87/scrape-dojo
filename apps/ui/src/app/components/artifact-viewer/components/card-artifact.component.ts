@@ -1,4 +1,10 @@
-import { Component, CUSTOM_ELEMENTS_SCHEMA, AfterViewChecked, AfterViewInit, ElementRef, inject, OnDestroy } from '@angular/core';
+import {
+  Component,
+  CUSTOM_ELEMENTS_SCHEMA,
+  AfterViewChecked,
+  ElementRef,
+  inject,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { BaseArtifactComponent } from './base-artifact.component';
@@ -11,36 +17,47 @@ import { FilesService } from '../../../services/files.service';
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   template: `
     @if (artifact().flush) {
-    <!-- Flush/Compact List Style -->
-    <div class="overflow-hidden">
-      @for (item of getCardItems(); track $index) {
-      <div class="bg-dojo-surface-2 hover:bg-dojo-surface transition-colors p-2" [class.border-b]="!$last" [class.border-dojo-border]="!$last">
-        <div [innerHTML]="getSafeHtml(item)" class="flush-card"></div>
+      <!-- Flush/Compact List Style -->
+      <div class="overflow-hidden">
+        @for (item of getCardItems(); track $index) {
+          <div
+            class="bg-dojo-surface-2 hover:bg-dojo-surface transition-colors p-2"
+            [class.border-b]="!$last"
+            [class.border-dojo-border]="!$last"
+          >
+            <div [innerHTML]="getSafeHtml(item)" class="flush-card"></div>
+          </div>
+        }
       </div>
-      }
-    </div>
     } @else {
-    <!-- Standard Card Grid -->
-    <div class="grid gap-3">
-      @for (item of getCardItems(); track $index) {
-      <div class="bg-dojo-surface-2 border border-dojo-border rounded-lg hover:border-dojo-accent transition-colors">
-        <div [innerHTML]="getSafeHtml(item)"></div>
+      <!-- Standard Card Grid -->
+      <div class="grid gap-3">
+        @for (item of getCardItems(); track $index) {
+          <div
+            class="bg-dojo-surface-2 border border-dojo-border rounded-lg hover:border-dojo-accent transition-colors"
+          >
+            <div [innerHTML]="getSafeHtml(item)"></div>
+          </div>
+        }
       </div>
-      }
-    </div>
     }
   `,
-  styles: [`
-    :host ::ng-deep .flush-card {
-      padding: 0;
-    }
-    :host ::ng-deep .flush-card > div {
-      padding: 0 !important;
-      margin: 0 !important;
-    }
-  `]
+  styles: [
+    `
+      :host ::ng-deep .flush-card {
+        padding: 0;
+      }
+      :host ::ng-deep .flush-card > div {
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+    `,
+  ],
 })
-export class CardArtifactComponent extends BaseArtifactComponent implements AfterViewChecked {
+export class CardArtifactComponent
+  extends BaseArtifactComponent
+  implements AfterViewChecked
+{
   private filesService = inject(FilesService);
   private elementRef = inject(ElementRef);
   private sanitizer = inject(DomSanitizer);
@@ -63,13 +80,19 @@ export class CardArtifactComponent extends BaseArtifactComponent implements Afte
 
   ngOnDestroy(): void {
     if (!this.clickHandler) return;
-    this.elementRef.nativeElement.removeEventListener('click', this.clickHandler);
+    this.elementRef.nativeElement.removeEventListener(
+      'click',
+      this.clickHandler,
+    );
     this.clickHandler = null;
   }
 
   private findDownloadPath(event: Event): string | null {
     const anyEvent = event as any;
-    const composedPath: unknown[] | undefined = typeof anyEvent.composedPath === 'function' ? anyEvent.composedPath() : undefined;
+    const composedPath: unknown[] | undefined =
+      typeof anyEvent.composedPath === 'function'
+        ? anyEvent.composedPath()
+        : undefined;
 
     if (Array.isArray(composedPath)) {
       for (const node of composedPath) {
@@ -104,7 +127,7 @@ export class CardArtifactComponent extends BaseArtifactComponent implements Afte
     if (!template) {
       return `<pre class="text-xs">${JSON.stringify(item, null, 2)}</pre>`;
     }
-    
+
     // Template wurde bereits im Backend gerendert, einfach zurückgeben
     return template;
   }

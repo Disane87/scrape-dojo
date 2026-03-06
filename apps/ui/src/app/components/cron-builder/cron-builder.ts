@@ -1,13 +1,15 @@
-import { Component, EventEmitter, Input, Output, signal, computed, effect } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+  signal,
+  computed,
+  effect,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslocoModule } from '@jsverse/transloco';
-
-interface CronPart {
-  value: string;
-  label: string;
-  description: string;
-}
 
 interface PresetSchedule {
   label: string;
@@ -47,7 +49,9 @@ export class CronBuilderComponent {
   dayOfWeek = signal('*');
 
   // Simple mode selections
-  scheduleType = signal<'every-minute' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'custom'>('daily');
+  scheduleType = signal<
+    'every-minute' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'custom'
+  >('daily');
   selectedHour = signal('9');
   selectedMinute = signal('0');
   selectedDays = signal<number[]>([1, 2, 3, 4, 5]); // Mon-Fri
@@ -66,13 +70,48 @@ export class CronBuilderComponent {
 
   // Preset schedules
   presets: PresetSchedule[] = [
-    { label: 'Jede Minute', expression: '* * * * *', description: 'Läuft jede Minute', icon: '⚡' },
-    { label: 'Stündlich', expression: '0 * * * *', description: 'Jede Stunde zur vollen Stunde', icon: '🕐' },
-    { label: 'Täglich 9:00', expression: '0 9 * * *', description: 'Jeden Tag um 9:00 Uhr', icon: '☀️' },
-    { label: 'Täglich 18:00', expression: '0 18 * * *', description: 'Jeden Tag um 18:00 Uhr', icon: '🌙' },
-    { label: 'Werktags 9:00', expression: '0 9 * * 1-5', description: 'Montag bis Freitag um 9:00', icon: '💼' },
-    { label: 'Wöchentlich', expression: '0 9 * * 1', description: 'Jeden Montag um 9:00', icon: '📅' },
-    { label: 'Monatlich', expression: '0 9 1 * *', description: 'Am 1. jeden Monats um 9:00', icon: '📆' },
+    {
+      label: 'Jede Minute',
+      expression: '* * * * *',
+      description: 'Läuft jede Minute',
+      icon: '⚡',
+    },
+    {
+      label: 'Stündlich',
+      expression: '0 * * * *',
+      description: 'Jede Stunde zur vollen Stunde',
+      icon: '🕐',
+    },
+    {
+      label: 'Täglich 9:00',
+      expression: '0 9 * * *',
+      description: 'Jeden Tag um 9:00 Uhr',
+      icon: '☀️',
+    },
+    {
+      label: 'Täglich 18:00',
+      expression: '0 18 * * *',
+      description: 'Jeden Tag um 18:00 Uhr',
+      icon: '🌙',
+    },
+    {
+      label: 'Werktags 9:00',
+      expression: '0 9 * * 1-5',
+      description: 'Montag bis Freitag um 9:00',
+      icon: '💼',
+    },
+    {
+      label: 'Wöchentlich',
+      expression: '0 9 * * 1',
+      description: 'Jeden Montag um 9:00',
+      icon: '📅',
+    },
+    {
+      label: 'Monatlich',
+      expression: '0 9 1 * *',
+      description: 'Am 1. jeden Monats um 9:00',
+      icon: '📆',
+    },
   ];
 
   // Days of week
@@ -170,7 +209,9 @@ export class CronBuilderComponent {
     this.mode.set('simple');
   }
 
-  updateScheduleType(type: 'every-minute' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'custom') {
+  updateScheduleType(
+    type: 'every-minute' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'custom',
+  ) {
     this.initialized = true; // User interaction
     this.scheduleType.set(type);
     this.updateCronFromSimple();
@@ -254,7 +295,10 @@ export class CronBuilderComponent {
     this.updateCronFromSimple();
   }
 
-  updateAdvancedPart(part: 'minute' | 'hour' | 'dayOfMonth' | 'month' | 'dayOfWeek', value: string) {
+  updateAdvancedPart(
+    part: 'minute' | 'hour' | 'dayOfMonth' | 'month' | 'dayOfWeek',
+    value: string,
+  ) {
     this.initialized = true; // User interaction
     switch (part) {
       case 'minute':
@@ -282,13 +326,21 @@ export class CronBuilderComponent {
     const [min, hr, dom, mon, dow] = parts;
 
     // Every minute
-    if (min === '*' && hr === '*' && dom === '*' && mon === '*' && dow === '*') {
+    if (
+      min === '*' &&
+      hr === '*' &&
+      dom === '*' &&
+      mon === '*' &&
+      dow === '*'
+    ) {
       return 'Jede Minute';
     }
 
     // Hourly
     if (hr === '*' && dom === '*' && mon === '*' && dow === '*') {
-      return min === '0' ? 'Jede Stunde zur vollen Stunde' : `Jede Stunde bei Minute ${min}`;
+      return min === '0'
+        ? 'Jede Stunde zur vollen Stunde'
+        : `Jede Stunde bei Minute ${min}`;
     }
 
     // Build description

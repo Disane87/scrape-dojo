@@ -1,4 +1,11 @@
-import { Component, computed, inject, input, signal, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import {
+  Component,
+  computed,
+  inject,
+  input,
+  signal,
+  CUSTOM_ELEMENTS_SCHEMA,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
@@ -24,7 +31,7 @@ import 'iconify-icon';
     IconButtonComponent,
     ModalComponent,
     AlertComponent,
-    EmptyStateComponent
+    EmptyStateComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './workflow-variables.component.html',
@@ -54,11 +61,11 @@ export class WorkflowVariablesComponent {
 
   // Computed
   readonly workflowVariables = computed(() =>
-    this.store.variables.getByWorkflow(this.workflowId())
+    this.store.variables.getByWorkflow(this.workflowId()),
   );
 
   readonly workflowDefinitions = computed(() =>
-    this.store.variables.getWorkflowDefinitions(this.workflowId())
+    this.store.variables.getWorkflowDefinitions(this.workflowId()),
   );
 
   hasVariableInDB(varName: string): boolean {
@@ -138,10 +145,13 @@ export class WorkflowVariablesComponent {
 
     try {
       if (this.editingVariable()) {
-        const updated = await this.store.variables.updateVariable(this.editingVariable()!.id, {
-          value: data.value.trim(),
-          description: data.description?.trim(),
-        });
+        const updated = await this.store.variables.updateVariable(
+          this.editingVariable()!.id,
+          {
+            value: data.value.trim(),
+            description: data.description?.trim(),
+          },
+        );
         console.log('Variable updated:', updated);
         // Store direkt aktualisieren statt kompletten Reload
         this.store.variables.update(updated.id, updated);
@@ -161,7 +171,9 @@ export class WorkflowVariablesComponent {
       this.closeDialog();
     } catch (error: any) {
       console.error('Save variable error:', error);
-      this.formError.set(error.message || this.transloco.translate('common.save_failed'));
+      this.formError.set(
+        error.message || this.transloco.translate('common.save_failed'),
+      );
     } finally {
       this.saving.set(false);
     }
@@ -177,7 +189,9 @@ export class WorkflowVariablesComponent {
    * Findet die Secret-Referenz für eine Variable aus den Workflow-Definitionen
    */
   getSecretRef(variableName: string): string | undefined {
-    const definition = this.workflowDefinitions().find(d => d.name === variableName);
+    const definition = this.workflowDefinitions().find(
+      (d) => d.name === variableName,
+    );
     return definition?.secretRef;
   }
 

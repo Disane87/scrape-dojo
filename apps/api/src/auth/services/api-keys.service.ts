@@ -9,76 +9,79 @@ import { UserEntity } from '../entities/user.entity';
 
 @Injectable()
 export class ApiKeysService {
-    constructor(
-        @InjectRepository(ApiKeyEntity)
-        private readonly apiKeyRepository: Repository<ApiKeyEntity>,
-        private readonly userService: UserService,
-    ) {}
+  constructor(
+    @InjectRepository(ApiKeyEntity)
+    private readonly apiKeyRepository: Repository<ApiKeyEntity>,
+    private readonly userService: UserService,
+  ) {}
 
-    async listForUser(userId: string): Promise<ApiKeyEntity[]> {
-        return this.apiKeyRepository.find({
-            where: { userId },
-            order: { createdAt: 'DESC' },
-        });
+  async listForUser(userId: string): Promise<ApiKeyEntity[]> {
+    return this.apiKeyRepository.find({
+      where: { userId },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async createForUser(
+    userId: string,
+    name: string,
+  ): Promise<{ apiKey: string; entity: ApiKeyEntity }> {
+    const apiKey = this.generateApiKey();
+    const keyHash = this.hashApiKey(apiKey);
+    const keyPrefix = apiKey.slice(0, 12);
+
+    const entity = this.apiKeyRepository.create({
+      id: uuidv4(),
+      userId,
+      name,
+      keyPrefix,
+      keyHash,
+      lastUsedAt: null,
+      revokedAt: null,
+    });
+
+    await this.apiKeyRepository.save(entity);
+
+    return { apiKey, entity };
+  }
+
+  async revokeForUser(userId: string, apiKeyId: string): Promise<void> {
+    await this.apiKeyRepository.update(
+      { id: apiKeyId, userId },
+      { revokedAt: Date.now() },
+    );
+  }
+
+  async validateApiKey(apiKey: string): Promise<UserEntity | null> {
+    const keyHash = this.hashApiKey(apiKey);
+
+    const match = await this.apiKeyRepository.findOne({
+      where: { keyHash, revokedAt: IsNull() },
+    });
+
+    if (!match) {
+      return null;
     }
 
-    async createForUser(userId: string, name: string): Promise<{ apiKey: string; entity: ApiKeyEntity }> {
-        const apiKey = this.generateApiKey();
-        const keyHash = this.hashApiKey(apiKey);
-        const keyPrefix = apiKey.slice(0, 12);
+    await this.apiKeyRepository.update(
+      { id: match.id },
+      { lastUsedAt: Date.now() },
+    );
 
-        const entity = this.apiKeyRepository.create({
-            id: uuidv4(),
-            userId,
-            name,
-            keyPrefix,
-            keyHash,
-            lastUsedAt: null,
-            revokedAt: null,
-        });
-
-        await this.apiKeyRepository.save(entity);
-
-        return { apiKey, entity };
+    const user = await this.userService.findById(match.userId);
+    if (!user || !user.isActive) {
+      return null;
     }
 
-    async revokeForUser(userId: string, apiKeyId: string): Promise<void> {
-        await this.apiKeyRepository.update(
-            { id: apiKeyId, userId },
-            { revokedAt: Date.now() },
-        );
-    }
+    return user;
+  }
 
-    async validateApiKey(apiKey: string): Promise<UserEntity | null> {
-        const keyHash = this.hashApiKey(apiKey);
+  private generateApiKey(): string {
+    const random = crypto.randomBytes(24).toString('hex');
+    return `sdj_${random}`;
+  }
 
-        const match = await this.apiKeyRepository.findOne({
-            where: { keyHash, revokedAt: IsNull() },
-        });
-
-        if (!match) {
-            return null;
-        }
-
-        await this.apiKeyRepository.update(
-            { id: match.id },
-            { lastUsedAt: Date.now() },
-        );
-
-        const user = await this.userService.findById(match.userId);
-        if (!user || !user.isActive) {
-            return null;
-        }
-
-        return user;
-    }
-
-    private generateApiKey(): string {
-        const random = crypto.randomBytes(24).toString('hex');
-        return `sdj_${random}`;
-    }
-
-    private hashApiKey(apiKey: string): string {
-        return crypto.createHash('sha256').update(apiKey).digest('hex');
-    }
+  private hashApiKey(apiKey: string): string {
+    return crypto.createHash('sha256').update(apiKey).digest('hex');
+  }
 }

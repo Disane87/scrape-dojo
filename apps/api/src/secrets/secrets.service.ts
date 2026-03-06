@@ -37,8 +37,8 @@ export class SecretsService implements OnModuleInit {
 
   constructor(
     private databaseService: DatabaseService,
-    private configService: ConfigService
-  ) { }
+    private configService: ConfigService,
+  ) {}
 
   async onModuleInit() {
     await this.initializeEncryption();
@@ -50,17 +50,27 @@ export class SecretsService implements OnModuleInit {
    */
   private async initializeEncryption() {
     try {
-      const keyHex = this.configService.get<string>('SCRAPE_DOJO_ENCRYPTION_KEY');
+      const keyHex = this.configService.get<string>(
+        'SCRAPE_DOJO_ENCRYPTION_KEY',
+      );
 
       if (!keyHex) {
-        this.logger.error('❌ SCRAPE_DOJO_ENCRYPTION_KEY not found in environment variables!');
-        this.logger.error('Please add SCRAPE_DOJO_ENCRYPTION_KEY to your .env file (64 hex characters = 256 bits)');
-        throw new Error('SCRAPE_DOJO_ENCRYPTION_KEY environment variable is required');
+        this.logger.error(
+          '❌ SCRAPE_DOJO_ENCRYPTION_KEY not found in environment variables!',
+        );
+        this.logger.error(
+          'Please add SCRAPE_DOJO_ENCRYPTION_KEY to your .env file (64 hex characters = 256 bits)',
+        );
+        throw new Error(
+          'SCRAPE_DOJO_ENCRYPTION_KEY environment variable is required',
+        );
       }
 
       // Validate key format
       if (!/^[0-9a-fA-F]{64}$/.test(keyHex)) {
-        this.logger.error('❌ Invalid SCRAPE_DOJO_ENCRYPTION_KEY format. Must be 64 hex characters (256 bits)');
+        this.logger.error(
+          '❌ Invalid SCRAPE_DOJO_ENCRYPTION_KEY format. Must be 64 hex characters (256 bits)',
+        );
         throw new Error('Invalid SCRAPE_DOJO_ENCRYPTION_KEY format');
       }
 
@@ -81,7 +91,11 @@ export class SecretsService implements OnModuleInit {
     }
 
     const iv = crypto.randomBytes(this.ivLength);
-    const cipher = crypto.createCipheriv(this.algorithm, this.encryptionKey, iv);
+    const cipher = crypto.createCipheriv(
+      this.algorithm,
+      this.encryptionKey,
+      iv,
+    );
 
     let encrypted = cipher.update(value, 'utf8', 'hex');
     encrypted += cipher.final('hex');
@@ -109,7 +123,11 @@ export class SecretsService implements OnModuleInit {
     const authTag = Buffer.from(parts[1], 'hex');
     const encrypted = parts[2];
 
-    const decipher = crypto.createDecipheriv(this.algorithm, this.encryptionKey, iv);
+    const decipher = crypto.createDecipheriv(
+      this.algorithm,
+      this.encryptionKey,
+      iv,
+    );
     decipher.setAuthTag(authTag);
 
     let decrypted = decipher.update(encrypted, 'hex', 'utf8');
@@ -153,9 +171,10 @@ export class SecretsService implements OnModuleInit {
       secretToWorkflows.get(v.v_secretId)!.push(v.v_workflowId);
     }
 
-    return entities.map(entity => {
+    return entities.map((entity) => {
       // Prüfe ob Secret leer ist (nur IV + AuthTag + leerer Cipher = ca. 66 Zeichen)
-      const isEmpty = !entity.encryptedValue || entity.encryptedValue.length < 70;
+      const isEmpty =
+        !entity.encryptedValue || entity.encryptedValue.length < 70;
 
       return {
         id: entity.id,
@@ -206,11 +225,15 @@ export class SecretsService implements OnModuleInit {
       return null;
     }
 
-    this.logger.debug(`  ✅ Found secret: ${entity.name}, encrypted value length: ${entity.encryptedValue?.length || 0}`);
+    this.logger.debug(
+      `  ✅ Found secret: ${entity.name}, encrypted value length: ${entity.encryptedValue?.length || 0}`,
+    );
 
     try {
       const decrypted = this.decrypt(entity.encryptedValue);
-      this.logger.debug(`  🔓 Decrypted successfully, length: ${decrypted?.length || 0}`);
+      this.logger.debug(
+        `  🔓 Decrypted successfully, length: ${decrypted?.length || 0}`,
+      );
       return decrypted;
     } catch (error) {
       this.logger.error(`Failed to decrypt secret ${entity.name}:`, error);
@@ -221,7 +244,11 @@ export class SecretsService implements OnModuleInit {
   /**
    * Create a new secret
    */
-  async createSecret(name: string, value: string, description?: string): Promise<SecretListItem> {
+  async createSecret(
+    name: string,
+    value: string,
+    description?: string,
+  ): Promise<SecretListItem> {
     // Check for duplicate name
     const existing = await this.databaseService.getSecretByName(name);
     if (existing) {
@@ -231,7 +258,12 @@ export class SecretsService implements OnModuleInit {
     const id = crypto.randomUUID();
     const encryptedValue = this.encrypt(value);
 
-    const entity = await this.databaseService.createSecret(id, name, encryptedValue, description);
+    const entity = await this.databaseService.createSecret(
+      id,
+      name,
+      encryptedValue,
+      description,
+    );
 
     this.logger.log(`✅ Created secret: ${name}`);
 
@@ -248,7 +280,10 @@ export class SecretsService implements OnModuleInit {
   /**
    * Update a secret
    */
-  async updateSecret(id: string, updates: { name?: string; value?: string; description?: string }): Promise<SecretListItem | null> {
+  async updateSecret(
+    id: string,
+    updates: { name?: string; value?: string; description?: string },
+  ): Promise<SecretListItem | null> {
     const entity = await this.databaseService.getSecretById(id);
     if (!entity) return null;
 
@@ -260,11 +295,17 @@ export class SecretsService implements OnModuleInit {
       }
     }
 
-    const dbUpdates: { name?: string; encryptedValue?: string; description?: string } = {};
+    const dbUpdates: {
+      name?: string;
+      encryptedValue?: string;
+      description?: string;
+    } = {};
 
     if (updates.name !== undefined) dbUpdates.name = updates.name;
-    if (updates.value !== undefined) dbUpdates.encryptedValue = this.encrypt(updates.value);
-    if (updates.description !== undefined) dbUpdates.description = updates.description;
+    if (updates.value !== undefined)
+      dbUpdates.encryptedValue = this.encrypt(updates.value);
+    if (updates.description !== undefined)
+      dbUpdates.description = updates.description;
 
     const updated = await this.databaseService.updateSecret(id, dbUpdates);
     if (!updated) return null;
@@ -322,16 +363,23 @@ export class SecretsService implements OnModuleInit {
       throw new Error(`Secret ${secretId} not found`);
     }
     // Note: Actual linking is done through VariableEntity with secretId FK
-    this.logger.debug(`Link secret ${secret.name} to workflow ${workflowId} (via variable)`);
+    this.logger.debug(
+      `Link secret ${secret.name} to workflow ${workflowId} (via variable)`,
+    );
   }
 
   /**
    * Unlink a secret from a workflow (placeholder for future implementation)
    * In DB-based implementation, this is managed through variables with secretId FK
    */
-  async unlinkFromWorkflow(secretId: string, workflowId: string): Promise<void> {
+  async unlinkFromWorkflow(
+    secretId: string,
+    workflowId: string,
+  ): Promise<void> {
     // Note: Actual unlinking is done by removing/updating VariableEntity with secretId FK
-    this.logger.debug(`Unlink secret from workflow ${workflowId} (via variable)`);
+    this.logger.debug(
+      `Unlink secret from workflow ${workflowId} (via variable)`,
+    );
   }
 
   /**
@@ -339,7 +387,7 @@ export class SecretsService implements OnModuleInit {
    */
   async resolveVariables(
     variables: Record<string, string | number | boolean>,
-    variableDefinitions: Array<{ name: string; secretRef?: string }>
+    variableDefinitions: Array<{ name: string; secretRef?: string }>,
   ): Promise<Record<string, string | number | boolean>> {
     const resolved = { ...variables };
 

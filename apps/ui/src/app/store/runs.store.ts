@@ -1,6 +1,11 @@
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { RunHistoryItem, ScrapeEvent, RunStepItem, RunActionItem } from '@scrape-dojo/shared';
+import {
+  RunHistoryItem,
+  ScrapeEvent,
+  RunStepItem,
+  RunActionItem,
+} from '@scrape-dojo/shared';
 import { ScrapeService } from '../services/scrape.service';
 import { EntityStore } from './entity-store.base';
 import { ScrapesStore } from './scrapes.store';
@@ -21,11 +26,18 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
         return firstValueFrom(this.scrapeService.getRuns(undefined, 50));
       },
       eventTypes: [
-        'scrape-start', 'scrape-end', 'scrape-complete',
-        'step-start', 'step-complete', 'step-status',
-        'action-start', 'action-complete', 'action-status',
-        'loop-iteration', 'error'
-      ]
+        'scrape-start',
+        'scrape-end',
+        'scrape-complete',
+        'step-start',
+        'step-complete',
+        'step-status',
+        'action-start',
+        'action-complete',
+        'action-status',
+        'loop-iteration',
+        'error',
+      ],
     });
   }
 
@@ -33,9 +45,9 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
    * Debug-Daten für einen Run cachen
    */
   cacheDebugData(runId: string, debugData: any): void {
-    this.updateWith(runId, run => ({
+    this.updateWith(runId, (run) => ({
       ...run,
-      debugData
+      debugData,
     }));
   }
 
@@ -51,9 +63,9 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
    * Artifacts für einen Run cachen (ersetzt existierende)
    */
   cacheArtifacts(runId: string, artifacts: any[]): void {
-    this.updateWith(runId, run => ({
+    this.updateWith(runId, (run) => ({
       ...run,
-      artifacts
+      artifacts,
     }));
   }
 
@@ -61,25 +73,28 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
    * Ein einzelnes Artifact zu einem Run hinzufügen (vermeidet Duplikate)
    */
   addArtifact(runId: string, artifact: any): void {
-    this.updateWith(runId, run => {
+    this.updateWith(runId, (run) => {
       const existingArtifacts = run.artifacts || [];
-      
+
       // Prüfe auf Duplikate basierend auf title oder name
-      const isDuplicate = existingArtifacts.some(a => {
+      const isDuplicate = existingArtifacts.some((a) => {
         if (artifact.title && a.title) return a.title === artifact.title;
         if (artifact.name && a.name) return a.name === artifact.name;
         // Fallback: Vergleiche JSON wenn möglich
         return JSON.stringify(a) === JSON.stringify(artifact);
       });
-      
+
       if (isDuplicate) {
-        console.log(`⚠️ Artifact already exists, skipping:`, artifact.title || artifact.name);
+        console.log(
+          `⚠️ Artifact already exists, skipping:`,
+          artifact.title || artifact.name,
+        );
         return run;
       }
-      
+
       return {
         ...run,
-        artifacts: [...existingArtifacts, artifact]
+        artifacts: [...existingArtifacts, artifact],
       };
     });
   }
@@ -105,8 +120,10 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
    * Laufende Jobs beim Start wiederherstellen
    */
   private async reconnectRunningJobs(): Promise<void> {
-    const runningRuns = this.entities().filter(run => run.status === 'running');
-    
+    const runningRuns = this.entities().filter(
+      (run) => run.status === 'running',
+    );
+
     if (runningRuns.length === 0) {
       console.log('✅ No running jobs to reconnect');
       return;
@@ -117,34 +134,40 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
     for (const run of runningRuns) {
       try {
         // Hole aktuellen Status vom Server
-        const updatedRun = await firstValueFrom(this.scrapeService.getRun(run.id));
-        
+        const updatedRun = await firstValueFrom(
+          this.scrapeService.getRun(run.id),
+        );
+
         // Aktualisiere Run im Store
         this.update(updatedRun.id, updatedRun);
 
         // Wenn immer noch running, aktualisiere auch Scrape-Status
         if (updatedRun.status === 'running') {
-          console.log(`✅ Reconnected to running job: ${run.id} (${run.scrapeId})`);
-          
+          console.log(
+            `✅ Reconnected to running job: ${run.id} (${run.scrapeId})`,
+          );
+
           // Aktualisiere Scrape-Status auf "running"
           this.scrapesStore.update(updatedRun.scrapeId, {
             lastRun: {
               status: 'running',
               startTime: updatedRun.startTime,
-              runId: updatedRun.id
-            }
+              runId: updatedRun.id,
+            },
           } as any);
         } else {
-          console.log(`ℹ️ Job ${run.id} is no longer running (${updatedRun.status})`);
-          
+          console.log(
+            `ℹ️ Job ${run.id} is no longer running (${updatedRun.status})`,
+          );
+
           // Aktualisiere Scrape mit finalem Status
           this.scrapesStore.update(updatedRun.scrapeId, {
             lastRun: {
               status: updatedRun.status === 'success' ? 'completed' : 'failed',
               startTime: updatedRun.startTime,
               endTime: updatedRun.endTime,
-              runId: updatedRun.id
-            }
+              runId: updatedRun.id,
+            },
           } as any);
         }
       } catch (error) {
@@ -202,25 +225,27 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
     if (!event.runId || !event.scrapeId) return;
 
     const existingRun = this.getById(event.runId)();
-    
+
     if (existingRun) {
       // Run existiert bereits, aktualisiere Status
-      this.updateWith(event.runId, run => ({
+      this.updateWith(event.runId, (run) => ({
         ...run,
         status: 'running',
-        startTime: event.timestamp || Date.now()
+        startTime: event.timestamp || Date.now(),
       }));
     } else {
       // Neuen Run hinzufügen - Struktur wird vom Backend oder reconnect geladen
       const scrape = this.scrapesStore.getById(event.scrapeId)();
-      
+
       const newRun: RunHistoryItem = {
         id: event.runId,
         scrapeId: event.scrapeId,
         status: 'running',
         trigger: 'manual',
         startTime: event.timestamp || Date.now(),
-        steps: scrape?.stepsCount ? this.createEmptySteps(scrape.stepsCount) : []
+        steps: scrape?.stepsCount
+          ? this.createEmptySteps(scrape.stepsCount)
+          : [],
       };
 
       this.add(newRun);
@@ -235,7 +260,7 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
     return Array.from({ length: count }, (_, i) => ({
       name: `Step ${i + 1}`,
       status: 'pending',
-      actions: []
+      actions: [],
     }));
   }
 
@@ -247,11 +272,11 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
 
     const status = event.error ? 'failed' : 'success';
 
-    this.updateWith(event.runId, run => ({
+    this.updateWith(event.runId, (run) => ({
       ...run,
       status,
       endTime: event.timestamp || Date.now(),
-      error: event.error
+      error: event.error,
     }));
 
     console.log(`✅ Run ${event.runId} ${status}`);
@@ -265,17 +290,22 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
   /**
    * Lädt Debug-Daten und Artifacts für einen Run
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private async loadRunData(runId: string, scrapeId: string): Promise<void> {
     try {
       // Debug-Daten laden
-      const debugData = await firstValueFrom(this.scrapeService.getRunDebugData(runId));
+      const debugData = await firstValueFrom(
+        this.scrapeService.getRunDebugData(runId),
+      );
       if (debugData) {
         this.cacheDebugData(runId, debugData);
         console.log(`📊 Debug data loaded for run ${runId}`);
       }
 
       // Artifacts laden
-      const artifacts = await firstValueFrom(this.scrapeService.getRunArtifacts(runId)) as any[];
+      const artifacts = (await firstValueFrom(
+        this.scrapeService.getRunArtifacts(runId),
+      )) as any[];
       if (artifacts && artifacts.length > 0) {
         this.cacheArtifacts(runId, artifacts);
         console.log(`📦 ${artifacts.length} artifacts loaded for run ${runId}`);
@@ -291,9 +321,9 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
   private handleStepEvent(runId: string, event: ScrapeEvent): void {
     if (!event.stepName) return;
 
-    this.updateWith(runId, run => ({
+    this.updateWith(runId, (run) => ({
       ...run,
-      steps: run.steps?.map(step => {
+      steps: run.steps?.map((step) => {
         if (step.name !== event.stepName) return step;
 
         const updates: Partial<RunStepItem> = {};
@@ -301,7 +331,10 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
         if (event.type === 'step-start' || event.status === 'running') {
           updates.status = 'running';
           updates.startTime = Date.now();
-        } else if (event.type === 'step-complete' || event.status === 'completed') {
+        } else if (
+          event.type === 'step-complete' ||
+          event.status === 'completed'
+        ) {
           updates.status = 'success';
           updates.endTime = Date.now();
         } else if (event.status === 'error') {
@@ -310,7 +343,7 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
         }
 
         return { ...step, ...updates };
-      })
+      }),
     }));
   }
 
@@ -320,14 +353,14 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
   private handleActionEvent(runId: string, event: ScrapeEvent): void {
     if (!event.stepName || !event.actionName) return;
 
-    this.updateWith(runId, run => ({
+    this.updateWith(runId, (run) => ({
       ...run,
-      steps: run.steps?.map(step => {
+      steps: run.steps?.map((step) => {
         if (step.name !== event.stepName) return step;
 
         return {
           ...step,
-          actions: step.actions?.map(action => {
+          actions: step.actions?.map((action) => {
             if (action.name !== event.actionName) return action;
 
             const updates: Partial<RunActionItem> = {};
@@ -335,7 +368,10 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
             if (event.type === 'action-start' || event.status === 'running') {
               updates.status = 'running';
               updates.startTime = Date.now();
-            } else if (event.type === 'action-complete' || event.status === 'completed') {
+            } else if (
+              event.type === 'action-complete' ||
+              event.status === 'completed'
+            ) {
               updates.status = 'success';
               updates.endTime = Date.now();
               if (event.data || event.result) {
@@ -356,15 +392,22 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
             }
 
             // Loop-Iterationen abschließen - aber nur wenn sie existieren!
-            if (updates.status && (updates.status === 'success' || updates.status === 'failed')) {
+            if (
+              updates.status &&
+              (updates.status === 'success' || updates.status === 'failed')
+            ) {
               const loopIterations = action.loopIterations;
               if (loopIterations && loopIterations.length > 0) {
                 const lastIteration = loopIterations[loopIterations.length - 1];
                 if (lastIteration.status === 'running') {
                   updates.loopIterations = loopIterations.map((it, idx) =>
                     idx === loopIterations.length - 1
-                      ? { ...it, status: updates.status as 'success' | 'failed', endTime: Date.now() }
-                      : it
+                      ? {
+                          ...it,
+                          status: updates.status as 'success' | 'failed',
+                          endTime: Date.now(),
+                        }
+                      : it,
                   );
                 }
               }
@@ -373,15 +416,18 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
             // WICHTIG: Überschreibe Loop-Daten NICHT wenn die Action ein Loop ist
             if (action.actionType === 'loop') {
               // Bewahre loopCurrent und loopTotal
-              if (!updates.loopCurrent && action.loopCurrent) updates.loopCurrent = action.loopCurrent;
-              if (!updates.loopTotal && action.loopTotal) updates.loopTotal = action.loopTotal;
-              if (!updates.loopIterations && action.loopIterations) updates.loopIterations = action.loopIterations;
+              if (!updates.loopCurrent && action.loopCurrent)
+                updates.loopCurrent = action.loopCurrent;
+              if (!updates.loopTotal && action.loopTotal)
+                updates.loopTotal = action.loopTotal;
+              if (!updates.loopIterations && action.loopIterations)
+                updates.loopIterations = action.loopIterations;
             }
 
             return { ...action, ...updates };
-          })
+          }),
         };
-      })
+      }),
     }));
 
     // Bei Action-Fehler auch Step als failed markieren
@@ -406,9 +452,17 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
     const loopPath = event.loopPath || [];
     const iterationStatus = event.status || 'running';
 
-    console.log('🔄 Store: Loop iteration:', { loopName, loopIndex, loopTotal, loopValue, loopPath, iterationStatus, runId });
+    console.log('🔄 Store: Loop iteration:', {
+      loopName,
+      loopIndex,
+      loopTotal,
+      loopValue,
+      loopPath,
+      iterationStatus,
+      runId,
+    });
 
-    const run = this.entities().find(r => r.id === runId);
+    const run = this.entities().find((r) => r.id === runId);
     if (!run) {
       console.error('❌ Run not found for loop iteration:', runId);
       return;
@@ -416,9 +470,9 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
 
     console.log('📊 Current run:', run);
 
-    this.updateWith(runId, run => ({
+    this.updateWith(runId, (run) => ({
       ...run,
-      steps: run.steps?.map(step => ({
+      steps: run.steps?.map((step) => ({
         ...step,
         actions: this.updateActionsWithLoopIteration(
           step.actions || [],
@@ -428,13 +482,13 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
           loopValue,
           loopPath,
           0,
-          iterationStatus
-        )
-      }))
+          iterationStatus,
+        ),
+      })),
     }));
 
     // Log updated run
-    const updatedRun = this.entities().find(r => r.id === runId);
+    const updatedRun = this.entities().find((r) => r.id === runId);
     console.log('✅ Updated run:', updatedRun);
   }
 
@@ -449,30 +503,49 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
     loopValue?: any,
     loopPath: Array<{ name: string; index: number }> = [],
     currentDepth: number = 0,
-    iterationStatus: string = 'running'
+    iterationStatus: string = 'running',
   ): RunActionItem[] {
-    console.log(`🔍 updateActionsWithLoopIteration: depth=${currentDepth}, loopName="${loopName}", status=${iterationStatus}, loopPath=`, loopPath, 'actions count=', actions.length);
+    console.log(
+      `🔍 updateActionsWithLoopIteration: depth=${currentDepth}, loopName="${loopName}", status=${iterationStatus}, loopPath=`,
+      loopPath,
+      'actions count=',
+      actions.length,
+    );
 
     // Map status to UI status
-    const uiStatus = iterationStatus === 'completed' ? 'success' : iterationStatus === 'failed' ? 'failed' : 'running';
+    const uiStatus =
+      iterationStatus === 'completed'
+        ? 'success'
+        : iterationStatus === 'failed'
+          ? 'failed'
+          : 'running';
 
-    return actions.map(action => {
+    return actions.map((action) => {
       // Ziel-Loop gefunden
       if (currentDepth === loopPath.length && action.name === loopName) {
-        console.log(`🎯 Found target loop: ${loopName}, actionType: ${action.actionType}, status: ${iterationStatus}`);
-        
-        let iterations = [...(action.loopIterations || [])];
+        console.log(
+          `🎯 Found target loop: ${loopName}, actionType: ${action.actionType}, status: ${iterationStatus}`,
+        );
+
+        const iterations = [...(action.loopIterations || [])];
         console.log(`📝 Current iterations:`, iterations);
 
         // Existierende Iteration aktualisieren
-        const existingIdx = iterations.findIndex(it => it.index === loopIndex);
+        const existingIdx = iterations.findIndex(
+          (it) => it.index === loopIndex,
+        );
         if (existingIdx >= 0) {
-          console.log(`✏️ Updating existing iteration at index ${existingIdx} to status: ${uiStatus}`);
+          console.log(
+            `✏️ Updating existing iteration at index ${existingIdx} to status: ${uiStatus}`,
+          );
           iterations[existingIdx] = {
             ...iterations[existingIdx],
             status: uiStatus as 'running' | 'success' | 'failed',
             value: loopValue,
-            endTime: iterationStatus === 'completed' || iterationStatus === 'failed' ? Date.now() : iterations[existingIdx].endTime
+            endTime:
+              iterationStatus === 'completed' || iterationStatus === 'failed'
+                ? Date.now()
+                : iterations[existingIdx].endTime,
           };
         } else if (iterationStatus === 'running') {
           // Nur neue Iteration hinzufügen wenn Status "running" ist
@@ -480,29 +553,34 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
           if (iterations.length > 0) {
             const lastIdx = iterations.length - 1;
             if (iterations[lastIdx].status === 'running') {
-              console.log(`✅ Completing previous iteration at index ${lastIdx}`);
+              console.log(
+                `✅ Completing previous iteration at index ${lastIdx}`,
+              );
               iterations[lastIdx] = {
                 ...iterations[lastIdx],
                 status: 'success',
-                endTime: Date.now()
+                endTime: Date.now(),
               };
             }
           }
 
           // Neue Iteration hinzufügen
-          const childActionsTemplate = action.nestedActions?.map(na => ({
-            ...na,
-            status: 'pending' as const,
-            loopIterations: na.actionType === 'loop' ? [] : undefined
-          })) || [];
+          const childActionsTemplate =
+            action.nestedActions?.map((na) => ({
+              ...na,
+              status: 'pending' as const,
+              loopIterations: na.actionType === 'loop' ? [] : undefined,
+            })) || [];
 
-          console.log(`➕ Adding new iteration ${loopIndex}/${loopTotal}, value: ${loopValue}`);
+          console.log(
+            `➕ Adding new iteration ${loopIndex}/${loopTotal}, value: ${loopValue}`,
+          );
           iterations.push({
             index: loopIndex,
             value: loopValue,
             status: 'running',
             startTime: Date.now(),
-            childActions: childActionsTemplate
+            childActions: childActionsTemplate,
           });
         }
 
@@ -510,16 +588,19 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
           ...action,
           loopIterations: iterations,
           loopTotal,
-          loopCurrent: loopIndex + 1
+          loopCurrent: loopIndex + 1,
         };
-        
+
         console.log(`🔄 Updated action:`, updatedAction);
-        
+
         return updatedAction;
       }
 
       // Parent-Loop traversieren
-      if (currentDepth < loopPath.length && action.name === loopPath[currentDepth].name) {
+      if (
+        currentDepth < loopPath.length &&
+        action.name === loopPath[currentDepth].name
+      ) {
         console.log(`🔗 Traversing parent loop: ${action.name}`);
         const parentIterationIndex = loopPath[currentDepth].index;
 
@@ -531,32 +612,34 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
           loopValue,
           loopPath,
           currentDepth + 1,
-          iterationStatus
+          iterationStatus,
         );
 
-        const updatedIterations = (action.loopIterations || []).map(iteration => {
-          if (iteration.index === parentIterationIndex) {
-            return {
-              ...iteration,
-              childActions: this.updateActionsWithLoopIteration(
-                iteration.childActions || [],
-                loopName,
-                loopIndex,
-                loopTotal,
-                loopValue,
-                loopPath,
-                currentDepth + 1,
-                iterationStatus
-              )
-            };
-          }
-          return iteration;
-        });
+        const updatedIterations = (action.loopIterations || []).map(
+          (iteration) => {
+            if (iteration.index === parentIterationIndex) {
+              return {
+                ...iteration,
+                childActions: this.updateActionsWithLoopIteration(
+                  iteration.childActions || [],
+                  loopName,
+                  loopIndex,
+                  loopTotal,
+                  loopValue,
+                  loopPath,
+                  currentDepth + 1,
+                  iterationStatus,
+                ),
+              };
+            }
+            return iteration;
+          },
+        );
 
         return {
           ...action,
           nestedActions: updatedNestedActions,
-          loopIterations: updatedIterations
+          loopIterations: updatedIterations,
         };
       }
 
@@ -597,7 +680,7 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
       this.scrapesStore.updateLastRunFromHistory(scrapeId, {
         status: run.status === 'success' ? 'completed' : run.status,
         startTime: run.startTime,
-        endTime: run.endTime
+        endTime: run.endTime,
       });
     });
   }
@@ -606,14 +689,14 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
    * Runs eines bestimmten Scrapes
    */
   getRunsByScrapeId(scrapeId: string) {
-    return this.filter(run => run.scrapeId === scrapeId);
+    return this.filter((run) => run.scrapeId === scrapeId);
   }
 
   /**
    * Letzten Run eines Scrapes holen
    */
   getLatestRunForScrape(scrapeId: string) {
-    return this.filter(run => run.scrapeId === scrapeId);
+    return this.filter((run) => run.scrapeId === scrapeId);
   }
 
   /**
@@ -624,15 +707,20 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
     stepName: string,
     status: 'pending' | 'running' | 'success' | 'failed',
     startTime?: number,
-    endTime?: number
+    endTime?: number,
   ): void {
-    this.updateWith(runId, run => ({
+    this.updateWith(runId, (run) => ({
       ...run,
-      steps: run.steps?.map(step =>
+      steps: run.steps?.map((step) =>
         step.name === stepName
-          ? { ...step, status, startTime: startTime ?? step.startTime, endTime: endTime ?? step.endTime }
-          : step
-      )
+          ? {
+              ...step,
+              status,
+              startTime: startTime ?? step.startTime,
+              endTime: endTime ?? step.endTime,
+            }
+          : step,
+      ),
     }));
   }
 
@@ -647,26 +735,34 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
     startTime?: number,
     endTime?: number,
     result?: any,
-    error?: string
+    error?: string,
   ): void {
-    this.updateWith(runId, run => ({
+    this.updateWith(runId, (run) => ({
       ...run,
-      steps: run.steps?.map(step => {
+      steps: run.steps?.map((step) => {
         if (step.name !== stepName) return step;
         return {
           ...step,
-          actions: step.actions?.map(action => {
+          actions: step.actions?.map((action) => {
             if (action.name !== actionName) return action;
 
             // Bei Loop-Actions: Letzte Iteration abschließen
             let loopIterations = action.loopIterations;
-            if (loopIterations && loopIterations.length > 0 && (status === 'success' || status === 'failed')) {
+            if (
+              loopIterations &&
+              loopIterations.length > 0 &&
+              (status === 'success' || status === 'failed')
+            ) {
               const lastIteration = loopIterations[loopIterations.length - 1];
               if (lastIteration.status === 'running') {
                 loopIterations = loopIterations.map((it, idx) =>
                   idx === loopIterations!.length - 1
-                    ? { ...it, status: status as 'success' | 'failed', endTime: Date.now() }
-                    : it
+                    ? {
+                        ...it,
+                        status: status as 'success' | 'failed',
+                        endTime: Date.now(),
+                      }
+                    : it,
                 );
               }
             }
@@ -678,11 +774,11 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
               endTime: endTime ?? action.endTime,
               result: result ?? action.result,
               error: error ?? action.error,
-              loopIterations
+              loopIterations,
             };
-          })
+          }),
         };
-      })
+      }),
     }));
   }
 }

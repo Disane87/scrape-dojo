@@ -1,4 +1,11 @@
-import { Component, input, output, contentChildren, AfterContentInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import {
+  Component,
+  input,
+  output,
+  contentChildren,
+  AfterContentInit,
+  CUSTOM_ELEMENTS_SCHEMA,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TabComponent } from './tab';
 import { toIconify } from '../../../utils/icon.utils';
@@ -40,7 +47,8 @@ export class TabsComponent implements AfterContentInit {
   }
 
   getTabClasses(tabId: string): string {
-    const base = 'px-3 py-3 text-sm font-medium border-b-2 -mb-px transition-colors flex items-center gap-2';
+    const base =
+      'px-3 py-3 text-sm font-medium border-b-2 -mb-px transition-colors flex items-center gap-2';
 
     if (this.isActive(tabId)) {
       return `${base} border-dojo-accent text-dojo-text`;

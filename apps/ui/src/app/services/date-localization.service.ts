@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { TranslocoService } from '@jsverse/transloco';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class DateLocalizationService {
   private readonly translocoService = inject(TranslocoService);
@@ -10,28 +10,29 @@ export class DateLocalizationService {
   private getLocale(): string {
     const lang = this.translocoService.getActiveLang();
     const localeMap: Record<string, string> = {
-      'en': 'en-US',
-      'de': 'de-DE'
+      en: 'en-US',
+      de: 'de-DE',
     };
     return localeMap[lang] || 'en-US';
   }
 
   formatDate(
     timestamp: string | number | Date,
-    options?: Intl.DateTimeFormatOptions
+    options?: Intl.DateTimeFormatOptions,
   ): string {
     if (!timestamp) return '';
 
-    const date = typeof timestamp === 'string' || typeof timestamp === 'number'
-      ? new Date(timestamp)
-      : timestamp;
+    const date =
+      typeof timestamp === 'string' || typeof timestamp === 'number'
+        ? new Date(timestamp)
+        : timestamp;
 
     if (isNaN(date.getTime())) return '';
 
     const defaultOptions: Intl.DateTimeFormatOptions = {
       day: '2-digit',
       month: '2-digit',
-      year: 'numeric'
+      year: 'numeric',
     };
 
     return date.toLocaleDateString(this.getLocale(), options || defaultOptions);
@@ -39,13 +40,14 @@ export class DateLocalizationService {
 
   formatDateTime(
     timestamp: string | number | Date,
-    options?: Intl.DateTimeFormatOptions
+    options?: Intl.DateTimeFormatOptions,
   ): string {
     if (!timestamp) return '';
 
-    const date = typeof timestamp === 'string' || typeof timestamp === 'number'
-      ? new Date(timestamp)
-      : timestamp;
+    const date =
+      typeof timestamp === 'string' || typeof timestamp === 'number'
+        ? new Date(timestamp)
+        : timestamp;
 
     if (isNaN(date.getTime())) return '';
 
@@ -54,7 +56,7 @@ export class DateLocalizationService {
       month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     };
 
     return date.toLocaleString(this.getLocale(), options || defaultOptions);
@@ -62,19 +64,20 @@ export class DateLocalizationService {
 
   formatTime(
     timestamp: string | number | Date,
-    options?: Intl.DateTimeFormatOptions
+    options?: Intl.DateTimeFormatOptions,
   ): string {
     if (!timestamp) return '';
 
-    const date = typeof timestamp === 'string' || typeof timestamp === 'number'
-      ? new Date(timestamp)
-      : timestamp;
+    const date =
+      typeof timestamp === 'string' || typeof timestamp === 'number'
+        ? new Date(timestamp)
+        : timestamp;
 
     if (isNaN(date.getTime())) return '';
 
     const defaultOptions: Intl.DateTimeFormatOptions = {
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     };
 
     return date.toLocaleTimeString(this.getLocale(), options || defaultOptions);
@@ -84,9 +87,10 @@ export class DateLocalizationService {
     if (!timestamp) return '';
 
     const now = new Date().getTime();
-    const date = typeof timestamp === 'string' || typeof timestamp === 'number'
-      ? new Date(timestamp).getTime()
-      : timestamp.getTime();
+    const date =
+      typeof timestamp === 'string' || typeof timestamp === 'number'
+        ? new Date(timestamp).getTime()
+        : timestamp.getTime();
 
     if (isNaN(date)) return '';
 

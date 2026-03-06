@@ -21,7 +21,8 @@ export class SectionLabelComponent {
   marginBottom = input<boolean>(true);
 
   labelClasses = computed(() => {
-    const base = 'block font-medium text-dojo-text-muted uppercase tracking-wider';
+    const base =
+      'block font-medium text-dojo-text-muted uppercase tracking-wider';
 
     const sizes: Record<SectionLabelSize, string> = {
       xs: 'text-xs',

@@ -49,13 +49,16 @@ async function bootstrap() {
   const httpInstance: any = app.getHttpAdapter().getInstance();
   if (httpInstance && typeof httpInstance.set === 'function') {
     const trustProxy = Number(process.env.SCRAPE_DOJO_TRUST_PROXY ?? 1);
-    httpInstance.set('trust proxy', Number.isFinite(trustProxy) ? trustProxy : 1);
+    httpInstance.set(
+      'trust proxy',
+      Number.isFinite(trustProxy) ? trustProxy : 1,
+    );
   }
 
   // CORS: allow explicit origins in prod; be permissive in dev to support local setups.
   const corsOrigins = (process.env.SCRAPE_DOJO_CORS_ORIGIN ?? '')
     .split(',')
-    .map(s => s.trim())
+    .map((s) => s.trim())
     .filter(Boolean);
 
   const isProd = process.env.NODE_ENV === 'production';
@@ -73,7 +76,9 @@ async function bootstrap() {
   );
 
   // Rate limit only the most sensitive public auth endpoints.
-  const authWindowMs = Number(process.env.SCRAPE_DOJO_AUTH_RATE_LIMIT_WINDOW_MS ?? 60_000);
+  const authWindowMs = Number(
+    process.env.SCRAPE_DOJO_AUTH_RATE_LIMIT_WINDOW_MS ?? 60_000,
+  );
   const authMax = Number(process.env.SCRAPE_DOJO_AUTH_RATE_LIMIT_MAX ?? 30);
   const authLimiter = rateLimit({
     windowMs: Number.isFinite(authWindowMs) ? authWindowMs : 60_000,
@@ -122,7 +127,7 @@ async function bootstrap() {
 
   eventLogger.log(`🚀 Application is running on: http://localhost:${port}`);
   eventLogger.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
-  
+
   return; // Verhindert "undefined" im Log
 }
 

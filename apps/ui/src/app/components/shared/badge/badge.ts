@@ -1,9 +1,21 @@
-import { Component, computed, input, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import {
+  Component,
+  computed,
+  input,
+  CUSTOM_ELEMENTS_SCHEMA,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { toIconify } from '../../../utils/icon.utils';
 import 'iconify-icon';
 
-export type BadgeVariant = 'default' | 'success' | 'warning' | 'danger' | 'info' | 'purple' | 'accent';
+export type BadgeVariant =
+  | 'default'
+  | 'success'
+  | 'warning'
+  | 'danger'
+  | 'info'
+  | 'purple'
+  | 'accent';
 export type BadgeSize = 'xs' | 'sm' | 'md';
 
 @Component({
@@ -51,7 +63,8 @@ export class BadgeComponent {
 
     const filledVariants: Record<BadgeVariant, string> = {
       default: 'bg-dojo-surface-2 text-dojo-text-muted',
-      success: 'bg-dojo-success-strong/20 text-dojo-success border border-dojo-success-strong/30',
+      success:
+        'bg-dojo-success-strong/20 text-dojo-success border border-dojo-success-strong/30',
       warning: 'bg-dojo-warning-strong text-white',
       danger: 'bg-dojo-danger/20 text-dojo-danger border border-dojo-danger/30',
       info: 'bg-blue-500/20 text-blue-400 border border-blue-500/30',

@@ -7,7 +7,7 @@ const STORAGE_KEY = 'scrape-dojo-language';
 const DEFAULT_LANG = 'en';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class LanguageService {
   private readonly platformId = inject(PLATFORM_ID);
@@ -86,13 +86,16 @@ export class LanguageService {
   }
 
   private isValidLanguage(lang: string): boolean {
-    const availableLangs = this.translocoService.getAvailableLangs() as string[];
+    const availableLangs =
+      this.translocoService.getAvailableLangs() as string[];
     return availableLangs.includes(lang);
   }
 
   setLanguage(language: string): void {
     if (!this.isValidLanguage(language)) {
-      console.warn(`Language '${language}' is not available. Falling back to '${DEFAULT_LANG}'.`);
+      console.warn(
+        `Language '${language}' is not available. Falling back to '${DEFAULT_LANG}'.`,
+      );
       language = DEFAULT_LANG;
     }
 

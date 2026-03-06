@@ -1,4 +1,14 @@
-import { Component, input, output, model, ViewChild, ElementRef, AfterViewInit, computed, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import {
+  Component,
+  input,
+  output,
+  model,
+  ViewChild,
+  ElementRef,
+  AfterViewInit,
+  computed,
+  CUSTOM_ELEMENTS_SCHEMA,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { OtpRequest, OtpAlternative } from '@scrape-dojo/shared';
@@ -7,51 +17,60 @@ import { TranslocoModule } from '@jsverse/transloco';
 import 'iconify-icon';
 
 @Component({
-    selector: 'app-otp-modal',
-    standalone: true,
-    imports: [CommonModule, FormsModule, ModalComponent, ButtonComponent, TranslocoModule],
-    schemas: [CUSTOM_ELEMENTS_SCHEMA],
-    templateUrl: './otp-modal.html',
+  selector: 'app-otp-modal',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    ModalComponent,
+    ButtonComponent,
+    TranslocoModule,
+  ],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  templateUrl: './otp-modal.html',
 })
 export class OtpModalComponent implements AfterViewInit {
-    otpRequest = input<OtpRequest | null>(null);
-    otpCode = model<string>('');
+  otpRequest = input<OtpRequest | null>(null);
+  otpCode = model<string>('');
 
-    submit = output<{ requestId: string; code: string }>();
-    alternativeClicked = output<{ requestId: string; selector: string }>();
-    close = output<void>();
+  submit = output<{ requestId: string; code: string }>();
+  alternativeClicked = output<{ requestId: string; selector: string }>();
+  close = output<void>();
 
-    @ViewChild('otpInput') otpInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('otpInput') otpInput?: ElementRef<HTMLInputElement>;
 
-    isOpen = computed(() => this.otpRequest() !== null);
-    canSubmit = computed(() => this.otpCode().length >= 4);
-    alternatives = computed(() => this.otpRequest()?.alternatives ?? []);
+  isOpen = computed(() => this.otpRequest() !== null);
+  canSubmit = computed(() => this.otpCode().length >= 4);
+  alternatives = computed(() => this.otpRequest()?.alternatives ?? []);
 
-    ngAfterViewInit(): void {
-        this.focusInput();
-    }
+  ngAfterViewInit(): void {
+    this.focusInput();
+  }
 
-    focusInput(): void {
-        setTimeout(() => this.otpInput?.nativeElement?.focus(), 100);
-    }
+  focusInput(): void {
+    setTimeout(() => this.otpInput?.nativeElement?.focus(), 100);
+  }
 
-    submitOtp(): void {
-        const request = this.otpRequest();
-        const code = this.otpCode();
-        if (!request || !code || code.length < 4) return;
+  submitOtp(): void {
+    const request = this.otpRequest();
+    const code = this.otpCode();
+    if (!request || !code || code.length < 4) return;
 
-        this.submit.emit({ requestId: request.requestId, code });
-        this.otpCode.set('');
-    }
+    this.submit.emit({ requestId: request.requestId, code });
+    this.otpCode.set('');
+  }
 
-    onAlternativeClick(alt: OtpAlternative): void {
-        const request = this.otpRequest();
-        if (!request) return;
-        this.alternativeClicked.emit({ requestId: request.requestId, selector: alt.selector });
-    }
+  onAlternativeClick(alt: OtpAlternative): void {
+    const request = this.otpRequest();
+    if (!request) return;
+    this.alternativeClicked.emit({
+      requestId: request.requestId,
+      selector: alt.selector,
+    });
+  }
 
-    closeModal(): void {
-        this.otpCode.set('');
-        this.close.emit();
-    }
+  closeModal(): void {
+    this.otpCode.set('');
+    this.close.emit();
+  }
 }

@@ -1,4 +1,12 @@
-import { Component, OnInit, OnDestroy, inject, signal, computed, ViewChild, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  inject,
+  signal,
+  computed,
+  CUSTOM_ELEMENTS_SCHEMA,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -6,22 +14,38 @@ import { ScrapeService } from '../../services/scrape.service';
 import { ScrapeEventsService } from '../../services/scrape-events.service';
 import { NotificationService } from '../../services/notification.service';
 import { StoreService } from '../../store/store.service';
-import { ScrapeListItem, ScrapeEvent, RunHistoryItem, Scrape, OtpRequest, RunStepItem, RunActionItem, ScrapeSchedule } from '@scrape-dojo/shared';
+import {
+  ScrapeEvent,
+  RunHistoryItem,
+  Scrape,
+  OtpRequest,
+  RunStepItem,
+  RunActionItem,
+  ScrapeSchedule,
+} from '@scrape-dojo/shared';
 import { Subject, takeUntil } from 'rxjs';
 import { TranslocoModule } from '@jsverse/transloco';
 import { JsonEditorComponent } from '../../components/json-editor/json-editor';
 import { LogViewerComponent } from '../../components/log-viewer/log-viewer';
 import { TopNavComponent } from '../../components/top-nav/top-nav';
 import { WorkflowSidebarComponent } from '../../components/workflow-sidebar/workflow-sidebar';
-import { WorkflowHeaderComponent, TabType } from '../../components/workflow-header/workflow-header';
-import { WorkflowHistoryComponent, StatusFilter } from '../../components/workflow-history/workflow-history';
+import {
+  WorkflowHeaderComponent,
+  TabType,
+} from '../../components/workflow-header/workflow-header';
+import {
+  WorkflowHistoryComponent,
+  StatusFilter,
+} from '../../components/workflow-history/workflow-history';
 import { WorkflowVisualizerComponent } from '../../components/workflow-visualizer/workflow-visualizer';
 import { RunDebugViewComponent } from '../../components/run-debug-view/run-debug-view';
 import { OtpModalComponent } from '../../components/otp-modal/otp-modal';
-import { WorkflowVariable, RunDialogResult } from '../../components/run-dialog/run-dialog';
+import {
+  WorkflowVariable,
+  RunDialogResult,
+} from '../../components/run-dialog/run-dialog';
 import { WorkflowVariablesComponent } from '../../components/workflow-variables/workflow-variables.component';
 import { NotificationModalComponent } from '../../components/notification-modal/notification-modal';
-import { ButtonComponent } from '../../components/shared';
 import { environment } from '../../../environments/environment';
 import 'iconify-icon';
 
@@ -42,11 +66,11 @@ import 'iconify-icon';
     RunDebugViewComponent,
     OtpModalComponent,
     WorkflowVariablesComponent,
-    NotificationModalComponent
+    NotificationModalComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './dashboard.html',
-  styleUrl: './dashboard.scss'
+  styleUrl: './dashboard.scss',
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   private scrapeService = inject(ScrapeService);
@@ -93,19 +117,23 @@ export class DashboardComponent implements OnInit, OnDestroy {
   selectedScrapeMetadata = computed(() => {
     const scrapeId = this.selectedScrape();
     if (!scrapeId) return undefined;
-    const scrape = this.scrapes().find(s => s.id === scrapeId);
+    const scrape = this.scrapes().find((s) => s.id === scrapeId);
     return scrape?.metadata;
   });
 
   // Schedule-Status für aktuellen Scrape
-  scheduleEnabled = computed(() => this.currentSchedule()?.scheduleEnabled ?? false);
-  nextScheduledRun = computed(() => this.currentSchedule()?.nextScheduledRun ?? null);
+  scheduleEnabled = computed(
+    () => this.currentSchedule()?.scheduleEnabled ?? false,
+  );
+  nextScheduledRun = computed(
+    () => this.currentSchedule()?.nextScheduledRun ?? null,
+  );
 
   // Workflow-spezifische Logs (gefiltert nach aktuellem Run)
   workflowLogs = computed(() => {
     const runId = this.selectedRunId();
     if (!runId) return [];
-    return this.serverLogs().filter(log => log.runId === runId);
+    return this.serverLogs().filter((log) => log.runId === runId);
   });
 
   filteredHistory = computed(() => {
@@ -115,12 +143,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     // Erst nach Scrape filtern
     let filtered = currentScrapeId
-      ? history.filter(item => item.scrapeId === currentScrapeId)
+      ? history.filter((item) => item.scrapeId === currentScrapeId)
       : history;
 
     // Dann nach Status filtern
     if (filter !== 'all') {
-      filtered = filtered.filter(item => item.status === filter);
+      filtered = filtered.filter((item) => item.status === filter);
     }
 
     return filtered;
@@ -130,7 +158,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   selectedRun = computed(() => {
     const runId = this.selectedRunId();
     if (!runId) return null;
-    return this.runHistory().find(run => run.id === runId) || null;
+    return this.runHistory().find((run) => run.id === runId) || null;
   });
 
   ngOnInit(): void {
@@ -141,10 +169,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     this.eventsService.events$
       .pipe(takeUntil(this.destroy$))
-      .subscribe(event => this.handleEvent(event));
+      .subscribe((event) => this.handleEvent(event));
 
     // Route-Parameter auswerten
-    this.route.params.pipe(takeUntil(this.destroy$)).subscribe(params => {
+    this.route.params.pipe(takeUntil(this.destroy$)).subscribe((params) => {
       if (params['jobId']) {
         const currentJobId = this.selectedScrape();
         if (currentJobId !== params['jobId']) {
@@ -168,12 +196,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   private loadStoredLogs(): void {
-    this.scrapeService.getLogs().pipe(takeUntil(this.destroy$)).subscribe({
-      next: (logs) => {
-        this.serverLogs.set(logs);
-      },
-      error: (err) => console.warn('Failed to load stored logs:', err)
-    });
+    this.scrapeService
+      .getLogs()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (logs) => {
+          this.serverLogs.set(logs);
+        },
+        error: (err) => console.warn('Failed to load stored logs:', err),
+      });
   }
 
   private loadRunHistory(): void {
@@ -196,10 +227,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   saveLogPanelState(): void {
     try {
-      localStorage.setItem(this.LOG_PANEL_STORAGE_KEY, JSON.stringify({
-        open: this.showServerLogs(),
-        height: this.serverLogsHeight()
-      }));
+      localStorage.setItem(
+        this.LOG_PANEL_STORAGE_KEY,
+        JSON.stringify({
+          open: this.showServerLogs(),
+          height: this.serverLogsHeight(),
+        }),
+      );
     } catch (e) {
       console.warn('Failed to save log panel state:', e);
     }
@@ -212,15 +246,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   selectScrape(id: string): void {
     const currentTab = this.activeTab();
-    const currentRunId = this.selectedRunId();
-    
+
     this.selectedScrape.set(id);
     this.loadScrapeDefinition(id);
     this.loadSchedule(id);
     // Live-Output leeren beim Job-Wechsel
     this.liveOutput.set([]);
     this.selectedRunId.set(null);
-    
+
     // URL aktualisieren mit aktuellem Tab
     this.navigateToJob(id, currentTab);
   }
@@ -232,25 +265,32 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.liveOutput.set([]);
   }
 
-  private navigateToJob(jobId: string, tab?: TabType, runId?: string | null): void {
+  private navigateToJob(
+    jobId: string,
+    tab?: TabType,
+    runId?: string | null,
+  ): void {
     const parts = ['/jobs', jobId];
-    
+
     if (tab && tab !== 'history') {
       parts.push(tab);
     }
-    
+
     if (runId) {
       parts.push('runs', runId);
     }
-    
+
     this.router.navigate(parts, { replaceUrl: false });
   }
 
   private loadSchedule(id: string): void {
-    this.scrapeService.getSchedule(id).pipe(takeUntil(this.destroy$)).subscribe({
-      next: (schedule) => this.currentSchedule.set(schedule),
-      error: () => this.currentSchedule.set(null)
-    });
+    this.scrapeService
+      .getSchedule(id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (schedule) => this.currentSchedule.set(schedule),
+        error: () => this.currentSchedule.set(null),
+      });
   }
 
   openScheduleModal(): void {
@@ -276,13 +316,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
 
     // Run auf dem Server löschen
-    this.scrapeService.deleteRun(runId).pipe(takeUntil(this.destroy$)).subscribe({
-      next: () => {
-        // Run aus dem Store entfernen
-        this.store.runs.remove(runId);
-      },
-      error: (err) => console.error('Failed to delete run:', err)
-    });
+    this.scrapeService
+      .deleteRun(runId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          // Run aus dem Store entfernen
+          this.store.runs.remove(runId);
+        },
+        error: (err) => console.error('Failed to delete run:', err),
+      });
   }
 
   onDeleteAllRuns(): void {
@@ -290,23 +333,31 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (!currentScrapeId) return;
 
     // Alle Runs des Scrapes auf dem Server löschen
-    this.scrapeService.deleteRunsByScrapeId(currentScrapeId).pipe(takeUntil(this.destroy$)).subscribe({
-      next: () => {
-        // Selection aufheben
-        this.selectedRunId.set(null);
-        // Runs des aktuellen Scrapes aus dem Store entfernen
-        const runsToDelete = this.store.runs.entities().filter(r => r.scrapeId === currentScrapeId);
-        runsToDelete.forEach(r => this.store.runs.remove(r.id));
-      },
-      error: (err) => console.error('Failed to delete runs:', err)
-    });
+    this.scrapeService
+      .deleteRunsByScrapeId(currentScrapeId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          // Selection aufheben
+          this.selectedRunId.set(null);
+          // Runs des aktuellen Scrapes aus dem Store entfernen
+          const runsToDelete = this.store.runs
+            .entities()
+            .filter((r) => r.scrapeId === currentScrapeId);
+          runsToDelete.forEach((r) => this.store.runs.remove(r.id));
+        },
+        error: (err) => console.error('Failed to delete runs:', err),
+      });
   }
 
   loadScrapeDefinition(id: string): void {
-    this.scrapeService.getScrapeDefinition(id).pipe(takeUntil(this.destroy$)).subscribe({
-      next: (definition) => this.selectedScrapeDefinition.set(definition),
-      error: (err) => console.error('Failed to load definition:', err)
-    });
+    this.scrapeService
+      .getScrapeDefinition(id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (definition) => this.selectedScrapeDefinition.set(definition),
+        error: (err) => console.error('Failed to load definition:', err),
+      });
   }
 
   runScrape(): void {
@@ -320,14 +371,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // Prüfe ob Variablen definiert sind
     const variables = definition?.metadata?.variables || [];
     console.log('📊 Variables found:', variables);
-    
+
     if (variables.length > 0) {
       // Zeige Run-Dialog für Variablen-Eingabe via Auxiliary Route
       // Übergebe Variablen via Router State
-      this.router.navigate(
-        [{ outlets: { modal: ['run', id] } }],
-        { state: { variables, workflowName: definition.metadata?.description || id } }
-      );
+      this.router.navigate([{ outlets: { modal: ['run', id] } }], {
+        state: {
+          variables,
+          workflowName: definition.metadata?.description || id,
+        },
+      });
       return;
     }
 
@@ -348,7 +401,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  private executeRun(id: string, definition: Scrape | null, variables?: Record<string, any>): void {
+  private executeRun(
+    id: string,
+    definition: Scrape | null,
+    variables?: Record<string, any>,
+  ): void {
     this.isRunning.set(true);
     this.liveOutput.set([]);
     // Auto-Navigation zum Live-Log deaktiviert - Benutzer bleibt auf aktuellem Tab
@@ -358,61 +415,70 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const runId = `run-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
     // Steps aus der Definition initialisieren
-    const steps: RunStepItem[] = definition?.steps.map(step => ({
-      name: step.name,
-      status: 'pending' as const,
-      actions: this.initializeActionsRecursive(step.actions)
-    })) || [];
+    const steps: RunStepItem[] =
+      definition?.steps.map((step) => ({
+        name: step.name,
+        status: 'pending' as const,
+        actions: this.initializeActionsRecursive(step.actions),
+      })) || [];
 
     const runItem: RunHistoryItem = {
       id: runId,
       scrapeId: id,
       status: 'running',
       startTime: Date.now(),
-      steps
+      steps,
     };
     this.store.runs.add(runItem);
     this.selectedRunId.set(runItem.id);
 
     // Übergebe die runId und Variablen an den Server
-    this.scrapeService.runScrape(id, runId, variables).pipe(takeUntil(this.destroy$)).subscribe({
-      next: (response) => {
-        this.isRunning.set(false);
-        this.store.runs.update(runId, {
-          status: response.success ? ('success' as const) : ('failed' as const),
-          endTime: Date.now()
-        });
-      },
-      error: (err) => {
-        this.isRunning.set(false);
-        this.store.runs.update(runId, {
-          status: 'failed' as const,
-          endTime: Date.now(),
-          error: err.message
-        });
-      }
-    });
+    this.scrapeService
+      .runScrape(id, runId, variables)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.isRunning.set(false);
+          this.store.runs.update(runId, {
+            status: response.success
+              ? ('success' as const)
+              : ('failed' as const),
+            endTime: Date.now(),
+          });
+        },
+        error: (err) => {
+          this.isRunning.set(false);
+          this.store.runs.update(runId, {
+            status: 'failed' as const,
+            endTime: Date.now(),
+            error: err.message,
+          });
+        },
+      });
   }
 
   stopScrape(): void {
     if (!this.isRunning()) return;
 
-    this.scrapeService.stopScrape().pipe(takeUntil(this.destroy$)).subscribe({
-      next: (response) => {
-        this.isRunning.set(false);
-        const runId = this.selectedRunId();
-        if (runId) {
-          this.store.runs.update(runId, {
-            status: 'failed' as const,
-            endTime: Date.now(),
-            error: 'Stopped by user'
-          });
-        }
-      },
-      error: (err) => {
-        console.error('Failed to stop scrape:', err);
-      }
-    });
+    this.scrapeService
+      .stopScrape()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.isRunning.set(false);
+          const runId = this.selectedRunId();
+          if (runId) {
+            this.store.runs.update(runId, {
+              status: 'failed' as const,
+              endTime: Date.now(),
+              error: 'Stopped by user',
+            });
+          }
+        },
+        error: (err) => {
+          console.error('Failed to stop scrape:', err);
+        },
+      });
   }
 
   /**
@@ -427,7 +493,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     // Server-Logs (für Log-Panel)
     if (event.type === 'log') {
-      this.serverLogs.update(logs => [...logs, event].slice(-500));
+      this.serverLogs.update((logs) => [...logs, event].slice(-500));
       return;
     }
 
@@ -454,7 +520,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         message: notif.message,
         iconUrl: notif.iconUrl,
         browserNotification: notif.browserNotification,
-        autoDismiss: notif.autoDismiss
+        autoDismiss: notif.autoDismiss,
       });
       return;
     }
@@ -469,14 +535,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
         type: 'info',
         title: 'Workflows aktualisiert',
         message: 'Die Workflow-Konfigurationen wurden neu geladen.',
-        autoDismiss: 3000
+        autoDismiss: 3000,
       });
       return;
     }
 
     // Live-Output für aktuell ausgewählten Scrape
     if (isCurrentScrape) {
-      this.liveOutput.update(output => [...output, event]);
+      this.liveOutput.update((output) => [...output, event]);
     }
 
     // ALLE ANDEREN EVENTS (Steps, Actions, Loops, Errors) → Store kümmert sich!
@@ -485,13 +551,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // ========== OTP METHODS ==========
 
   onOtpSubmit(data: { requestId: string; code: string }): void {
-    this.scrapeService.submitOtp(data.requestId, data.code).pipe(takeUntil(this.destroy$)).subscribe({
-      next: () => {
-        this.otpRequest.set(null);
-        this.otpCode.set('');
-      },
-      error: (err) => console.error('Failed to submit OTP:', err)
-    });
+    this.scrapeService
+      .submitOtp(data.requestId, data.code)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.otpRequest.set(null);
+          this.otpCode.set('');
+        },
+        error: (err) => console.error('Failed to submit OTP:', err),
+      });
   }
 
   submitOtp(): void {
@@ -499,19 +568,25 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const code = this.otpCode();
     if (!request || !code || code.length < 4) return;
 
-    this.scrapeService.submitOtp(request.requestId, code).pipe(takeUntil(this.destroy$)).subscribe({
-      next: () => {
-        this.otpRequest.set(null);
-        this.otpCode.set('');
-      },
-      error: (err) => console.error('Failed to submit OTP:', err)
-    });
+    this.scrapeService
+      .submitOtp(request.requestId, code)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.otpRequest.set(null);
+          this.otpCode.set('');
+        },
+        error: (err) => console.error('Failed to submit OTP:', err),
+      });
   }
 
   onOtpAlternativeClicked(data: { requestId: string; selector: string }): void {
-    this.scrapeService.executeOtpAction(data.requestId, data.selector).pipe(takeUntil(this.destroy$)).subscribe({
-      error: (err) => console.error('Failed to execute OTP action:', err)
-    });
+    this.scrapeService
+      .executeOtpAction(data.requestId, data.selector)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        error: (err) => console.error('Failed to execute OTP action:', err),
+      });
   }
 
   closeOtpModal(): void {
@@ -523,7 +598,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   onRunSelected(runId: string): void {
     const newRunId = this.selectedRunId() === runId ? null : runId;
     this.selectedRunId.set(newRunId);
-    
+
     // URL aktualisieren
     const jobId = this.selectedScrape();
     const currentTab = this.activeTab();
@@ -534,7 +609,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   setActiveTab(tab: TabType): void {
     this.activeTab.set(tab);
-    
+
     // URL aktualisieren
     const jobId = this.selectedScrape();
     if (jobId) {
@@ -545,19 +620,22 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   getSelectedRun(): RunHistoryItem | undefined {
     const runId = this.selectedRunId();
-    return this.runHistory().find(r => r.id === runId);
+    return this.runHistory().find((r) => r.id === runId);
   }
 
   clearServerLogs(): void {
     this.serverLogs.set([]);
     // Auch auf dem Server löschen
-    this.scrapeService.clearLogs().pipe(takeUntil(this.destroy$)).subscribe({
-      error: (err) => console.warn('Failed to clear server logs:', err)
-    });
+    this.scrapeService
+      .clearLogs()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        error: (err) => console.warn('Failed to clear server logs:', err),
+      });
   }
 
   toggleServerLogs(): void {
-    this.showServerLogs.update(show => !show);
+    this.showServerLogs.update((show) => !show);
     this.saveLogPanelState();
   }
 
@@ -568,10 +646,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   getStatusColor(status: string): string {
     switch (status) {
-      case 'running': return 'text-dojo-warning';
-      case 'success': return 'text-dojo-success';
-      case 'failed': return 'text-dojo-danger';
-      default: return 'text-dojo-text-muted';
+      case 'running':
+        return 'text-dojo-warning';
+      case 'success':
+        return 'text-dojo-success';
+      case 'failed':
+        return 'text-dojo-danger';
+      default:
+        return 'text-dojo-text-muted';
     }
   }
 
@@ -580,11 +662,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private initializeActionsRecursive(actions: any[]): RunActionItem[] {
-    return actions.map(action => {
+    return actions.map((action) => {
       const baseAction: RunActionItem = {
         name: action.name,
         actionType: action.action,
-        status: 'pending' as const
+        status: 'pending' as const,
       };
 
       // Bei Loop-Actions: Initialisiere Loop-Felder und extrahiere verschachtelte Actions
@@ -596,7 +678,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           loopTotal: 0,
           loopCurrent: 0,
           // Speichere die verschachtelten Actions für spätere Verwendung
-          nestedActions: this.initializeActionsRecursive(nestedActions)
+          nestedActions: this.initializeActionsRecursive(nestedActions),
         };
       }
 

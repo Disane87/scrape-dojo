@@ -1,10 +1,17 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { ScrapeListItem, ScrapeRunResponse, Scrape, ScrapeEvent, RunHistoryItem, ScrapeSchedule } from '@scrape-dojo/shared';
+import {
+  ScrapeListItem,
+  ScrapeRunResponse,
+  Scrape,
+  ScrapeEvent,
+  RunHistoryItem,
+  ScrapeSchedule,
+} from '@scrape-dojo/shared';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ScrapeService {
   private http = inject(HttpClient);
@@ -18,8 +25,15 @@ export class ScrapeService {
     return this.http.get<Scrape>(`${this.apiUrl}/scrapes/${id}`);
   }
 
-  runScrape(id: string, runId?: string, variables?: Record<string, any>): Observable<ScrapeRunResponse> {
-    return this.http.post<ScrapeRunResponse>(`${this.apiUrl}/run/${id}`, { runId, variables });
+  runScrape(
+    id: string,
+    runId?: string,
+    variables?: Record<string, any>,
+  ): Observable<ScrapeRunResponse> {
+    return this.http.post<ScrapeRunResponse>(`${this.apiUrl}/run/${id}`, {
+      runId,
+      variables,
+    });
   }
 
   getLogs(): Observable<ScrapeEvent[]> {
@@ -27,19 +41,34 @@ export class ScrapeService {
   }
 
   clearLogs(): Observable<{ success: boolean }> {
-    return this.http.post<{ success: boolean }>(`${this.apiUrl}/logs/clear`, {});
+    return this.http.post<{ success: boolean }>(
+      `${this.apiUrl}/logs/clear`,
+      {},
+    );
   }
 
   submitOtp(requestId: string, code: string): Observable<{ success: boolean }> {
-    return this.http.post<{ success: boolean }>(`${this.apiUrl}/otp/${requestId}`, { code });
+    return this.http.post<{ success: boolean }>(
+      `${this.apiUrl}/otp/${requestId}`,
+      { code },
+    );
   }
 
-  executeOtpAction(requestId: string, selector: string): Observable<{ success: boolean }> {
-    return this.http.post<{ success: boolean }>(`${this.apiUrl}/otp-action/${requestId}`, { selector });
+  executeOtpAction(
+    requestId: string,
+    selector: string,
+  ): Observable<{ success: boolean }> {
+    return this.http.post<{ success: boolean }>(
+      `${this.apiUrl}/otp-action/${requestId}`,
+      { selector },
+    );
   }
 
   stopScrape(): Observable<{ stopped: boolean; message: string }> {
-    return this.http.post<{ stopped: boolean; message: string }>(`${this.apiUrl}/scrape/stop`, {});
+    return this.http.post<{ stopped: boolean; message: string }>(
+      `${this.apiUrl}/scrape/stop`,
+      {},
+    );
   }
 
   // ============ Run History ============
@@ -64,7 +93,9 @@ export class ScrapeService {
    * Debug-Daten für einen Run abrufen
    */
   getRunDebugData(runId: string): Observable<Record<string, any>> {
-    return this.http.get<Record<string, any>>(`${this.apiUrl}/runs/${runId}/debug`);
+    return this.http.get<Record<string, any>>(
+      `${this.apiUrl}/runs/${runId}/debug`,
+    );
   }
 
   /**
@@ -78,21 +109,29 @@ export class ScrapeService {
    * Run löschen
    */
   deleteRun(runId: string): Observable<{ success: boolean }> {
-    return this.http.delete<{ success: boolean }>(`${this.apiUrl}/runs/${runId}`);
+    return this.http.delete<{ success: boolean }>(
+      `${this.apiUrl}/runs/${runId}`,
+    );
   }
 
   /**
    * Alle Runs eines Scrapes löschen
    */
-  deleteRunsByScrapeId(scrapeId: string): Observable<{ success: boolean; deleted: number }> {
-    return this.http.delete<{ success: boolean; deleted: number }>(`${this.apiUrl}/scrapes/${scrapeId}/runs`);
+  deleteRunsByScrapeId(
+    scrapeId: string,
+  ): Observable<{ success: boolean; deleted: number }> {
+    return this.http.delete<{ success: boolean; deleted: number }>(
+      `${this.apiUrl}/scrapes/${scrapeId}/runs`,
+    );
   }
 
   /**
    * Alte Runs aufräumen
    */
   cleanupRuns(olderThanDays?: number): Observable<{ success: boolean }> {
-    return this.http.post<{ success: boolean }>(`${this.apiUrl}/runs/cleanup`, { olderThanDays });
+    return this.http.post<{ success: boolean }>(`${this.apiUrl}/runs/cleanup`, {
+      olderThanDays,
+    });
   }
 
   // ============ Schedule Management ============
@@ -101,7 +140,9 @@ export class ScrapeService {
    * Schedule für einen Scrape abrufen
    */
   getSchedule(scrapeId: string): Observable<ScrapeSchedule> {
-    return this.http.get<ScrapeSchedule>(`${this.apiUrl}/scrapes/${scrapeId}/schedule`);
+    return this.http.get<ScrapeSchedule>(
+      `${this.apiUrl}/scrapes/${scrapeId}/schedule`,
+    );
   }
 
   /**
@@ -114,14 +155,29 @@ export class ScrapeService {
   /**
    * Schedule für einen Scrape aktualisieren
    */
-  updateSchedule(scrapeId: string, schedule: Partial<Pick<ScrapeSchedule, 'manualEnabled' | 'scheduleEnabled' | 'cronExpression' | 'timezone'>>): Observable<ScrapeSchedule> {
-    return this.http.put<ScrapeSchedule>(`${this.apiUrl}/scrapes/${scrapeId}/schedule`, schedule);
+  updateSchedule(
+    scrapeId: string,
+    schedule: Partial<
+      Pick<
+        ScrapeSchedule,
+        'manualEnabled' | 'scheduleEnabled' | 'cronExpression' | 'timezone'
+      >
+    >,
+  ): Observable<ScrapeSchedule> {
+    return this.http.put<ScrapeSchedule>(
+      `${this.apiUrl}/scrapes/${scrapeId}/schedule`,
+      schedule,
+    );
   }
 
   /**
    * Scheduler-Status abrufen
    */
-  getSchedulerStatus(): Observable<{ scrapeId: string; cronExpression: string; nextRun: number | null }[]> {
-    return this.http.get<{ scrapeId: string; cronExpression: string; nextRun: number | null }[]>(`${this.apiUrl}/scheduler/status`);
+  getSchedulerStatus(): Observable<
+    { scrapeId: string; cronExpression: string; nextRun: number | null }[]
+  > {
+    return this.http.get<
+      { scrapeId: string; cronExpression: string; nextRun: number | null }[]
+    >(`${this.apiUrl}/scheduler/status`);
   }
 }

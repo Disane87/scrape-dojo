@@ -18,4 +18,10 @@ export { authInterceptor } from './interceptors';
 export { UserMenuComponent } from './components';
 
 // Pages
-export { LoginComponent, RegisterComponent, SetupComponent, OidcCallbackComponent, MfaComponent } from './pages';
+export {
+  LoginComponent,
+  RegisterComponent,
+  SetupComponent,
+  OidcCallbackComponent,
+  MfaComponent,
+} from './pages';

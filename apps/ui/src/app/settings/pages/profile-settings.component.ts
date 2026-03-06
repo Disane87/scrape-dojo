@@ -1,4 +1,9 @@
-import { Component, OnInit, inject, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  inject,
+  CUSTOM_ELEMENTS_SCHEMA,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -7,11 +12,11 @@ import { AuthService } from '../../auth/services/auth.service';
 import 'iconify-icon';
 
 @Component({
-    selector: 'app-profile-settings',
-    standalone: true,
-    imports: [CommonModule, FormsModule, TranslocoModule],
-    schemas: [CUSTOM_ELEMENTS_SCHEMA],
-    template: `
+  selector: 'app-profile-settings',
+  standalone: true,
+  imports: [CommonModule, FormsModule, TranslocoModule],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  template: `
         <div class="bg-dojo-surface rounded-lg border border-dojo-border p-6">
             <h2 class="text-xl font-bold text-dojo-text mb-6">
                 {{ 'settings.profile.title' | transloco }}
@@ -126,53 +131,61 @@ import 'iconify-icon';
     `,
 })
 export class ProfileSettingsComponent implements OnInit {
-    private http = inject(HttpClient);
-    private authService = inject(AuthService);
-    private transloco = inject(TranslocoService);
+  private http = inject(HttpClient);
+  private authService = inject(AuthService);
+  private transloco = inject(TranslocoService);
 
-    profile: any = null;
-    username = '';
-    displayName = '';
-    isLoading = false;
-    successMessage = '';
-    errorMessage = '';
+  profile: any = null;
+  username = '';
+  displayName = '';
+  isLoading = false;
+  successMessage = '';
+  errorMessage = '';
 
-    ngOnInit(): void {
-        this.loadProfile();
-    }
+  ngOnInit(): void {
+    this.loadProfile();
+  }
 
-    loadProfile(): void {
-        this.http.get('/api/users/me/profile').subscribe({
-            next: (data: any) => {
-                this.profile = data;
-                this.username = data.username || '';
-                this.displayName = data.displayName || '';
-            },
-            error: (err) => {
-                this.errorMessage = err?.error?.message || this.transloco.translate('settings.profile.load_error');
-            },
-        });
-    }
+  loadProfile(): void {
+    this.http.get('/api/users/me/profile').subscribe({
+      next: (data: any) => {
+        this.profile = data;
+        this.username = data.username || '';
+        this.displayName = data.displayName || '';
+      },
+      error: (err) => {
+        this.errorMessage =
+          err?.error?.message ||
+          this.transloco.translate('settings.profile.load_error');
+      },
+    });
+  }
 
-    saveProfile(): void {
-        this.isLoading = true;
-        this.successMessage = '';
-        this.errorMessage = '';
+  saveProfile(): void {
+    this.isLoading = true;
+    this.successMessage = '';
+    this.errorMessage = '';
 
-        this.http.put('/api/users/me/profile', {
-            username: this.username || null,
-            displayName: this.displayName || null,
-        }).subscribe({
-            next: () => {
-                this.successMessage = this.transloco.translate('settings.profile.save_success');
-                this.isLoading = false;
-                // Reload user profile in auth service
-                this.authService.loadUserProfile().subscribe();
-            },
-            error: (err) => {
-                this.errorMessage = err?.error?.message || this.transloco.translate('settings.profile.save_error');
-                this.isLoading = false;
-            },
-        });
-    }
+    this.http
+      .put('/api/users/me/profile', {
+        username: this.username || null,
+        displayName: this.displayName || null,
+      })
+      .subscribe({
+        next: () => {
+          this.successMessage = this.transloco.translate(
+            'settings.profile.save_success',
+          );
+          this.isLoading = false;
+          // Reload user profile in auth service
+          this.authService.loadUserProfile().subscribe();
+        },
+        error: (err) => {
+          this.errorMessage =
+            err?.error?.message ||
+            this.transloco.translate('settings.profile.save_error');
+          this.isLoading = false;
+        },
+      });
+  }
 }

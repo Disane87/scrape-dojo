@@ -12,10 +12,10 @@ import { SecretsModule } from '../secrets/secrets.module';
     TypeOrmModule.forFeature([VariableEntity]),
     DatabaseModule,
     SecretsModule,
-    ScrapeModule
+    ScrapeModule,
   ],
   controllers: [VariablesController],
   providers: [VariablesService],
-  exports: [VariablesService]
+  exports: [VariablesService],
 })
-export class VariablesModule { }
+export class VariablesModule {}

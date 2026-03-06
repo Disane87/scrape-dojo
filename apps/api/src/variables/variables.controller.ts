@@ -1,5 +1,22 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, HttpException, HttpStatus, Logger } from '@nestjs/common';
-import { VariablesService, Variable, VariableListItem, VariableScope } from './variables.service';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  Query,
+  HttpException,
+  HttpStatus,
+  Logger,
+} from '@nestjs/common';
+import {
+  VariablesService,
+  Variable,
+  VariableListItem,
+  VariableScope,
+} from './variables.service';
 import { ScrapeService } from '../scrape/scrape.service';
 import { CreateVariableDto, UpdateVariableDto } from './dto';
 
@@ -12,8 +29,8 @@ export class VariablesController {
 
   constructor(
     private readonly variablesService: VariablesService,
-    private readonly scrapeService: ScrapeService
-  ) { }
+    private readonly scrapeService: ScrapeService,
+  ) {}
 
   /**
    * GET /api/variables - Alle Variablen abrufen
@@ -22,7 +39,7 @@ export class VariablesController {
   @Get()
   async getAll(
     @Query('scope') scope?: VariableScope,
-    @Query('workflowId') workflowId?: string
+    @Query('workflowId') workflowId?: string,
   ): Promise<VariableListItem[]> {
     return this.variablesService.getAll(scope, workflowId);
   }
@@ -39,7 +56,9 @@ export class VariablesController {
    * GET /api/variables/definitions - Variablen-Definitionen aus Workflows
    */
   @Get('definitions')
-  async getWorkflowDefinitions(): Promise<Array<{ workflowId: string; variables: any[] }>> {
+  async getWorkflowDefinitions(): Promise<
+    Array<{ workflowId: string; variables: any[] }>
+  > {
     const scrapes = this.scrapeService.getScrapeDefinitions();
     const definitions: Array<{ workflowId: string; variables: any[] }> = [];
 
@@ -47,7 +66,7 @@ export class VariablesController {
       if (scrape.metadata?.variables && scrape.metadata.variables.length > 0) {
         definitions.push({
           workflowId: scrape.id,
-          variables: scrape.metadata.variables
+          variables: scrape.metadata.variables,
         });
       }
     }
@@ -59,7 +78,9 @@ export class VariablesController {
    * GET /api/variables/workflow/:workflowId - Workflow-spezifische Variablen
    */
   @Get('workflow/:workflowId')
-  async getByWorkflow(@Param('workflowId') workflowId: string): Promise<VariableListItem[]> {
+  async getByWorkflow(
+    @Param('workflowId') workflowId: string,
+  ): Promise<VariableListItem[]> {
     return this.variablesService.getByWorkflow(workflowId);
   }
 
@@ -83,7 +104,8 @@ export class VariablesController {
     try {
       return this.variablesService.create(data);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to create variable';
+      const message =
+        error instanceof Error ? error.message : 'Failed to create variable';
       this.logger.error(`Failed to create variable: ${message}`);
       throw new HttpException(message, HttpStatus.BAD_REQUEST);
     }
@@ -95,12 +117,13 @@ export class VariablesController {
   @Put(':id')
   async update(
     @Param('id') id: string,
-    @Body() updates: UpdateVariableDto
+    @Body() updates: UpdateVariableDto,
   ): Promise<Variable> {
     try {
       return this.variablesService.update(id, updates);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to update variable';
+      const message =
+        error instanceof Error ? error.message : 'Failed to update variable';
       this.logger.error(`Failed to update variable: ${message}`);
       throw new HttpException(message, HttpStatus.NOT_FOUND);
     }

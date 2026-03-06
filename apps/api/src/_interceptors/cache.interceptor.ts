@@ -11,7 +11,7 @@ import { createHash } from 'crypto';
 
 /**
  * HTTP Caching Interceptor
- * 
+ *
  * Setzt Cache-Control und ETag Header für GET-Requests.
  * Der Browser/Client handhabt 304 Not Modified automatisch basierend auf den Headers.
  */
@@ -41,10 +41,10 @@ export class HttpCacheInterceptor implements NestInterceptor {
 
         // ETag generieren basierend auf dem Response-Body
         const etag = this.generateETag(data);
-        
+
         // Cache-Control basierend auf dem Endpoint setzen
         const cacheControl = this.getCacheControl(request.path);
-        
+
         response.setHeader('Cache-Control', cacheControl);
         response.setHeader('ETag', etag);
 
@@ -76,7 +76,7 @@ export class HttpCacheInterceptor implements NestInterceptor {
     if (path.match(/\/api\/scrapes\/[^/]+$/)) {
       return 'private, max-age=60, stale-while-revalidate=300';
     }
-    
+
     // Scrapes-Liste
     if (path === '/api/scrapes') {
       return 'private, max-age=30, stale-while-revalidate=120';

@@ -1,4 +1,9 @@
-import { Component, computed, input, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import {
+  Component,
+  computed,
+  input,
+  CUSTOM_ELEMENTS_SCHEMA,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { toIconify } from '../../../utils/icon.utils';
 import 'iconify-icon';
@@ -39,7 +44,9 @@ export class EmptyStateComponent {
       lg: 'py-16 px-6',
     };
 
-    const border = this.bordered() ? 'border border-dashed border-dojo-border rounded-lg' : '';
+    const border = this.bordered()
+      ? 'border border-dashed border-dojo-border rounded-lg'
+      : '';
 
     return `${base} ${sizes[this.size()]} ${border}`;
   });

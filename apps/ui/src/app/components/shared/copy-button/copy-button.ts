@@ -1,4 +1,10 @@
-import { Component, input, signal, computed , CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import {
+  Component,
+  input,
+  signal,
+  computed,
+  CUSTOM_ELEMENTS_SCHEMA,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import 'iconify-icon';
 
@@ -9,7 +15,7 @@ export type CopyButtonVariant = 'default' | 'ghost' | 'toolbar';
   selector: 'app-copy-button',
   standalone: true,
   imports: [CommonModule],
-    schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './copy-button.html',
 })
 export class CopyButtonComponent {
@@ -38,9 +44,12 @@ export class CopyButtonComponent {
     const base = 'rounded transition-colors flex items-center gap-1';
 
     const variants: Record<CopyButtonVariant, string> = {
-      default: 'bg-dojo-surface-2 border border-dojo-border text-dojo-text-muted hover:text-dojo-text hover:border-dojo-text-muted',
-      ghost: 'text-dojo-text-muted hover:text-dojo-text hover:bg-dojo-surface-2',
-      toolbar: 'hover:bg-dojo-surface-2 text-dojo-text-muted hover:text-dojo-text',
+      default:
+        'bg-dojo-surface-2 border border-dojo-border text-dojo-text-muted hover:text-dojo-text hover:border-dojo-text-muted',
+      ghost:
+        'text-dojo-text-muted hover:text-dojo-text hover:bg-dojo-surface-2',
+      toolbar:
+        'hover:bg-dojo-surface-2 text-dojo-text-muted hover:text-dojo-text',
     };
 
     const sizes: Record<CopyButtonSize, string> = {

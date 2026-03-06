@@ -1,4 +1,11 @@
-import { Component, computed, input, output, signal, effect } from '@angular/core';
+import {
+  Component,
+  computed,
+  input,
+  output,
+  signal,
+  effect,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 export type ToggleSize = 'sm' | 'md' | 'lg';
@@ -15,7 +22,8 @@ export type ToggleColor = 'emerald' | 'blue' | 'orange' | 'rose';
       [attr.aria-checked]="isChecked()"
       [disabled]="disabled()"
       (click)="toggle()"
-      [class]="buttonClasses()">
+      [class]="buttonClasses()"
+    >
       <span [class]="knobClasses()"></span>
     </button>
   `,

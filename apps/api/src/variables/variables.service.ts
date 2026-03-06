@@ -33,7 +33,7 @@ export interface VariableListItem {
 /**
  * Service für persistente Variablen (global & workflow-spezifisch)
  * Speichert in Datenbank statt Datei
- * 
+ *
  * Auto-Sync:
  * - SCRAPE_DOJO_VAR_* ENV-Variablen werden automatisch als globale Variablen gespeichert
  * - SCRAPE_DOJO_SECRET_* ENV-Variablen werden automatisch als verschlüsselte Secrets gespeichert
@@ -47,8 +47,8 @@ export class VariablesService implements OnModuleInit {
     private variableRepository: Repository<VariableEntity>,
     private databaseService: DatabaseService,
     private secretsService: SecretsService,
-    private configService: ConfigService
-  ) { }
+    private configService: ConfigService,
+  ) {}
 
   async onModuleInit() {
     await this.syncEnvVariables();
@@ -64,7 +64,9 @@ export class VariablesService implements OnModuleInit {
     const varPrefix = 'SCRAPE_DOJO_VAR_';
     const secretPrefix = 'SCRAPE_DOJO_SECRET_';
 
-    this.logger.log('🔍 Scanning environment for SCRAPE_DOJO_VAR_* and SCRAPE_DOJO_SECRET_* variables...');
+    this.logger.log(
+      '🔍 Scanning environment for SCRAPE_DOJO_VAR_* and SCRAPE_DOJO_SECRET_* variables...',
+    );
 
     // Sammle alle gefundenen ENV-Variablen
     const foundVars: string[] = [];
@@ -74,7 +76,9 @@ export class VariablesService implements OnModuleInit {
     for (const [key, value] of Object.entries(envVars)) {
       if (key.startsWith(varPrefix) && value) {
         foundVars.push(key);
-        const varName = this.convertEnvNameToVarName(key.substring(varPrefix.length));
+        const varName = this.convertEnvNameToVarName(
+          key.substring(varPrefix.length),
+        );
         await this.syncEnvVariable(varName, value, key);
       }
     }
@@ -83,22 +87,30 @@ export class VariablesService implements OnModuleInit {
     for (const [key, value] of Object.entries(envVars)) {
       if (key.startsWith(secretPrefix) && value) {
         foundSecrets.push(key);
-        const secretName = this.convertEnvNameToVarName(key.substring(secretPrefix.length));
+        const secretName = this.convertEnvNameToVarName(
+          key.substring(secretPrefix.length),
+        );
         await this.syncEnvSecret(secretName, value, key);
       }
     }
 
     // Zusammenfassung loggen
     if (foundVars.length > 0) {
-      this.logger.log(`📋 Found ${foundVars.length} SCRAPE_DOJO_VAR_* variable(s): ${foundVars.join(', ')}`);
+      this.logger.log(
+        `📋 Found ${foundVars.length} SCRAPE_DOJO_VAR_* variable(s): ${foundVars.join(', ')}`,
+      );
     } else {
       this.logger.log('📋 No SCRAPE_DOJO_VAR_* variables found in environment');
     }
 
     if (foundSecrets.length > 0) {
-      this.logger.log(`🔐 Found ${foundSecrets.length} SCRAPE_DOJO_SECRET_* variable(s): ${foundSecrets.join(', ')}`);
+      this.logger.log(
+        `🔐 Found ${foundSecrets.length} SCRAPE_DOJO_SECRET_* variable(s): ${foundSecrets.join(', ')}`,
+      );
     } else {
-      this.logger.log('🔐 No SCRAPE_DOJO_SECRET_* variables found in environment');
+      this.logger.log(
+        '🔐 No SCRAPE_DOJO_SECRET_* variables found in environment',
+      );
     }
   }
 
@@ -109,7 +121,9 @@ export class VariablesService implements OnModuleInit {
     return envName
       .toLowerCase()
       .split('_')
-      .map((part, idx) => idx === 0 ? part : part.charAt(0).toUpperCase() + part.slice(1))
+      .map((part, idx) =>
+        idx === 0 ? part : part.charAt(0).toUpperCase() + part.slice(1),
+      )
       .join('');
   }
 
@@ -119,7 +133,7 @@ export class VariablesService implements OnModuleInit {
   private async syncEnvVariable(name: string, value: string, envKey: string) {
     try {
       const existing = await this.variableRepository.findOne({
-        where: { name, scope: 'global' }
+        where: { name, scope: 'global' },
       });
 
       if (!existing) {
@@ -127,7 +141,7 @@ export class VariablesService implements OnModuleInit {
           name,
           value,
           description: `Auto-synced from ENV: ${envKey}`,
-          scope: 'global'
+          scope: 'global',
         });
         this.logger.log(`✅ Synced ENV variable: ${name} = ${value}`);
       } else if (existing.value !== value) {
@@ -137,7 +151,9 @@ export class VariablesService implements OnModuleInit {
         this.logger.debug(`✓ ENV variable up-to-date: ${name}`);
       }
     } catch (error) {
-      this.logger.error(`Failed to sync ENV variable ${name}: ${error.message}`);
+      this.logger.error(
+        `Failed to sync ENV variable ${name}: ${error.message}`,
+      );
     }
   }
 
@@ -148,9 +164,13 @@ export class VariablesService implements OnModuleInit {
     try {
       // Prüfe ob Secret schon existiert
       const existingSecret = await this.secretsService.getSecret(name);
-      
+
       if (!existingSecret) {
-        await this.secretsService.createSecret(name, value, `Auto-synced from ENV: ${envKey}`);
+        await this.secretsService.createSecret(
+          name,
+          value,
+          `Auto-synced from ENV: ${envKey}`,
+        );
         this.logger.log(`✅ Synced ENV secret: ${name}`);
       } else {
         // Secrets nicht automatisch überschreiben (könnten vom User geändert worden sein)
@@ -164,7 +184,10 @@ export class VariablesService implements OnModuleInit {
   /**
    * Alle Variablen abrufen (optional gefiltert nach Scope/Workflow)
    */
-  async getAll(scope?: VariableScope, workflowId?: string): Promise<VariableListItem[]> {
+  async getAll(
+    scope?: VariableScope,
+    workflowId?: string,
+  ): Promise<VariableListItem[]> {
     const query = this.variableRepository.createQueryBuilder('variable');
 
     if (scope) {
@@ -176,7 +199,7 @@ export class VariablesService implements OnModuleInit {
     }
 
     const variables = await query.getMany();
-    return variables.map(v => this.toListItem(v));
+    return variables.map((v) => this.toListItem(v));
   }
 
   /**
@@ -204,18 +227,21 @@ export class VariablesService implements OnModuleInit {
   /**
    * Variable nach Name abrufen (für Template-Rendering)
    */
-  async getByName(name: string, workflowId?: string): Promise<Variable | undefined> {
+  async getByName(
+    name: string,
+    workflowId?: string,
+  ): Promise<Variable | undefined> {
     // Erst workflow-spezifisch suchen, dann global
     if (workflowId) {
       const workflowVar = await this.variableRepository.findOne({
-        where: { name, scope: 'workflow', workflowId }
+        where: { name, scope: 'workflow', workflowId },
       });
       if (workflowVar) return this.toVariable(workflowVar);
     }
 
     // Fallback auf global
     const globalVar = await this.variableRepository.findOne({
-      where: { name, scope: 'global' }
+      where: { name, scope: 'global' },
     });
     return globalVar ? this.toVariable(globalVar) : undefined;
   }
@@ -223,9 +249,12 @@ export class VariablesService implements OnModuleInit {
   /**
    * Variable nach Name und Workflow abrufen (für Sync-Check)
    */
-  async getByNameAndWorkflow(name: string, workflowId: string): Promise<Variable | undefined> {
+  async getByNameAndWorkflow(
+    name: string,
+    workflowId: string,
+  ): Promise<Variable | undefined> {
     const variable = await this.variableRepository.findOne({
-      where: { name, scope: 'workflow', workflowId }
+      where: { name, scope: 'workflow', workflowId },
     });
     return variable ? this.toVariable(variable) : undefined;
   }
@@ -243,16 +272,20 @@ export class VariablesService implements OnModuleInit {
     secretId?: string;
   }): Promise<Variable> {
     // Prüfe ob Name bereits existiert (im gleichen Scope/Workflow)
-    const query = this.variableRepository.createQueryBuilder('variable')
+    const query = this.variableRepository
+      .createQueryBuilder('variable')
       .where('variable.name = :name', { name: data.name });
 
     if (data.scope === 'global') {
       query.andWhere('variable.scope = :scope', { scope: 'global' });
     } else {
-      query.andWhere('variable.scope = :scope AND variable.workflowId = :workflowId', {
-        scope: 'workflow',
-        workflowId: data.workflowId
-      });
+      query.andWhere(
+        'variable.scope = :scope AND variable.workflowId = :workflowId',
+        {
+          scope: 'workflow',
+          workflowId: data.workflowId,
+        },
+      );
     }
 
     const existing = await query.getOne();
@@ -270,7 +303,7 @@ export class VariablesService implements OnModuleInit {
       isSecret: data.isSecret ?? false,
       secretId: data.secretId,
       createdAt: Date.now(),
-      updatedAt: Date.now()
+      updatedAt: Date.now(),
     });
 
     const saved = await this.variableRepository.save(variable);
@@ -281,14 +314,18 @@ export class VariablesService implements OnModuleInit {
   /**
    * Variable aktualisieren
    */
-  async update(id: string, updates: { value?: string; description?: string }): Promise<Variable> {
+  async update(
+    id: string,
+    updates: { value?: string; description?: string },
+  ): Promise<Variable> {
     const variable = await this.variableRepository.findOne({ where: { id } });
     if (!variable) {
       throw new Error('Variable not found');
     }
 
     if (updates.value !== undefined) variable.value = updates.value;
-    if (updates.description !== undefined) variable.description = updates.description;
+    if (updates.description !== undefined)
+      variable.description = updates.description;
     variable.updatedAt = Date.now();
 
     const saved = await this.variableRepository.save(variable);
@@ -324,13 +361,17 @@ export class VariablesService implements OnModuleInit {
 
     // Erst globale Variablen
     const globalVars = await this.variableRepository.find({
-      where: { scope: 'global' }
+      where: { scope: 'global' },
     });
     for (const v of globalVars) {
-      this.logger.debug(`🔍 Global var: ${v.name}, isSecret=${v.isSecret}, secretId=${v.secretId}`);
+      this.logger.debug(
+        `🔍 Global var: ${v.name}, isSecret=${v.isSecret}, secretId=${v.secretId}`,
+      );
       if (v.isSecret && v.secretId) {
         const secretValue = await getSecretValue(v.secretId);
-        this.logger.debug(`🔐 Loaded secret value for ${v.name}: ${secretValue ? '***' : '(empty)'}`);
+        this.logger.debug(
+          `🔐 Loaded secret value for ${v.name}: ${secretValue ? '***' : '(empty)'}`,
+        );
         map[v.name] = secretValue;
       } else {
         map[v.name] = v.value;
@@ -340,13 +381,17 @@ export class VariablesService implements OnModuleInit {
     // Dann workflow-spezifische (überschreiben globale)
     if (workflowId) {
       const workflowVars = await this.variableRepository.find({
-        where: { scope: 'workflow', workflowId }
+        where: { scope: 'workflow', workflowId },
       });
       for (const v of workflowVars) {
-        this.logger.debug(`🔍 Workflow var: ${v.name}, isSecret=${v.isSecret}, secretId=${v.secretId}`);
+        this.logger.debug(
+          `🔍 Workflow var: ${v.name}, isSecret=${v.isSecret}, secretId=${v.secretId}`,
+        );
         if (v.isSecret && v.secretId) {
           const secretValue = await getSecretValue(v.secretId);
-          this.logger.debug(`🔐 Loaded secret value for ${v.name}: ${secretValue ? '***' : '(empty)'}`);
+          this.logger.debug(
+            `🔐 Loaded secret value for ${v.name}: ${secretValue ? '***' : '(empty)'}`,
+          );
           map[v.name] = secretValue;
         } else {
           map[v.name] = v.value;
@@ -354,7 +399,9 @@ export class VariablesService implements OnModuleInit {
       }
     }
 
-    this.logger.debug(`📦 Final variable map: ${JSON.stringify(Object.keys(map))}`);
+    this.logger.debug(
+      `📦 Final variable map: ${JSON.stringify(Object.keys(map))}`,
+    );
     return map;
   }
 
@@ -370,7 +417,7 @@ export class VariablesService implements OnModuleInit {
       scope: entity.scope,
       workflowId: entity.workflowId,
       createdAt: entity.createdAt,
-      updatedAt: entity.updatedAt
+      updatedAt: entity.updatedAt,
     };
   }
 
@@ -386,7 +433,7 @@ export class VariablesService implements OnModuleInit {
       scope: variable.scope,
       workflowId: variable.workflowId,
       createdAt: variable.createdAt,
-      updatedAt: variable.updatedAt
+      updatedAt: variable.updatedAt,
     };
   }
 

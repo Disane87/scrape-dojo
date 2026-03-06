@@ -1,4 +1,9 @@
-import { Component, OnInit, inject, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  inject,
+  CUSTOM_ELEMENTS_SCHEMA,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
@@ -11,36 +16,70 @@ import 'iconify-icon';
   imports: [CommonModule, TranslocoModule],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   template: `
-    <div class="min-h-screen bg-linear-to-br from-dojo-bg via-dojo-surface to-dojo-bg flex items-center justify-center text-dojo-text">
-      <div class="bg-dojo-surface backdrop-blur-xl rounded-2xl shadow-2xl shadow-black/50 border border-dojo-border p-8 max-w-md w-full mx-4">
+    <div
+      class="min-h-screen bg-linear-to-br from-dojo-bg via-dojo-surface to-dojo-bg flex items-center justify-center text-dojo-text"
+    >
+      <div
+        class="bg-dojo-surface backdrop-blur-xl rounded-2xl shadow-2xl shadow-black/50 border border-dojo-border p-8 max-w-md w-full mx-4"
+      >
         <div class="text-center">
           <!-- Logo -->
           <div class="flex justify-center mb-6">
             <div class="relative">
-              <div class="absolute inset-0 bg-orange-500/30 blur-2xl rounded-full scale-150"></div>
-              <img src="/logos/scrape-dojo-readme-logo.png" alt="Scrape Dojo" class="h-20 relative drop-shadow-2xl" />
+              <div
+                class="absolute inset-0 bg-orange-500/30 blur-2xl rounded-full scale-150"
+              ></div>
+              <img
+                src="/logos/scrape-dojo-readme-logo.png"
+                alt="Scrape Dojo"
+                class="h-20 relative drop-shadow-2xl"
+              />
             </div>
           </div>
 
           <!-- Loading State -->
           @if (isProcessing) {
             <div class="flex flex-col items-center gap-4">
-              <svg class="animate-spin h-8 w-8 text-orange-500" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              <svg
+                class="animate-spin h-8 w-8 text-orange-500"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                  fill="none"
+                ></circle>
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
               </svg>
-              <h2 class="text-lg font-semibold text-dojo-text">{{ 'auth.oidc_callback.processing_title' | transloco }}</h2>
-              <p class="text-dojo-text-muted text-sm">{{ 'auth.oidc_callback.processing_subtitle' | transloco }}</p>
+              <h2 class="text-lg font-semibold text-dojo-text">
+                {{ 'auth.oidc_callback.processing_title' | transloco }}
+              </h2>
+              <p class="text-dojo-text-muted text-sm">
+                {{ 'auth.oidc_callback.processing_subtitle' | transloco }}
+              </p>
             </div>
           }
 
           <!-- Error State -->
           @if (errorMessage) {
             <div class="flex flex-col items-center gap-4">
-              <iconify-icon icon="mdi:alert-circle" class="text-4xl text-red-400"></iconify-icon>
-              <h2 class="text-lg font-semibold text-red-300">{{ 'auth.oidc_callback.failed_title' | transloco }}</h2>
+              <iconify-icon
+                icon="mdi:alert-circle"
+                class="text-4xl text-red-400"
+              ></iconify-icon>
+              <h2 class="text-lg font-semibold text-red-300">
+                {{ 'auth.oidc_callback.failed_title' | transloco }}
+              </h2>
               <p class="text-red-400 text-sm">{{ errorMessage }}</p>
-              <button 
+              <button
                 class="mt-4 px-6 py-3 bg-orange-500 hover:bg-orange-400 text-white font-semibold rounded-xl transition-colors"
                 (click)="backToLogin()"
               >
@@ -83,7 +122,9 @@ export class OidcCallbackComponent implements OnInit {
     }
 
     if (mfaChallengeToken) {
-      const returnUrl = params['return_url'] ? decodeURIComponent(params['return_url']) : '/';
+      const returnUrl = params['return_url']
+        ? decodeURIComponent(params['return_url'])
+        : '/';
       this.router.navigate(['/mfa'], {
         queryParams: {
           mfa_challenge_token: mfaChallengeToken,
@@ -110,17 +151,23 @@ export class OidcCallbackComponent implements OnInit {
       this.authService.loadUserProfile().subscribe({
         next: () => {
           // Get return URL from query parameter
-          const returnUrl = params['return_url'] ? decodeURIComponent(params['return_url']) : '/';
+          const returnUrl = params['return_url']
+            ? decodeURIComponent(params['return_url'])
+            : '/';
           this.router.navigate([returnUrl]);
         },
         error: (err) => {
           console.error('Failed to load user profile:', err);
-          this.errorMessage = this.transloco.translate('auth.oidc_callback.profile_load_failed');
+          this.errorMessage = this.transloco.translate(
+            'auth.oidc_callback.profile_load_failed',
+          );
           this.isProcessing = false;
         },
       });
     } else {
-      this.errorMessage = this.transloco.translate('auth.oidc_callback.invalid_response');
+      this.errorMessage = this.transloco.translate(
+        'auth.oidc_callback.invalid_response',
+      );
       this.isProcessing = false;
     }
   }

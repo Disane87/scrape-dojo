@@ -14,7 +14,7 @@ export interface ActiveNotification extends NotificationRequest {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class NotificationService {
   private permission: NotificationPermission = 'default';
@@ -24,7 +24,9 @@ export class NotificationService {
   private _notifications = signal<ActiveNotification[]>([]);
 
   /** All active (visible) notifications */
-  notifications = computed(() => this._notifications().filter(n => n.visible));
+  notifications = computed(() =>
+    this._notifications().filter((n) => n.visible),
+  );
 
   /** Current notification to show in modal (most recent) */
   currentNotification = computed(() => {
@@ -125,7 +127,7 @@ export class NotificationService {
         icon: options.icon || '/favicon.ico',
         tag: options.tag,
         badge: '/favicon.ico',
-        silent: false
+        silent: false,
       });
 
       // Auto-close after 5 seconds
@@ -148,7 +150,7 @@ export class NotificationService {
     this.notify({
       title: '🚀 Workflow Started',
       body: `Workflow "${workflowId}" is now running`,
-      tag: `workflow-${workflowId}`
+      tag: `workflow-${workflowId}`,
     });
   }
 
@@ -159,7 +161,7 @@ export class NotificationService {
     this.notify({
       title: '✅ Workflow Completed',
       body: `Workflow "${workflowId}" finished successfully`,
-      tag: `workflow-${workflowId}`
+      tag: `workflow-${workflowId}`,
     });
   }
 
@@ -169,8 +171,10 @@ export class NotificationService {
   notifyWorkflowFailed(workflowId: string, error?: string): void {
     this.notify({
       title: '❌ Workflow Failed',
-      body: error ? `Workflow "${workflowId}" failed: ${error}` : `Workflow "${workflowId}" failed`,
-      tag: `workflow-${workflowId}`
+      body: error
+        ? `Workflow "${workflowId}" failed: ${error}`
+        : `Workflow "${workflowId}" failed`,
+      tag: `workflow-${workflowId}`,
     });
   }
 
@@ -203,10 +207,10 @@ export class NotificationService {
       browserNotification: data.browserNotification ?? false,
       autoDismiss: data.autoDismiss ?? 5000,
       timestamp: Date.now(),
-      visible: true
+      visible: true,
     };
 
-    this._notifications.update(list => [...list, notification]);
+    this._notifications.update((list) => [...list, notification]);
 
     // Show browser notification if requested
     if (data.browserNotification) {
@@ -225,18 +229,16 @@ export class NotificationService {
    * Dismiss a specific notification
    */
   dismiss(notificationId: string): void {
-    this._notifications.update(list =>
-      list.map(n =>
-        n.notificationId === notificationId
-          ? { ...n, visible: false }
-          : n
-      )
+    this._notifications.update((list) =>
+      list.map((n) =>
+        n.notificationId === notificationId ? { ...n, visible: false } : n,
+      ),
     );
 
     // Cleanup old notifications after a delay
     setTimeout(() => {
-      this._notifications.update(list =>
-        list.filter(n => n.visible || Date.now() - n.timestamp < 60000)
+      this._notifications.update((list) =>
+        list.filter((n) => n.visible || Date.now() - n.timestamp < 60000),
       );
     }, 1000);
   }
@@ -245,8 +247,8 @@ export class NotificationService {
    * Dismiss all notifications
    */
   dismissAll(): void {
-    this._notifications.update(list =>
-      list.map(n => ({ ...n, visible: false }))
+    this._notifications.update((list) =>
+      list.map((n) => ({ ...n, visible: false })),
     );
   }
 
@@ -265,14 +267,17 @@ export class NotificationService {
     const iconEmoji = this.getTypeEmoji(notification.type);
 
     try {
-      const browserNotif = new Notification(`${iconEmoji} ${notification.title}`, {
-        body: notification.message,
-        icon: notification.iconUrl || '/favicon.ico',
-        tag: notification.notificationId,
-        badge: '/favicon.ico',
-        requireInteraction: notification.autoDismiss === 0,
-        silent: false
-      });
+      const browserNotif = new Notification(
+        `${iconEmoji} ${notification.title}`,
+        {
+          body: notification.message,
+          icon: notification.iconUrl || '/favicon.ico',
+          tag: notification.notificationId,
+          badge: '/favicon.ico',
+          requireInteraction: notification.autoDismiss === 0,
+          silent: false,
+        },
+      );
 
       browserNotif.onclick = () => {
         window.focus();
@@ -294,10 +299,14 @@ export class NotificationService {
    */
   private getTypeEmoji(type: NotificationType): string {
     switch (type) {
-      case 'success': return '✅';
-      case 'warning': return '⚠️';
-      case 'error': return '❌';
-      default: return 'ℹ️';
+      case 'success':
+        return '✅';
+      case 'warning':
+        return '⚠️';
+      case 'error':
+        return '❌';
+      default:
+        return 'ℹ️';
     }
   }
 }
