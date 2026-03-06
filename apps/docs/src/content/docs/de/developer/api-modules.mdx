@@ -34,7 +34,7 @@ Das Action-System ist über ein Factory Pattern aufgebaut und unterstützt aktue
 Jede Action erbt von `BaseAction` und implementiert die `execute(page, params, context)`-Methode. Neue Actions werden automatisch registriert, sobald sie den `@ActionMetadata`-Decorator verwenden und in `index.ts` importiert werden.
 
 <Aside type="tip">
-Eine Schritt-für-Schritt-Anleitung zum Erstellen eigener Actions findest du im [Entwicklerhandbuch](/scrape-dojo/de/developer/).
+Eine Schritt-für-Schritt-Anleitung zum Erstellen eigener Actions findest du im [Entwicklerhandbuch](/de/developer/).
 </Aside>
 
 ## 3. DatabaseModule
@@ -76,7 +76,7 @@ Das Auth-System ist modular aufgebaut und unterstützt mehrere Strategien:
 Die Authentifizierung wird über `SCRAPE_DOJO_AUTH_ENABLED` global aktiviert. Wenn aktiv, registriert sich der `JwtAuthGuard` als globaler Guard. Einzelne Endpunkte können mit `@Public()` davon ausgenommen werden.
 
 <Aside type="note">
-Details zu allen Auth-Flows findest du unter [Authentifizierung](/scrape-dojo/de/developer/authentication/).
+Details zu allen Auth-Flows findest du unter [Authentifizierung](/de/developer/authentication/).
 </Aside>
 
 ## 5. EventsModule
@@ -159,7 +159,7 @@ Alle API-Routen sind unter dem Prefix `/api` erreichbar: `/api/scrape`, `/api/au
 ---
 
 **Verwandte Themen:**
-- [Architektur](/scrape-dojo/de/developer/architecture/)
-- [Authentifizierung](/scrape-dojo/de/developer/authentication/)
-- [SSE Events](/scrape-dojo/de/developer/sse-events/)
-- [Entwicklerhandbuch](/scrape-dojo/de/developer/)
+- [Architektur](/de/developer/architecture/)
+- [Authentifizierung](/de/developer/authentication/)
+- [SSE Events](/de/developer/sse-events/)
+- [Entwicklerhandbuch](/de/developer/)
