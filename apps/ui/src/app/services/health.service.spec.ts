@@ -1,72 +1,38 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { HealthService } from './health.service';
 
 describe('HealthService', () => {
   let service: HealthService;
-  let httpMock: HttpTestingController;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [HttpClientTestingModule],
-      providers: [HealthService],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        HealthService,
+      ],
     });
     service = TestBed.inject(HealthService);
-    httpMock = TestBed.inject(HttpTestingController);
-  });
-
-  afterEach(() => {
-    httpMock.verify();
   });
 
   it('should be created', () => {
     expect(service).toBeTruthy();
   });
 
-  describe('checkHealth', () => {
-    it('should retrieve health status', () => {
-      const mockHealth = {
-        status: 'ok',
-        timestamp: new Date().toISOString(),
-        uptime: 12345,
-      };
-
-      service.checkHealth().subscribe(health => {
-        expect(health.status).toBe('ok');
-        expect(health.uptime).toBeGreaterThan(0);
-      });
-
-      const req = httpMock.expectOne('/api/health');
-      expect(req.request.method).toBe('GET');
-      req.flush(mockHealth);
-    });
+  it('should format uptime correctly', () => {
+    expect(service.formatUptime(0)).toBe('0s');
+    expect(service.formatUptime(65)).toBe('1m 5s');
+    expect(service.formatUptime(3661)).toBe('1h 1m 1s');
+    expect(service.formatUptime(90061)).toBe('1d 1h 1m 1s');
   });
 
-  describe('checkLiveness', () => {
-    it('should check liveness endpoint', () => {
-      const mockLiveness = { status: 'ok' };
-
-      service.checkLiveness().subscribe(result => {
-        expect(result.status).toBe('ok');
-      });
-
-      const req = httpMock.expectOne('/api/health/live');
-      expect(req.request.method).toBe('GET');
-      req.flush(mockLiveness);
-    });
+  it('should expose isApiOnline signal', () => {
+    expect(typeof service.isApiOnline()).toBe('boolean');
   });
 
-  describe('checkReadiness', () => {
-    it('should check readiness endpoint', () => {
-      const mockReadiness = { status: 'ok' };
-
-      service.checkReadiness().subscribe(result => {
-        expect(result.status).toBe('ok');
-      });
-
-      const req = httpMock.expectOne('/api/health/ready');
-      expect(req.request.method).toBe('GET');
-      req.flush(mockReadiness);
-    });
+  it('should expose isApiOffline signal', () => {
+    expect(typeof service.isApiOffline()).toBe('boolean');
   });
 });

@@ -1,5 +1,5 @@
 /// <reference types="vitest" />
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 import angular from '@analogjs/vite-plugin-angular';
 import * as path from 'path';
 
@@ -12,7 +12,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: [path.resolve(__dirname, 'src/test-setup.ts')],
+    setupFiles: ['src/test-setup.js'],
     include: ['src/**/*.spec.ts'],
     coverage: {
       provider: 'v8',
@@ -20,7 +20,7 @@ export default defineConfig({
       reportsDirectory: '../../coverage/apps/ui',
       exclude: [
         'node_modules/',
-        'src/test-setup.ts',
+        'src/test-setup.js',
         '**/*.spec.ts',
         '**/*.interface.ts',
         'src/main.ts',

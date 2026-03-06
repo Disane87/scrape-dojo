@@ -1,6 +1,9 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { TestBed, ComponentFixture } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideRouter } from '@angular/router';
 import { TopNavComponent } from './top-nav';
+import { provideTransloco } from '@jsverse/transloco';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 
 describe('TopNavComponent', () => {
   let component: TopNavComponent;
@@ -8,7 +11,18 @@ describe('TopNavComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [TopNavComponent, HttpClientTestingModule],
+      imports: [TopNavComponent],
+      providers: [
+        provideHttpClient(),
+        provideRouter([]),
+        provideTransloco({
+          config: {
+            availableLangs: ['en', 'de'],
+            defaultLang: 'en',
+          },
+        }),
+      ],
+      schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
 
     fixture = TestBed.createComponent(TopNavComponent);

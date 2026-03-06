@@ -5,8 +5,9 @@ describe('ThemeService', () => {
   let service: ThemeService;
 
   beforeEach(() => {
-    // Reset localStorage before service initialization
     localStorage.clear();
+    // Set auth token so service doesn't start in guest mode
+    localStorage.setItem('scrape_dojo_access_token', 'test-token');
 
     TestBed.configureTestingModule({
       providers: [ThemeService],
@@ -14,12 +15,17 @@ describe('ThemeService', () => {
     service = TestBed.inject(ThemeService);
   });
 
+  afterEach(() => {
+    localStorage.clear();
+    document.documentElement.classList.remove('dark');
+  });
+
   it('should be created', () => {
     expect(service).toBeTruthy();
   });
 
   describe('theme management', () => {
-    it('should initialize with default theme "system" when localStorage is empty', () => {
+    it('should initialize with default theme "system" when no theme stored', () => {
       expect(service.theme()).toBe('system');
     });
 
@@ -33,14 +39,17 @@ describe('ThemeService', () => {
 
     it('should persist theme in localStorage', () => {
       service.setTheme('dark');
+      TestBed.flushEffects();
       expect(localStorage.getItem('scrape-dojo-theme')).toBe('dark');
     });
 
     it('should apply the Tailwind dark class to <html> when theme is dark', () => {
       service.setTheme('dark');
+      TestBed.flushEffects();
       expect(document.documentElement.classList.contains('dark')).toBe(true);
 
       service.setTheme('light');
+      TestBed.flushEffects();
       expect(document.documentElement.classList.contains('dark')).toBe(false);
     });
   });

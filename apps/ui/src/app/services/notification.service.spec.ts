@@ -1,59 +1,84 @@
-import { TestBed } from '@angular/core/testing';
 import { NotificationService } from './notification.service';
 
 describe('NotificationService', () => {
   let service: NotificationService;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({
-      providers: [NotificationService],
-    });
-    service = TestBed.inject(NotificationService);
+    localStorage.clear();
+    service = new NotificationService();
   });
 
   it('should be created', () => {
     expect(service).toBeTruthy();
   });
 
-  describe('notifications', () => {
-    it('should show success notification', (done) => {
-      service.notifications$.subscribe(notification => {
-        expect(notification.type).toBe('success');
-        expect(notification.message).toBe('Success!');
-        done();
-      });
-
-      service.showSuccess('Success!');
+  describe('notifications signal', () => {
+    it('should start with no notifications', () => {
+      expect(service.notifications().length).toBe(0);
+      expect(service.hasNotifications()).toBe(false);
     });
 
-    it('should show error notification', (done) => {
-      service.notifications$.subscribe(notification => {
-        expect(notification.type).toBe('error');
-        expect(notification.message).toBe('Error!');
-        done();
+    it('should show notification from backend', () => {
+      service.showFromBackend({
+        notificationId: 'test-1',
+        scrapeId: 'scrape-1',
+        type: 'success',
+        title: 'Success!',
+        message: 'Test message',
+        autoDismiss: 0,
       });
 
-      service.showError('Error!');
+      expect(service.notifications().length).toBe(1);
+      expect(service.hasNotifications()).toBe(true);
+      expect(service.currentNotification()?.title).toBe('Success!');
     });
 
-    it('should show info notification', (done) => {
-      service.notifications$.subscribe(notification => {
-        expect(notification.type).toBe('info');
-        expect(notification.message).toBe('Info!');
-        done();
+    it('should dismiss notification', () => {
+      service.showFromBackend({
+        notificationId: 'test-1',
+        scrapeId: 'scrape-1',
+        type: 'info',
+        title: 'Info',
+        message: 'Test',
+        autoDismiss: 0,
       });
 
-      service.showInfo('Info!');
+      service.dismiss('test-1');
+      expect(service.notifications().length).toBe(0);
     });
 
-    it('should show warning notification', (done) => {
-      service.notifications$.subscribe(notification => {
-        expect(notification.type).toBe('warning');
-        expect(notification.message).toBe('Warning!');
-        done();
+    it('should dismiss all notifications', () => {
+      service.showFromBackend({
+        notificationId: 'test-1',
+        scrapeId: 'scrape-1',
+        type: 'info',
+        title: 'Info 1',
+        message: 'Test 1',
+        autoDismiss: 0,
+      });
+      service.showFromBackend({
+        notificationId: 'test-2',
+        scrapeId: 'scrape-1',
+        type: 'error',
+        title: 'Error 1',
+        message: 'Test 2',
+        autoDismiss: 0,
       });
 
-      service.showWarning('Warning!');
+      service.dismissAll();
+      expect(service.notifications().length).toBe(0);
+    });
+  });
+
+  describe('preferences', () => {
+    it('should be enabled by default', () => {
+      expect(service.isEnabled()).toBe(true);
+    });
+
+    it('should toggle enabled state', () => {
+      service.setEnabled(false);
+      expect(service.isEnabled()).toBe(false);
+      expect(localStorage.getItem('notifications_enabled')).toBe('false');
     });
   });
 });

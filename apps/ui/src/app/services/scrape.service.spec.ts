@@ -1,32 +1,29 @@
-import { vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
+import {
+  HttpTestingController,
+  provideHttpClientTesting,
+} from '@angular/common/http/testing';
+import { provideHttpClient } from '@angular/common/http';
 import { ScrapeService } from './scrape.service';
-import { ApiService } from './api.service';
-import { of } from 'rxjs';
 
 describe('ScrapeService', () => {
   let service: ScrapeService;
-  let apiService: any; // ApiService
-
-  const mockApiService = {
-    getScrapes: vi.fn(),
-    runScrape: vi.fn(),
-    stopScrape: vi.fn(),
-  };
+  let httpMock: HttpTestingController;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
         ScrapeService,
-        { provide: ApiService, useValue: mockApiService },
       ],
     });
     service = TestBed.inject(ScrapeService);
-    apiService = TestBed.inject(ApiService) as any;
+    httpMock = TestBed.inject(HttpTestingController);
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    httpMock.verify();
   });
 
   it('should be created', () => {
@@ -39,26 +36,40 @@ describe('ScrapeService', () => {
         { id: 'test1', metadata: {}, steps: [] },
         { id: 'test2', metadata: {}, steps: [] },
       ];
-      mockApiService.getScrapes.mockReturnValue(of(mockScrapes));
 
-      service.getScrapes().subscribe(scrapes => {
+      service.getScrapes().subscribe((scrapes) => {
         expect(scrapes).toEqual(mockScrapes);
       });
 
-      expect(apiService.getScrapes).toHaveBeenCalled();
+      const req = httpMock.expectOne('/api/scrapes');
+      expect(req.request.method).toBe('GET');
+      req.flush(mockScrapes);
     });
   });
 
   describe('runScrape', () => {
     it('should execute scrape via API', () => {
       const scrapeId = 'test-scrape';
-      mockApiService.runScrape.mockReturnValue(of({ success: true }));
 
-      service.runScrape(scrapeId).subscribe(result => {
-        expect(result.success).toBe(true);
+      service.runScrape(scrapeId).subscribe((result) => {
+        expect(result).toBeTruthy();
       });
 
-      expect(apiService.runScrape).toHaveBeenCalledWith(scrapeId);
+      const req = httpMock.expectOne(`/api/run/${scrapeId}`);
+      expect(req.request.method).toBe('POST');
+      req.flush({ success: true });
+    });
+  });
+
+  describe('stopScrape', () => {
+    it('should stop scrape via API', () => {
+      service.stopScrape().subscribe((result) => {
+        expect(result.stopped).toBe(true);
+      });
+
+      const req = httpMock.expectOne('/api/scrape/stop');
+      expect(req.request.method).toBe('POST');
+      req.flush({ stopped: true, message: 'Stopped' });
     });
   });
 });

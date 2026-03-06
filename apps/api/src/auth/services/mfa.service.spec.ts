@@ -126,5 +126,137 @@ describe('MfaService', () => {
     it('should throw on invalid encrypted format', () => {
       expect(() => service.decryptSecret('invalid')).toThrow();
     });
+
+    it('should throw on empty encrypted string', () => {
+      expect(() => service.decryptSecret('')).toThrow();
+    });
+  });
+
+  describe('isMfaRequired - additional branches', () => {
+    it('should return false when auth enabled but MFA disabled', () => {
+      mockConfigService.get.mockImplementation((key: string, def?: string) => {
+        if (key === 'SCRAPE_DOJO_AUTH_ENABLED') return 'true';
+        if (key === 'SCRAPE_DOJO_AUTH_REQUIRE_MFA') return 'false';
+        return def;
+      });
+      const svc = new MfaService(mockConfigService, mockJwtService);
+      expect(svc.isMfaRequired()).toBe(false);
+    });
+  });
+
+  describe('verifyChallengeToken - additional branches', () => {
+    it('should throw when payload has no sub', () => {
+      mockJwtService.verify.mockReturnValue({
+        sub: '',
+        purpose: 'mfa_challenge',
+      });
+      expect(() => service.verifyChallengeToken('token')).toThrow(
+        UnauthorizedException,
+      );
+    });
+
+    it('should throw when payload is null', () => {
+      mockJwtService.verify.mockReturnValue(null);
+      expect(() => service.verifyChallengeToken('token')).toThrow(
+        UnauthorizedException,
+      );
+    });
+
+    it('should handle error without message property', () => {
+      mockJwtService.verify.mockImplementation(() => {
+        throw 'string-error';
+      });
+      expect(() => service.verifyChallengeToken('token')).toThrow(
+        UnauthorizedException,
+      );
+    });
+  });
+
+  describe('verifyTotp - additional branches', () => {
+    it('should return false for null code', () => {
+      expect(service.verifyTotp(null as any, 'some-secret')).toBe(false);
+    });
+
+    it('should return false for undefined code', () => {
+      expect(service.verifyTotp(undefined as any, 'some-secret')).toBe(false);
+    });
+  });
+
+  describe('getChallengeSecret - production branch', () => {
+    it('should throw when in production with default secret', () => {
+      mockConfigService.get.mockImplementation((key: string, def?: string) => {
+        if (key === 'NODE_ENV') return 'production';
+        if (key === 'SCRAPE_DOJO_AUTH_MFA_CHALLENGE_SECRET')
+          return 'mfa-challenge-secret-change-me';
+        return def;
+      });
+      const svc = new MfaService(mockConfigService, mockJwtService);
+      expect(() => svc.createChallengeToken('user-1')).toThrow(
+        'SCRAPE_DOJO_AUTH_MFA_CHALLENGE_SECRET must be set in production',
+      );
+    });
+
+    it('should not throw in production with custom secret', () => {
+      mockConfigService.get.mockImplementation((key: string, def?: string) => {
+        if (key === 'NODE_ENV') return 'production';
+        if (key === 'SCRAPE_DOJO_AUTH_MFA_CHALLENGE_SECRET')
+          return 'my-custom-secret';
+        return def;
+      });
+      const svc = new MfaService(mockConfigService, mockJwtService);
+      expect(() => svc.createChallengeToken('user-1')).not.toThrow();
+    });
+  });
+
+  describe('getEncryptionKey - branches', () => {
+    it('should throw in production when no encryption key set', () => {
+      mockConfigService.get.mockImplementation((key: string, def?: string) => {
+        if (key === 'NODE_ENV') return 'production';
+        if (key === 'SCRAPE_DOJO_AUTH_MFA_ENCRYPTION_KEY') return undefined;
+        return def;
+      });
+      const svc = new MfaService(mockConfigService, mockJwtService);
+      expect(() => svc.encryptSecret('test')).toThrow(
+        'SCRAPE_DOJO_AUTH_MFA_ENCRYPTION_KEY must be set in production',
+      );
+    });
+
+    it('should use raw key when provided as valid base64 of 32 bytes', () => {
+      const key32 = Buffer.alloc(32, 'a').toString('base64');
+      mockConfigService.get.mockImplementation((key: string, def?: string) => {
+        if (key === 'SCRAPE_DOJO_AUTH_MFA_ENCRYPTION_KEY') return key32;
+        if (key === 'NODE_ENV') return 'development';
+        return def;
+      });
+      const svc = new MfaService(mockConfigService, mockJwtService);
+      const encrypted = svc.encryptSecret('test-secret');
+      const decrypted = svc.decryptSecret(encrypted);
+      expect(decrypted).toBe('test-secret');
+    });
+
+    it('should hash raw key when not valid 32-byte base64', () => {
+      mockConfigService.get.mockImplementation((key: string, def?: string) => {
+        if (key === 'SCRAPE_DOJO_AUTH_MFA_ENCRYPTION_KEY') return 'short-key';
+        if (key === 'NODE_ENV') return 'development';
+        return def;
+      });
+      const svc = new MfaService(mockConfigService, mockJwtService);
+      const encrypted = svc.encryptSecret('test-secret');
+      const decrypted = svc.decryptSecret(encrypted);
+      expect(decrypted).toBe('test-secret');
+    });
+
+    it('should derive key from JWT secret in dev when no encryption key', () => {
+      mockConfigService.get.mockImplementation((key: string, def?: string) => {
+        if (key === 'SCRAPE_DOJO_AUTH_MFA_ENCRYPTION_KEY') return undefined;
+        if (key === 'SCRAPE_DOJO_AUTH_JWT_SECRET') return 'my-jwt-secret';
+        if (key === 'NODE_ENV') return 'development';
+        return def;
+      });
+      const svc = new MfaService(mockConfigService, mockJwtService);
+      const encrypted = svc.encryptSecret('test-secret');
+      const decrypted = svc.decryptSecret(encrypted);
+      expect(decrypted).toBe('test-secret');
+    });
   });
 });

@@ -4,7 +4,13 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - 'apps/docs/**'
+      - '**/*.md'
   pull_request:
+    paths-ignore:
+      - 'apps/docs/**'
+      - '**/*.md'
 
 jobs:
   test-api:

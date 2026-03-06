@@ -92,7 +92,13 @@ Scrapes are defined as JSONC files in `config/sites/`. Validated against `config
 ## Code Conventions
 
 - **Formatting**: Prettier — single quotes, trailing commas (`.prettierrc`)
-- **Linting**: ESLint with @typescript-eslint + prettier plugin
+- **Linting**: ESLint with @typescript-eslint + prettier plugin. **All new and changed code must be ESLint-conformant** — `npx nx lint api` and `npx nx lint ui` must pass with zero errors before committing. A pre-commit hook (lint-staged + husky) enforces this automatically.
+- **ESLint rules to watch for**:
+  - Do NOT use the `Function` type — use `(...args: any[]) => any` or `new (...args: any[]) => any` instead
+  - Do NOT leave unused imports or variables — remove them or prefix with `_` if required by a signature
+  - Do NOT use `require()` in TypeScript — use ES imports. If dynamic `require()` is unavoidable, add `// eslint-disable-next-line @typescript-eslint/no-require-imports`
+  - Use `const` instead of `let` when the variable is never reassigned
+  - Use LF line endings (not CRLF) — Prettier enforces this
 - **Commits**: Conventional Commits enforced via semantic-release (feat, fix, docs, chore, etc.)
 - **TypeScript**: Target ES2021, lenient settings (strictNullChecks=false, noImplicitAny=false)
 - **File organization**: Feature-based NestJS modules with controllers/services/entities/dto subdirectories
@@ -101,6 +107,7 @@ Scrapes are defined as JSONC files in `config/sites/`. Validated against `config
 ## Environment
 
 Key env vars (see `.env.example` for full list):
+
 - `SCRAPE_DOJO_ENCRYPTION_KEY` — Required, 256-bit hex key for secrets encryption
 - `DB_TYPE` — sqlite (default), mysql, or postgres
 - `SCRAPE_DOJO_AUTH_ENABLED` — Toggles authentication globally

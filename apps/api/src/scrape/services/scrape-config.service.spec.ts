@@ -83,6 +83,67 @@ describe('ScrapeConfigService', () => {
       service.loadScrapeDefinitions();
       expect(fs.readFileSync).toHaveBeenCalledTimes(2);
     });
+
+    it('should handle files that return empty scrapes array', () => {
+      vi.mocked(fs.existsSync).mockReturnValue(true);
+      vi.mocked(fs.readdirSync).mockReturnValue(['empty.json'] as any);
+      vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify([]));
+
+      const result = service.loadScrapeDefinitions();
+      expect(result).toEqual([]);
+    });
+
+    it('should handle scrapes property that is not an array', () => {
+      vi.mocked(fs.existsSync).mockReturnValue(true);
+      vi.mocked(fs.readdirSync).mockReturnValue(['bad-scrapes.json'] as any);
+      vi.mocked(fs.readFileSync).mockReturnValue(
+        JSON.stringify({ scrapes: 'not-an-array' }),
+      );
+
+      const result = service.loadScrapeDefinitions();
+      expect(result).toEqual([]);
+    });
+
+    it('should merge scrapes from multiple files', () => {
+      vi.mocked(fs.existsSync).mockReturnValue(true);
+      vi.mocked(fs.readdirSync).mockReturnValue(['a.json', 'b.json'] as any);
+      vi.mocked(fs.readFileSync)
+        .mockReturnValueOnce(JSON.stringify([{ id: 'scrape-1', steps: [] }]))
+        .mockReturnValueOnce(JSON.stringify([{ id: 'scrape-2', steps: [] }]));
+
+      const result = service.loadScrapeDefinitions();
+      expect(result).toHaveLength(2);
+      expect(result[0].id).toBe('scrape-1');
+      expect(result[1].id).toBe('scrape-2');
+    });
+
+    it('should warn about duplicate scrape IDs', () => {
+      vi.mocked(fs.existsSync).mockReturnValue(true);
+      vi.mocked(fs.readdirSync).mockReturnValue(['dupes.json'] as any);
+      vi.mocked(fs.readFileSync).mockReturnValue(
+        JSON.stringify([
+          { id: 'dup', steps: [] },
+          { id: 'dup', steps: [] },
+        ]),
+      );
+
+      // Should not throw, just warn
+      const result = service.loadScrapeDefinitions();
+      expect(result).toHaveLength(2);
+    });
+
+    it('should sort files alphabetically', () => {
+      vi.mocked(fs.existsSync).mockReturnValue(true);
+      vi.mocked(fs.readdirSync).mockReturnValue(['z.json', 'a.json'] as any);
+      vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify([]));
+
+      service.loadScrapeDefinitions();
+
+      // readFileSync called for a.json first (sorted), then z.json
+      const calls = vi.mocked(fs.readFileSync).mock.calls;
+      expect(calls[0][0]).toContain('a.json');
+      expect(calls[1][0]).toContain('z.json');
+    });
   });
 
   describe('getSitesPath', () => {
@@ -111,6 +172,165 @@ describe('ScrapeConfigService', () => {
       service.ensureSitesDirectory();
 
       expect(fs.mkdirSync).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('private formatSiteConfigError', () => {
+    it('should format error with file path', () => {
+      const result = (service as any).formatSiteConfigError(
+        'test.json',
+        new Error('Parse error'),
+      );
+      expect(result).toContain('Parse error');
+      expect(result).toContain('test.json');
+    });
+
+    it('should include line and column when error has them', () => {
+      const error = new Error('Syntax error') as any;
+      error.line = 5;
+      error.column = 10;
+      const result = (service as any).formatSiteConfigError('test.json', error);
+      expect(result).toContain('5');
+      expect(result).toContain('10');
+    });
+
+    it('should handle error with position and file content', () => {
+      const error = new Error('Unexpected token') as any;
+      error.position = 15;
+      error.fileContent = '{\n  "id": "test",\n  bad-json\n}';
+      error.filePath = '/path/to/test.json';
+
+      const result = (service as any).formatSiteConfigError('test.json', error);
+      expect(result).toContain('Unexpected token');
+    });
+
+    it('should handle non-Error objects', () => {
+      const result = (service as any).formatSiteConfigError(
+        'test.json',
+        'string error',
+      );
+      expect(result).toContain('string error');
+    });
+  });
+
+  describe('private coerceNumber', () => {
+    it('should return number for valid number', () => {
+      expect((service as any).coerceNumber(5)).toBe(5);
+    });
+
+    it('should return number for valid string number', () => {
+      expect((service as any).coerceNumber('42')).toBe(42);
+    });
+
+    it('should return undefined for non-numeric string', () => {
+      expect((service as any).coerceNumber('abc')).toBeUndefined();
+    });
+
+    it('should return undefined for empty string', () => {
+      expect((service as any).coerceNumber('')).toBeUndefined();
+    });
+
+    it('should return undefined for NaN', () => {
+      expect((service as any).coerceNumber(NaN)).toBeUndefined();
+    });
+
+    it('should return undefined for Infinity', () => {
+      expect((service as any).coerceNumber(Infinity)).toBeUndefined();
+    });
+
+    it('should return undefined for null/undefined', () => {
+      expect((service as any).coerceNumber(null)).toBeUndefined();
+      expect((service as any).coerceNumber(undefined)).toBeUndefined();
+    });
+  });
+
+  describe('private resolveLineColumnFromPosition', () => {
+    it('should return line and column from existing values', () => {
+      const result = (service as any).resolveLineColumnFromPosition(
+        'content',
+        undefined,
+        3,
+        5,
+      );
+      expect(result).toEqual({ line: 3, column: 5 });
+    });
+
+    it('should return undefined when no position and no line/column', () => {
+      const result = (service as any).resolveLineColumnFromPosition(
+        'content',
+        undefined,
+        undefined,
+        undefined,
+      );
+      expect(result).toBeUndefined();
+    });
+
+    it('should resolve position to line and column', () => {
+      const content = 'line1\nline2\nline3';
+      const result = (service as any).resolveLineColumnFromPosition(
+        content,
+        8,
+        undefined,
+        undefined,
+      );
+      // Position 8 is 'i' in 'line2' -> line 2, column 3
+      expect(result.line).toBe(2);
+      expect(result.column).toBe(3);
+    });
+
+    it('should clamp position to content length', () => {
+      const content = 'short';
+      const result = (service as any).resolveLineColumnFromPosition(
+        content,
+        1000,
+        undefined,
+        undefined,
+      );
+      expect(result).toBeDefined();
+      expect(result.line).toBe(1);
+    });
+
+    it('should handle position 0', () => {
+      const content = 'hello';
+      const result = (service as any).resolveLineColumnFromPosition(
+        content,
+        0,
+        undefined,
+        undefined,
+      );
+      expect(result).toEqual({ line: 1, column: 1 });
+    });
+  });
+
+  describe('private getLineExcerpt', () => {
+    it('should return the correct line', () => {
+      const content = 'line1\nline2\nline3';
+      expect((service as any).getLineExcerpt(content, 2)).toBe('line2');
+    });
+
+    it('should handle line number beyond content', () => {
+      const content = 'only one line';
+      const result = (service as any).getLineExcerpt(content, 999);
+      expect(result).toBe('only one line');
+    });
+
+    it('should truncate long lines', () => {
+      const longLine = 'a'.repeat(300);
+      const result = (service as any).getLineExcerpt(longLine, 1);
+      expect(result.length).toBeLessThanOrEqual(240);
+      expect(result).toContain('...');
+    });
+  });
+
+  describe('private getCaretLine', () => {
+    it('should return caret at correct position', () => {
+      expect((service as any).getCaretLine(1)).toBe('^');
+      expect((service as any).getCaretLine(5)).toBe('    ^');
+    });
+
+    it('should clamp column to valid range', () => {
+      const result = (service as any).getCaretLine(0);
+      expect(result).toBe('^'); // Clamped to 1
     });
   });
 });

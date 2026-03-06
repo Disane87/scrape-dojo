@@ -3,7 +3,7 @@ import { ActionMetadata } from '../types/action-metadata.types';
 // Typ zur Speicherung der registrierten Aktion und ihres Namens
 export interface RegisteredAction {
   name: string;
-  actionClass: Function;
+  actionClass: new (...args: any[]) => any;
   metadata: ActionMetadata;
 }
 
@@ -25,12 +25,12 @@ export interface ActionDecoratorOptions {
 }
 
 /**
-* Action Decorator, um eine Klasse als Aktion zu markieren und zu registrieren
-* @param name Der Name der Aktion (z.B. 'navigate', 'click')
-* @param options Metadaten für die Action (displayName, icon, description, etc.)
-*/
+ * Action Decorator, um eine Klasse als Aktion zu markieren und zu registrieren
+ * @param name Der Name der Aktion (z.B. 'navigate', 'click')
+ * @param options Metadaten für die Action (displayName, icon, description, etc.)
+ */
 export function Action(name: string, options: ActionDecoratorOptions) {
-  return function (constructor: Function) {
+  return function (constructor: new (...args: any[]) => any) {
     const metadata: ActionMetadata = {
       name,
       displayName: options.displayName,
@@ -59,4 +59,3 @@ export function getAllActionMetadata(): Record<string, ActionMetadata> {
   }
   return metadataMap;
 }
-
