@@ -1,3 +1,9 @@
+## [1.0.15](https://github.com/disane87/scrape-dojo/compare/v1.0.14...v1.0.15) (2026-03-06)
+
+### Bug Fixes
+
+- use vmThreads pool for proper jsdom document scope in CI ([f57ef5f](https://github.com/disane87/scrape-dojo/commit/f57ef5f7cf7f4c66243c1b22d582b2f966d94ef1))
+
 ## [1.0.14](https://github.com/disane87/scrape-dojo/compare/v1.0.13...v1.0.14) (2026-03-06)
 
 ### Bug Fixes
