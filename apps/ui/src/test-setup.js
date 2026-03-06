@@ -11,9 +11,12 @@ try {
   // Already initialized by @analogjs/vite-plugin-angular
 }
 
-afterEach(() => {
-  testBed.resetTestingModule();
-});
+// Angular registers auto-cleanup via globalThis.afterEach, but vitest
+// globals may not be on globalThis. Ensure cleanup runs between tests.
+if (!globalThis.afterEach) {
+  globalThis.afterEach = afterEach;
+  globalThis.beforeEach = beforeEach;
+}
 
 Object.defineProperty(window, 'CSS', { value: null });
 Object.defineProperty(window, 'getComputedStyle', {
