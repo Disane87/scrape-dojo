@@ -9,6 +9,7 @@ permissions:
   contents: write
   issues: write
   pull-requests: write
+  packages: write
 
 concurrency:
   group: release-${{ github.ref }}
@@ -21,6 +22,9 @@ jobs:
   semantic_release:
     name: Semantic Release
     runs-on: ubuntu-latest
+    outputs:
+      new_release_published: ${{ steps.check.outputs.new_release_published }}
+      new_release_version: ${{ steps.check.outputs.new_release_version }}
 
     steps:
       - name: Checkout
@@ -48,7 +52,69 @@ jobs:
       - name: Build UI
         run: pnpm nx build ui --skip-nx-cache
 
+      - name: Get latest tag before release
+        id: before
+        run: |
+          git fetch --tags
+          echo "tag=$(git describe --tags --abbrev=0 2>/dev/null || echo '')" >> "$GITHUB_OUTPUT"
+
       - name: Semantic Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: pnpm semantic-release
+
+      - name: Check for new release
+        id: check
+        run: |
+          git fetch --tags
+          NEW_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo '')
+          if [ "$NEW_TAG" != "${{ steps.before.outputs.tag }}" ] && [ -n "$NEW_TAG" ]; then
+            echo "new_release_published=true" >> "$GITHUB_OUTPUT"
+            echo "new_release_version=${NEW_TAG#v}" >> "$GITHUB_OUTPUT"
+            echo "New release: $NEW_TAG"
+          else
+            echo "new_release_published=false" >> "$GITHUB_OUTPUT"
+            echo "No new release"
+          fi
+
+  docker:
+    name: Build & Push Docker Image
+    needs: semantic_release
+    if: needs.semantic_release.outputs.new_release_published == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Compute GHCR owner (lowercase)
+        id: ghcr
+        shell: bash
+        run: |
+          echo "owner=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push combined image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ghcr.io/${{ steps.ghcr.outputs.owner }}/scrape-dojo:${{ needs.semantic_release.outputs.new_release_version }}
+            ghcr.io/${{ steps.ghcr.outputs.owner }}/scrape-dojo:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
