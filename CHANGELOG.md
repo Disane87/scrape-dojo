@@ -1,3 +1,9 @@
+## [1.0.16](https://github.com/disane87/scrape-dojo/compare/v1.0.15...v1.0.16) (2026-03-06)
+
+### Bug Fixes
+
+- switch to happy-dom for Angular TestBed component test compat ([122c181](https://github.com/disane87/scrape-dojo/commit/122c18178001ff64a9a1aee975fd39de72c69005))
+
 ## [1.0.15](https://github.com/disane87/scrape-dojo/compare/v1.0.14...v1.0.15) (2026-03-06)
 
 ### Bug Fixes
