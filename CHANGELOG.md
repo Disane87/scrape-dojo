@@ -1,3 +1,9 @@
+## [1.0.14](https://github.com/disane87/scrape-dojo/compare/v1.0.13...v1.0.14) (2026-03-06)
+
+### Bug Fixes
+
+- use resetTestEnvironment for clean init + minimal afterEach cleanup ([59ffd93](https://github.com/disane87/scrape-dojo/commit/59ffd935427c05c4cf784317e1eb88fdfef8c1b2))
+
 ## [1.0.13](https://github.com/disane87/scrape-dojo/compare/v1.0.12...v1.0.13) (2026-03-06)
 
 ### Bug Fixes
