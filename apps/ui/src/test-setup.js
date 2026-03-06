@@ -5,15 +5,9 @@ import {
 } from '@angular/platform-browser/testing';
 
 const testBed = getTestBed();
-try {
-  testBed.initTestEnvironment(BrowserTestingModule, platformBrowserTesting());
-} catch {
-  // Already initialized
-}
+testBed.resetTestEnvironment();
+testBed.initTestEnvironment(BrowserTestingModule, platformBrowserTesting());
 
-// Reset _testModuleRef between tests to allow configureTestingModule.
-// Angular's auto-cleanup via globalThis.afterEach doesn't register in
-// vitest's jsdom environment.
 afterEach(() => {
   getTestBed()._testModuleRef = null;
 });
