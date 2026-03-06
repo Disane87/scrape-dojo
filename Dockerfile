@@ -26,14 +26,23 @@ COPY config ./config
 # Install ALL dependencies (needed for build)
 RUN pnpm install --frozen-lockfile
 
-# Build API and UI in parallel
+# Build API and UI
 RUN pnpm nx build api --configuration=production --verbose && \
     pnpm nx build ui --configuration=production --verbose
 
-# Prune to production-only dependencies
-RUN CI=true pnpm prune --prod
+# Stage 2: Production dependencies only (avoids unreliable pnpm prune)
+FROM node:22-slim AS prod-deps
 
-# Stage 2: Production - Puppeteer base with nginx
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+WORKDIR /app
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/docs/package.json ./apps/docs/package.json
+
+RUN pnpm install --prod --no-frozen-lockfile
+
+# Stage 3: Production - Puppeteer base with nginx
 FROM ghcr.io/puppeteer/puppeteer:23.11.1 AS production
 
 # Switch to root for system package installation
@@ -68,7 +77,7 @@ RUN mkdir -p /home/pptruser/app/data \
 
 # Copy built API
 COPY --from=builder --chown=pptruser:pptruser /app/dist/apps/api ./dist
-COPY --from=builder --chown=pptruser:pptruser /app/node_modules ./node_modules
+COPY --from=prod-deps --chown=pptruser:pptruser /app/node_modules ./node_modules
 
 # Copy config files
 COPY --chown=pptruser:pptruser config ./config
