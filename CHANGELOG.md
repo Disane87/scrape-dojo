@@ -1,3 +1,9 @@
+## [1.0.1](https://github.com/disane87/scrape-dojo/compare/v1.0.0...v1.0.1) (2026-03-06)
+
+### Bug Fixes
+
+- use npx vitest for UI CI tests instead of pnpm exec ([bb00181](https://github.com/disane87/scrape-dojo/commit/bb00181eaced5be679de37005cf2b89666a72b01))
+
 ## 1.0.0 (2026-03-06)
 
 ### Features
