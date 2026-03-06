@@ -12,6 +12,14 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'happy-dom',
+    fileParallelism: false,
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        singleFork: false,
+        isolate: true,
+      },
+    },
     setupFiles: ['src/test-setup.js'],
     include: ['src/**/*.spec.ts'],
     coverage: {
