@@ -5,8 +5,11 @@ import {
 } from '@angular/platform-browser/testing';
 
 const testBed = getTestBed();
-testBed.resetTestEnvironment();
-testBed.initTestEnvironment(BrowserTestingModule, platformBrowserTesting());
+try {
+  testBed.initTestEnvironment(BrowserTestingModule, platformBrowserTesting());
+} catch {
+  // Already initialized by @analogjs/vite-plugin-angular
+}
 
 afterEach(() => {
   testBed.resetTestingModule();
