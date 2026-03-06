@@ -4,14 +4,9 @@ import {
   platformBrowserTesting,
 } from '@angular/platform-browser/testing';
 
-try {
-  getTestBed().initTestEnvironment(
-    BrowserTestingModule,
-    platformBrowserTesting(),
-  );
-} catch {
-  // Already initialized by @analogjs/vite-plugin-angular
-}
+const testBed = getTestBed();
+testBed.resetTestEnvironment();
+testBed.initTestEnvironment(BrowserTestingModule, platformBrowserTesting());
 
 Object.defineProperty(window, 'CSS', { value: null });
 Object.defineProperty(window, 'getComputedStyle', {
