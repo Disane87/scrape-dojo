@@ -76,4 +76,5 @@ tmp/
 data/scrape-dojo.db
 config/stored-data.json
 
-.claude/plans/**
+.claude/
+.playwright-mcp/
