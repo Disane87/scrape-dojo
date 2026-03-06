@@ -48,7 +48,8 @@
     "affected:build": "nx affected -t build",
     "affected:test": "nx affected -t test",
     "affected:lint": "nx affected -t lint",
-    "release": "semantic-release"
+    "release": "semantic-release",
+    "prepare": "husky"
   },
   "dependencies": {
     "@angular/common": "~21.0.0",
@@ -73,38 +74,32 @@
     "class-validator": "^0.14.3",
     "comment-json": "^4.2.5",
     "cron-parser": "^5.4.0",
+    "express-rate-limit": "^7.5.1",
     "fast-glob": "^3.3.3",
     "handlebars": "^4.7.8",
+    "helmet": "^8.1.0",
     "iconify-icon": "^3.0.2",
     "jsonata": "^2.0.5",
     "jsonc-parser": "^3.3.1",
     "monaco-editor": "^0.55.1",
     "ngx-monaco-editor-v2": "^20.3.0",
     "openid-client": "^6.8.1",
+    "otplib": "^12.0.1",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
     "puppeteer": "^23.7.1",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
+    "qrcode": "^1.5.4",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
     "sql.js": "^1.13.0",
     "tslib": "^2.3.0",
     "typeorm": "^0.3.28",
-    "uuid": "^13.0.0",
-    "express-rate-limit": "^7.5.1",
-    "helmet": "^8.1.0",
-    "otplib": "^12.0.1",
-    "qrcode": "^1.5.4"
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
-    "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/commit-analyzer": "^13.0.1",
-    "@semantic-release/git": "^10.0.1",
-    "@semantic-release/github": "^11.0.0",
-    "@semantic-release/npm": "^12.0.1",
-    "@semantic-release/release-notes-generator": "^14.0.3",
     "@analogjs/vite-plugin-angular": "^2.2.0",
     "@angular-devkit/core": "21",
     "@angular-devkit/schematics": "21",
@@ -132,6 +127,12 @@
     "@nx/vitest": "^22.3.3",
     "@nx/web": "22.3.3",
     "@schematics/angular": "~21.0.0",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^11.0.0",
+    "@semantic-release/npm": "^12.0.1",
+    "@semantic-release/release-notes-generator": "^14.0.3",
     "@swc-node/register": "~1.9.1",
     "@swc/core": "~1.15.7",
     "@swc/helpers": "~0.5.11",
@@ -158,9 +159,11 @@
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.0",
+    "husky": "^9.1.7",
     "jasmine-core": "^5.13.0",
     "jest": "^29.5.0",
     "jsdom": "^27.3.0",
+    "lint-staged": "^16.3.2",
     "nodemon": "^3.1.7",
     "nx": "22.3.3",
     "postcss": "^8.4.5",
@@ -168,6 +171,7 @@
     "prism-react-renderer": "^2.4.1",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
+    "semantic-release": "^24.2.0",
     "source-map-support": "^0.5.21",
     "supertest": "^7.0.0",
     "tailwindcss": "^4.1.18",
@@ -180,8 +184,15 @@
     "typescript-json-schema": "^0.65.1",
     "unplugin-swc": "^1.5.9",
     "vite": "^7.3.0",
-    "vitest": "^4.0.16",
-    "semantic-release": "^24.2.0"
+    "vitest": "^4.0.16"
   },
-  "nx": {}
+  "nx": {},
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix"
+    ],
+    "*.{ts,tsx,json,html,css,scss,md}": [
+      "prettier --write"
+    ]
+  }
 }

@@ -1,0 +1,68 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  test-api:
+    name: Test API
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run API tests with coverage
+        run: pnpm nx test api --coverage
+
+      - name: Upload API coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-coverage
+          path: coverage/apps/api
+
+  test-ui:
+    name: Test UI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run UI tests with coverage
+        run: pnpm nx test ui --coverage
+
+      - name: Upload UI coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-coverage
+          path: coverage/apps/ui
