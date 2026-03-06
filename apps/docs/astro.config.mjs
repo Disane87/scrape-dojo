@@ -6,8 +6,7 @@ import mermaid from 'astro-mermaid';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://disane87.github.io',
-  base: '/scrape-dojo',
+  site: 'https://scrape-dojo.com',
 
   integrations: [
       mermaid({
