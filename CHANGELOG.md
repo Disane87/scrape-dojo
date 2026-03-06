@@ -1,3 +1,9 @@
+## [1.0.8](https://github.com/disane87/scrape-dojo/compare/v1.0.7...v1.0.8) (2026-03-06)
+
+### Bug Fixes
+
+- add afterEach resetTestingModule to fix TestBed state on Linux CI ([e65f666](https://github.com/disane87/scrape-dojo/commit/e65f6662fc558cbd86817c805d902fb817b36201))
+
 ## [1.0.7](https://github.com/disane87/scrape-dojo/compare/v1.0.6...v1.0.7) (2026-03-06)
 
 ### Bug Fixes
