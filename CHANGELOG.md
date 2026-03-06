@@ -1,3 +1,9 @@
+## [1.0.9](https://github.com/disane87/scrape-dojo/compare/v1.0.8...v1.0.9) (2026-03-06)
+
+### Bug Fixes
+
+- use try/catch init + afterEach reset for TestBed CI compat ([8436b12](https://github.com/disane87/scrape-dojo/commit/8436b129cd467434d980bc3f0c2c1eac57636705))
+
 ## [1.0.8](https://github.com/disane87/scrape-dojo/compare/v1.0.7...v1.0.8) (2026-03-06)
 
 ### Bug Fixes
