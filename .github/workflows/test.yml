@@ -69,9 +69,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Run UI tests with coverage
-        run: pnpm nx test ui --coverage --skip-nx-cache
-        env:
-          NX_VERBOSE_LOGGING: 'true'
+        run: node node_modules/.bin/vitest run --config apps/ui/vitest.config.ts --coverage --root apps/ui
 
       - name: Upload UI coverage artifacts
         uses: actions/upload-artifact@v4
