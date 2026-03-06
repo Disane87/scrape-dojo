@@ -131,6 +131,7 @@ describe('FilesService', () => {
       const consoleSpy = vi
         .spyOn(console, 'error')
         .mockImplementation(() => {});
+      if (!window.alert) window.alert = () => {};
       const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
       const error = new Error('Network error');
       mockHttp.post.mockReturnValue(throwError(() => error));

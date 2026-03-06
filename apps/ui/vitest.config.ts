@@ -11,8 +11,7 @@ export default defineConfig({
   ],
   test: {
     globals: true,
-    environment: 'jsdom',
-    pool: 'vmThreads',
+    environment: 'happy-dom',
     setupFiles: ['src/test-setup.js'],
     include: ['src/**/*.spec.ts'],
     coverage: {
