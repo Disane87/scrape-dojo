@@ -385,10 +385,15 @@ const year = new Date().getFullYear();
             font-size: 0.78rem; line-height: 1.85;
             color: var(--text-muted);
         }
-        .hero-code .key { color: #7dd3fc; }
-        .hero-code .str { color: #86efac; }
-        .hero-code .brace { color: #6b6b78; }
-        .hero-code .tmpl { color: var(--accent); font-weight: 500; }
+        .hero-code :global(.key) { color: #7dd3fc; }
+        .hero-code :global(.str) { color: #86efac; }
+        .hero-code :global(.num) { color: #fb923c; }
+        .hero-code :global(.bool) { color: #c084fc; }
+        .hero-code :global(.null) { color: #94a3b8; }
+        .hero-code :global(.brace) { color: #6b6b78; }
+        .hero-code :global(.bracket) { color: #6b6b78; }
+        .hero-code :global(.tmpl) { color: var(--accent); font-weight: 500; }
+        .hero-code :global(.action-name) { color: #fbbf24; }
 
         /* Code line highlight on hover */
         .code-line {
@@ -947,37 +952,37 @@ const year = new Date().getFullYear();
         <div class="tech-grid reveal">
             <div class="tech-item">
                 <div class="tech-icon">
-                    <img src="/scrape-dojo/logos/nestjs.svg" alt="NestJS">
+                    <img src="https://cdn.simpleicons.org/nestjs/E0234E" alt="NestJS">
                 </div>
                 <span class="tech-name">NestJS 11</span>
             </div>
             <div class="tech-item">
                 <div class="tech-icon">
-                    <img src="/scrape-dojo/logos/angular.svg" alt="Angular">
+                    <img src="https://cdn.simpleicons.org/angular/DD0031" alt="Angular">
                 </div>
                 <span class="tech-name">Angular 21</span>
             </div>
             <div class="tech-item">
                 <div class="tech-icon">
-                    <img src="/scrape-dojo/logos/puppeteer.svg" alt="Puppeteer">
+                    <img src="https://cdn.simpleicons.org/puppeteer/40B5A4" alt="Puppeteer">
                 </div>
                 <span class="tech-name">Puppeteer</span>
             </div>
             <div class="tech-item">
                 <div class="tech-icon">
-                    <img src="/scrape-dojo/logos/typeorm.svg" alt="TypeORM">
+                    <img src="https://cdn.simpleicons.org/typeorm/FE0803" alt="TypeORM">
                 </div>
                 <span class="tech-name">TypeORM</span>
             </div>
             <div class="tech-item">
                 <div class="tech-icon">
-                    <img src="/scrape-dojo/logos/docker.svg" alt="Docker">
+                    <img src="https://cdn.simpleicons.org/docker/2496ED" alt="Docker">
                 </div>
                 <span class="tech-name">Docker</span>
             </div>
             <div class="tech-item">
                 <div class="tech-icon">
-                    <img src="/scrape-dojo/logos/nx.svg" alt="Nx">
+                    <img src="https://cdn.simpleicons.org/nx/143055" alt="Nx">
                 </div>
                 <span class="tech-name">Nx Monorepo</span>
             </div>
@@ -1122,10 +1127,15 @@ const codeLines = [
 
 function colorize(type, text) {
     return text
+        .replace(/\{\{[^}]+\}\}/g, m => `__TMPL_${m}__`)
         .replace(/"([^"]*)"(\s*:)/g, '<span class="key">"$1"</span>$2')
         .replace(/:\s*"([^"]*)"/g, ': <span class="str">"$1"</span>')
-        .replace(/\{\{[^}]+\}\}/g, m => `<span class="tmpl">${m}</span>`)
-        .replace(/([{}[\]])/g, '<span class="brace">$1</span>');
+        .replace(/\b(\d+(\.\d+)?)\b/g, '<span class="num">$1</span>')
+        .replace(/\b(true|false)\b/g, '<span class="bool">$1</span>')
+        .replace(/\bnull\b/g, '<span class="null">null</span>')
+        .replace(/__TMPL_(\{\{[^}]+\}\})__/g, '<span class="tmpl">$1</span>')
+        .replace(/([{}])/g, '<span class="brace">$1</span>')
+        .replace(/([\[\]])/g, '<span class="bracket">$1</span>');
 }
 
 const codeBlock = document.getElementById('hero-code-block');
