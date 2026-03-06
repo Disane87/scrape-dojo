@@ -1,3 +1,9 @@
+## [1.0.2](https://github.com/disane87/scrape-dojo/compare/v1.0.1...v1.0.2) (2026-03-06)
+
+### Bug Fixes
+
+- use Nx runner for UI tests with NX_NO_CLOUD=true ([75fbd91](https://github.com/disane87/scrape-dojo/commit/75fbd9106f7737c86e5bd819824e4cae9c63e532))
+
 ## [1.0.1](https://github.com/disane87/scrape-dojo/compare/v1.0.0...v1.0.1) (2026-03-06)
 
 ### Bug Fixes
