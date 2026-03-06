@@ -68,7 +68,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Run UI tests with coverage
-        run: cd apps/ui && pnpm exec vitest run --coverage
+        run: npx vitest run --config apps/ui/vitest.config.ts --coverage
         env:
           NODE_OPTIONS: '--max-old-space-size=4096'
 
