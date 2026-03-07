@@ -1,3 +1,9 @@
+## [1.0.22](https://github.com/disane87/scrape-dojo/compare/v1.0.21...v1.0.22) (2026-03-07)
+
+### Bug Fixes
+
+- modular CI pipeline with test → release → docker chain ([80724d1](https://github.com/disane87/scrape-dojo/commit/80724d13230c2e5f955d0fcd15f8d06e8dfd5856))
+
 ## [1.0.21](https://github.com/disane87/scrape-dojo/compare/v1.0.20...v1.0.21) (2026-03-06)
 
 ### Bug Fixes
