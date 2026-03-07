@@ -3,8 +3,11 @@ import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import tailwindcss from '@tailwindcss/vite';
 import mermaid from 'astro-mermaid';
+import { readFileSync } from 'node:fs';
 
 const isProd = process.env.NODE_ENV === 'production';
+const rootPkg = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf-8'));
+const version = rootPkg.version;
 
 // https://astro.build/config
 export default defineConfig({
@@ -16,7 +19,7 @@ export default defineConfig({
         autoTheme: true,
       }),
       starlight({
-          title: 'Scrape Dojo',
+          title: `Scrape Dojo v${version}`,
           description: 'Web Scraping Framework Documentation',
           logo: {
               src: './public/scrape-dojo-app-icon-64x64.png',
@@ -27,6 +30,11 @@ export default defineConfig({
                   icon: 'github',
                   label: 'GitHub',
                   href: 'https://github.com/disane87/scrape-dojo',
+              },
+              {
+                  icon: 'heart',
+                  label: 'Sponsor',
+                  href: 'https://github.com/sponsors/Disane87',
               },
           ],
           editLink: {
