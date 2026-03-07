@@ -99,7 +99,7 @@ Scrapes are defined as JSONC files in `config/sites/`. Validated against `config
   - Do NOT use `require()` in TypeScript — use ES imports. If dynamic `require()` is unavoidable, add `// eslint-disable-next-line @typescript-eslint/no-require-imports`
   - Use `const` instead of `let` when the variable is never reassigned
   - Use LF line endings (not CRLF) — Prettier enforces this
-- **Commits**: Conventional Commits enforced via semantic-release (feat, fix, docs, chore, etc.)
+- **Commits**: Conventional Commits are **mandatory**. Enforced locally via commitlint + husky `commit-msg` hook and on PRs via `pr-lint.yml` (validates PR title). Valid types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`. Only `feat` and `fix` trigger a new semantic-release version and Docker build. **Every commit and PR title MUST follow this format** — e.g. `feat: add PUID/PGID support`, `fix(auth): handle expired tokens`
 - **TypeScript**: Target ES2021, lenient settings (strictNullChecks=false, noImplicitAny=false)
 - **File organization**: Feature-based NestJS modules with controllers/services/entities/dto subdirectories
 - **Naming**: camelCase for functions/variables, PascalCase for classes/components
