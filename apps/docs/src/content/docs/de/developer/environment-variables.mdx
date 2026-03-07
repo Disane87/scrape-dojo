@@ -89,6 +89,23 @@ Hier findest du die vollständige Referenz aller Umgebungsvariablen in Scrape Do
 | `SCRAPE_DOJO_AUTH_OIDC_SCOPES`        | `openid profile email`                     | Angeforderte OAuth Scopes (Leerzeichen-separiert)      |
 | `SCRAPE_DOJO_AUTH_OIDC_PROVIDER_NAME` | `OIDC Provider`                            | Anzeigename des Providers in der UI                    |
 
+## Docker Container (PUID / PGID / UMASK)
+
+Diese Variablen steuern die User-/Group-Identität und die Dateiberechtigungs-Maske innerhalb von Docker-Containern. Sie sind besonders nützlich auf NAS-Systemen wie **Unraid**, **Synology** oder **TrueNAS**, wo die Host-Dateiberechtigungen mit dem Container-User übereinstimmen müssen.
+
+| Variable | Standard | Beschreibung                                              |
+| -------- | -------- | --------------------------------------------------------- |
+| `PUID`   | `1000`   | User-ID für den Container-Prozess                         |
+| `PGID`   | `1000`   | Group-ID für den Container-Prozess                        |
+| `UMASK`  | `022`    | Dateiberechtigungs-Maske für neu erstellte Dateien        |
+
+<Aside type="tip">
+  Finde deine Host-User- und Group-IDs mit `id $(whoami)` im Terminal.
+  Gängige Defaults: **Unraid** nutzt `99:100`, **Synology** oft `1026:100`.
+</Aside>
+
+Detaillierte Setup-Anleitungen und NAS-spezifische Beispiele findest du im [Docker Deployment Guide](/de/getting-started/docker/).
+
 ## 🔑 Keys generieren
 
 Für die Verschlüsselungs- und Authentifizierungskeys brauchst du kryptographisch sichere Zufallswerte. So generierst du sie:

@@ -127,6 +127,9 @@ Use the `environment` block in your `docker-compose.yml` to configure Scrape Doj
 | `SCRAPE_DOJO_PORT` | `3000` | Internal API port (usually no need to change in Docker) |
 | `SCRAPE_DOJO_CORS_ORIGIN` | — | CORS origins (comma-separated, recommended for production) |
 | `SCRAPE_DOJO_AUTH_OIDC_ENABLED` | `false` | Enable OIDC/SSO login (Keycloak, Auth0, Google, Azure AD) |
+| `PUID` | `1000` | User ID for the container process — set to match your host user ([details](/en/getting-started/docker/)) |
+| `PGID` | `1000` | Group ID for the container process ([details](/en/getting-started/docker/)) |
+| `UMASK` | `022` | File permission mask for newly created files ([details](/en/getting-started/docker/)) |
 
 <Aside type="tip">
   These are just the most important variables. For the full reference with all

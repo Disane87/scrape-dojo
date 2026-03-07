@@ -93,16 +93,25 @@ COPY apps/ui/nginx.combined.conf /etc/nginx/nginx.conf
 # Copy supervisor config
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
+# Copy entrypoint script
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 # Set permissions for nginx directories
 RUN chown -R pptruser:pptruser /var/log/nginx /var/lib/nginx /run && \
     chown -R pptruser:pptruser /home/pptruser/app && \
     chown -R pptruser:pptruser /usr/share/nginx/html
 
-# Switch to non-root user
+# Switch to non-root user for Chrome installation
 USER pptruser
 
 # Install Chrome for Puppeteer
 RUN npx puppeteer browsers install chrome --path /home/pptruser/.cache/puppeteer
+
+# PUID/PGID/UMASK support for NAS systems (Unraid, Synology, etc.)
+ENV PUID=1000
+ENV PGID=1000
+ENV UMASK=022
 
 # Expose single port
 EXPOSE 80
@@ -111,5 +120,7 @@ EXPOSE 80
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
     CMD node -e "require('http').get('http://localhost:80/api/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"
 
-# Start both services via supervisor
+# Entrypoint runs as root to adjust UID/GID, then execs CMD
+USER root
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
