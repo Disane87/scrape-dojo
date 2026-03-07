@@ -1,3 +1,13 @@
+## [1.4.0](https://github.com/disane87/scrape-dojo/compare/v1.3.0...v1.4.0) (2026-03-07)
+
+### 🚀 Features
+
+- enforce conventional commits and fix CI paths-ignore ([cbb9015](https://github.com/disane87/scrape-dojo/commit/cbb901561af24f332e354ddf5064fb54044749fd))
+
+### 📔 Docs
+
+- add AI-Aided Development note to README and documentation ([67d0f9b](https://github.com/disane87/scrape-dojo/commit/67d0f9b80a08881337e197f58cc3981cdab1f107))
+
 ## [1.3.0](https://github.com/disane87/scrape-dojo/compare/v1.2.0...v1.3.0) (2026-03-07)
 
 ### 🚀 Features
