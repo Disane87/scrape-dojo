@@ -9,12 +9,7 @@
       "request": "launch",
       "name": "🚀 Debug API",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": [
-        "nx",
-        "serve",
-        "api",
-        "--configuration=development"
-      ],
+      "runtimeArgs": ["nx", "serve", "api", "--configuration=development"],
       "env": {
         "NODE_ENV": "development"
       },
@@ -69,10 +64,7 @@
     // ═══════════════════════════════════════════════════════════
     {
       "name": "⚡ Debug Full Stack (API + UI)",
-      "configurations": [
-        "🚀 Debug API",
-        "🎨 Debug UI (Chrome)"
-      ],
+      "configurations": ["🚀 Debug API", "🎨 Debug UI (Chrome)"],
       "stopAll": true,
       "presentation": {
         "order": 1,
