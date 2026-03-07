@@ -19,11 +19,9 @@ _Declarative web scraping & browser automation with JSON workflows_
 [![Nx](https://img.shields.io/badge/Nx_22-143055?style=flat-square&logo=nx&logoColor=white)](https://nx.dev/)
 [![pnpm](https://img.shields.io/badge/pnpm_10-F69220?style=flat-square&logo=pnpm&logoColor=white)](https://pnpm.io/)
 
-<!-- These badges require a public repo — uncomment when the repo goes public:
 ![GitHub Stars](https://img.shields.io/github/stars/Disane87/scrape-dojo?style=flat-square&logo=github)
 ![GitHub Issues](https://img.shields.io/github/issues/Disane87/scrape-dojo?style=flat-square&logo=github)
 ![CI](https://img.shields.io/github/actions/workflow/status/Disane87/scrape-dojo/ci.yml?style=flat-square&label=CI&logo=githubactions&logoColor=white)
--->
 
 </div>
 

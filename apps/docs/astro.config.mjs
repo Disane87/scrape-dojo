@@ -28,7 +28,7 @@ export default defineConfig({
               },
           ],
           editLink: {
-              baseUrl: 'https://github.com/disane87/scrape-dojo/edit/main/apps/docs/src/content/docs/',
+              baseUrl: 'https://github.com/disane87/scrape-dojo/edit/main/apps/docs/',
           },
           defaultLocale: 'de',
           locales: {
