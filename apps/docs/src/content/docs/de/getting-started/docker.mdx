@@ -136,13 +136,100 @@ services:
 
 Scrape Dojo verwendet folgende persistente Verzeichnisse:
 
-| Container-Pfad                      | Zweck                                       |
-| ----------------------------------- | ------------------------------------------- |
-| `/home/pptruser/app/data`           | Datenbank (SQLite) und Anwendungsdaten      |
-| `/home/pptruser/app/downloads`      | Heruntergeladene Dateien aus Scrape-Actions |
-| `/home/pptruser/app/logs`           | Anwendungs- und Supervisor-Logs            |
-| `/home/pptruser/app/browser-data`   | Chromium Browser-Profildaten               |
-| `/home/pptruser/app/config`         | Scrape-Konfigurationsdateien (`.jsonc`)    |
+| Container-Pfad                      | Zweck                                       | Kritisch? |
+| ----------------------------------- | ------------------------------------------- | --------- |
+| `/home/pptruser/app/data`           | Datenbank (SQLite) und Anwendungsdaten      | **Ja** |
+| `/home/pptruser/app/downloads`      | Heruntergeladene Dateien aus Scrape-Actions | Ja |
+| `/home/pptruser/app/logs`           | Anwendungs- und Supervisor-Logs            | Nein |
+| `/home/pptruser/app/browser-data`   | Chromium Browser-Profildaten               | Empfohlen |
+| `/home/pptruser/app/config`         | Scrape-Konfigurationsdateien (`.jsonc`)    | **Ja** |
+
+<Aside type="danger" title="Datenpersistenz">
+  **Ohne Volume-Mounts gehen alle Daten verloren**, wenn der Container entfernt oder neu erstellt wird (z.B. bei einem Image-Update).
+  Mounte mindestens `data` und `config`, um deine Datenbank und Scrape-Konfigurationen zu sichern.
+</Aside>
+
+### Bind Mounts vs. Named Volumes
+
+Du kannst entweder **Bind Mounts** oder **Named Docker Volumes** zur Datenpersistierung verwenden:
+
+| Methode | Syntax | Vorteile | Nachteile |
+| --- | --- | --- | --- |
+| **Bind Mount** | `./data:/home/pptruser/app/data` | Dateien auf dem Host sichtbar, einfach zu sichern | Berechtigungen muessen verwaltet werden (PUID/PGID) |
+| **Named Volume** | `scrape-data:/home/pptruser/app/data` | Docker verwaltet den Speicher, keine Berechtigungsprobleme | Nicht direkt auf dem Host sichtbar |
+
+<Aside type="tip">
+  **Bind Mounts** sind fuer die meisten Setups empfohlen — besonders auf NAS-Systemen — weil du die Dateien direkt sehen und sichern kannst.
+  Verwende Named Volumes nur, wenn du keinen direkten Dateizugriff brauchst.
+</Aside>
+
+## Datenbank-Synchronisation
+
+`DB_SYNCHRONIZE` steuert, ob TypeORM beim Start automatisch Datenbanktabellen erstellt und aktualisiert.
+
+| Szenario | Wert | Hinweise |
+| --- | --- | --- |
+| **Erster Start** | `true` | **Erforderlich** — erstellt alle Datenbanktabellen |
+| **Nach der Ersteinrichtung** | `false` | Verhindert versehentliche Schema-Aenderungen oder Datenverlust bei Updates |
+
+<Aside type="caution" title="Wichtig: DB_SYNCHRONIZE=false nach dem ersten Start setzen">
+  Nachdem die Ersteinrichtung abgeschlossen ist und die Datenbank erstellt wurde, setze `DB_SYNCHRONIZE=false` in deiner Umgebung.
+  Wenn es in Produktion auf `true` bleibt, kann es bei Updates zu Datenverlust kommen,
+  da TypeORM Spalten loeschen und neu erstellen kann, wenn sich Entity-Definitionen aendern.
+</Aside>
+
+## Umgebungsvariablen
+
+Im `environment`-Block deiner `docker-compose.yml` kannst du das Verhalten von Scrape Dojo steuern. Hier die wichtigsten:
+
+| Variable | Standard | Beschreibung |
+| --- | --- | --- |
+| `SCRAPE_DOJO_ENCRYPTION_KEY` | — | **Pflicht.** 256-Bit Hex-Key fuer die Verschluesselung von Secrets |
+| `DB_TYPE` | `sqlite` | Datenbank-Typ: `sqlite`, `mysql`, `postgres` |
+| `DB_SYNCHRONIZE` | `true` | Erstellt Tabellen automatisch beim Start. Nach der Ersteinrichtung auf `false` setzen (siehe oben) |
+| `SCRAPE_DOJO_AUTH_ENABLED` | `true` | Authentifizierung global aktivieren/deaktivieren |
+| `SCRAPE_DOJO_AUTH_JWT_SECRET` | — | JWT-Signing-Secret (mind. 32 Zeichen, in Produktion mit Auth erforderlich) |
+| `SCRAPE_DOJO_AUTH_REFRESH_TOKEN_SECRET` | — | Refresh-Token-Secret (mind. 32 Zeichen) |
+| `SCRAPE_DOJO_AUTH_REQUIRE_MFA` | `true` | MFA/TOTP fuer alle Nutzer erzwingen |
+| `SCRAPE_DOJO_PORT` | `3000` | Interner API-Port (in Docker normalerweise nicht aendern) |
+| `SCRAPE_DOJO_CORS_ORIGIN` | — | CORS-Origins (kommasepariert, fuer Produktion empfohlen) |
+| `SCRAPE_DOJO_AUTH_OIDC_ENABLED` | `false` | OIDC/SSO-Login aktivieren (Keycloak, Auth0, Google, Azure AD) |
+| `PUID` | `1000` | User-ID fuer den Container-Prozess — passend zum Host-User setzen |
+| `PGID` | `1000` | Group-ID fuer den Container-Prozess |
+| `UMASK` | `022` | Dateiberechtigungs-Maske fuer neu erstellte Dateien |
+
+<Aside type="tip">
+  Die vollstaendige Referenz mit allen Optionen (Datenbank, Auth, MFA, OIDC, Logging, Rate Limiting) findest du unter
+  [Umgebungsvariablen](/de/developer/environment-variables/).
+</Aside>
+
+**Beispiel: Produktions-Setup mit Auth und MySQL:**
+
+```yaml
+services:
+  scrape-dojo:
+    image: ghcr.io/disane87/scrape-dojo:latest
+    ports:
+      - '8080:80'
+    environment:
+      - SCRAPE_DOJO_ENCRYPTION_KEY=dein_64_zeichen_hex_key
+      - DB_TYPE=mysql
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_USERNAME=scrape_dojo
+      - DB_PASSWORD=sicheres_passwort
+      - DB_DATABASE=scrape_dojo
+      - DB_SYNCHRONIZE=false
+      - SCRAPE_DOJO_AUTH_ENABLED=true
+      - SCRAPE_DOJO_AUTH_JWT_SECRET=dein_jwt_secret_mind_32_zeichen
+      - SCRAPE_DOJO_AUTH_REFRESH_TOKEN_SECRET=dein_refresh_secret
+    volumes:
+      - ./downloads:/home/pptruser/app/downloads
+      - ./logs:/home/pptruser/app/logs
+      - ./config:/home/pptruser/app/config
+      - ./browser-data:/home/pptruser/app/browser-data
+    restart: unless-stopped
+```
 
 ## Fehlerbehebung
 

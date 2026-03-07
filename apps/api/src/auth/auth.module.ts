@@ -45,7 +45,14 @@ import type { StringValue } from 'ms';
           'SCRAPE_DOJO_AUTH_JWT_SECRET',
           'jwt-secret-change-me',
         );
-        if (nodeEnv === 'production' && secret === 'jwt-secret-change-me') {
+        const authEnabled =
+          configService.get<string>('SCRAPE_DOJO_AUTH_ENABLED', 'true') ===
+          'true';
+        if (
+          authEnabled &&
+          nodeEnv === 'production' &&
+          secret === 'jwt-secret-change-me'
+        ) {
           throw new Error(
             'SCRAPE_DOJO_AUTH_JWT_SECRET must be set in production',
           );
