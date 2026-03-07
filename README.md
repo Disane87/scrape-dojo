@@ -27,6 +27,13 @@ _Declarative web scraping & browser automation with JSON workflows_
 
 ---
 
+> [!NOTE]
+> **🤖 AI-Aided Development (AIAD)**
+>
+> This project openly uses AI-assisted development (e.g. [Claude Code](https://claude.ai/code)) to accelerate workflows, improve code quality, and gain more development momentum. All AI-generated code is **reviewed and approved by humans** — this is not a vibe-coding project, but a deliberate effort to build a useful product while exploring the boundaries, benefits, and trade-offs of AI-aided development.
+
+---
+
 ## 🥷 What is Scrape Dojo?
 
 Scrape Dojo is a self-hosted web scraping & browser automation platform. Instead of writing Puppeteer code for every site, you define workflows declaratively in **JSON/JSONC** — like Infrastructure-as-Code, but for scraping.
