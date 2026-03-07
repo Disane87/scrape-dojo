@@ -1,0 +1,76 @@
+const scopeEmojis = {
+  api: '🖥️',
+  ui: '🎨',
+  docs: '📔',
+  docker: '🐳',
+  auth: '🔐',
+  scrape: '🕷️',
+  db: '🗄️',
+  shared: '📦',
+  ci: '🤖',
+  deps: '📌',
+  release: '🏷️',
+};
+
+module.exports = {
+  branches: ['main'],
+  tagFormat: 'v${version}',
+  plugins: [
+    [
+      '@semantic-release/commit-analyzer',
+      {
+        preset: 'conventionalcommits',
+      },
+    ],
+    [
+      '@semantic-release/release-notes-generator',
+      {
+        preset: 'conventionalcommits',
+        presetConfig: {
+          types: [
+            { type: 'feat', section: '🚀 Features' },
+            { type: 'fix', section: '🛠️ Fixes' },
+            { type: 'perf', section: '⚡ Performance' },
+            { type: 'revert', section: '🔙 Reverts' },
+            { type: 'docs', section: '📔 Docs' },
+            { type: 'style', section: '💎 Styles' },
+            { type: 'refactor', section: '♻️ Refactor' },
+            { type: 'test', section: '🧪 Tests' },
+            { type: 'build', section: '📦 Build' },
+            { type: 'ci', section: '🤖 CI' },
+            { type: 'chore', section: '🔧 Chore', hidden: true },
+          ],
+        },
+        writerOpts: {
+          transform: (commit) => {
+            if (commit.scope && scopeEmojis[commit.scope]) {
+              commit.scope = `${scopeEmojis[commit.scope]} ${commit.scope}`;
+            }
+            return commit;
+          },
+        },
+      },
+    ],
+    [
+      '@semantic-release/changelog',
+      {
+        changelogFile: 'CHANGELOG.md',
+      },
+    ],
+    [
+      '@semantic-release/npm',
+      {
+        npmPublish: false,
+      },
+    ],
+    '@semantic-release/github',
+    [
+      '@semantic-release/git',
+      {
+        assets: ['CHANGELOG.md', 'package.json', 'pnpm-lock.yaml'],
+        message:
+          'chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}',
+      },
+    ],
+  ],
+};
