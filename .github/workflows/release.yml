@@ -41,12 +41,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build API
-        run: pnpm nx build api --skip-nx-cache
-
-      - name: Build UI
-        run: pnpm nx build ui --skip-nx-cache
-
       - name: Get latest tag before release
         id: before
         run: |

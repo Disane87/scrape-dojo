@@ -11,20 +11,21 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 
 WORKDIR /app
 
-# Copy workspace config files
+# Copy dependency manifests first (better layer caching)
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+
+# Install ALL dependencies (needed for build)
+RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile
+
+# Copy workspace config and source files
 COPY nx.json tsconfig.json tsconfig.build.json ./
 COPY jest.preset.js ./
 COPY nest-cli.json ./
 COPY .postcssrc.json ./
-
-# Copy all source
 COPY apps ./apps
 COPY libs ./libs
 COPY config ./config
-
-# Install ALL dependencies (needed for build)
-RUN pnpm install --frozen-lockfile
 
 # Build API and UI (daemon disabled to avoid SQLite issues in Docker)
 RUN NX_DAEMON=false pnpm nx build api --configuration=production --verbose && \
@@ -40,7 +41,8 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/docs/package.json ./apps/docs/package.json
 
-RUN pnpm install --prod --no-frozen-lockfile --ignore-scripts
+RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
+    pnpm install --prod --no-frozen-lockfile --ignore-scripts
 
 # Stage 3: Production - Puppeteer base with nginx
 FROM ghcr.io/puppeteer/puppeteer:23.11.1 AS production
