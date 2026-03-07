@@ -1,0 +1,110 @@
+name: Website Workflow Request
+description: Request a new scrape workflow for a website
+title: "[Workflow]: "
+labels: ["workflow-request", "community"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for requesting a new website workflow! Please provide as much detail as possible so we can build a scrape configuration for the target website.
+
+  - type: input
+    id: website-url
+    attributes:
+      label: Website URL
+      description: The URL of the website you want to scrape
+      placeholder: "https://example.com"
+    validations:
+      required: true
+
+  - type: textarea
+    id: target-data
+    attributes:
+      label: Target Data
+      description: What data do you want to extract from the website? Be as specific as possible (e.g., product names, prices, availability, article titles, etc.)
+      placeholder: |
+        - Product name
+        - Price
+        - Availability status
+        - Image URL
+    validations:
+      required: true
+
+  - type: dropdown
+    id: scrape-type
+    attributes:
+      label: Scrape Type
+      description: What kind of scraping is needed?
+      options:
+        - Single page extraction
+        - Multi-page / Pagination
+        - Search results
+        - Product listing + detail pages
+        - Login required / Authenticated
+        - API-based (JSON/XML)
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: schedule
+    attributes:
+      label: Suggested Schedule
+      description: How often should this workflow run?
+      options:
+        - On demand (manual)
+        - Hourly
+        - Daily
+        - Weekly
+        - Monthly
+    validations:
+      required: false
+
+  - type: textarea
+    id: interactions
+    attributes:
+      label: Required Interactions
+      description: Does the scrape require any user interactions like clicking buttons, filling forms, scrolling, accepting cookies, etc.?
+      placeholder: |
+        - Accept cookie banner
+        - Click "Load more" button
+        - Select dropdown filter
+
+  - type: dropdown
+    id: auth-required
+    attributes:
+      label: Authentication Required?
+      description: Does the website require login or authentication to access the data?
+      options:
+        - "No"
+        - "Yes - Free account"
+        - "Yes - Paid account"
+    validations:
+      required: true
+
+  - type: textarea
+    id: example-output
+    attributes:
+      label: Expected Output
+      description: Describe or show an example of how the extracted data should look
+      placeholder: |
+        | Name       | Price  | In Stock |
+        |------------|--------|----------|
+        | Product A  | 19.99  | Yes      |
+        | Product B  | 29.99  | No       |
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other context, screenshots, or notes that might help (e.g., anti-bot protections, dynamic content, etc.)
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Acknowledgements
+      options:
+        - label: I have verified that scraping this website does not violate its Terms of Service
+          required: true
+        - label: I have checked that no existing workflow already covers this website
+          required: true
