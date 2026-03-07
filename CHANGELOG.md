@@ -1,3 +1,9 @@
+## [1.5.2](https://github.com/disane87/scrape-dojo/compare/v1.5.1...v1.5.2) (2026-03-07)
+
+### 🛠️ Fixes
+
+- **docker:** resolve EACCES and startup issues with custom PUID/PGID [#52](https://github.com/disane87/scrape-dojo/issues/52) ([6d2584a](https://github.com/disane87/scrape-dojo/commit/6d2584ad53d4dcbeabde6b7b3f9faab2afd8b89b))
+
 ## [1.5.1](https://github.com/disane87/scrape-dojo/compare/v1.5.0...v1.5.1) (2026-03-07)
 
 ### 🛠️ Fixes
