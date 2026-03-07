@@ -193,9 +193,11 @@ Commits follow [Conventional Commits](https://www.conventionalcommits.org/) (`fe
 
 ## 🌟 Contributors
 
+<!-- readme: contributors -start -->
 <a href="https://github.com/Disane87/scrape-dojo/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=Disane87/scrape-dojo" alt="Contributors" />
 </a>
+<!-- readme: contributors -end -->
 
 ---
 

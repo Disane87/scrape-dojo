@@ -13,14 +13,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: contrib-rocks/action@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Commit contributors image
-        run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git add .
-          git diff --staged --quiet || git commit -m "docs: update contributors [skip ci]"
-          git push
+      - uses: akhilmhdh/contributors-readme-action@v2.3.10
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
