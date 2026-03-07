@@ -1,3 +1,23 @@
+## [1.2.0](https://github.com/disane87/scrape-dojo/compare/v1.1.0...v1.2.0) (2026-03-07)
+
+### 🚀 Features
+
+- add Umami analytics tracking (production only) ([84ae0cf](https://github.com/disane87/scrape-dojo/commit/84ae0cf791816ed36e31bbaac65711f44b4bd169))
+
+### 🛠️ Fixes
+
+- enable DB_SYNCHRONIZE by default for first-start table creation ([05851fe](https://github.com/disane87/scrape-dojo/commit/05851fe545eb527e4cb9555774485e70f65eb1a6))
+- log synchronize state on startup for better debugging ([bd8434c](https://github.com/disane87/scrape-dojo/commit/bd8434c593626efbfc84d9bde604c7a0eeeab0b0))
+- re-enable GitHub badges (repo now public) and fix edit link path ([e0cac65](https://github.com/disane87/scrape-dojo/commit/e0cac65f1786e36fbb01f2599dc77ae341e36494))
+- trigger release for DB_SYNCHRONIZE fix and Umami tracking ([f3a506d](https://github.com/disane87/scrape-dojo/commit/f3a506d46f3f6e0c735f7a61db658f9a76249338))
+- use RELEASE_TOKEN for semantic-release to bypass branch protection ([807ed8f](https://github.com/disane87/scrape-dojo/commit/807ed8ffdff276815fc57d057531bd25e3fde037))
+
+### 📔 Docs
+
+- add DB_SYNCHRONIZE to quickstart env vars table (DE + EN) ([bd9cc69](https://github.com/disane87/scrape-dojo/commit/bd9cc694c2d876ec5d2e78fb6620acca81dc76c3))
+- add emojis to community health files ([#46](https://github.com/disane87/scrape-dojo/issues/46)) ([ee94218](https://github.com/disane87/scrape-dojo/commit/ee9421886be13ac47ddeec1e46b48d1d7948d096))
+- overhaul README and improve docs navigation ([6bd94b5](https://github.com/disane87/scrape-dojo/commit/6bd94b5185c4db40febce8bef59f8f43ec9b7ee1))
+
 ## [1.1.0](https://github.com/disane87/scrape-dojo/compare/v1.0.23...v1.1.0) (2026-03-07)
 
 ### 🚀 Features
