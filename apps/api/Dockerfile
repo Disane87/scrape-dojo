@@ -35,6 +35,14 @@ RUN CI=true pnpm prune --prod
 # This image has Chrome pre-installed and all dependencies configured
 FROM ghcr.io/puppeteer/puppeteer:23.11.1 AS production
 
+# Switch to root for system setup
+USER root
+
+# Install gosu for stepping down from root after UID/GID adjustment
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends gosu && \
+    rm -rf /var/lib/apt/lists/*
+
 # Mark as running in Docker for special handling
 ENV DOCKER_ENV=true
 ENV NODE_ENV=production
@@ -63,11 +71,19 @@ COPY --from=builder --chown=pptruser:pptruser /app/node_modules ./node_modules
 # Copy config files (will be mounted in production)
 COPY --chown=pptruser:pptruser config ./config
 
-# Switch to non-root user (already pptruser by default)
+# Copy entrypoint script
+COPY apps/api/docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+
+# Switch to non-root user for Chrome installation
 USER pptruser
 
 # Install Chrome for Puppeteer in the correct cache directory
 RUN npx puppeteer browsers install chrome --path /home/pptruser/.cache/puppeteer
+
+# PUID/PGID support: default to pptruser's UID/GID (1000)
+ENV PUID=1000
+ENV PGID=1000
 
 # Expose port
 EXPOSE 3000
@@ -76,5 +92,7 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
     CMD node -e "require('http').get('http://localhost:3000/api/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"
 
-# Start the application (main.js is in dist/src/)
+# Entrypoint runs as root to adjust UID/GID, then drops to pptruser via gosu
+USER root
+ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["node", "dist/src/main.js"]

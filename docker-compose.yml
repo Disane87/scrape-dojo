@@ -24,6 +24,10 @@ services:
     ports:
       - '8080:80'
     environment:
+      # ---- User / Group ID (useful for Unraid and NAS systems) ----
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+
       # ---- Runtime ----
       - NODE_ENV=production
       - SCRAPE_DOJO_NODE_ENV=production
