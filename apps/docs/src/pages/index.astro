@@ -348,6 +348,27 @@ const changelog = parseChangelog();
         }
         .nav-version svg { width: 12px; height: 12px; }
 
+        .nav-sponsor {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            padding: 0.25rem 0.75rem;
+            background: rgba(219,39,119,0.1);
+            border: 1px solid rgba(219,39,119,0.25);
+            border-radius: 20px;
+            font-size: 0.75rem; font-weight: 600;
+            color: #db2777;
+            transition: all 0.3s;
+            text-decoration: none !important;
+        }
+        .nav-sponsor::after { display: none !important; }
+        .nav-sponsor:hover {
+            background: rgba(219,39,119,0.2);
+            border-color: rgba(219,39,119,0.5);
+            color: #be185d;
+        }
+        .nav-sponsor svg { width: 14px; height: 14px; }
+
+        .btn-sponsor:hover { border-color: #db2777; color: #db2777; }
+
         /* Changelog Modal */
         .changelog-overlay {
             position: fixed; inset: 0;
@@ -1008,6 +1029,10 @@ const changelog = parseChangelog();
             <a href="/de/getting-started/quickstart/">Quickstart</a>
             <a href="/de/examples/">Examples</a>
             <a href="https://github.com/disane87/scrape-dojo" target="_blank" rel="noopener">GitHub</a>
+            <a href="https://github.com/sponsors/Disane87" target="_blank" rel="noopener" class="nav-sponsor" title="Sponsor">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                Sponsor
+            </a>
             <button class="nav-version" id="changelog-trigger" title="View Changelog">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                 v{version}
@@ -1046,6 +1071,9 @@ const changelog = parseChangelog();
                     </a>
                     <a href="https://github.com/disane87/scrape-dojo" class="btn btn-ghost" target="_blank" rel="noopener">
                         GitHub
+                    </a>
+                    <a href="https://github.com/sponsors/Disane87" class="btn btn-ghost btn-sponsor" target="_blank" rel="noopener">
+                        ❤️ Sponsor
                     </a>
                 </div>
             </div>
