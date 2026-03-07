@@ -4,6 +4,8 @@ import starlight from '@astrojs/starlight';
 import tailwindcss from '@tailwindcss/vite';
 import mermaid from 'astro-mermaid';
 
+const isProd = process.env.NODE_ENV === 'production';
+
 // https://astro.build/config
 export default defineConfig({
   site: 'https://scrape-dojo.com',
@@ -46,6 +48,14 @@ export default defineConfig({
                   tag: 'script',
                   content: `document.addEventListener('DOMContentLoaded',()=>{const a=document.querySelector('.site-title');if(a)a.href='/';});`,
               },
+              ...(isProd ? [{
+                  tag: 'script',
+                  attrs: {
+                      defer: true,
+                      src: 'https://statistics.disane.dev/script.js',
+                      'data-website-id': '59270b8d-22f0-4136-b596-ec0bf7d86e99',
+                  },
+              }] : []),
           ],
           customCss: ['./src/styles/global.css'],
           sidebar: [
