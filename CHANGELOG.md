@@ -1,3 +1,13 @@
+## [1.3.0](https://github.com/disane87/scrape-dojo/compare/v1.2.0...v1.3.0) (2026-03-07)
+
+### 🚀 Features
+
+- add website workflow request template for scraping configurations ([36989f0](https://github.com/disane87/scrape-dojo/commit/36989f079c2ca564e98fa257fac5b9aabba42941))
+
+### 🛠️ Fixes
+
+- replace defunct contrib-rocks/action with akhilmhdh/contributors-readme-action ([e77945d](https://github.com/disane87/scrape-dojo/commit/e77945d5cfe7ec7324b3b73ed4e53203748f90b6))
+
 ## [1.2.0](https://github.com/disane87/scrape-dojo/compare/v1.1.0...v1.2.0) (2026-03-07)
 
 ### 🚀 Features
