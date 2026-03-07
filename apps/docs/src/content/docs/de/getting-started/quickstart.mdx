@@ -71,6 +71,7 @@ Docker ist der einfachste Weg, Scrape Dojo zum Laufen zu bringen. Kein Node.js n
        environment:
          - SCRAPE_DOJO_ENCRYPTION_KEY=dein_generierter_key_hier
          - DB_TYPE=sqlite
+         - DB_SYNCHRONIZE=true
        volumes:
          - ./data:/home/pptruser/app/data
          - ./downloads:/home/pptruser/app/downloads
@@ -79,6 +80,11 @@ Docker ist der einfachste Weg, Scrape Dojo zum Laufen zu bringen. Kein Node.js n
          - ./browser-data:/home/pptruser/app/browser-data
        restart: unless-stopped
    ```
+
+   <Aside type="caution" title="DB_SYNCHRONIZE">
+     `DB_SYNCHRONIZE=true` **muss** beim allerersten Start gesetzt sein, damit die Datenbanktabellen automatisch erstellt werden.
+     Nach der Ersteinrichtung auf `false` setzen, um versehentliche Schema-Aenderungen oder Datenverlust bei zukuenftigen Updates zu vermeiden.
+   </Aside>
 
 3. **Container starten**
 
@@ -101,68 +107,10 @@ Docker ist der einfachste Weg, Scrape Dojo zum Laufen zu bringen. Kein Node.js n
   Port. Einfach im Browser öffnen und loslegen!
 </Aside>
 
-**📁 Volumes im Überblick:**
-
-| Volume           | Was steckt drin?                                                      |
-| ---------------- | --------------------------------------------------------------------- |
-| `./data`         | SQLite-Datenbank und persistente Daten                                |
-| `./downloads`    | Heruntergeladene Dateien (PDFs, Screenshots etc.)                     |
-| `./logs`         | Log-Dateien der Anwendung                                             |
-| `./config`       | Deine Scrape-Konfigurationsdateien (JSONC)                            |
-| `./browser-data` | Browser-Profildaten (Cookies, Sessions — damit du eingeloggt bleibst) |
-
-**⚙️ Wichtige Umgebungsvariablen für Docker:**
-
-Im `environment`-Block deiner `docker-compose.yml` kannst du das Verhalten von Scrape Dojo steuern. Hier die wichtigsten:
-
-| Variable | Standard | Beschreibung |
-| --- | --- | --- |
-| `SCRAPE_DOJO_ENCRYPTION_KEY` | — | **Pflicht.** 256-Bit Hex-Key für die Verschlüsselung von Secrets |
-| `DB_TYPE` | `sqlite` | Datenbank-Typ: `sqlite`, `mysql`, `postgres` |
-| `DB_SYNCHRONIZE` | `true` | Erstellt Tabellen automatisch beim Start. Nach der Ersteinrichtung auf `false` setzen |
-| `SCRAPE_DOJO_AUTH_ENABLED` | `true` | Authentifizierung global aktivieren/deaktivieren |
-| `SCRAPE_DOJO_AUTH_JWT_SECRET` | — | JWT-Signing-Secret (mind. 32 Zeichen, in Produktion ändern!) |
-| `SCRAPE_DOJO_AUTH_REFRESH_TOKEN_SECRET` | — | Refresh-Token-Secret (mind. 32 Zeichen) |
-| `SCRAPE_DOJO_AUTH_REQUIRE_MFA` | `true` | MFA/TOTP für alle Nutzer erzwingen |
-| `SCRAPE_DOJO_PORT` | `3000` | Interner API-Port (in Docker normalerweise nicht ändern) |
-| `SCRAPE_DOJO_CORS_ORIGIN` | — | CORS-Origins (kommasepariert, für Produktion empfohlen) |
-| `SCRAPE_DOJO_AUTH_OIDC_ENABLED` | `false` | OIDC/SSO-Login aktivieren (Keycloak, Auth0, Google, Azure AD) |
-| `PUID` | `1000` | User-ID für den Container-Prozess — passend zum Host-User setzen ([Details](/de/getting-started/docker/)) |
-| `PGID` | `1000` | Group-ID für den Container-Prozess ([Details](/de/getting-started/docker/)) |
-| `UMASK` | `022` | Dateiberechtigungs-Maske für neu erstellte Dateien ([Details](/de/getting-started/docker/)) |
-
-<Aside type="tip">
-  Das sind nur die wichtigsten Variablen. Die vollständige Referenz mit allen
-  Optionen (Datenbank, Auth, MFA, OIDC, Logging, Rate Limiting) findest du unter
-  [Umgebungsvariablen](/de/developer/environment-variables/).
+<Aside type="note" title="Naechste Schritte fuer Docker">
+  Details zu Volumes, Datenpersistenz, Bind Mounts vs. Named Volumes, PUID/PGID, Umgebungsvariablen,
+  NAS-spezifischen Setups und Produktions-Konfiguration findest du im [Docker Deployment Guide](/de/getting-started/docker/).
 </Aside>
-
-**Beispiel: Produktions-Setup mit Auth und MySQL:**
-
-```yaml
-services:
-  scrape-dojo:
-    image: ghcr.io/disane87/scrape-dojo:latest
-    ports:
-      - '8080:80'
-    environment:
-      - SCRAPE_DOJO_ENCRYPTION_KEY=dein_64_zeichen_hex_key
-      - DB_TYPE=mysql
-      - DB_HOST=db
-      - DB_PORT=3306
-      - DB_USERNAME=scrape_dojo
-      - DB_PASSWORD=sicheres_passwort
-      - DB_DATABASE=scrape_dojo
-      - SCRAPE_DOJO_AUTH_ENABLED=true
-      - SCRAPE_DOJO_AUTH_JWT_SECRET=dein_jwt_secret_mind_32_zeichen
-      - SCRAPE_DOJO_AUTH_REFRESH_TOKEN_SECRET=dein_refresh_secret
-    volumes:
-      - ./downloads:/home/pptruser/app/downloads
-      - ./logs:/home/pptruser/app/logs
-      - ./config:/home/pptruser/app/config
-      - ./browser-data:/home/pptruser/app/browser-data
-    restart: unless-stopped
-```
 
 </TabItem>
 <TabItem label="📦 Aus dem Quellcode">
