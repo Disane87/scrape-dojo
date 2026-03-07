@@ -111,6 +111,55 @@ Docker is the easiest way to get Scrape Dojo up and running. No Node.js needed, 
 | `./config`       | Your scrape configuration files (JSONC)                          |
 | `./browser-data` | Browser profile data (cookies, sessions — so you stay logged in) |
 
+**⚙️ Important environment variables for Docker:**
+
+Use the `environment` block in your `docker-compose.yml` to configure Scrape Dojo's behavior. Here are the most important ones:
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `SCRAPE_DOJO_ENCRYPTION_KEY` | — | **Required.** 256-bit hex key for encrypting secrets |
+| `DB_TYPE` | `sqlite` | Database type: `sqlite`, `mysql`, `postgres` |
+| `SCRAPE_DOJO_AUTH_ENABLED` | `true` | Enable/disable authentication globally |
+| `SCRAPE_DOJO_AUTH_JWT_SECRET` | — | JWT signing secret (min. 32 chars, change in production!) |
+| `SCRAPE_DOJO_AUTH_REFRESH_TOKEN_SECRET` | — | Refresh token secret (min. 32 chars) |
+| `SCRAPE_DOJO_AUTH_REQUIRE_MFA` | `true` | Require MFA/TOTP for all users |
+| `SCRAPE_DOJO_PORT` | `3000` | Internal API port (usually no need to change in Docker) |
+| `SCRAPE_DOJO_CORS_ORIGIN` | — | CORS origins (comma-separated, recommended for production) |
+| `SCRAPE_DOJO_AUTH_OIDC_ENABLED` | `false` | Enable OIDC/SSO login (Keycloak, Auth0, Google, Azure AD) |
+
+<Aside type="tip">
+  These are just the most important variables. For the full reference with all
+  options (database, auth, MFA, OIDC, logging, rate limiting), see
+  [Environment Variables](/en/developer/environment-variables/).
+</Aside>
+
+**Example: Production setup with auth and MySQL:**
+
+```yaml
+services:
+  scrape-dojo:
+    image: ghcr.io/disane87/scrape-dojo:latest
+    ports:
+      - '8080:80'
+    environment:
+      - SCRAPE_DOJO_ENCRYPTION_KEY=your_64_char_hex_key
+      - DB_TYPE=mysql
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_USERNAME=scrape_dojo
+      - DB_PASSWORD=secure_password
+      - DB_DATABASE=scrape_dojo
+      - SCRAPE_DOJO_AUTH_ENABLED=true
+      - SCRAPE_DOJO_AUTH_JWT_SECRET=your_jwt_secret_min_32_chars
+      - SCRAPE_DOJO_AUTH_REFRESH_TOKEN_SECRET=your_refresh_secret
+    volumes:
+      - ./downloads:/home/pptruser/app/downloads
+      - ./logs:/home/pptruser/app/logs
+      - ./config:/home/pptruser/app/config
+      - ./browser-data:/home/pptruser/app/browser-data
+    restart: unless-stopped
+```
+
 </TabItem>
 <TabItem label="📦 From source">
 

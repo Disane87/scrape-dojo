@@ -41,6 +41,12 @@ export default defineConfig({
                   lang: 'en',
               },
           },
+          head: [
+              {
+                  tag: 'script',
+                  content: `document.addEventListener('DOMContentLoaded',()=>{const a=document.querySelector('.site-title');if(a)a.href='/';});`,
+              },
+          ],
           customCss: ['./src/styles/global.css'],
           sidebar: [
               {
