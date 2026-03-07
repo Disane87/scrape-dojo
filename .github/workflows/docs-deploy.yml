@@ -6,6 +6,8 @@ on:
       - main
     paths:
       - 'apps/docs/**'
+      - 'CHANGELOG.md'
+      - 'package.json'
       - '.github/workflows/docs-deploy.yml'
   workflow_dispatch:
 

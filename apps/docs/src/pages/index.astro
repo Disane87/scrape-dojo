@@ -1,7 +1,145 @@
 ---
+import fs from 'node:fs';
+import path from 'node:path';
+
 const title = 'Scrape Dojo';
 const description = 'Define your scrapes with JSON configurations, use dynamic templates, and automate web tasks.';
 const year = new Date().getFullYear();
+
+// Read version from root package.json (not docs/package.json)
+const rootPkgPaths = [
+  path.resolve(process.cwd(), '..', '..', 'package.json'), // from apps/docs/
+  path.resolve(process.cwd(), 'package.json'),              // fallback
+];
+let version = 'unknown';
+for (const p of rootPkgPaths) {
+  if (fs.existsSync(p)) {
+    const pkg = JSON.parse(fs.readFileSync(p, 'utf-8'));
+    if (pkg.version && pkg.version !== '0.0.1') {
+      version = pkg.version;
+      break;
+    }
+  }
+}
+
+// Read and parse CHANGELOG.md
+interface ChangelogSection {
+  emoji: string;
+  title: string;
+  items: string[];
+}
+
+interface ChangelogEntry {
+  version: string;
+  date: string;
+  sections: ChangelogSection[];
+}
+
+// Map of known section headings to their emoji + display name
+const sectionMap: Record<string, { emoji: string; title: string }> = {
+  'features': { emoji: '🚀', title: 'Features' },
+  'fixes': { emoji: '🛠️', title: 'Fixes' },
+  'bug fixes': { emoji: '🛠️', title: 'Fixes' },
+  'performance': { emoji: '⚡', title: 'Performance' },
+  'reverts': { emoji: '🔙', title: 'Reverts' },
+  'docs': { emoji: '📔', title: 'Docs' },
+  'styles': { emoji: '💎', title: 'Styles' },
+  'refactor': { emoji: '♻️', title: 'Refactor' },
+  'tests': { emoji: '🧪', title: 'Tests' },
+  'build': { emoji: '📦', title: 'Build' },
+  'ci': { emoji: '🤖', title: 'CI' },
+  'chore': { emoji: '🔧', title: 'Chore' },
+  'breaking changes': { emoji: '⚠', title: 'Breaking Changes' },
+};
+
+function parseChangelog(): ChangelogEntry[] {
+  const possiblePaths = [
+    path.resolve(process.cwd(), 'CHANGELOG.md'),
+    path.resolve(process.cwd(), '..', '..', 'CHANGELOG.md'),
+  ];
+
+  let markdown = '';
+  for (const p of possiblePaths) {
+    if (fs.existsSync(p)) {
+      markdown = fs.readFileSync(p, 'utf-8');
+      break;
+    }
+  }
+
+  if (!markdown) return [];
+
+  const entries: ChangelogEntry[] = [];
+  const versionRegex = /^## \[?(\d+\.\d+\.\d+)\]?(?:\([^)]*\))?\s*\((\d{4}-\d{2}-\d{2})\)/gm;
+
+  const matches: { version: string; date: string; index: number }[] = [];
+  let match;
+  while ((match = versionRegex.exec(markdown)) !== null) {
+    matches.push({ version: match[1], date: match[2], index: match.index });
+  }
+
+  for (let i = 0; i < matches.length; i++) {
+    const start = matches[i].index;
+    const end = i + 1 < matches.length ? matches[i + 1].index : markdown.length;
+    const section = markdown.substring(start, end);
+
+    const sections = extractSections(section);
+
+    if (sections.length > 0) {
+      entries.push({ version: matches[i].version, date: matches[i].date, sections });
+    }
+  }
+
+  return entries;
+}
+
+function extractSections(versionBlock: string): ChangelogSection[] {
+  const sections: ChangelogSection[] = [];
+  // Match ### headings with optional emoji prefix, e.g. "### 🚀 Features" or "### Bug Fixes"
+  const headingRegex = /^### (?:[^\w]*\s*)?(.+)$/gm;
+  const headingMatches: { title: string; index: number }[] = [];
+  let hm;
+  while ((hm = headingRegex.exec(versionBlock)) !== null) {
+    headingMatches.push({ title: hm[1].trim(), index: hm.index });
+  }
+
+  for (let j = 0; j < headingMatches.length; j++) {
+    const start = headingMatches[j].index;
+    const end = j + 1 < headingMatches.length ? headingMatches[j + 1].index : versionBlock.length;
+    const block = versionBlock.substring(start, end);
+
+    const items = block
+      .split('\n')
+      .filter((line: string) => line.trim().startsWith('*') || line.trim().startsWith('-'))
+      .map((line: string) =>
+        line.trim()
+          .replace(/^[-*]\s*/, '')
+          .replace(/\*\*([^*]+)\*\*/g, '$1')
+          .replace(/\([a-f0-9]{7}\)/g, '')
+          .replace(/\[([a-f0-9]{7,})\]\([^)]+\)/g, '')
+          .replace(/,?\s*closes?\s*\[#\d+\]\([^)]+\)/gi, '')
+          .trim()
+      )
+      .filter((item: string) => item.length > 0);
+
+    if (items.length === 0) continue;
+
+    // Strip emoji from raw title to look up in sectionMap
+    const rawTitle = headingMatches[j].title;
+    const titleNoEmoji = rawTitle.replace(/^[^\w]*/u, '').trim();
+    const key = titleNoEmoji.toLowerCase();
+    const mapped = sectionMap[key];
+
+    sections.push({
+      emoji: mapped?.emoji || '📋',
+      title: mapped?.title || titleNoEmoji,
+      items,
+    });
+  }
+
+  return sections;
+}
+
+const changelog = parseChangelog();
 ---
 
 <!DOCTYPE html>
@@ -188,6 +326,117 @@ const year = new Date().getFullYear();
             background: var(--accent-hover) !important;
             transform: translateY(-1px) !important;
             box-shadow: 0 4px 24px rgba(249,115,22,0.4) !important;
+        }
+
+        /* Version badge */
+        .nav-version {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            padding: 0.25rem 0.75rem;
+            background: rgba(249,115,22,0.1);
+            border: 1px solid rgba(249,115,22,0.25);
+            border-radius: 20px;
+            font-size: 0.75rem; font-weight: 600;
+            color: var(--accent);
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+        .nav-version:hover {
+            background: rgba(249,115,22,0.2);
+            border-color: rgba(249,115,22,0.5);
+            color: var(--accent-hover);
+        }
+        .nav-version svg { width: 12px; height: 12px; }
+
+        /* Changelog Modal */
+        .changelog-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: none; align-items: center; justify-content: center;
+            padding: 2rem;
+            animation: fadeIn 0.2s ease;
+        }
+        .changelog-overlay.open { display: flex; }
+        .changelog-modal {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            width: 100%; max-width: 640px;
+            max-height: 80vh;
+            display: flex; flex-direction: column;
+            animation: scaleIn 0.25s ease;
+            box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+        }
+        .changelog-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .changelog-header h2 {
+            font-size: 1.125rem; font-weight: 700;
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+        .changelog-header h2 span { color: var(--accent); }
+        .changelog-close {
+            background: none; border: none; color: var(--text-muted);
+            cursor: pointer; padding: 0.25rem; border-radius: 6px;
+            transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .changelog-close:hover { color: var(--text); background: var(--surface-2); }
+        .changelog-body {
+            overflow-y: auto; padding: 1.5rem;
+            display: flex; flex-direction: column; gap: 1.5rem;
+        }
+        .changelog-entry {
+            border-left: 2px solid var(--border);
+            padding-left: 1rem;
+            transition: border-color 0.3s;
+        }
+        .changelog-entry:first-child { border-left-color: var(--accent); }
+        .changelog-entry-header {
+            display: flex; align-items: center; gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+        .changelog-entry-version {
+            font-size: 0.875rem; font-weight: 700;
+            color: var(--text);
+            background: var(--surface-2);
+            padding: 0.15rem 0.6rem;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .changelog-entry:first-child .changelog-entry-version {
+            background: rgba(249,115,22,0.15);
+            color: var(--accent);
+        }
+        .changelog-entry-date {
+            font-size: 0.75rem; color: var(--text-subtle);
+        }
+        .changelog-section-title {
+            font-size: 0.7rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin: 0.5rem 0 0.25rem;
+            display: flex; align-items: center; gap: 0.35rem;
+        }
+        .changelog-items {
+            list-style: none; padding: 0;
+            display: flex; flex-direction: column; gap: 0.2rem;
+        }
+        .changelog-items li {
+            font-size: 0.8rem; color: var(--text-muted);
+            line-height: 1.5;
+            padding-left: 1rem;
+            position: relative;
+        }
+        .changelog-items li::before {
+            content: '';
+            position: absolute; left: 0; top: 0.55em;
+            width: 4px; height: 4px; border-radius: 50%;
+            background: var(--text-subtle);
         }
 
         /* =========== HERO =========== */
@@ -756,6 +1005,10 @@ const year = new Date().getFullYear();
             <a href="/de/getting-started/quickstart/">Quickstart</a>
             <a href="/de/examples/">Examples</a>
             <a href="https://github.com/disane87/scrape-dojo" target="_blank" rel="noopener">GitHub</a>
+            <button class="nav-version" id="changelog-trigger" title="View Changelog">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                v{version}
+            </button>
             <a href="/de/getting-started/quickstart/" class="nav-cta">Get Started</a>
         </div>
     </div>
@@ -1022,7 +1275,60 @@ const year = new Date().getFullYear();
     </div>
 </footer>
 
+<!-- Changelog Modal -->
+<div class="changelog-overlay" id="changelog-overlay">
+    <div class="changelog-modal">
+        <div class="changelog-header">
+            <h2>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                Changelog <span>v{version}</span>
+            </h2>
+            <button class="changelog-close" id="changelog-close">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <div class="changelog-body">
+            {changelog.length === 0 && (
+                <p style="color: var(--text-muted); font-size: 0.875rem;">No changelog entries found.</p>
+            )}
+            {changelog.map((entry) => (
+                <div class="changelog-entry">
+                    <div class="changelog-entry-header">
+                        <span class="changelog-entry-version">v{entry.version}</span>
+                        <span class="changelog-entry-date">{entry.date}</span>
+                    </div>
+                    {entry.sections.map((section) => (
+                        <div>
+                            <div class="changelog-section-title">
+                                <span>{section.emoji}</span>
+                                {section.title}
+                            </div>
+                            <ul class="changelog-items">
+                                {section.items.map((item) => <li>{item}</li>)}
+                            </ul>
+                        </div>
+                    ))}
+                </div>
+            ))}
+        </div>
+    </div>
+</div>
+
 <script>
+// ---- Changelog modal ----
+const changelogTrigger = document.getElementById('changelog-trigger');
+const changelogOverlay = document.getElementById('changelog-overlay');
+const changelogClose = document.getElementById('changelog-close');
+
+changelogTrigger?.addEventListener('click', () => changelogOverlay?.classList.add('open'));
+changelogClose?.addEventListener('click', () => changelogOverlay?.classList.remove('open'));
+changelogOverlay?.addEventListener('click', (e) => {
+    if (e.target === changelogOverlay) changelogOverlay.classList.remove('open');
+});
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') changelogOverlay?.classList.remove('open');
+});
+
 // ---- Scroll reveal with IntersectionObserver ----
 const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
