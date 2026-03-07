@@ -1,3 +1,17 @@
+## [1.5.0](https://github.com/disane87/scrape-dojo/compare/v1.4.0...v1.5.0) (2026-03-07)
+
+### 🚀 Features
+
+- add sponsor button and styles to navigation and footer ([799da34](https://github.com/disane87/scrape-dojo/commit/799da34b3d2849576bc9b776f04cc32312337c17))
+
+### 🛠️ Fixes
+
+- update supervisord configuration for log file path and user setting ([d672fa3](https://github.com/disane87/scrape-dojo/commit/d672fa3573772d3d4f150ad6c33969963406e90a))
+
+### 📔 Docs
+
+- add sponsor buttons and dynamic version to docs ([4f10aa8](https://github.com/disane87/scrape-dojo/commit/4f10aa848c3013685af5ffbc176187657335ef5f))
+
 ## [1.4.0](https://github.com/disane87/scrape-dojo/compare/v1.3.0...v1.4.0) (2026-03-07)
 
 ### 🚀 Features
