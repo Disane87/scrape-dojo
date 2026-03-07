@@ -45,7 +45,7 @@ jobs:
         run: pnpm nx build docs --skip-nx-cache
 
       - name: Setup Pages
-        uses: actions/configure-pages@v4
+        uses: actions/configure-pages@v5
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
