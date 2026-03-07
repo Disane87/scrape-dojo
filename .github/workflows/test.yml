@@ -1,12 +1,7 @@
 name: Test
 
 on:
-  push:
-    branches:
-      - main
-    paths-ignore:
-      - 'apps/docs/**'
-      - '**/*.md'
+  workflow_call:
   pull_request:
     paths-ignore:
       - 'apps/docs/**'

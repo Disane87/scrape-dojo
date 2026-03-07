@@ -26,9 +26,9 @@ COPY config ./config
 # Install ALL dependencies (needed for build)
 RUN pnpm install --frozen-lockfile
 
-# Build API and UI
-RUN pnpm nx build api --configuration=production --verbose && \
-    pnpm nx build ui --configuration=production --verbose
+# Build API and UI (daemon disabled to avoid SQLite issues in Docker)
+RUN NX_DAEMON=false pnpm nx build api --configuration=production --verbose && \
+    NX_DAEMON=false pnpm nx build ui --configuration=production --verbose
 
 # Stage 2: Production dependencies only (avoids unreliable pnpm prune)
 FROM node:22-slim AS prod-deps
@@ -40,7 +40,7 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/docs/package.json ./apps/docs/package.json
 
-RUN pnpm install --prod --no-frozen-lockfile
+RUN pnpm install --prod --no-frozen-lockfile --ignore-scripts
 
 # Stage 3: Production - Puppeteer base with nginx
 FROM ghcr.io/puppeteer/puppeteer:23.11.1 AS production
