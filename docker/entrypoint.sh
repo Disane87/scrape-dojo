@@ -1,17 +1,22 @@
 #!/bin/bash
 # ============================================
 # Scrape Dojo - Docker Entrypoint
-# Supports PUID/PGID for custom user/group IDs
+# Supports PUID/PGID/UMASK for custom user/group IDs and file permissions
 # ============================================
 
 PUID=${PUID:-1000}
 PGID=${PGID:-1000}
+UMASK=${UMASK:-022}
 
 echo "───────────────────────────────────────"
 echo " Scrape Dojo - Starting up"
-echo " PUID: ${PUID}"
-echo " PGID: ${PGID}"
+echo " PUID:  ${PUID}"
+echo " PGID:  ${PGID}"
+echo " UMASK: ${UMASK}"
 echo "───────────────────────────────────────"
+
+# Apply umask
+umask "$UMASK"
 
 # Get current UID/GID of pptruser
 CURRENT_UID=$(id -u pptruser)

@@ -1,0 +1,169 @@
+---
+title: Docker Deployment
+description: Scrape Dojo mit Docker deployen — inklusive PUID/PGID/UMASK-Konfiguration für NAS-Systeme wie Unraid, Synology und TrueNAS
+sidebar:
+  order: 2
+---
+
+import { Aside, Tabs, TabItem, Steps } from '@astrojs/starlight/components';
+
+Scrape Dojo wird als einzelnes Docker-Image ausgeliefert, das sowohl API als auch UI bündelt. Dieser Guide behandelt die Deployment-Konfiguration mit Fokus auf **Dateiberechtigungs-Management** — essenziell beim Betrieb auf NAS-Systemen wie Unraid, Synology oder TrueNAS.
+
+## PUID / PGID — User- und Group-IDs
+
+Docker-Container führen Prozesse mit internen User-IDs aus. Wenn der Container Dateien auf gemountete Volumes schreibt (Datenbank, Downloads, Logs), gehören diese Dateien dem internen Container-User. Wenn die IDs nicht mit deinem Host-System übereinstimmen, bekommst du Berechtigungsfehler.
+
+**PUID** (Process User ID) und **PGID** (Process Group ID) ermöglichen es dir, den Container-User an deinen Host-User anzugleichen, damit die Datei-Ownership auf beiden Seiten korrekt ist.
+
+### So funktioniert es
+
+Beim Container-Start führt das Entrypoint-Script folgende Schritte aus:
+
+<Steps>
+1. Liest die Umgebungsvariablen `PUID` und `PGID`
+2. Passt den internen `pptruser`-Account an diese IDs an
+3. Korrigiert die Ownership aller Anwendungsverzeichnisse
+4. Startet die Anwendung mit der aktualisierten Identität
+</Steps>
+
+### Eigene IDs herausfinden
+
+Führe diesen Befehl auf deinem **Host-System** aus, um deine User- und Group-IDs zu finden:
+
+```bash
+id $(whoami)
+# Beispielausgabe: uid=1000(user) gid=1000(user) groups=1000(user)
+```
+
+### Gängige NAS-Defaults
+
+| System       | Standard PUID | Standard PGID | Hinweise                                    |
+| ------------ | ------------- | ------------- | ------------------------------------------- |
+| **Unraid**   | `99`          | `100`         | `nobody:users` — Unraids Standard-User      |
+| **Synology** | `1026`        | `100`         | Erster auf dem NAS erstellter Benutzer       |
+| **TrueNAS**  | `568`         | `568`         | `apps:apps` — TrueNAS SCALE Apps-User        |
+| **Linux**    | `1000`        | `1000`        | Erster regulärer User (Ubuntu, Debian, etc.) |
+
+## UMASK — Dateiberechtigungs-Maske
+
+Die `UMASK`-Variable steuert die Standard-Berechtigungen für neu erstellte Dateien und Verzeichnisse im Container. Sie bestimmt, wer Dateien lesen, schreiben oder ausführen kann, die Scrape Dojo zur Laufzeit erstellt (Datenbank-Dateien, heruntergeladene Inhalte, Logs usw.).
+
+| UMASK | Dateiberechtigungen | Verzeichnisberechtigungen | Anwendungsfall                         |
+| ----- | ------------------- | ------------------------- | -------------------------------------- |
+| `022` | `644` (rw-r--r--)   | `755` (rwxr-xr-x)        | **Standard** — Besitzer Vollzugriff, andere nur lesen |
+| `002` | `664` (rw-rw-r--)   | `775` (rwxrwxr-x)        | Gemeinsamer Zugriff — Besitzer und Gruppe können schreiben |
+| `077` | `600` (rw-------)   | `700` (rwx------)        | Restriktiv — nur Besitzer hat Zugriff  |
+
+<Aside type="tip">
+  Verwende `UMASK=002`, wenn andere Prozesse oder Benutzer in der gleichen Gruppe die Datendateien von Scrape Dojo lesen und schreiben müssen.
+  Das ist auf NAS-Systemen üblich, wo mehrere Dienste Datenverzeichnisse teilen.
+</Aside>
+
+## Docker Compose Beispiele
+
+### Standard-Setup
+
+```yaml
+services:
+  scrape-dojo:
+    image: ghcr.io/disane87/scrape-dojo:latest
+    container_name: scrape-dojo
+    restart: unless-stopped
+    ports:
+      - '8080:80'
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - UMASK=022
+      - SCRAPE_DOJO_ENCRYPTION_KEY=${SCRAPE_DOJO_ENCRYPTION_KEY}
+    volumes:
+      - ./data:/home/pptruser/app/data
+      - ./downloads:/home/pptruser/app/downloads
+      - ./logs:/home/pptruser/app/logs
+      - ./config:/home/pptruser/app/config
+```
+
+### Unraid
+
+```yaml
+services:
+  scrape-dojo:
+    image: ghcr.io/disane87/scrape-dojo:latest
+    container_name: scrape-dojo
+    restart: unless-stopped
+    ports:
+      - '8080:80'
+    environment:
+      - PUID=99
+      - PGID=100
+      - UMASK=002
+      - SCRAPE_DOJO_ENCRYPTION_KEY=${SCRAPE_DOJO_ENCRYPTION_KEY}
+    volumes:
+      - /mnt/user/appdata/scrape-dojo/data:/home/pptruser/app/data
+      - /mnt/user/appdata/scrape-dojo/downloads:/home/pptruser/app/downloads
+      - /mnt/user/appdata/scrape-dojo/logs:/home/pptruser/app/logs
+      - /mnt/user/appdata/scrape-dojo/config:/home/pptruser/app/config
+```
+
+<Aside type="note">
+  Auf Unraid entsprechen `PUID=99` und `PGID=100` dem `nobody:users`-Account — dem Standard-User für Docker-Container.
+  `UMASK=002` stellt sicher, dass Dateien für die Gruppe beschreibbar sind, was beim Teilen von Daten zwischen Containern wichtig ist.
+</Aside>
+
+### Synology
+
+```yaml
+services:
+  scrape-dojo:
+    image: ghcr.io/disane87/scrape-dojo:latest
+    container_name: scrape-dojo
+    restart: unless-stopped
+    ports:
+      - '8080:80'
+    environment:
+      - PUID=1026
+      - PGID=100
+      - UMASK=002
+      - SCRAPE_DOJO_ENCRYPTION_KEY=${SCRAPE_DOJO_ENCRYPTION_KEY}
+    volumes:
+      - /volume1/docker/scrape-dojo/data:/home/pptruser/app/data
+      - /volume1/docker/scrape-dojo/downloads:/home/pptruser/app/downloads
+      - /volume1/docker/scrape-dojo/logs:/home/pptruser/app/logs
+      - /volume1/docker/scrape-dojo/config:/home/pptruser/app/config
+```
+
+## Volumes
+
+Scrape Dojo verwendet folgende persistente Verzeichnisse:
+
+| Container-Pfad                      | Zweck                                       |
+| ----------------------------------- | ------------------------------------------- |
+| `/home/pptruser/app/data`           | Datenbank (SQLite) und Anwendungsdaten      |
+| `/home/pptruser/app/downloads`      | Heruntergeladene Dateien aus Scrape-Actions |
+| `/home/pptruser/app/logs`           | Anwendungs- und Supervisor-Logs            |
+| `/home/pptruser/app/browser-data`   | Chromium Browser-Profildaten               |
+| `/home/pptruser/app/config`         | Scrape-Konfigurationsdateien (`.jsonc`)    |
+
+## Fehlerbehebung
+
+### Permission denied Fehler
+
+Wenn du `EACCES` oder `Permission denied` Fehler in den Logs siehst:
+
+1. Prüfe, ob `PUID` und `PGID` mit deinem Host-User übereinstimmen: `id $(whoami)`
+2. Überprüfe die Verzeichnis-Ownership auf dem Host: `ls -la ./data`
+3. Falls nötig, korrigiere die Ownership manuell: `sudo chown -R <PUID>:<PGID> ./data ./downloads ./logs ./config`
+
+### Dateien mit falschen Berechtigungen erstellt
+
+Wenn andere Dienste oder Benutzer nicht auf von Scrape Dojo erstellte Dateien zugreifen können:
+
+1. Setze `UMASK=002` um Gruppen-Schreibzugriff zu ermöglichen
+2. Stelle sicher, dass der andere Dienst die gleiche `PGID` verwendet
+
+---
+
+**Verwandte Themen:**
+
+- [Schnellstart](/de/getting-started/quickstart/)
+- [Umgebungsvariablen](/de/developer/environment-variables/)

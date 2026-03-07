@@ -1,0 +1,169 @@
+---
+title: Docker Deployment
+description: Deploy Scrape Dojo with Docker — including PUID/PGID/UMASK configuration for NAS systems like Unraid, Synology, and TrueNAS
+sidebar:
+  order: 2
+---
+
+import { Aside, Tabs, TabItem, Steps } from '@astrojs/starlight/components';
+
+Scrape Dojo ships as a single Docker image that bundles both the API and UI. This guide covers deployment configuration with a focus on **file permission management** — essential when running on NAS systems like Unraid, Synology, or TrueNAS.
+
+## PUID / PGID — User and Group IDs
+
+Docker containers run processes with internal user IDs. When the container writes files to mounted volumes (database, downloads, logs), these files are owned by the container's internal user. If the IDs don't match your host system, you'll run into permission errors.
+
+**PUID** (Process User ID) and **PGID** (Process Group ID) let you align the container's user with your host user so that file ownership is correct on both sides.
+
+### How it works
+
+On container startup, the entrypoint script:
+
+<Steps>
+1. Reads the `PUID` and `PGID` environment variables
+2. Modifies the internal `pptruser` account to match those IDs
+3. Adjusts ownership of all application directories
+4. Starts the application with the updated identity
+</Steps>
+
+### Finding your IDs
+
+Run this command on your **host system** to find your user and group IDs:
+
+```bash
+id $(whoami)
+# Example output: uid=1000(user) gid=1000(user) groups=1000(user)
+```
+
+### Common NAS defaults
+
+| System       | Default PUID | Default PGID | Notes                                      |
+| ------------ | ------------ | ------------ | ------------------------------------------ |
+| **Unraid**   | `99`         | `100`        | `nobody:users` — Unraid's default user     |
+| **Synology** | `1026`       | `100`        | First user created on the NAS              |
+| **TrueNAS**  | `568`        | `568`        | `apps:apps` — TrueNAS SCALE apps user      |
+| **Linux**    | `1000`       | `1000`       | First regular user (Ubuntu, Debian, etc.)  |
+
+## UMASK — File Permission Mask
+
+The `UMASK` variable controls the default permissions for newly created files and directories inside the container. It determines who can read, write, or execute files that Scrape Dojo creates at runtime (database files, downloaded content, logs, etc.).
+
+| UMASK | File permissions | Directory permissions | Use case                         |
+| ----- | ---------------- | --------------------- | -------------------------------- |
+| `022` | `644` (rw-r--r--)| `755` (rwxr-xr-x)    | **Default** — owner full access, others read-only |
+| `002` | `664` (rw-rw-r--)| `775` (rwxrwxr-x)    | Shared access — owner and group can write         |
+| `077` | `600` (rw-------)| `700` (rwx------)    | Restrictive — only owner has access               |
+
+<Aside type="tip">
+  Use `UMASK=002` if you need other processes or users in the same group to read and write Scrape Dojo's data files.
+  This is common on NAS systems where multiple services share data directories.
+</Aside>
+
+## Docker Compose examples
+
+### Standard setup
+
+```yaml
+services:
+  scrape-dojo:
+    image: ghcr.io/disane87/scrape-dojo:latest
+    container_name: scrape-dojo
+    restart: unless-stopped
+    ports:
+      - '8080:80'
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - UMASK=022
+      - SCRAPE_DOJO_ENCRYPTION_KEY=${SCRAPE_DOJO_ENCRYPTION_KEY}
+    volumes:
+      - ./data:/home/pptruser/app/data
+      - ./downloads:/home/pptruser/app/downloads
+      - ./logs:/home/pptruser/app/logs
+      - ./config:/home/pptruser/app/config
+```
+
+### Unraid
+
+```yaml
+services:
+  scrape-dojo:
+    image: ghcr.io/disane87/scrape-dojo:latest
+    container_name: scrape-dojo
+    restart: unless-stopped
+    ports:
+      - '8080:80'
+    environment:
+      - PUID=99
+      - PGID=100
+      - UMASK=002
+      - SCRAPE_DOJO_ENCRYPTION_KEY=${SCRAPE_DOJO_ENCRYPTION_KEY}
+    volumes:
+      - /mnt/user/appdata/scrape-dojo/data:/home/pptruser/app/data
+      - /mnt/user/appdata/scrape-dojo/downloads:/home/pptruser/app/downloads
+      - /mnt/user/appdata/scrape-dojo/logs:/home/pptruser/app/logs
+      - /mnt/user/appdata/scrape-dojo/config:/home/pptruser/app/config
+```
+
+<Aside type="note">
+  On Unraid, `PUID=99` and `PGID=100` correspond to the `nobody:users` account — the default user for Docker containers.
+  Setting `UMASK=002` ensures that files are group-writable, which is important when sharing data between containers.
+</Aside>
+
+### Synology
+
+```yaml
+services:
+  scrape-dojo:
+    image: ghcr.io/disane87/scrape-dojo:latest
+    container_name: scrape-dojo
+    restart: unless-stopped
+    ports:
+      - '8080:80'
+    environment:
+      - PUID=1026
+      - PGID=100
+      - UMASK=002
+      - SCRAPE_DOJO_ENCRYPTION_KEY=${SCRAPE_DOJO_ENCRYPTION_KEY}
+    volumes:
+      - /volume1/docker/scrape-dojo/data:/home/pptruser/app/data
+      - /volume1/docker/scrape-dojo/downloads:/home/pptruser/app/downloads
+      - /volume1/docker/scrape-dojo/logs:/home/pptruser/app/logs
+      - /volume1/docker/scrape-dojo/config:/home/pptruser/app/config
+```
+
+## Volumes
+
+Scrape Dojo uses the following persistent directories:
+
+| Container path                      | Purpose                                    |
+| ----------------------------------- | ------------------------------------------ |
+| `/home/pptruser/app/data`           | Database (SQLite) and application data     |
+| `/home/pptruser/app/downloads`      | Downloaded files from scrape actions       |
+| `/home/pptruser/app/logs`           | Application and supervisor logs            |
+| `/home/pptruser/app/browser-data`   | Chromium browser profile data              |
+| `/home/pptruser/app/config`         | Scrape configuration files (`.jsonc`)      |
+
+## Troubleshooting
+
+### Permission denied errors
+
+If you see `EACCES` or `Permission denied` errors in the logs:
+
+1. Check that `PUID` and `PGID` match your host user: `id $(whoami)`
+2. Verify volume directory ownership on the host: `ls -la ./data`
+3. If needed, fix ownership manually: `sudo chown -R <PUID>:<PGID> ./data ./downloads ./logs ./config`
+
+### Files created with wrong permissions
+
+If other services or users can't access files created by Scrape Dojo:
+
+1. Set `UMASK=002` to allow group write access
+2. Make sure the other service uses the same `PGID`
+
+---
+
+**Related topics:**
+
+- [Quickstart](/en/getting-started/quickstart/)
+- [Environment Variables](/en/developer/environment-variables/)

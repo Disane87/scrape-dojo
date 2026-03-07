@@ -81,9 +81,10 @@ USER pptruser
 # Install Chrome for Puppeteer in the correct cache directory
 RUN npx puppeteer browsers install chrome --path /home/pptruser/.cache/puppeteer
 
-# PUID/PGID support: default to pptruser's UID/GID (1000)
+# PUID/PGID/UMASK support for NAS systems (Unraid, Synology, etc.)
 ENV PUID=1000
 ENV PGID=1000
+ENV UMASK=022
 
 # Expose port
 EXPOSE 3000
