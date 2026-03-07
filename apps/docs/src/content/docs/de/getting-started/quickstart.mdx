@@ -119,6 +119,7 @@ Im `environment`-Block deiner `docker-compose.yml` kannst du das Verhalten von S
 | --- | --- | --- |
 | `SCRAPE_DOJO_ENCRYPTION_KEY` | — | **Pflicht.** 256-Bit Hex-Key für die Verschlüsselung von Secrets |
 | `DB_TYPE` | `sqlite` | Datenbank-Typ: `sqlite`, `mysql`, `postgres` |
+| `DB_SYNCHRONIZE` | `true` | Erstellt Tabellen automatisch beim Start. Nach der Ersteinrichtung auf `false` setzen |
 | `SCRAPE_DOJO_AUTH_ENABLED` | `true` | Authentifizierung global aktivieren/deaktivieren |
 | `SCRAPE_DOJO_AUTH_JWT_SECRET` | — | JWT-Signing-Secret (mind. 32 Zeichen, in Produktion ändern!) |
 | `SCRAPE_DOJO_AUTH_REFRESH_TOKEN_SECRET` | — | Refresh-Token-Secret (mind. 32 Zeichen) |

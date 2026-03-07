@@ -119,6 +119,7 @@ Use the `environment` block in your `docker-compose.yml` to configure Scrape Doj
 | --- | --- | --- |
 | `SCRAPE_DOJO_ENCRYPTION_KEY` | — | **Required.** 256-bit hex key for encrypting secrets |
 | `DB_TYPE` | `sqlite` | Database type: `sqlite`, `mysql`, `postgres` |
+| `DB_SYNCHRONIZE` | `true` | Auto-creates tables on startup. Set to `false` after initial setup |
 | `SCRAPE_DOJO_AUTH_ENABLED` | `true` | Enable/disable authentication globally |
 | `SCRAPE_DOJO_AUTH_JWT_SECRET` | — | JWT signing secret (min. 32 chars, change in production!) |
 | `SCRAPE_DOJO_AUTH_REFRESH_TOKEN_SECRET` | — | Refresh token secret (min. 32 chars) |
