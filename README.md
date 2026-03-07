@@ -191,6 +191,14 @@ Commits follow [Conventional Commits](https://www.conventionalcommits.org/) (`fe
 
 ---
 
+## 🌟 Contributors
+
+<a href="https://github.com/Disane87/scrape-dojo/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=Disane87/scrape-dojo" alt="Contributors" />
+</a>
+
+---
+
 <div align="center">
 
 Made with ❤️ by [Marco Franke](https://github.com/Disane87)
