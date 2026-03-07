@@ -1,3 +1,22 @@
+## [1.6.0](https://github.com/disane87/scrape-dojo/compare/v1.5.2...v1.6.0) (2026-03-07)
+
+### fix
+
+- **🏷️ release:** clone commit object to fix immutable object error ([](https://github.com/disane87/scrape-dojo/commit/9f7725f83bd9dbf8176d5b883836f94c456f8fbd))
+- **🐳 docker:** resolve EACCES and startup issues with custom PUID/PGID #52 ([](https://github.com/disane87/scrape-dojo/commit/6ce3bc276feccd45670bf25aeb698e5fdacd22b3)), closes [#52](https://github.com/disane87/scrape-dojo/issues/52) [#52](https://github.com/disane87/scrape-dojo/issues/52)
+
+### feat
+
+- **📔 docs:** add health check and initial setup documentation ([](https://github.com/disane87/scrape-dojo/commit/b24cc8cd00575377d6d760744a24aaf1a3d475be))
+- **📔 docs:** add SEO, OG image, changelog pages, and contributor avatars to landing page ([](https://github.com/disane87/scrape-dojo/commit/9dbaafca30dd67939f49a7d3d66802fd60d8fe37))
+- **📔 docs:** improve landing page OG metadata and contributors ([](https://github.com/disane87/scrape-dojo/commit/1e2923a15bd052ce9ce9b464618f9e41160a5bc6))
+
+### chore
+
+- **🏷️ release:** migrate release config to JS and enforce commit scopes ([](https://github.com/disane87/scrape-dojo/commit/7d2717893550dd7443a33b9fc6aaca515d1d79e6))
+
+- Merge branch 'main' of https://github.com/Disane87/scrape-dojo ([](https://github.com/disane87/scrape-dojo/commit/1280132916a2b0881c4c673f0edbe096c1a9356c))
+
 ## [1.5.2](https://github.com/disane87/scrape-dojo/compare/v1.5.1...v1.5.2) (2026-03-07)
 
 ### 🛠️ Fixes
