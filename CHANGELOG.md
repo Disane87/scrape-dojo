@@ -1,3 +1,9 @@
+## [1.0.23](https://github.com/disane87/scrape-dojo/compare/v1.0.22...v1.0.23) (2026-03-07)
+
+### Bug Fixes
+
+- add contents:read permission to Docker workflow for checkout ([687003e](https://github.com/disane87/scrape-dojo/commit/687003e4d188c6c09c0a847d45fefbb25b73a0df))
+
 ## [1.0.22](https://github.com/disane87/scrape-dojo/compare/v1.0.21...v1.0.22) (2026-03-07)
 
 ### Bug Fixes
