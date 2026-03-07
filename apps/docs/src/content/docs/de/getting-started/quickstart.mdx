@@ -127,6 +127,9 @@ Im `environment`-Block deiner `docker-compose.yml` kannst du das Verhalten von S
 | `SCRAPE_DOJO_PORT` | `3000` | Interner API-Port (in Docker normalerweise nicht ändern) |
 | `SCRAPE_DOJO_CORS_ORIGIN` | — | CORS-Origins (kommasepariert, für Produktion empfohlen) |
 | `SCRAPE_DOJO_AUTH_OIDC_ENABLED` | `false` | OIDC/SSO-Login aktivieren (Keycloak, Auth0, Google, Azure AD) |
+| `PUID` | `1000` | User-ID für den Container-Prozess — passend zum Host-User setzen ([Details](/de/getting-started/docker/)) |
+| `PGID` | `1000` | Group-ID für den Container-Prozess ([Details](/de/getting-started/docker/)) |
+| `UMASK` | `022` | Dateiberechtigungs-Maske für neu erstellte Dateien ([Details](/de/getting-started/docker/)) |
 
 <Aside type="tip">
   Das sind nur die wichtigsten Variablen. Die vollständige Referenz mit allen
