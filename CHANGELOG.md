@@ -1,3 +1,13 @@
+## [1.1.0](https://github.com/disane87/scrape-dojo/compare/v1.0.23...v1.1.0) (2026-03-07)
+
+### 🚀 Features
+
+- enhance changelog functionality with modal display and version tracking ([8e256c3](https://github.com/disane87/scrape-dojo/commit/8e256c33b7936cb0fe08c2ae2208fac53713d241))
+
+### 🛠️ Fixes
+
+- remove redundant builds from release, add pnpm mount cache to Dockerfile ([4b57181](https://github.com/disane87/scrape-dojo/commit/4b57181ea1f82239d47d963e7945501ac9410d08))
+
 ## [1.0.23](https://github.com/disane87/scrape-dojo/compare/v1.0.22...v1.0.23) (2026-03-07)
 
 ### Bug Fixes
