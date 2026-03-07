@@ -52,14 +52,18 @@ const entities = [
         const dbType = configService.get<string>('DB_TYPE', 'sqlite');
         const nodeEnv = configService.get<string>('NODE_ENV', 'development');
         const synchronize =
-          configService.get<string>(
-            'DB_SYNCHRONIZE',
-            nodeEnv === 'production' ? 'false' : 'true',
-          ) === 'true';
+          configService.get<string>('DB_SYNCHRONIZE', 'true') === 'true';
         const logging =
           configService.get<string>('DB_LOGGING', 'false') === 'true';
 
         logger.log(`🗃️ Database type: ${dbType}`);
+
+        if (synchronize && nodeEnv === 'production') {
+          logger.warn(
+            '⚠️ DB_SYNCHRONIZE is enabled in production. This auto-creates tables but may cause data loss on schema changes. Set DB_SYNCHRONIZE=false once your database is initialized.',
+          );
+        }
+
         logger.log('🚀 Running migrations (if any)...');
 
         if (dbType === 'sqlite') {

@@ -28,16 +28,18 @@ Hier findest du die vollständige Referenz aller Umgebungsvariablen in Scrape Do
 | ---------------- | ----------------------- | ---------------------------------------------------- |
 | `DB_TYPE`        | `sqlite`                | Datenbank-Typ: `sqlite`, `mysql`, `postgres`         |
 | `DB_DATABASE`    | `./data/scrape-dojo.db` | Datenbank-Pfad (SQLite) oder Name (MySQL/PostgreSQL) |
-| `DB_SYNCHRONIZE` | `true`                  | TypeORM Schema-Sync (in Production `false` setzen!)  |
+| `DB_SYNCHRONIZE` | `true`                  | TypeORM Schema-Sync — erstellt/aktualisiert Tabellen automatisch |
 | `DB_LOGGING`     | `false`                 | SQL Query Logging aktivieren                         |
 | `DB_HOST`        | —                       | Datenbank-Host (nur MySQL/PostgreSQL)                |
 | `DB_PORT`        | `3306`                  | Datenbank-Port (nur MySQL/PostgreSQL)                |
 | `DB_USERNAME`    | —                       | Datenbank-Benutzer (nur MySQL/PostgreSQL)            |
 | `DB_PASSWORD`    | —                       | Datenbank-Passwort (nur MySQL/PostgreSQL)            |
 
-<Aside type="caution">
-  `DB_SYNCHRONIZE=true` ist praktisch in der Entwicklung, aber **niemals** in
-  Production verwenden! TypeORM könnte dabei Daten verlieren.
+<Aside type="tip">
+  `DB_SYNCHRONIZE=true` ist der Standard und wird beim **ersten Start** benötigt, um alle Tabellen zu erstellen.
+  Für laufende Produktiv-Installationen kannst du es auf `false` setzen, sobald die Datenbank initialisiert ist.
+  Beachte: Bei Schema-Änderungen (z.B. nach Updates) könnte `synchronize` Spalten droppen und neu erstellen — das kann zu **Datenverlust** führen.
+  Langfristig werden Migrations dieses Verhalten ersetzen.
 </Aside>
 
 ## Verschlüsselung
@@ -181,7 +183,7 @@ SCRAPE_DOJO_AUTH_MFA_ENCRYPTION_KEY=<MINDESTENS_32_ZEICHEN>
 Bevor du in Production gehst, prüfe diese Punkte:
 
 - [ ] `NODE_ENV=production` gesetzt
-- [ ] `DB_SYNCHRONIZE=false` in Production
+- [ ] `DB_SYNCHRONIZE=false` nach der Erstinitialisierung der Datenbank
 - [ ] `SCRAPE_DOJO_CORS_ORIGIN` explizit konfiguriert (nicht `*`)
 - [ ] Alle Secrets mit `crypto.randomBytes()` generiert
 - [ ] PostgreSQL statt SQLite verwenden

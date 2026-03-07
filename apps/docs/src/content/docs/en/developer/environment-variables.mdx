@@ -28,16 +28,18 @@ Here you'll find the complete reference of all environment variables in Scrape D
 | ---------------- | ----------------------- | --------------------------------------------------- |
 | `DB_TYPE`        | `sqlite`                | Database type: `sqlite`, `mysql`, `postgres`        |
 | `DB_DATABASE`    | `./data/scrape-dojo.db` | Database path (SQLite) or name (MySQL/PostgreSQL)   |
-| `DB_SYNCHRONIZE` | `true`                  | TypeORM schema sync (set to `false` in production!) |
+| `DB_SYNCHRONIZE` | `true`                  | TypeORM schema sync — auto-creates/updates tables |
 | `DB_LOGGING`     | `false`                 | Enable SQL query logging                            |
 | `DB_HOST`        | —                       | Database host (MySQL/PostgreSQL only)               |
 | `DB_PORT`        | `3306`                  | Database port (MySQL/PostgreSQL only)               |
 | `DB_USERNAME`    | —                       | Database user (MySQL/PostgreSQL only)               |
 | `DB_PASSWORD`    | —                       | Database password (MySQL/PostgreSQL only)           |
 
-<Aside type="caution">
-  `DB_SYNCHRONIZE=true` is handy during development, but **never** use it in
-  production! TypeORM could lose data in the process.
+<Aside type="tip">
+  `DB_SYNCHRONIZE=true` is the default and is **required on first startup** to create all tables.
+  For running production installations, you can set it to `false` once the database is initialized.
+  Note: On schema changes (e.g., after updates), `synchronize` may drop and recreate columns — which can lead to **data loss**.
+  Long-term, migrations will replace this behavior.
 </Aside>
 
 ## Encryption
@@ -181,7 +183,7 @@ SCRAPE_DOJO_AUTH_MFA_ENCRYPTION_KEY=<AT_LEAST_32_CHARACTERS>
 Before going to production, check these items:
 
 - [ ] `NODE_ENV=production` is set
-- [ ] `DB_SYNCHRONIZE=false` in production
+- [ ] `DB_SYNCHRONIZE=false` after initial database setup
 - [ ] `SCRAPE_DOJO_CORS_ORIGIN` explicitly configured (not `*`)
 - [ ] All secrets generated with `crypto.randomBytes()`
 - [ ] Using PostgreSQL instead of SQLite
