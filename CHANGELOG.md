@@ -1,3 +1,9 @@
+## [1.5.1](https://github.com/disane87/scrape-dojo/compare/v1.5.0...v1.5.1) (2026-03-07)
+
+### 🛠️ Fixes
+
+- **docker:** resolve EACCES permission errors with custom PUID/PGID [#52](https://github.com/disane87/scrape-dojo/issues/52) ([8219f17](https://github.com/disane87/scrape-dojo/commit/8219f176920b2d26d54107762c7238bee1c9b7e5))
+
 ## [1.5.0](https://github.com/disane87/scrape-dojo/compare/v1.4.0...v1.5.0) (2026-03-07)
 
 ### 🚀 Features
