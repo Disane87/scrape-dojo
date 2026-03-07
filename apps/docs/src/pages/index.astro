@@ -94,7 +94,6 @@ function parseChangelog(): ChangelogEntry[] {
 
 function extractSections(versionBlock: string): ChangelogSection[] {
   const sections: ChangelogSection[] = [];
-  // Match ### headings with optional emoji prefix, e.g. "### 🚀 Features" or "### Bug Fixes"
   const headingRegex = /^### (?:[^\w]*\s*)?(.+)$/gm;
   const headingMatches: { title: string; index: number }[] = [];
   let hm;
@@ -123,7 +122,6 @@ function extractSections(versionBlock: string): ChangelogSection[] {
 
     if (items.length === 0) continue;
 
-    // Strip emoji from raw title to look up in sectionMap
     const rawTitle = headingMatches[j].title;
     const titleNoEmoji = rawTitle.replace(/^[^\w]*/u, '').trim();
     const key = titleNoEmoji.toLowerCase();
@@ -143,7 +141,7 @@ const changelog = parseChangelog();
 ---
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de" id="html-root">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -222,17 +220,9 @@ const changelog = parseChangelog();
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
-        @keyframes orbit {
-            from { transform: rotate(0deg) translateX(300px) rotate(0deg); }
-            to { transform: rotate(360deg) translateX(300px) rotate(-360deg); }
-        }
         @keyframes type-cursor {
             0%, 100% { border-color: var(--accent); }
             50% { border-color: transparent; }
-        }
-        @keyframes draw-line {
-            from { width: 0; }
-            to { width: 100%; }
         }
         @keyframes counter-pulse {
             0% { transform: scale(1); }
@@ -261,17 +251,6 @@ const changelog = parseChangelog();
             opacity: 1;
             transform: scale(1);
         }
-        .reveal-left {
-            opacity: 0;
-            transform: translateX(60px);
-            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
-                        transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .reveal-left.visible {
-            opacity: 1;
-            transform: translateX(0);
-        }
-        /* Stagger children */
         .stagger > * { transition-delay: calc(var(--i, 0) * 0.1s); }
 
         /* =========== NAV =========== */
@@ -328,7 +307,6 @@ const changelog = parseChangelog();
             box-shadow: 0 4px 24px rgba(249,115,22,0.4) !important;
         }
 
-        /* Version badge */
         .nav-version {
             display: inline-flex; align-items: center; gap: 0.4rem;
             padding: 0.25rem 0.75rem;
@@ -366,7 +344,6 @@ const changelog = parseChangelog();
             color: #be185d;
         }
         .nav-sponsor svg { width: 14px; height: 14px; }
-
         .btn-sponsor:hover { border-color: #db2777; color: #db2777; }
 
         /* Changelog Modal */
@@ -468,7 +445,25 @@ const changelog = parseChangelog();
             padding-top: 6rem;
         }
 
-        /* Animated mesh gradient background */
+        .hero-parallax {
+            position: absolute; inset: -20% 0;
+            background: url('/hero-japan.jpg') center center / cover no-repeat;
+            will-change: transform;
+            z-index: 0;
+        }
+
+        .hero-overlay {
+            position: absolute; inset: 0;
+            background: linear-gradient(
+                to bottom,
+                rgba(5, 5, 7, 0.72) 0%,
+                rgba(5, 5, 7, 0.55) 40%,
+                rgba(5, 5, 7, 0.65) 70%,
+                rgba(5, 5, 7, 0.95) 100%
+            );
+            z-index: 1;
+        }
+
         .hero-mesh {
             position: absolute; inset: -50%; pointer-events: none;
             background:
@@ -477,9 +472,9 @@ const changelog = parseChangelog();
                 radial-gradient(500px circle at 55% 75%, rgba(59,130,246,0.08), transparent 50%);
             animation: gradient-shift 15s ease infinite;
             background-size: 200% 200%;
+            z-index: 2;
         }
 
-        /* Dot grid */
         .hero-dots {
             position: absolute; inset: 0; pointer-events: none;
             background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
@@ -487,15 +482,16 @@ const changelog = parseChangelog();
             mask-image: radial-gradient(ellipse 70% 55% at 50% 40%, black 10%, transparent 80%);
             -webkit-mask-image: radial-gradient(ellipse 70% 55% at 50% 40%, black 10%, transparent 80%);
             opacity: 0.35;
+            z-index: 2;
         }
 
-        /* Floating orbs */
         .orb {
             position: absolute;
             border-radius: 50%;
             filter: blur(80px);
             pointer-events: none;
             animation: float 8s ease-in-out infinite;
+            z-index: 2;
         }
         .orb-1 {
             width: 400px; height: 400px;
@@ -518,14 +514,13 @@ const changelog = parseChangelog();
             animation-duration: 12s;
         }
 
-        .hero .container { position: relative; z-index: 2; }
+        .hero .container { position: relative; z-index: 3; }
         .hero-layout {
             display: grid;
             grid-template-columns: 1fr 1.1fr;
             gap: 5rem; align-items: center;
         }
 
-        /* Hero text animations */
         .hero-content > * {
             opacity: 0;
             animation: fadeUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -534,6 +529,7 @@ const changelog = parseChangelog();
         .hero-content > *:nth-child(2) { animation-delay: 0.25s; }
         .hero-content > *:nth-child(3) { animation-delay: 0.4s; }
         .hero-content > *:nth-child(4) { animation-delay: 0.55s; }
+        .hero-content > *:nth-child(5) { animation-delay: 0.7s; }
 
         .hero-badge {
             display: inline-flex; align-items: center; gap: 0.625rem;
@@ -569,9 +565,20 @@ const changelog = parseChangelog();
         }
         .hero-sub {
             font-size: 1.2rem; color: var(--text-muted);
-            margin-bottom: 2.5rem; max-width: 500px; line-height: 1.8;
+            margin-bottom: 2.5rem; max-width: 520px; line-height: 1.8;
         }
         .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; }
+        .hero-trust {
+            display: flex; align-items: center; gap: 1.5rem;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-muted);
+        }
+        .hero-trust-item {
+            display: flex; align-items: center; gap: 0.5rem;
+            font-size: 0.8rem; color: var(--text-subtle);
+        }
+        .hero-trust-item svg { width: 16px; height: 16px; color: var(--green); flex-shrink: 0; }
 
         .btn {
             display: inline-flex; align-items: center; gap: 0.5rem;
@@ -610,6 +617,11 @@ const changelog = parseChangelog();
             border-color: var(--text-subtle);
             background: rgba(255,255,255,0.06);
             transform: translateY(-2px);
+        }
+        .btn-lg {
+            padding: 1.1rem 2.4rem;
+            font-size: 1.05rem;
+            border-radius: 14px;
         }
 
         /* Hero code window */
@@ -665,7 +677,6 @@ const changelog = parseChangelog();
         .hero-code :global(.tmpl) { color: var(--accent); font-weight: 500; }
         .hero-code :global(.action-name) { color: #fbbf24; }
 
-        /* Code line highlight on hover */
         .code-line {
             display: block;
             padding: 0 0.5rem;
@@ -677,32 +688,25 @@ const changelog = parseChangelog();
             background: rgba(249,115,22,0.06);
         }
 
-        /* =========== STATS =========== */
-        .stats {
+        /* =========== SOCIAL PROOF =========== */
+        .social-proof {
             padding: 5rem 0;
             position: relative;
         }
-        .stats::before {
+        .social-proof::before, .social-proof::after {
             content: '';
-            position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+            position: absolute; left: 50%; transform: translateX(-50%);
             width: 60%; height: 1px;
             background: linear-gradient(90deg, transparent, var(--border), transparent);
         }
-        .stats::after {
-            content: '';
-            position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
-            width: 60%; height: 1px;
-            background: linear-gradient(90deg, transparent, var(--border), transparent);
-        }
-        .stats-grid {
+        .social-proof::before { top: 0; }
+        .social-proof::after { bottom: 0; }
+        .proof-grid {
             display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem;
             text-align: center;
         }
-        .stat {
-            padding: 1rem;
-            position: relative;
-        }
-        .stat-value {
+        .proof-item { padding: 1rem; }
+        .proof-value {
             font-size: 3rem; font-weight: 900;
             letter-spacing: -0.03em;
             background: linear-gradient(135deg, var(--accent), #fbbf24);
@@ -711,15 +715,84 @@ const changelog = parseChangelog();
             background-clip: text;
             line-height: 1;
         }
-        .stat.visible .stat-value {
+        .proof-item.visible .proof-value {
             animation: counter-pulse 0.6s ease 0.3s;
         }
-        .stat-label {
+        .proof-label {
             font-size: 0.8rem; color: var(--text-subtle);
             margin-top: 0.5rem;
             text-transform: uppercase;
             letter-spacing: 0.08em;
             font-weight: 500;
+        }
+
+        /* =========== PAIN / PROBLEM =========== */
+        .pain-section {
+            padding: 8rem 0 4rem;
+        }
+        .pain-section .center { text-align: center; }
+        .pain-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem; margin-top: 3rem;
+        }
+        .pain-card {
+            background: var(--surface);
+            border: 1px solid var(--border-muted);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.4s;
+        }
+        .pain-card:hover {
+            border-color: rgba(239,68,68,0.3);
+            transform: translateY(-4px);
+        }
+        .pain-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+        .pain-card h3 {
+            font-size: 1rem; font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .pain-card p {
+            color: var(--text-muted); font-size: 0.875rem; line-height: 1.65;
+        }
+
+        /* =========== SOLUTION BRIDGE =========== */
+        .solution-bridge {
+            padding: 4rem 0 8rem;
+            text-align: center;
+        }
+        .bridge-arrow {
+            display: flex; align-items: center; justify-content: center;
+            gap: 1rem; margin: 3rem 0;
+            color: var(--text-subtle);
+            font-size: 0.85rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.1em;
+        }
+        .bridge-arrow::before, .bridge-arrow::after {
+            content: '';
+            width: 80px; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+        }
+        .solution-card {
+            background: linear-gradient(135deg, rgba(249,115,22,0.06), rgba(168,85,247,0.04));
+            border: 1px solid rgba(249,115,22,0.2);
+            border-radius: 20px;
+            padding: 3rem;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .solution-card h3 {
+            font-size: 1.5rem; font-weight: 800;
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+        }
+        .solution-card p {
+            color: var(--text-muted); font-size: 1.05rem;
+            line-height: 1.7; margin-bottom: 2rem;
         }
 
         /* =========== FEATURES =========== */
@@ -737,7 +810,7 @@ const changelog = parseChangelog();
             letter-spacing: 0.08em;
         }
         .section-heading {
-            font-size: clamp(2.25rem, 4vw, 3.25rem);
+            font-size: clamp(2.5rem, 4.5vw, 3.5rem);
             font-weight: 900; line-height: 1.1;
             letter-spacing: -0.03em;
             margin-bottom: 1rem;
@@ -761,7 +834,6 @@ const changelog = parseChangelog();
             overflow: hidden;
             transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        /* Glow on hover */
         .feature-card::before {
             content: '';
             position: absolute; top: -1px; left: -1px; right: -1px;
@@ -822,7 +894,6 @@ const changelog = parseChangelog();
             gap: 0; margin-top: 4rem;
             position: relative;
         }
-        /* Connecting line */
         .steps-line {
             position: absolute;
             top: 2rem; left: 16.67%; right: 16.67%;
@@ -903,6 +974,61 @@ const changelog = parseChangelog();
         .use-case h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.375rem; }
         .use-case p { color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; }
 
+        /* =========== MID CTA =========== */
+        .mid-cta {
+            padding: 6rem 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .mid-cta-bg {
+            position: absolute; inset: 0;
+            background: linear-gradient(135deg, rgba(249,115,22,0.04), rgba(168,85,247,0.03), rgba(59,130,246,0.03));
+            border-top: 1px solid var(--border-muted);
+            border-bottom: 1px solid var(--border-muted);
+        }
+        .mid-cta .container { position: relative; z-index: 1; }
+        .mid-cta h2 {
+            font-size: clamp(2rem, 4vw, 2.75rem);
+            font-weight: 900; margin-bottom: 1rem;
+            letter-spacing: -0.03em;
+        }
+        .mid-cta p {
+            font-size: 1.1rem; color: var(--text-muted);
+            max-width: 520px; margin: 0 auto 2rem;
+            line-height: 1.7;
+        }
+
+        /* =========== TESTIMONIAL / QUOTE =========== */
+        .quote-section {
+            padding: 6rem 0;
+            text-align: center;
+        }
+        .quote-block {
+            max-width: 680px;
+            margin: 0 auto;
+            position: relative;
+        }
+        .quote-block blockquote {
+            font-size: 1.3rem;
+            font-weight: 500;
+            line-height: 1.7;
+            color: var(--text);
+            font-style: italic;
+        }
+        .quote-block .quote-mark {
+            font-size: 5rem;
+            color: var(--accent);
+            opacity: 0.3;
+            line-height: 1;
+            font-family: Georgia, serif;
+        }
+        .quote-attr {
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            color: var(--text-subtle);
+        }
+
         /* =========== TECH STACK =========== */
         .tech-stack { padding: 6rem 0; }
         .tech-stack .center { text-align: center; }
@@ -931,16 +1057,52 @@ const changelog = parseChangelog();
             border: 1px solid var(--border-muted);
             transition: border-color 0.3s;
         }
-        .tech-icon svg {
-            width: 2rem; height: 2rem;
-            fill: currentColor;
-        }
         .tech-icon img {
             width: 2rem; height: 2rem;
             object-fit: contain;
         }
         .tech-item:hover .tech-icon { border-color: var(--accent); }
         .tech-name { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
+
+        /* =========== COMPARISON =========== */
+        .comparison {
+            padding: 8rem 0;
+        }
+        .comparison .center { text-align: center; }
+        .comparison .section-desc { margin-left: auto; margin-right: auto; }
+        .comparison-grid {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 2rem; margin-top: 3rem;
+            max-width: 800px; margin-left: auto; margin-right: auto;
+        }
+        .comp-col {
+            background: var(--surface);
+            border: 1px solid var(--border-muted);
+            border-radius: 16px;
+            padding: 2rem;
+        }
+        .comp-col.highlight {
+            border-color: rgba(249,115,22,0.3);
+            background: linear-gradient(180deg, rgba(249,115,22,0.04), var(--surface));
+        }
+        .comp-col h3 {
+            font-size: 1.1rem; font-weight: 700;
+            margin-bottom: 1.25rem;
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+        .comp-list {
+            list-style: none; padding: 0;
+            display: flex; flex-direction: column; gap: 0.75rem;
+        }
+        .comp-list li {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            display: flex; align-items: flex-start; gap: 0.5rem;
+            line-height: 1.5;
+        }
+        .comp-list li svg { flex-shrink: 0; margin-top: 2px; }
+        .check { color: var(--green); }
+        .cross { color: var(--red); opacity: 0.6; }
 
         /* =========== CTA =========== */
         .cta {
@@ -973,7 +1135,8 @@ const changelog = parseChangelog();
         .cta p {
             font-size: 1.15rem; color: var(--text-muted);
             margin-bottom: 3rem;
-            max-width: 480px; margin-left: auto; margin-right: auto;
+            max-width: 520px; margin-left: auto; margin-right: auto;
+            line-height: 1.7;
         }
         .cta .hero-actions { justify-content: center; }
 
@@ -1000,20 +1163,174 @@ const changelog = parseChangelog();
             .feature-grid { grid-template-columns: repeat(2, 1fr); }
         }
         @media (max-width: 768px) {
-            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+            .proof-grid { grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
             .feature-grid { grid-template-columns: 1fr; }
             .steps-grid { grid-template-columns: 1fr; gap: 2rem; }
             .steps-line { display: none; }
             .use-case-grid { grid-template-columns: 1fr; }
+            .pain-grid { grid-template-columns: 1fr; }
+            .comparison-grid { grid-template-columns: 1fr; }
             .nav-links { display: none; }
             footer .container { flex-direction: column; gap: 1rem; text-align: center; }
             .footer-links { justify-content: center; }
             .hero h1 { font-size: 2.5rem; }
+            .hero-trust { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
         }
     </style>
     {import.meta.env.PROD && (
         <script defer src="https://statistics.disane.dev/script.js" data-website-id="59270b8d-22f0-4136-b596-ec0bf7d86e99"></script>
     )}
+    <script is:inline>
+    // i18n: detect language and prevent FOUC
+    (function(){
+        var EN = {
+            'nav.cta': 'Get Started',
+            'hero.sub': 'Automate browser tasks without writing a single line of code. Just describe what should happen in JSON \u2014 Scrape Dojo handles the rest.',
+            'hero.cta1': 'Start for free \u2192',
+            'hero.cta2': 'View on GitHub',
+            'hero.trust1': '100% Open Source',
+            'hero.trust2': 'No vendor lock-in',
+            'hero.trust3': '5 min setup',
+            'proof.actions': 'Built-in Actions',
+            'proof.setup': 'To your first scrape',
+            'proof.license': 'Open Source License',
+            'proof.realtime': 'Real-time Monitoring',
+            'pain.label': 'The Problem',
+            'pain.heading': 'Web scraping is frustrating.',
+            'pain.desc': "We've all been there: you just want to grab some data from a website. But instead of results, you get headaches.",
+            'pain.1.title': 'Hours of Setup',
+            'pain.1.desc': 'Install Puppeteer, configure browsers, find selectors, debug errors \u2014 before you even have a single line of data.',
+            'pain.2.title': 'Too Much Boilerplate',
+            'pain.2.desc': 'Hundreds of lines of code for simple tasks. Login, wait, click, extract \u2014 over and over again.',
+            'pain.3.title': 'No Visibility',
+            'pain.3.desc': "Is the scrape running? Did it fail? What exactly happened? Without monitoring, you're in the dark.",
+            'bridge.arrow': 'There is a better way',
+            'bridge.heading': 'Describe what you want \u2014<br /> not how to do it.',
+            'bridge.desc': 'Scrape Dojo turns simple JSON configurations into full browser automations. You say <em>what</em> should happen \u2014 click, login, extract data, download files \u2014 and Scrape Dojo takes care of the <em>how</em>.',
+            'bridge.cta': 'Try it now \u2192',
+            'feat.label': "What's Inside",
+            'feat.heading': "Everything you need. Nothing you don't.",
+            'feat.desc': 'No bloated framework. Every feature exists because it solves a real problem.',
+            'feat.1.title': 'JSON Instead of Code',
+            'feat.1.desc': 'Describe your automation in simple JSON. With comments, schema validation, and IntelliSense in your editor.',
+            'feat.2.title': 'Dynamic Templates',
+            'feat.2.desc': 'Use variables, secrets, and previous results directly in your configurations. No more hardcoding.',
+            'feat.3.title': 'Ready-Made Building Blocks',
+            'feat.3.desc': 'Navigate, click, type, scroll, wait, extract, download \u2014 everything built in and ready to use.',
+            'feat.4.title': 'Automatic Scheduling',
+            'feat.4.desc': 'Let scrapes run automatically \u2014 daily, weekly, or with a cron expression. Set it up once, never think about it again.',
+            'feat.5.title': 'Watch it Live',
+            'feat.5.desc': 'Follow in real time what your scrape is doing. Every step, every status \u2014 right in the browser dashboard.',
+            'feat.6.title': 'Secure by Design',
+            'feat.6.desc': 'Passwords and API keys are stored encrypted. Optional login protection, multi-factor auth, and single sign-on.',
+            'midcta.heading': 'Sounds good? Give it a try.',
+            'midcta.desc': "One Docker command \u2014 and you're ready to go. No account, no credit card, no dependencies.",
+            'midcta.cta1': 'Quickstart Guide \u2192',
+            'midcta.cta2': '\u2764\ufe0f Support the project',
+            'how.label': 'How It Works',
+            'how.heading': 'Three steps to results.',
+            'how.desc': 'No complicated setup. No Puppeteer knowledge needed. No stress.',
+            'how.1.title': 'Create a JSON file',
+            'how.1.desc': 'Describe in a simple config file which pages to visit and which actions to perform.',
+            'how.2.title': 'Run it',
+            'how.2.desc': 'Via click in the dashboard, API call, or automatically on schedule. Your choice, your workflow.',
+            'how.3.title': 'Get results',
+            'how.3.desc': "Data, files, and screenshots are collected and stored. Watch live what's happening.",
+            'uc.label': 'Use Cases',
+            'uc.heading': 'What others build with it.',
+            'uc.desc': 'From simple data queries to complex multi-step workflows \u2014 Scrape Dojo adapts to your needs.',
+            'uc.1.title': 'Collect invoices automatically',
+            'uc.1.desc': 'Log into customer portals and download PDFs \u2014 every month, fully automated, without lifting a finger.',
+            'uc.2.title': 'Monitor prices',
+            'uc.2.desc': 'Track product prices from competitors or suppliers. Detect changes instantly and react faster than anyone else.',
+            'uc.3.title': 'Get past login walls',
+            'uc.3.desc': 'Multi-step logins with encrypted credentials, OTP handling, and session management \u2014 all built in.',
+            'uc.4.title': 'Aggregate data from anywhere',
+            'uc.4.desc': 'Collect information from multiple sources, transform it, and store everything structured in one place.',
+            'uc.5.title': 'Screenshots as proof',
+            'uc.5.desc': 'Document website states automatically with screenshots. Perfect for compliance, archiving, or monitoring.',
+            'uc.6.title': 'Detect changes',
+            'uc.6.desc': 'Get notified when content on a page changes. Ideal for availability checks or news monitoring.',
+            'comp.label': 'Comparison',
+            'comp.heading': 'The difference.',
+            'comp.desc': 'Why write dozens of lines of code when a JSON file is all you need?',
+            'comp.old.title': 'Classic Scripting',
+            'comp.old.1': 'Puppeteer/Playwright setup required',
+            'comp.old.2': 'Hundreds of lines of boilerplate code',
+            'comp.old.3': 'Build error handling yourself',
+            'comp.old.4': 'No monitoring out of the box',
+            'comp.old.5': 'Scheduling? Cron + custom logic',
+            'comp.new.1': 'Start Docker \u2014 done',
+            'comp.new.2': 'Describe declaratively in JSON',
+            'comp.new.3': 'Automatic retries & error handling',
+            'comp.new.4': 'Live dashboard with real-time events',
+            'comp.new.5': 'Built-in scheduling with cron',
+            'quote.text': 'The best thing about Scrape Dojo is that I could set up my scraping workflow in 10 minutes instead of spending half a day with Puppeteer scripting.',
+            'quote.attr': '\u2014 The idea behind the project',
+            'tech.label': 'Technology',
+            'tech.heading': 'Built on proven tools.',
+            'tech.desc': 'Modern, stable technologies \u2014 so you can focus on your tasks.',
+            'cta.heading': 'Ready to scrape smarter?',
+            'cta.desc': "Set up in 5 minutes. No dependencies, no risk. If you don't like it, just delete the container.",
+            'cta.cta1': 'Start for free \u2192',
+            'cta.cta2': 'Read the docs',
+            'footer.copy': '\u00a9 ' + new Date().getFullYear() + ' Scrape Dojo. MIT License. Free forever.',
+        };
+
+        // 1. Detect language and persist
+        var stored = localStorage.getItem('scrape-dojo-lang');
+        var lang;
+        if (stored) {
+            lang = stored;
+        } else {
+            var bl = (navigator.language || '').split('-')[0].toLowerCase();
+            lang = (bl === 'de') ? 'de' : 'en';
+            localStorage.setItem('scrape-dojo-lang', lang);
+        }
+        window.__sdLang = lang;
+        window.__sdEN = EN;
+
+        // 2. If EN detected, hide body until translations are applied (prevents FOUC)
+        if (lang === 'en') {
+            document.documentElement.classList.add('i18n-loading');
+            var css = document.createElement('style');
+            css.textContent = 'html.i18n-loading body{opacity:0}html.i18n-ready body{opacity:1;transition:opacity .08s}';
+            document.head.appendChild(css);
+        }
+        document.documentElement.setAttribute('lang', lang);
+
+        // 3. Apply translations once DOM is ready
+        function applyI18n() {
+            if (lang === 'en') {
+                document.querySelectorAll('[data-i18n]').forEach(function(el) {
+                    var key = el.getAttribute('data-i18n');
+                    if (EN[key]) el.textContent = EN[key];
+                });
+                document.querySelectorAll('[data-i18n-html]').forEach(function(el) {
+                    var key = el.getAttribute('data-i18n-html');
+                    if (EN[key]) el.innerHTML = EN[key];
+                });
+                var prefix = '/en/';
+                var other = '/de/';
+                document.querySelectorAll('[data-i18n-href]').forEach(function(el) {
+                    var href = el.getAttribute('href');
+                    if (href && href.startsWith(other)) {
+                        el.setAttribute('href', href.replace(other, prefix));
+                    }
+                });
+                // Reveal body after translations are applied
+                document.documentElement.classList.remove('i18n-loading');
+                document.documentElement.classList.add('i18n-ready');
+            }
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', applyI18n);
+        } else {
+            applyI18n();
+        }
+    })();
+    </script>
 </head>
 <body>
 
@@ -1025,9 +1342,9 @@ const changelog = parseChangelog();
             Scrape Dojo
         </a>
         <div class="nav-links">
-            <a href="/de/user-guide/">Docs</a>
-            <a href="/de/getting-started/quickstart/">Quickstart</a>
-            <a href="/de/examples/">Examples</a>
+            <a href="/de/user-guide/" data-i18n-href>Docs</a>
+            <a href="/de/getting-started/quickstart/" data-i18n-href>Quickstart</a>
+            <a href="/de/examples/" data-i18n-href>Examples</a>
             <a href="https://github.com/disane87/scrape-dojo" target="_blank" rel="noopener">GitHub</a>
             <a href="https://github.com/sponsors/Disane87" target="_blank" rel="noopener" class="nav-sponsor" title="Sponsor">
                 <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
@@ -1037,13 +1354,15 @@ const changelog = parseChangelog();
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                 v{version}
             </button>
-            <a href="/de/getting-started/quickstart/" class="nav-cta">Get Started</a>
+            <a href="/de/getting-started/quickstart/" class="nav-cta" data-i18n-href data-i18n="nav.cta">Get Started</a>
         </div>
     </div>
 </nav>
 
 <!-- Hero -->
 <section class="hero">
+    <div class="hero-parallax" id="hero-parallax"></div>
+    <div class="hero-overlay"></div>
     <div class="hero-mesh"></div>
     <div class="hero-dots"></div>
     <div class="orb orb-1"></div>
@@ -1057,24 +1376,34 @@ const changelog = parseChangelog();
                     <span>Open Source</span> &middot; MIT License &middot; Self-Hosted
                 </div>
                 <h1>
-                    Web Scraping,<br />
-                    <span class="gradient">deklarativ definiert.</span>
+                    Scrape smarter.<br />
+                    <span class="gradient">Code less.</span>
                 </h1>
-                <p class="hero-sub">
-                    Beschreibe Browser-Automatisierung in JSON statt Code.
-                    25+ Actions, Handlebars-Templates, JSONata-Transformationen,
-                    Cron-Scheduling und Echtzeit-Monitoring.
+                <p class="hero-sub" data-i18n="hero.sub">
+                    Automatisiere Browser-Aufgaben, ohne eine Zeile Code zu schreiben.
+                    Beschreibe einfach in JSON, was passieren soll &mdash; Scrape Dojo erledigt den Rest.
                 </p>
                 <div class="hero-actions">
-                    <a href="/de/getting-started/quickstart/" class="btn btn-primary">
-                        Schnellstart &rarr;
+                    <a href="/de/getting-started/quickstart/" class="btn btn-primary btn-lg" data-i18n-href data-i18n="hero.cta1">
+                        Kostenlos starten &rarr;
                     </a>
-                    <a href="https://github.com/disane87/scrape-dojo" class="btn btn-ghost" target="_blank" rel="noopener">
-                        GitHub
+                    <a href="https://github.com/disane87/scrape-dojo" class="btn btn-ghost" target="_blank" rel="noopener" data-i18n="hero.cta2">
+                        GitHub ansehen
                     </a>
-                    <a href="https://github.com/sponsors/Disane87" class="btn btn-ghost btn-sponsor" target="_blank" rel="noopener">
-                        ❤️ Sponsor
-                    </a>
+                </div>
+                <div class="hero-trust">
+                    <div class="hero-trust-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                        <span data-i18n="hero.trust1">100% Open Source</span>
+                    </div>
+                    <div class="hero-trust-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                        <span data-i18n="hero.trust2">Kein Vendor Lock-in</span>
+                    </div>
+                    <div class="hero-trust-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                        <span data-i18n="hero.trust3">5 Min. Setup</span>
+                    </div>
                 </div>
             </div>
             <div class="hero-code-wrap">
@@ -1092,26 +1421,73 @@ const changelog = parseChangelog();
     </div>
 </section>
 
-<!-- Stats -->
-<section class="stats">
+<!-- Social Proof -->
+<section class="social-proof">
     <div class="container">
-        <div class="stats-grid">
-            <div class="stat reveal" style="--i:0">
-                <div class="stat-value" data-target="25" data-suffix="+">0</div>
-                <div class="stat-label">Built-in Actions</div>
+        <div class="proof-grid">
+            <div class="proof-item reveal" style="--i:0">
+                <div class="proof-value" data-target="25" data-suffix="+">0</div>
+                <div class="proof-label" data-i18n="proof.actions">Fertige Aktionen</div>
             </div>
-            <div class="stat reveal" style="--i:1">
-                <div class="stat-value" data-target="4">0</div>
-                <div class="stat-label">Trigger Types</div>
+            <div class="proof-item reveal" style="--i:1">
+                <div class="proof-value" data-target="5" data-suffix=" Min">0</div>
+                <div class="proof-label" data-i18n="proof.setup">Bis zum ersten Scrape</div>
             </div>
-            <div class="stat reveal" style="--i:2">
-                <div class="stat-value" data-target="3">0</div>
-                <div class="stat-label">Database Backends</div>
+            <div class="proof-item reveal" style="--i:2">
+                <div class="proof-value" data-target="0" data-suffix="" data-text="MIT">---</div>
+                <div class="proof-label" data-i18n="proof.license">Open-Source-Lizenz</div>
             </div>
-            <div class="stat reveal" style="--i:3">
-                <div class="stat-value" data-text="SSE">---</div>
-                <div class="stat-label">Real-time Events</div>
+            <div class="proof-item reveal" style="--i:3">
+                <div class="proof-value" data-text="SSE">---</div>
+                <div class="proof-label" data-i18n="proof.realtime">Echtzeit-Monitoring</div>
             </div>
+        </div>
+    </div>
+</section>
+
+<!-- Pain Points -->
+<section class="pain-section">
+    <div class="container center">
+        <div class="reveal"><div class="section-label" data-i18n="pain.label">Das Problem</div></div>
+        <h2 class="section-heading reveal" data-i18n="pain.heading">Web Scraping ist frustrierend.</h2>
+        <p class="section-desc reveal" style="margin-left:auto;margin-right:auto;" data-i18n="pain.desc">
+            Jeder kennt es: Du willst nur ein paar Daten von einer Website holen.
+            Doch statt Ergebnissen bekommst du Kopfschmerzen.
+        </p>
+        <div class="pain-grid stagger">
+            <div class="pain-card reveal" style="--i:0">
+                <span class="pain-icon">&#128679;</span>
+                <h3 data-i18n="pain.1.title">Stundenlanger Setup</h3>
+                <p data-i18n="pain.1.desc">Puppeteer installieren, Browser konfigurieren, Selektoren suchen, Fehler debuggen &mdash; bevor du auch nur eine Zeile Daten hast.</p>
+            </div>
+            <div class="pain-card reveal" style="--i:1">
+                <span class="pain-icon">&#128187;</span>
+                <h3 data-i18n="pain.2.title">Zu viel Boilerplate</h3>
+                <p data-i18n="pain.2.desc">Hunderte Zeilen Code fuer simple Aufgaben. Login, Warten, Klicken, Extrahieren &mdash; immer und immer wieder.</p>
+            </div>
+            <div class="pain-card reveal" style="--i:2">
+                <span class="pain-icon">&#128564;</span>
+                <h3 data-i18n="pain.3.title">Keine Uebersicht</h3>
+                <p data-i18n="pain.3.desc">Laeuft der Scrape? Ist er fehlgeschlagen? Was genau ist passiert? Ohne Monitoring tappst du im Dunkeln.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Solution Bridge -->
+<section class="solution-bridge">
+    <div class="container">
+        <div class="bridge-arrow reveal" data-i18n="bridge.arrow">Es gibt einen besseren Weg</div>
+        <div class="solution-card reveal-scale">
+            <h3 data-i18n-html="bridge.heading">Beschreibe, was du willst &mdash;<br /> nicht, wie es geht.</h3>
+            <p data-i18n-html="bridge.desc">
+                Scrape Dojo verwandelt einfache JSON-Konfigurationen in vollstaendige Browser-Automatisierungen.
+                Du sagst <em>was</em> passieren soll &mdash; klicken, einloggen, Daten extrahieren, Dateien herunterladen &mdash;
+                und Scrape Dojo kuemmert sich um das <em>wie</em>.
+            </p>
+            <a href="/de/getting-started/quickstart/" class="btn btn-primary" data-i18n-href data-i18n="bridge.cta">
+                Jetzt ausprobieren &rarr;
+            </a>
         </div>
     </div>
 </section>
@@ -1119,43 +1495,62 @@ const changelog = parseChangelog();
 <!-- Features -->
 <section class="features">
     <div class="container">
-        <div class="reveal"><div class="section-label">Features</div></div>
-        <h2 class="section-heading reveal">Alles was du brauchst.</h2>
-        <p class="section-desc reveal">
-            Von der einfachen Datenextraktion bis zum komplexen Multi-Step-Workflow
-            mit Login, OTP und Datei-Downloads.
+        <div class="reveal"><div class="section-label" data-i18n="feat.label">Was drin steckt</div></div>
+        <h2 class="section-heading reveal" data-i18n="feat.heading">Alles, was du brauchst. Nichts, was du nicht brauchst.</h2>
+        <p class="section-desc reveal" data-i18n="feat.desc">
+            Kein aufgeblaehtes Framework. Jede Funktion existiert, weil sie ein echtes Problem loest.
         </p>
         <div class="feature-grid stagger">
             <div class="feature-card reveal" style="--i:0; --card-accent: var(--accent); --card-glow: rgba(249,115,22,0.06);">
                 <div class="feature-icon fi-orange">{ }</div>
-                <h3>JSONC Konfiguration</h3>
-                <p>Deklarative Workflows in JSON mit Kommentaren. Schema-Validierung, Hot Reload im Dev-Modus, kein Code noetig.</p>
+                <h3 data-i18n="feat.1.title">JSON statt Code</h3>
+                <p data-i18n="feat.1.desc">Beschreibe deine Automatisierung in einfachem JSON. Mit Kommentaren, Schema-Validierung und IntelliSense in deinem Editor.</p>
             </div>
             <div class="feature-card reveal" style="--i:1; --card-accent: var(--blue); --card-glow: rgba(59,130,246,0.06);">
                 <div class="feature-icon fi-blue">&lt;/&gt;</div>
-                <h3>Handlebars + JSONata</h3>
-                <p>Dynamische Templates fuer String-Interpolation und machtvolle JSONata-Ausdruecke fuer Datentransformationen.</p>
+                <h3 data-i18n="feat.2.title">Dynamische Templates</h3>
+                <p data-i18n="feat.2.desc">Verwende Variablen, Secrets und vorherige Ergebnisse direkt in deinen Konfigurationen. Kein Hardcoding mehr.</p>
             </div>
             <div class="feature-card reveal" style="--i:2; --card-accent: var(--green); --card-glow: rgba(34,197,94,0.06);">
                 <div class="feature-icon fi-green">25+</div>
-                <h3>Action Library</h3>
-                <p>Navigation, Klicks, Eingaben, Extraktion, Loops, Bedingungen, Downloads, Screenshots und Benachrichtigungen.</p>
+                <h3 data-i18n="feat.3.title">Fertige Bausteine</h3>
+                <p data-i18n="feat.3.desc">Navigieren, Klicken, Tippen, Scrollen, Warten, Extrahieren, Herunterladen &mdash; alles eingebaut und sofort nutzbar.</p>
             </div>
             <div class="feature-card reveal" style="--i:3; --card-accent: var(--purple); --card-glow: rgba(168,85,247,0.06);">
                 <div class="feature-icon fi-purple">&#9201;</div>
-                <h3>Cron-Scheduling</h3>
-                <p>Automatische Ausfuehrung per Cron mit Timezone-Support. Plus Webhook- und Startup-Triggers.</p>
+                <h3 data-i18n="feat.4.title">Automatisch planen</h3>
+                <p data-i18n="feat.4.desc">Lass Scrapes automatisch laufen &mdash; taeglich, woechentlich oder per Cron-Ausdruck. Einmal einrichten, nie wieder dran denken.</p>
             </div>
             <div class="feature-card reveal" style="--i:4; --card-accent: var(--cyan); --card-glow: rgba(6,182,212,0.06);">
                 <div class="feature-icon fi-cyan">&#9737;</div>
-                <h3>Live-Monitoring</h3>
-                <p>Server-Sent Events streamen jeden Action-Status in Echtzeit an die Angular 21 UI mit Run-History und Debug-Daten.</p>
+                <h3 data-i18n="feat.5.title">Live zusehen</h3>
+                <p data-i18n="feat.5.desc">Verfolge in Echtzeit, was dein Scrape gerade tut. Jeder Schritt, jeder Status &mdash; direkt im Browser-Dashboard.</p>
             </div>
             <div class="feature-card reveal" style="--i:5; --card-accent: var(--red); --card-glow: rgba(239,68,68,0.06);">
                 <div class="feature-icon fi-red">&#9919;</div>
-                <h3>Security &amp; Auth</h3>
-                <p>AES-256-CBC Secrets, JWT + Refresh Tokens, OIDC/SSO, MFA/TOTP, API Keys. Auth optional deaktivierbar.</p>
+                <h3 data-i18n="feat.6.title">Sicher by Design</h3>
+                <p data-i18n="feat.6.desc">Passwoerter und API-Keys werden verschluesselt gespeichert. Optional mit Login-Schutz, Multi-Faktor und Single Sign-On.</p>
             </div>
+        </div>
+    </div>
+</section>
+
+<!-- Mid CTA -->
+<section class="mid-cta">
+    <div class="mid-cta-bg"></div>
+    <div class="container">
+        <h2 class="reveal" data-i18n="midcta.heading">Klingt gut? Probier es aus.</h2>
+        <p class="reveal" data-i18n="midcta.desc">
+            Ein Docker-Befehl &mdash; und du bist startklar.
+            Kein Account, keine Kreditkarte, keine Abhaengigkeit.
+        </p>
+        <div class="hero-actions reveal" style="justify-content:center;">
+            <a href="/de/getting-started/quickstart/" class="btn btn-primary btn-lg" data-i18n-href data-i18n="midcta.cta1">
+                Schnellstart-Guide &rarr;
+            </a>
+            <a href="https://github.com/sponsors/Disane87" class="btn btn-ghost btn-sponsor" target="_blank" rel="noopener" data-i18n="midcta.cta2">
+                &#10084;&#65039; Projekt unterstuetzen
+            </a>
         </div>
     </div>
 </section>
@@ -1163,27 +1558,27 @@ const changelog = parseChangelog();
 <!-- How it works -->
 <section class="how-it-works">
     <div class="container center">
-        <div class="reveal"><div class="section-label">Workflow</div></div>
-        <h2 class="section-heading reveal">Drei Schritte, fertig.</h2>
-        <p class="section-desc reveal">
-            Kein Boilerplate, kein Puppeteer-Setup, kein Browser-Management.
+        <div class="reveal"><div class="section-label" data-i18n="how.label">So funktioniert's</div></div>
+        <h2 class="section-heading reveal" data-i18n="how.heading">In drei Schritten zum Ergebnis.</h2>
+        <p class="section-desc reveal" data-i18n="how.desc">
+            Kein kompliziertes Setup. Kein Puppeteer-Wissen noetig. Kein Stress.
         </p>
         <div class="steps-grid">
             <div class="steps-line" id="steps-line"><div class="steps-line-fill"></div></div>
             <div class="step reveal" style="--i:0">
                 <div class="step-circle">1</div>
-                <h3>Konfigurieren</h3>
-                <p>Erstelle eine JSONC-Datei in config/sites/ mit deinen Steps und Actions. Schema-Validierung hilft dir dabei.</p>
+                <h3 data-i18n="how.1.title">JSON-Datei erstellen</h3>
+                <p data-i18n="how.1.desc">Beschreibe in einer einfachen Konfigurationsdatei, welche Seiten besucht und welche Aktionen ausgefuehrt werden sollen.</p>
             </div>
             <div class="step reveal" style="--i:1">
                 <div class="step-circle">2</div>
-                <h3>Ausfuehren</h3>
-                <p>Starte per UI-Klick, API-Call, Cron-Schedule oder Webhook. Variablen und Secrets werden automatisch aufgeloest.</p>
+                <h3 data-i18n="how.2.title">Starten</h3>
+                <p data-i18n="how.2.desc">Per Klick im Dashboard, per API-Call oder automatisch nach Zeitplan. Deine Wahl, dein Workflow.</p>
             </div>
             <div class="step reveal" style="--i:2">
                 <div class="step-circle">3</div>
-                <h3>Ueberwachen</h3>
-                <p>Verfolge die Ausfuehrung live per SSE. Debug-Daten, Artefakte und Run-History stehen sofort bereit.</p>
+                <h3 data-i18n="how.3.title">Ergebnisse erhalten</h3>
+                <p data-i18n="how.3.desc">Daten, Dateien und Screenshots werden gesammelt und gespeichert. Du siehst live, was passiert.</p>
             </div>
         </div>
     </div>
@@ -1192,37 +1587,108 @@ const changelog = parseChangelog();
 <!-- Use Cases -->
 <section class="use-cases">
     <div class="container">
-        <div class="reveal"><div class="section-label">Use Cases</div></div>
-        <h2 class="section-heading reveal">Was du damit machen kannst.</h2>
+        <div class="reveal"><div class="section-label" data-i18n="uc.label">Anwendungsfaelle</div></div>
+        <h2 class="section-heading reveal" data-i18n="uc.heading">Was andere damit machen.</h2>
+        <p class="section-desc reveal" data-i18n="uc.desc">
+            Von der einfachen Datenabfrage bis zum komplexen Multi-Step-Workflow &mdash;
+            Scrape Dojo passt sich deinen Anforderungen an.
+        </p>
         <div class="use-case-grid stagger">
             <div class="use-case reveal" style="--i:0">
                 <div class="use-case-icon fi-orange">&#128196;</div>
                 <div>
-                    <h3>Rechnungen herunterladen</h3>
-                    <p>Automatisch PDFs von Portalen sammeln, Duplikate per fileExists erkennen, mit Scheduling monatlich ausfuehren.</p>
+                    <h3 data-i18n="uc.1.title">Rechnungen automatisch sammeln</h3>
+                    <p data-i18n="uc.1.desc">Logge dich in Kundenportale ein und lade PDFs herunter &mdash; jeden Monat, vollautomatisch, ohne einen Finger zu ruehren.</p>
                 </div>
             </div>
             <div class="use-case reveal" style="--i:1">
                 <div class="use-case-icon fi-blue">&#128200;</div>
                 <div>
-                    <h3>Preise ueberwachen</h3>
-                    <p>Produktdaten extrahieren, mit JSONata transformieren, als strukturierte Daten speichern und vergleichen.</p>
+                    <h3 data-i18n="uc.2.title">Preise im Blick behalten</h3>
+                    <p data-i18n="uc.2.desc">Ueberwache Produktpreise bei Konkurrenten oder Lieferanten. Erkenne Aenderungen sofort und reagiere schneller als alle anderen.</p>
                 </div>
             </div>
             <div class="use-case reveal" style="--i:2">
                 <div class="use-case-icon fi-green">&#128274;</div>
                 <div>
-                    <h3>Login-Flows automatisieren</h3>
-                    <p>Multi-Step-Logins mit verschluesselten Credentials, OTP-Handling, Passkey-Alternativen und Session-Management.</p>
+                    <h3 data-i18n="uc.3.title">Login-Walls ueberwinden</h3>
+                    <p data-i18n="uc.3.desc">Mehrstufige Logins mit verschluesselten Zugangsdaten, OTP-Handling und Session-Management &mdash; alles eingebaut.</p>
                 </div>
             </div>
             <div class="use-case reveal" style="--i:3">
                 <div class="use-case-icon fi-purple">&#128269;</div>
                 <div>
-                    <h3>Daten aggregieren</h3>
-                    <p>Informationen von mehreren Quellen scrapen, mit Loops und Transforms konsolidieren und persistent speichern.</p>
+                    <h3 data-i18n="uc.4.title">Daten von ueberall aggregieren</h3>
+                    <p data-i18n="uc.4.desc">Sammle Informationen aus verschiedenen Quellen, transformiere sie und speichere alles strukturiert an einem Ort.</p>
                 </div>
             </div>
+            <div class="use-case reveal" style="--i:4">
+                <div class="use-case-icon fi-cyan">&#128247;</div>
+                <div>
+                    <h3 data-i18n="uc.5.title">Screenshots als Beweis</h3>
+                    <p data-i18n="uc.5.desc">Dokumentiere Website-Zustaende automatisch mit Screenshots. Perfekt fuer Compliance, Archivierung oder Monitoring.</p>
+                </div>
+            </div>
+            <div class="use-case reveal" style="--i:5">
+                <div class="use-case-icon fi-red">&#128276;</div>
+                <div>
+                    <h3 data-i18n="uc.6.title">Aenderungen erkennen</h3>
+                    <p data-i18n="uc.6.desc">Werde benachrichtigt, wenn sich Inhalte auf einer Seite aendern. Ideal fuer Verfuegbarkeitschecks oder News-Monitoring.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Comparison -->
+<section class="comparison">
+    <div class="container center">
+        <div class="reveal"><div class="section-label" data-i18n="comp.label">Vergleich</div></div>
+        <h2 class="section-heading reveal" data-i18n="comp.heading">Der Unterschied.</h2>
+        <p class="section-desc reveal" style="margin-left:auto;margin-right:auto;" data-i18n="comp.desc">
+            Warum dutzende Zeilen Code schreiben, wenn eine JSON-Datei reicht?
+        </p>
+        <div class="comparison-grid reveal">
+            <div class="comp-col">
+                <h3>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                    <span data-i18n="comp.old.title">Klassisches Scripting</span>
+                </h3>
+                <ul class="comp-list" data-i18n-list="comp.old">
+                    <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="cross"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> <span data-i18n="comp.old.1">Puppeteer/Playwright Setup notwendig</span></li>
+                    <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="cross"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> <span data-i18n="comp.old.2">Hunderte Zeilen Boilerplate-Code</span></li>
+                    <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="cross"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> <span data-i18n="comp.old.3">Fehlerbehandlung selber bauen</span></li>
+                    <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="cross"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> <span data-i18n="comp.old.4">Kein Monitoring out of the box</span></li>
+                    <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="cross"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> <span data-i18n="comp.old.5">Scheduling? Cron + eigene Logik</span></li>
+                </ul>
+            </div>
+            <div class="comp-col highlight">
+                <h3>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                    Scrape Dojo
+                </h3>
+                <ul class="comp-list">
+                    <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="check"><polyline points="20 6 9 17 4 12"/></svg> <span data-i18n="comp.new.1">Docker starten &mdash; fertig</span></li>
+                    <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="check"><polyline points="20 6 9 17 4 12"/></svg> <span data-i18n="comp.new.2">Deklarativ in JSON beschreiben</span></li>
+                    <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="check"><polyline points="20 6 9 17 4 12"/></svg> <span data-i18n="comp.new.3">Automatische Retries &amp; Fehlerbehandlung</span></li>
+                    <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="check"><polyline points="20 6 9 17 4 12"/></svg> <span data-i18n="comp.new.4">Live-Dashboard mit Echtzeit-Events</span></li>
+                    <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="check"><polyline points="20 6 9 17 4 12"/></svg> <span data-i18n="comp.new.5">Eingebautes Scheduling mit Cron</span></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Quote -->
+<section class="quote-section">
+    <div class="container">
+        <div class="quote-block reveal">
+            <div class="quote-mark">&ldquo;</div>
+            <blockquote data-i18n="quote.text">
+                Das Beste an Scrape Dojo ist, dass ich meinen Scraping-Workflow in 10 Minuten
+                einrichten konnte, statt einen halben Tag mit Puppeteer-Scripting zu verbringen.
+            </blockquote>
+            <div class="quote-attr" data-i18n="quote.attr">&mdash; Die Idee hinter dem Projekt</div>
         </div>
     </div>
 </section>
@@ -1230,9 +1696,9 @@ const changelog = parseChangelog();
 <!-- Tech stack -->
 <section class="tech-stack">
     <div class="container center">
-        <div class="reveal"><div class="section-label">Tech Stack</div></div>
-        <h2 class="section-heading reveal">Moderne Technologien.</h2>
-        <p class="section-desc reveal">Gebaut mit bewährten Tools für Stabilität und Performance.</p>
+        <div class="reveal"><div class="section-label" data-i18n="tech.label">Technologie</div></div>
+        <h2 class="section-heading reveal" data-i18n="tech.heading">Gebaut auf bewaehrten Tools.</h2>
+        <p class="section-desc reveal" data-i18n="tech.desc">Moderne, stabile Technologien &mdash; damit du dich auf deine Aufgaben konzentrieren kannst.</p>
         <div class="tech-grid reveal">
             <div class="tech-item">
                 <div class="tech-icon">
@@ -1274,20 +1740,26 @@ const changelog = parseChangelog();
     </div>
 </section>
 
-<!-- CTA -->
+<!-- Final CTA -->
 <section class="cta">
     <div class="cta-glow"></div>
     <div class="cta-ring"></div>
     <div class="cta-ring"></div>
     <div class="container">
-        <h2 class="reveal">Bereit loszulegen?</h2>
-        <p class="reveal">In 5 Minuten eingerichtet. Docker, Source oder beides.</p>
-        <div class="hero-actions reveal">
-            <a href="/de/getting-started/quickstart/" class="btn btn-primary">
-                Schnellstart &rarr;
+        <h2 class="reveal" data-i18n="cta.heading">Bereit, schlauer zu scrapen?</h2>
+        <p class="reveal" data-i18n="cta.desc">
+            In 5 Minuten eingerichtet. Keine Abhaengigkeiten, kein Risiko.
+            Wenn es dir nicht gefaellt, loeschst du einfach den Container.
+        </p>
+        <div class="hero-actions reveal" style="justify-content:center;">
+            <a href="/de/getting-started/quickstart/" class="btn btn-primary btn-lg" data-i18n-href data-i18n="cta.cta1">
+                Kostenlos starten &rarr;
             </a>
-            <a href="/de/user-guide/" class="btn btn-ghost">
-                Dokumentation
+            <a href="/de/user-guide/" class="btn btn-ghost" data-i18n-href data-i18n="cta.cta2">
+                Dokumentation lesen
+            </a>
+            <a href="https://github.com/sponsors/Disane87" class="btn btn-ghost btn-sponsor" target="_blank" rel="noopener">
+                &#10084;&#65039; Sponsor
             </a>
         </div>
     </div>
@@ -1296,12 +1768,12 @@ const changelog = parseChangelog();
 <!-- Footer -->
 <footer>
     <div class="container">
-        <div class="footer-copy">&copy; {year} Scrape Dojo. MIT License.</div>
+        <div class="footer-copy" data-i18n-html="footer.copy">&copy; {year} Scrape Dojo. MIT License. Frei fuer immer.</div>
         <div class="footer-links">
-            <a href="/de/user-guide/">Docs</a>
-            <a href="/de/examples/">Examples</a>
+            <a href="/de/user-guide/" data-i18n-href>Docs</a>
+            <a href="/de/examples/" data-i18n-href>Examples</a>
             <a href="https://github.com/disane87/scrape-dojo" target="_blank" rel="noopener">GitHub</a>
-            <a href="https://github.com/disane87/issues" target="_blank" rel="noopener">Issues</a>
+            <a href="https://github.com/disane87/scrape-dojo/issues" target="_blank" rel="noopener">Issues</a>
         </div>
     </div>
 </footer>
@@ -1366,8 +1838,7 @@ const observer = new IntersectionObserver((entries) => {
         if (entry.isIntersecting) {
             entry.target.classList.add('visible');
 
-            // Counter animation for stats
-            const val = entry.target.querySelector('.stat-value');
+            const val = entry.target.querySelector('.proof-value');
             if (val) {
                 const target = val.dataset.target;
                 const suffix = val.dataset.suffix || '';
@@ -1379,7 +1850,6 @@ const observer = new IntersectionObserver((entries) => {
                 }
             }
 
-            // Steps line animation
             if (entry.target.id === 'steps-line') {
                 entry.target.classList.add('visible');
             }
@@ -1387,7 +1857,7 @@ const observer = new IntersectionObserver((entries) => {
     });
 }, { threshold: 0.15, rootMargin: '0px 0px -60px 0px' });
 
-document.querySelectorAll('.reveal, .reveal-scale, .reveal-left, #steps-line').forEach(el => observer.observe(el));
+document.querySelectorAll('.reveal, .reveal-scale, #steps-line').forEach(el => observer.observe(el));
 
 // ---- Counter animation ----
 function animateCounter(el, target, suffix) {
@@ -1413,12 +1883,17 @@ function animateText(el, text) {
     }, 120);
 }
 
-// ---- Nav scroll effect ----
+// ---- Nav scroll effect + Parallax ----
+const heroParallax = document.getElementById('hero-parallax');
 let ticking = false;
 window.addEventListener('scroll', () => {
     if (!ticking) {
         requestAnimationFrame(() => {
-            document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 50);
+            const scrollY = window.scrollY;
+            document.getElementById('nav').classList.toggle('scrolled', scrollY > 50);
+            if (heroParallax && scrollY < window.innerHeight) {
+                heroParallax.style.transform = `translateY(${scrollY * 0.4}px)`;
+            }
             ticking = false;
         });
         ticking = true;
@@ -1496,7 +1971,6 @@ function typeLine() {
     lineIdx++;
     setTimeout(typeLine, 55 + Math.random() * 30);
 }
-// Start typing after a short delay
 setTimeout(typeLine, 800);
 </script>
 
