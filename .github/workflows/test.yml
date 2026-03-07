@@ -37,7 +37,7 @@ jobs:
         run: pnpm nx test api --coverage --skip-nx-cache --verbose
 
       - name: Upload API coverage artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: api-coverage
           path: coverage/apps/api
@@ -67,7 +67,7 @@ jobs:
         run: npx vitest run --root apps/ui --coverage
 
       - name: Upload UI coverage artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ui-coverage
           path: coverage/apps/ui
