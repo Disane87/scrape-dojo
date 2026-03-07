@@ -1,0 +1,19 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import Changelog from '../../components/Changelog.astro';
+import { parseChangelog, changelogToHeadings } from '../../utils/changelog';
+
+const changelog = parseChangelog();
+const headings = changelogToHeadings(changelog);
+---
+
+<StarlightPage
+  frontmatter={{
+    title: 'Changelog',
+    description: 'All changes and releases of Scrape Dojo',
+  }}
+  headings={headings}
+>
+  <p>All published versions of Scrape Dojo and their changes.</p>
+  <Changelog />
+</StarlightPage>

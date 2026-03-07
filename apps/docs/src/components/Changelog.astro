@@ -1,0 +1,195 @@
+---
+import { parseChangelog } from '../utils/changelog';
+
+const changelog = parseChangelog();
+---
+
+<div class="changelog-timeline">
+  {changelog.map((entry, idx) => (
+    <div class={`cl-entry${idx === 0 ? ' cl-latest cl-open' : ''}`}>
+      <h2 id={`v${entry.version}`} class="cl-heading-anchor">
+        <button class="cl-header" data-cl-toggle>
+          <svg class="cl-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          <span class="cl-version">
+            {entry.compareUrl ? (
+              <a href={entry.compareUrl} target="_blank" rel="noopener" onclick="event.stopPropagation()">v{entry.version}</a>
+            ) : (
+              `v${entry.version}`
+            )}
+          </span>
+          <span class="cl-date">{entry.date}</span>
+          {idx === 0 && <span class="cl-latest-badge">Latest</span>}
+        </button>
+      </h2>
+      <div class="cl-body">
+        {entry.sections.map((section) => (
+          <div class="cl-section">
+            <h3 class="cl-section-title">{section.emoji} {section.title}</h3>
+            <ul class="cl-items">
+              {section.items.map((item) => (
+                <li>
+                  {item.text}
+                  {item.url && (
+                    <a href={item.url} target="_blank" rel="noopener" class="cl-issue-link">&rarr;</a>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </div>
+  ))}
+  {changelog.length === 0 && (
+    <p>No changelog entries found.</p>
+  )}
+</div>
+
+<script>
+  document.querySelectorAll('[data-cl-toggle]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      btn.closest('.cl-entry')?.classList.toggle('cl-open');
+    });
+  });
+</script>
+
+<style>
+  .changelog-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+  .cl-entry {
+    border-left: 3px solid var(--sl-color-gray-5);
+    padding-left: 1.5rem;
+    position: relative;
+  }
+  .cl-entry::before {
+    content: '';
+    position: absolute;
+    left: -7px; top: 0.5rem;
+    width: 11px; height: 11px;
+    border-radius: 50%;
+    background: var(--sl-color-gray-5);
+    border: 2px solid var(--sl-color-bg);
+  }
+  .cl-latest {
+    border-left-color: var(--sl-color-accent);
+  }
+  .cl-latest::before {
+    background: var(--sl-color-accent);
+  }
+  .cl-heading-anchor {
+    margin: 0;
+    padding: 0;
+    font-size: inherit;
+    border: none;
+  }
+  .cl-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0;
+    padding: 0.35rem 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    font: inherit;
+    color: inherit;
+    border-radius: 8px;
+    transition: background 0.2s;
+  }
+  .cl-header:hover {
+    background: var(--sl-color-gray-6, rgba(255,255,255,0.05));
+  }
+  .cl-open .cl-header {
+    margin-bottom: 0.75rem;
+  }
+  .cl-chevron {
+    width: 16px; height: 16px;
+    flex-shrink: 0;
+    color: var(--sl-color-gray-3);
+    transition: transform 0.25s ease;
+  }
+  .cl-open .cl-chevron {
+    transform: rotate(90deg);
+  }
+  .cl-body {
+    display: none;
+  }
+  .cl-open .cl-body {
+    display: block;
+  }
+  .cl-version {
+    font-size: 1.25rem;
+    font-weight: 700;
+    font-family: var(--sl-font-mono, monospace);
+  }
+  .cl-version a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .cl-version a:hover {
+    text-decoration: underline;
+  }
+  .cl-latest .cl-version {
+    color: var(--sl-color-accent);
+  }
+  .cl-date {
+    font-size: 0.85rem;
+    color: var(--sl-color-gray-3);
+  }
+  .cl-latest-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.15rem 0.5rem;
+    border-radius: 9999px;
+    background: var(--sl-color-accent);
+    color: var(--sl-color-bg);
+  }
+  .cl-section {
+    margin-bottom: 0.75rem;
+  }
+  .cl-section-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin: 0 0 0.35rem;
+    color: var(--sl-color-white);
+  }
+  .cl-items {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .cl-items li {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--sl-color-gray-2);
+    padding-left: 1.25rem;
+    position: relative;
+  }
+  .cl-items li::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0.6em;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--sl-color-gray-4);
+  }
+  .cl-issue-link {
+    margin-left: 0.35rem;
+    font-size: 0.8rem;
+    color: var(--sl-color-accent);
+    text-decoration: none;
+  }
+  .cl-issue-link:hover {
+    text-decoration: underline;
+  }
+</style>
