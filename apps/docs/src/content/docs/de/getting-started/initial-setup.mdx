@@ -1,0 +1,204 @@
+---
+title: Ersteinrichtung
+description: Erststart-Assistent — das initiale Admin-Konto erstellen und den Setup-Modus verstehen
+sidebar:
+  order: 3
+---
+
+import { Aside, Steps, Card, CardGrid } from '@astrojs/starlight/components';
+
+Wenn du Scrape Dojo zum ersten Mal startest, geht die Anwendung in den **Setup-Modus**. Es existieren noch keine Benutzer, und du **musst** ein initiales Administrator-Konto erstellen, bevor du die Plattform nutzen kannst. Dieser Guide erklaert den gesamten Setup-Flow im Detail.
+
+## Wie der Setup-Modus funktioniert
+
+Scrape Dojo erkennt, ob ein Admin-Konto in der Datenbank existiert. Wenn kein Admin gefunden wird, aktiviert die Anwendung den Setup-Modus und erzwingt die Kontoerstellung, bevor andere Funktionen verfuegbar sind.
+
+### Erkennungsablauf
+
+<Steps>
+1. **Anwendung startet** — die API bootet und die Datenbank wird initialisiert
+2. **Kein Admin gefunden** — das Backend prueft auf Benutzer mit `role: admin` und findet keine
+3. **Setup-Modus aktiv** — der Endpunkt `GET /api/auth/setup-required` gibt `{ "required": true }` zurueck
+4. **UI leitet weiter** — wenn du die App oeffnest, erkennt die Login-Seite den Setup-Modus automatisch und leitet dich zum Setup-Assistenten unter `/setup` weiter
+5. **Admin erstellt** — nachdem du das Formular ausgefuellt hast, wird der erste Benutzer mit `role: admin` erstellt
+6. **Setup-Modus beendet** — nachfolgende Anfragen an `GET /api/auth/setup-required` geben `{ "required": false }` zurueck
+</Steps>
+
+<Aside type="caution" title="Pflichtschritt">
+  Du **kannst** die Ersteinrichtung nicht ueberspringen. Alle geschuetzten Routen erfordern Authentifizierung, und ein Login ist ohne mindestens einen Benutzer unmoeglich. Der Setup-Assistent ist der einzige Weg, das erste Konto zu erstellen.
+</Aside>
+
+## Der Setup-Assistent (UI)
+
+Wenn du zum ersten Mal zu deiner Scrape-Dojo-Instanz navigierst (z.B. `http://localhost:8080`), wirst du automatisch zur Setup-Seite weitergeleitet.
+
+### Was du angeben musst
+
+| Feld | Pflicht | Beschreibung |
+|------|---------|-------------|
+| **E-Mail** | Ja | Die E-Mail-Adresse des Admin-Kontos — wird fuer den Login verwendet |
+| **Anzeigename** | Nein | Ein freundlicher Name, der in der UI angezeigt wird (Standard: "Administrator") |
+| **Passwort** | Ja | Mindestens 8 Zeichen |
+| **Passwort bestaetigen** | Ja | Muss mit dem Passwort uebereinstimmen |
+
+### Was nach dem Setup passiert
+
+<Steps>
+1. Das Admin-Konto wird mit `role: admin` erstellt
+2. Du wirst automatisch eingeloggt und erhaeltst ein JWT-Token-Paar
+3. Wenn MFA global erforderlich ist (`SCRAPE_DOJO_AUTH_REQUIRE_MFA=true`), wirst du zur MFA-Setup-Seite weitergeleitet, um TOTP zu konfigurieren
+4. Andernfalls landest du auf dem Dashboard und kannst mit der Erstellung von Scrape-Konfigurationen beginnen
+</Steps>
+
+## Setup ueber API (Headless)
+
+Wenn du das Setup lieber automatisieren moechtest (z.B. in einer CI/CD-Pipeline oder einem Docker-Entrypoint-Script), kannst du die API direkt verwenden:
+
+### Schritt 1: Pruefen ob Setup erforderlich ist
+
+```bash
+curl -s http://localhost:8080/api/auth/setup-required
+```
+
+**Antwort wenn Setup noetig ist:**
+```json
+{ "required": true }
+```
+
+**Antwort wenn bereits ein Admin existiert:**
+```json
+{ "required": false }
+```
+
+### Schritt 2: Admin-Konto erstellen
+
+```bash
+curl -X POST http://localhost:8080/api/auth/setup \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "admin@example.com",
+    "password": "dein-sicheres-passwort",
+    "displayName": "Administrator"
+  }'
+```
+
+**Erfolgreiche Antwort:**
+```json
+{
+  "accessToken": "eyJhbGci...",
+  "refreshToken": "eyJhbGci..."
+}
+```
+
+<Aside type="danger" title="Nur einmalig">
+  Der Endpunkt `/api/auth/setup` **funktioniert nur, wenn kein Admin existiert**. Sobald der initiale Admin erstellt wurde, geben nachfolgende Aufrufe `409 Conflict` zurueck. Das verhindert unautorisierte Kontoerstellung nach dem Setup.
+</Aside>
+
+### Automatisiertes Setup-Script
+
+Hier ein vollstaendiges Script fuer automatisiertes initiales Setup in Docker:
+
+```bash
+#!/bin/bash
+# wait-for-setup.sh — wartet auf die API und erstellt den initialen Admin
+
+API_URL="${API_URL:-http://localhost:8080}"
+ADMIN_EMAIL="${ADMIN_EMAIL:-admin@example.com}"
+ADMIN_PASSWORD="${ADMIN_PASSWORD:-changeme}"
+
+echo "Warte auf API-Bereitschaft..."
+until curl -sf "$API_URL/api/health/ready" > /dev/null 2>&1; do
+  sleep 2
+done
+
+echo "API ist bereit. Pruefe Setup-Status..."
+SETUP_REQUIRED=$(curl -s "$API_URL/api/auth/setup-required" | jq -r '.required')
+
+if [ "$SETUP_REQUIRED" = "true" ]; then
+  echo "Erstelle initiales Admin-Konto..."
+  RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$API_URL/api/auth/setup" \
+    -H "Content-Type: application/json" \
+    -d "{\"email\": \"$ADMIN_EMAIL\", \"password\": \"$ADMIN_PASSWORD\"}")
+
+  HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+
+  if [ "$HTTP_CODE" = "201" ] || [ "$HTTP_CODE" = "200" ]; then
+    echo "Admin-Konto erfolgreich erstellt!"
+  else
+    echo "Admin-Konto konnte nicht erstellt werden (HTTP $HTTP_CODE)"
+    exit 1
+  fi
+else
+  echo "Admin-Konto existiert bereits. Setup uebersprungen."
+fi
+```
+
+## Sicherheitsaspekte
+
+### Der Setup-Endpunkt ist by Design geschuetzt
+
+| Schutz | Details |
+|--------|---------|
+| **Nur einmalig** | Gibt `409 Conflict` zurueck, nachdem der erste Admin erstellt wurde |
+| **Keine Auth erforderlich** | Muss oeffentlich sein, da noch keine Benutzer zur Authentifizierung existieren |
+| **Rate-limitiert** | Unterliegt dem gleichen Rate Limiting wie `/api/auth/register` |
+| **Passwort-Anforderungen** | Mindestens 8 Zeichen, durch Validierung erzwungen |
+
+### Best Practices
+
+<CardGrid>
+  <Card title="Standard-Credentials aendern" icon="warning">
+    Wenn du automatisiertes Setup verwendest, aendere das Admin-Passwort sofort nach dem ersten Login. Lass niemals Standard-Passwoerter in Produktion.
+  </Card>
+  <Card title="MFA aktivieren" icon="approve-check">
+    Setze `SCRAPE_DOJO_AUTH_REQUIRE_MFA=true`, um TOTP fuer alle Benutzer zu erzwingen, einschliesslich des Admins. Das fuegt eine zweite Sicherheitsebene hinzu.
+  </Card>
+  <Card title="Starke JWT-Secrets setzen" icon="setting">
+    In Produktion setze immer `SCRAPE_DOJO_AUTH_JWT_SECRET` und `SCRAPE_DOJO_AUTH_REFRESH_TOKEN_SECRET` auf starke, einzigartige Werte (mindestens 32 Zeichen).
+  </Card>
+  <Card title="Registrierung einschraenken" icon="close">
+    Ueberlege nach dem Setup, ob du offene Registrierung brauchst. Wenn nicht, erstelle zusaetzliche Benutzer nur ueber das Admin-Panel.
+  </Card>
+</CardGrid>
+
+## Benutzerrollen
+
+Scrape Dojo hat zwei Benutzerrollen:
+
+| Rolle | Berechtigungen |
+|-------|---------------|
+| **admin** | Vollzugriff — Benutzer verwalten, alle Scrapes einsehen, Admin-Panel, API-Keys fuer alle Benutzer erstellen/widerrufen |
+| **user** | Standard-Zugriff — eigene Scrapes erstellen und verwalten, eigene Run-Historie einsehen, eigene API-Keys und Profil verwalten |
+
+Das initiale Setup-Konto wird immer als `admin` erstellt. Zusaetzliche Benutzer, die ueber `/api/auth/register` oder das Admin-Panel erstellt werden, erhalten standardmaessig die Rolle `user`. Admins koennen Benutzer ueber die Benutzerverwaltung zum Admin befoerdern.
+
+## Fehlerbehebung
+
+### "Initial admin already exists" Fehler
+
+Das bedeutet, dass jemand (oder ein automatisiertes Script) das Setup bereits abgeschlossen hat. Wenn du den Zugang zum Admin-Konto verloren hast:
+
+1. Pruefe die Datenbank auf existierende Benutzer
+2. Fuer SQLite: `sqlite3 data/scrape-dojo.db "SELECT id, email, role FROM users"`
+3. Falls noetig, loesche den Benutzerdatensatz und starte die Anwendung neu, um den Setup-Modus erneut zu aktivieren
+
+### Setup-Seite wird nicht angezeigt
+
+Wenn du die Login-Seite statt des Setup-Assistenten siehst:
+
+1. Verifiziere, dass kein Admin existiert: `curl http://localhost:8080/api/auth/setup-required`
+2. Wenn `required: false`, existiert bereits ein Admin-Konto
+3. Leere deinen Browser-Cache und Local Storage, navigiere dann direkt zu `/setup`
+
+### MFA-Setup direkt nach Kontoerstellung
+
+Wenn `SCRAPE_DOJO_AUTH_REQUIRE_MFA=true` gesetzt ist, wirst du nach der Admin-Kontoerstellung direkt zur MFA-Setup-Seite weitergeleitet. Das ist erwartet — scanne den QR-Code mit deiner Authenticator-App (Google Authenticator, Authy, 1Password, etc.), um das Setup abzuschliessen.
+
+---
+
+**Verwandte Themen:**
+
+- [Schnellstart](/de/getting-started/)
+- [Docker Deployment](/de/getting-started/docker/)
+- [Authentifizierung](/de/developer/authentication/)
+- [Umgebungsvariablen](/de/developer/environment-variables/)

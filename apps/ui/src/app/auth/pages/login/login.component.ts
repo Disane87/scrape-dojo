@@ -231,6 +231,15 @@ export class LoginComponent implements OnInit {
     // Get return URL from query params
     this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
 
+    // Redirect to setup page if no admin exists yet (fresh install)
+    this.authService.checkSetupRequired().subscribe({
+      next: (status) => {
+        if (status.required) {
+          this.router.navigate(['/setup']);
+        }
+      },
+    });
+
     // Ensure OIDC config is loaded
     if (!this.authService.oidcConfig()) {
       this.authService.loadOidcConfig();

@@ -33,17 +33,22 @@ Die klassische Benutzername/Passwort-Authentifizierung:
 
 ### Setup-Flow (Ersteinrichtung)
 
-Beim ersten Start existiert noch kein Benutzer. Der Setup-Flow führt dich durch die Erstellung des Admin-Accounts:
+Beim ersten Start existiert noch kein Benutzer. Die Anwendung geht in den **Setup-Modus** und erzwingt die Admin-Kontoerstellung, bevor irgendetwas anderes funktioniert. Die UI leitet automatisch zum Setup-Assistenten weiter.
 
 ```bash
-# Prüfen ob Setup nötig ist
-curl http://localhost:3000/api/auth/setup/status
+# Pruefen ob Setup noetig ist
+curl http://localhost:3000/api/auth/setup-required
+# → { "required": true }
 
 # Admin erstellen
 curl -X POST http://localhost:3000/api/auth/setup \
   -H "Content-Type: application/json" \
-  -d '{"username": "admin", "password": "sicheres-passwort"}'
+  -d '{"email": "admin@example.com", "password": "sicheres-passwort", "displayName": "Administrator"}'
 ```
+
+<Aside type="tip">
+  Den vollstaendigen Setup-Guide mit automatisierten Scripts und Fehlerbehebung findest du unter [Ersteinrichtung](/de/getting-started/initial-setup/).
+</Aside>
 
 ## JWT (JSON Web Tokens)
 

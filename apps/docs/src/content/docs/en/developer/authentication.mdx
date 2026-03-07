@@ -33,17 +33,22 @@ The classic username/password authentication:
 
 ### Setup Flow (Initial Setup)
 
-On first launch, no user exists yet. The setup flow guides you through creating the admin account:
+On first launch, no user exists yet. The application enters **Setup Mode** and forces admin account creation before anything else works. The UI automatically redirects to the setup wizard.
 
 ```bash
 # Check if setup is needed
-curl http://localhost:3000/api/auth/setup/status
+curl http://localhost:3000/api/auth/setup-required
+# → { "required": true }
 
 # Create admin
 curl -X POST http://localhost:3000/api/auth/setup \
   -H "Content-Type: application/json" \
-  -d '{"username": "admin", "password": "secure-password"}'
+  -d '{"email": "admin@example.com", "password": "secure-password", "displayName": "Administrator"}'
 ```
+
+<Aside type="tip">
+  For the full setup guide with automated scripts and troubleshooting, see [Initial Setup](/en/getting-started/initial-setup/).
+</Aside>
 
 ## JWT (JSON Web Tokens)
 

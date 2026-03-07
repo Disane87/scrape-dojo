@@ -1,0 +1,255 @@
+---
+title: "Health Check"
+description: Health-Check-Endpunkte fuer Docker, Kubernetes und Monitoring — Liveness, Readiness und vollstaendiger Status
+sidebar:
+  order: 8
+---
+
+import { Aside, Tabs, TabItem, Steps, Card, CardGrid } from '@astrojs/starlight/components';
+
+Scrape Dojo bietet eingebaute Health-Check-Endpunkte, mit denen Docker, Kubernetes, Load Balancer und Monitoring-Tools pruefen koennen, ob die Anwendung laeuft und gesund ist. Alle Health-Endpunkte sind **oeffentlich** — keine Authentifizierung erforderlich.
+
+## Endpunkte
+
+<CardGrid>
+  <Card title="GET /api/health" icon="heart">
+    Vollstaendiger Statuscheck mit Version, Speicher, Uptime, Umgebung und Service-Status. Wird vom Docker `HEALTHCHECK` und Monitoring-Dashboards verwendet.
+  </Card>
+  <Card title="GET /api/health/live" icon="rocket">
+    Leichtgewichtige Liveness-Probe. Gibt `{"status":"ok"}` zurueck, wenn der Prozess laeuft. Wird von Kubernetes `livenessProbe` verwendet.
+  </Card>
+  <Card title="GET /api/health/ready" icon="approve-check">
+    Readiness-Probe. Gibt `{"status":"ok"}` zurueck, wenn die Anwendung bereit ist, Traffic zu verarbeiten. Wird von Kubernetes `readinessProbe` verwendet.
+  </Card>
+</CardGrid>
+
+## Vollstaendige Health-Antwort
+
+Der Haupt-Endpunkt `GET /api/health` gibt einen umfassenden Statusbericht zurueck:
+
+```json
+{
+  "status": "ok",
+  "timestamp": "2025-03-07T14:30:00.000Z",
+  "uptime": 86400,
+  "version": "1.5.2",
+  "environment": {
+    "nodeVersion": "v22.12.0",
+    "platform": "linux",
+    "arch": "x64",
+    "isDocker": true,
+    "nodeEnv": "production",
+    "variables": {
+      "SCRAPE_DOJO_PORT": "3000",
+      "SCRAPE_DOJO_CORS_ORIGIN": "https://scrape.example.com"
+    }
+  },
+  "memory": {
+    "heapUsed": 85,
+    "heapTotal": 128,
+    "rss": 200
+  },
+  "services": {
+    "api": "online",
+    "sse": "available"
+  }
+}
+```
+
+### Antwortfelder
+
+| Feld | Typ | Beschreibung |
+|------|-----|-------------|
+| `status` | `ok` \| `degraded` \| `error` | Gesamtstatus der Anwendung |
+| `timestamp` | string | ISO 8601 Zeitstempel der Pruefung |
+| `uptime` | number | Prozess-Uptime in Sekunden |
+| `version` | string | Anwendungsversion aus `package.json` |
+| `environment.nodeVersion` | string | Node.js Runtime-Version |
+| `environment.platform` | string | Betriebssystem-Plattform (`linux`, `win32`, `darwin`) |
+| `environment.arch` | string | CPU-Architektur (`x64`, `arm64`) |
+| `environment.isDocker` | boolean | `true` wenn innerhalb von Docker ausgefuehrt |
+| `environment.nodeEnv` | string | `production` oder `development` |
+| `environment.variables` | object | Nicht-sensible `SCRAPE_DOJO_*` Umgebungsvariablen |
+| `memory.heapUsed` | number | V8 Heap belegt (MB) |
+| `memory.heapTotal` | number | V8 Heap gesamt (MB) |
+| `memory.rss` | number | Resident Set Size (MB) — gesamter Prozess-Speicher |
+| `services.api` | `online` \| `offline` | API-Service-Status |
+| `services.sse` | `available` \| `unavailable` | Server-Sent Events Verfuegbarkeit |
+
+<Aside type="tip">
+  Das Feld `environment.variables` zeigt nur **nicht-sensible** `SCRAPE_DOJO_*` Variablen an. Alles, was Muster wie `password`, `secret`, `key`, `token`, `jwt`, `encryption` oder `auth` enthaelt, wird automatisch herausgefiltert. Credentials in URLs werden mit `***` maskiert.
+</Aside>
+
+## Docker HEALTHCHECK
+
+Das Docker-Image enthaelt eine eingebaute `HEALTHCHECK`-Direktive. Docker prueft automatisch den Health-Endpunkt und markiert den Container als `healthy`, `unhealthy` oder `starting`.
+
+### Eingebaute Konfiguration
+
+```dockerfile
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:80/api/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"
+```
+
+| Parameter | Wert | Beschreibung |
+|-----------|------|-------------|
+| `interval` | 30s | Zeit zwischen den Health Checks |
+| `timeout` | 10s | Maximale Antwortzeit fuer einen Check |
+| `start-period` | 15s | Karenzzeit nach dem Start (Fehler werden nicht gezaehlt) |
+| `retries` | 3 | Aufeinanderfolgende Fehler bis zur Markierung als unhealthy |
+
+<Aside type="note">
+  Du musst **keinen** eigenen `HEALTHCHECK` in deiner `docker-compose.yml` hinzufuegen — er ist bereits im Image integriert. Docker ueberwacht die Container-Gesundheit automatisch.
+</Aside>
+
+### Container-Gesundheit pruefen
+
+```bash
+# Gesundheitsstatus anzeigen
+docker inspect --format='{{.State.Health.Status}}' scrape-dojo
+
+# Letzte Health-Check-Logs anzeigen
+docker inspect --format='{{json .State.Health}}' scrape-dojo | jq
+
+# Live-Monitoring
+docker events --filter container=scrape-dojo --filter event=health_status
+```
+
+### Eigenen Healthcheck ueberschreiben
+
+Wenn du den eingebauten Healthcheck ueberschreiben musst (z.B. anderes Intervall oder Endpunkt), fuege einen `healthcheck`-Abschnitt in deine `docker-compose.yml` ein:
+
+```yaml
+services:
+  scrape-dojo:
+    image: ghcr.io/disane87/scrape-dojo:latest
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:80/api/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      interval: 60s
+      timeout: 15s
+      start_period: 30s
+      retries: 5
+```
+
+## Kubernetes Probes
+
+Fuer Kubernetes-Deployments konfiguriere Liveness- und Readiness-Probes mit den dedizierten leichtgewichtigen Endpunkten:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scrape-dojo
+spec:
+  template:
+    spec:
+      containers:
+        - name: scrape-dojo
+          image: ghcr.io/disane87/scrape-dojo:latest
+          ports:
+            - containerPort: 80
+          livenessProbe:
+            httpGet:
+              path: /api/health/live
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /api/health/ready
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /api/health/live
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 30
+```
+
+### Probe-Typen erklaert
+
+| Probe | Endpunkt | Zweck | Bei Fehler |
+|-------|----------|-------|------------|
+| **Liveness** | `/api/health/live` | Lebt der Prozess? | Container wird neu gestartet |
+| **Readiness** | `/api/health/ready` | Kann er Traffic verarbeiten? | Wird aus den Service-Endpoints entfernt (kein Traffic geroutet) |
+| **Startup** | `/api/health/live` | Hat er den Start abgeschlossen? | Liveness/Readiness-Checks pausieren bis Startup erfolgreich |
+
+<Aside type="caution">
+  Verwende `/api/health/live` und `/api/health/ready` fuer Kubernetes-Probes statt des vollstaendigen `/api/health`-Endpunkts. Die leichtgewichtigen Endpunkte geben minimales JSON zurueck und fuehren keine Speicher- oder Umgebungsabfragen durch, was den Overhead bei hochfrequenten Checks reduziert.
+</Aside>
+
+## Monitoring-Integration
+
+### Uptime Kuma
+
+[Uptime Kuma](https://github.com/louislam/uptime-kuma) ist ein beliebtes Self-Hosted Monitoring-Tool. Konfiguriere einen neuen Monitor:
+
+| Einstellung | Wert |
+|-------------|------|
+| **Monitor-Typ** | HTTP(s) |
+| **URL** | `http://scrape-dojo:80/api/health` |
+| **Methode** | GET |
+| **Erwarteter Status** | 200 |
+| **Heartbeat-Intervall** | 60 Sekunden |
+| **JSON Query** | `$.status` (erwarteter Wert: `ok`) |
+
+### Prometheus
+
+Wenn du Prometheus fuer Metriken verwendest, kannst du den Health-Endpunkt scrapen:
+
+```yaml
+scrape_configs:
+  - job_name: 'scrape-dojo'
+    metrics_path: /api/health
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['scrape-dojo:80']
+```
+
+### curl / Skripte
+
+```bash
+# Einfacher Check (Exit-Code 0 = gesund, 1 = ungesund)
+curl -sf http://localhost:8080/api/health > /dev/null && echo "gesund" || echo "ungesund"
+
+# Vollstaendiger Status mit jq
+curl -s http://localhost:8080/api/health | jq '{status, version, uptime: (.uptime | floor), memory: .memory}'
+
+# Bestimmte Felder pruefen
+curl -s http://localhost:8080/api/health | jq -e '.status == "ok"'
+```
+
+## Fehlerbehebung
+
+### Container zeigt "unhealthy"
+
+<Steps>
+1. Container-Logs pruefen: `docker logs scrape-dojo`
+2. Verifizieren dass die API erreichbar ist: `docker exec scrape-dojo curl -sf http://localhost:80/api/health`
+3. Pruefen ob Port 80 (nginx) und Port 3000 (API) beide laufen: `docker exec scrape-dojo supervisorctl status`
+4. `start-period` erhoehen, wenn die App mehr Zeit zum Starten braucht (besonders auf ressourcenarmen Systemen)
+</Steps>
+
+### Health Check antwortet, aber Container ist noch "starting"
+
+Die `start-period` (Standard: 15s) gibt der App Zeit zur Initialisierung. Auf langsameren Systemen (Raspberry Pi, aeltere NAS) erhoehe sie:
+
+```yaml
+healthcheck:
+  start_period: 60s  # Mehr Zeit zum Starten geben
+```
+
+---
+
+**Verwandte Themen:**
+
+- [Docker Deployment](/de/getting-started/docker/)
+- [Umgebungsvariablen](/de/developer/environment-variables/)
+- [API Referenz](/de/developer/api-reference/)
