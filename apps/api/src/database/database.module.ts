@@ -56,7 +56,7 @@ const entities = [
         const logging =
           configService.get<string>('DB_LOGGING', 'false') === 'true';
 
-        logger.log(`🗃️ Database type: ${dbType}`);
+        logger.log(`🗃️ Database type: ${dbType} (synchronize: ${synchronize})`);
 
         if (synchronize && nodeEnv === 'production') {
           logger.warn(
