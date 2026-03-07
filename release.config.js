@@ -43,10 +43,11 @@ module.exports = {
         },
         writerOpts: {
           transform: (commit) => {
-            if (commit.scope && scopeEmojis[commit.scope]) {
-              commit.scope = `${scopeEmojis[commit.scope]} ${commit.scope}`;
+            const result = { ...commit };
+            if (result.scope && scopeEmojis[result.scope]) {
+              result.scope = `${scopeEmojis[result.scope]} ${result.scope}`;
             }
-            return commit;
+            return result;
           },
         },
       },
