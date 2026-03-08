@@ -81,8 +81,9 @@ RUN mkdir -p /home/pptruser/app/data \
 COPY --from=builder --chown=pptruser:pptruser /app/dist/apps/api ./dist
 COPY --from=prod-deps --chown=pptruser:pptruser /app/node_modules ./node_modules
 
-# Copy config files
+# Copy config files (to runtime dir and defaults dir for volume seeding)
 COPY --chown=pptruser:pptruser config ./config
+COPY --chown=pptruser:pptruser config ./config-defaults
 
 # Copy built UI to nginx html directory
 COPY --from=builder /app/dist/apps/ui/browser /usr/share/nginx/html

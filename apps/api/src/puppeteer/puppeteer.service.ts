@@ -33,6 +33,18 @@ export class PuppeteerService implements OnModuleDestroy {
     this.debug = false;
     this.inDocker = false;
     this.arguments = [];
+
+    if (this.inDocker) {
+      this.arguments.push(
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-gpu',
+        '--disable-dev-shm-usage',
+      );
+      this.logger.log(
+        '🐳 Docker environment detected, disabling Chrome sandbox',
+      );
+    }
   }
 
   async onModuleDestroy() {
@@ -140,10 +152,26 @@ export class PuppeteerService implements OnModuleDestroy {
       this.logger.log(`📁 Created browser data directory: ${userDataDir}`);
     }
 
+    // Remove all Chrome lock/singleton files before launch.
+    // These are symlinks that reference a hostname — after a container restart
+    // the hostname changes and Chrome refuses to start.
+    // Use lstatSync (not existsSync) because broken symlinks are invisible to existsSync.
+    const lockFiles = ['SingletonLock', 'SingletonSocket', 'SingletonCookie'];
+    for (const lockFile of lockFiles) {
+      const lockPath = path.join(userDataDir, lockFile);
+      try {
+        fs.lstatSync(lockPath);
+        this.logger.warn(`🔓 Removing stale lock file: ${lockFile}`);
+        fs.unlinkSync(lockPath);
+      } catch {
+        // File doesn't exist — nothing to remove
+      }
+    }
+
     this.logger.log(`🍪 Using persistent browser data from: ${userDataDir}`);
 
     return (await puppeteerExtra.launch({
-      headless: process.env.SCRAPE_DOJO_NODE_ENV === 'production',
+      headless: this.inDocker || process.env.NODE_ENV === 'production',
       args: this.arguments,
       dumpio: false,
       devtools: this.debug,
