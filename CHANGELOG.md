@@ -1,3 +1,9 @@
+## [1.7.1](https://github.com/disane87/scrape-dojo/compare/v1.7.0...v1.7.1) (2026-03-08)
+
+### fix
+
+- **🐳 docker:** resolve Chrome lock file and headless issues in containers (#53) ([](https://github.com/disane87/scrape-dojo/commit/a0b34b3f174c72cca8ea97f71865a7a5ea5bedd9)), closes [#53](https://github.com/disane87/scrape-dojo/issues/53)
+
 ## [1.7.0](https://github.com/disane87/scrape-dojo/compare/v1.6.0...v1.7.0) (2026-03-08)
 
 - Delete config/.secrets.key ([](https://github.com/disane87/scrape-dojo/commit/5ce4bc0031dc67efd123839182a07c38cd9de43f))
