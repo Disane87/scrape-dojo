@@ -1,0 +1,117 @@
+<div
+  class="px-4 py-3 bg-dojo-bg-surface border border-dojo-border rounded-lg mb-3 space-y-2.5"
+  *transloco="let t"
+>
+  <!-- Row 1: ID + Category + Version -->
+  <div class="flex items-end gap-3">
+    <div class="flex-1">
+      <label
+        class="text-[10px] font-semibold uppercase tracking-wider text-dojo-text-muted mb-0.5 block"
+      >
+        {{ t('workflow_metadata.id') }}
+      </label>
+      <app-input
+        size="sm"
+        [ngModel]="id()"
+        [readonly]="idReadonly()"
+        [disabled]="disabled()"
+        placeholder="my-workflow-id"
+        [mono]="true"
+        (valueChange)="onIdChange($event)"
+      />
+    </div>
+    <div class="w-40">
+      <label
+        class="text-[10px] font-semibold uppercase tracking-wider text-dojo-text-muted mb-0.5 block"
+      >
+        {{ t('workflow_metadata.category') }}
+      </label>
+      <app-input
+        size="sm"
+        [ngModel]="category()"
+        [disabled]="disabled()"
+        [readonly]="disabled()"
+        [placeholder]="t('workflow_metadata.category_placeholder')"
+        (valueChange)="onCategoryChange($event)"
+      />
+    </div>
+    <div class="flex items-center gap-1.5 text-xs text-dojo-text-muted pb-1.5">
+      <iconify-icon icon="lucide:tag" width="12"></iconify-icon>
+      <span class="font-mono">{{ version() || '0.0.0' }}</span>
+    </div>
+  </div>
+
+  <!-- Row 2: Description -->
+  <div>
+    <label
+      class="text-[10px] font-semibold uppercase tracking-wider text-dojo-text-muted mb-0.5 block"
+    >
+      {{ t('workflow_metadata.description') }}
+    </label>
+    <app-input
+      size="sm"
+      [ngModel]="description()"
+      [disabled]="disabled()"
+      [readonly]="disabled()"
+      [placeholder]="t('workflow_metadata.description_placeholder')"
+      (valueChange)="onDescriptionChange($event)"
+    />
+  </div>
+
+  <!-- Row 3: Triggers (inline) -->
+  <div class="flex items-center gap-2 flex-wrap">
+    <span
+      class="text-[10px] font-semibold uppercase tracking-wider text-dojo-text-muted"
+    >
+      {{ t('workflow_metadata.triggers') }}
+    </span>
+    @for (trigger of triggers(); track $index) {
+    <app-badge variant="info" size="xs" [icon]="getTriggerIcon(trigger.type)">
+      {{ t('workflow_metadata.trigger_' + trigger.type) }} @if (trigger.type ===
+      'cron' && $any(trigger).expression) {
+      <span class="opacity-70">({{ $any(trigger).expression }})</span>
+      } @if (!disabled()) {
+      <button
+        type="button"
+        class="ml-0.5 hover:text-red-400 transition-colors"
+        [attr.aria-label]="t('workflow_metadata.remove_trigger')"
+        (click)="removeTrigger($index)"
+      >
+        <iconify-icon icon="lucide:x" width="10"></iconify-icon>
+      </button>
+      }
+    </app-badge>
+    } @if (!disabled()) {
+    <div class="relative">
+      <button
+        type="button"
+        class="flex items-center gap-0.5 text-[11px] text-dojo-text-muted hover:text-dojo-text transition-colors px-1.5 py-0.5 rounded border border-dashed border-dojo-border hover:border-dojo-text-muted"
+        (click)="toggleTriggerMenu()"
+      >
+        <iconify-icon icon="lucide:plus" width="12"></iconify-icon>
+        {{ t('workflow_metadata.add_trigger') }}
+      </button>
+      @if (showTriggerMenu()) {
+      <div
+        class="absolute top-full left-0 mt-1 bg-dojo-bg-surface border border-dojo-border rounded shadow-lg z-10 min-w-35"
+      >
+        @for (type of availableTriggerTypes(); track type) {
+        <button
+          type="button"
+          class="w-full text-left px-2.5 py-1.5 text-xs hover:bg-dojo-bg-hover transition-colors flex items-center gap-1.5"
+          (click)="addTrigger(type)"
+        >
+          <iconify-icon [icon]="getTriggerIcon(type)" width="12"></iconify-icon>
+          {{ t('workflow_metadata.trigger_' + type) }}
+        </button>
+        } @if (availableTriggerTypes().length === 0) {
+        <div class="px-2.5 py-1.5 text-xs text-dojo-text-muted">
+          {{ t('workflow_metadata.all_triggers_added') }}
+        </div>
+        }
+      </div>
+      }
+    </div>
+    }
+  </div>
+</div>

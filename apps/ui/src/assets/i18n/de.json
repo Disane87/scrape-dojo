@@ -447,6 +447,46 @@
   "workflow_sidebar": {
     "filter_workflows": "Workflows filtern"
   },
+  "workflow_editor": {
+    "create_workflow": "Workflow erstellen",
+    "edit_workflow": "Workflow bearbeiten",
+    "import_workflow": "Workflow importieren",
+    "export_workflow": "Workflow exportieren",
+    "delete_workflow": "Workflow löschen",
+    "delete_confirm": "Möchtest du diesen Workflow wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "builtin_readonly": "Mitgelieferte Workflows sind schreibgeschützt",
+    "custom": "Benutzerdefiniert",
+    "import_success": "Workflow erfolgreich importiert",
+    "import_error": "Workflow konnte nicht importiert werden",
+    "id_conflict": "Ein Workflow mit dieser ID existiert bereits",
+    "save_success": "Workflow erfolgreich gespeichert",
+    "version_bump": "Versionsupdate",
+    "version_bump_description": "Welche Art von Änderung ist das?",
+    "current_version": "Aktuelle Version",
+    "new_version": "Neue Version",
+    "change_type_major": "Breaking Change",
+    "change_type_major_desc": "Inkompatible Änderungen an der Workflow-Struktur",
+    "change_type_minor": "Feature",
+    "change_type_minor_desc": "Neue Funktionalität, abwärtskompatibel",
+    "change_type_patch": "Fix",
+    "change_type_patch_desc": "Fehlerbehebungen und kleine Anpassungen"
+  },
+  "workflow_metadata": {
+    "id": "Workflow-ID",
+    "description": "Beschreibung",
+    "description_placeholder": "Was macht dieser Workflow?",
+    "category": "Kategorie",
+    "category_placeholder": "z.B. E-Commerce, Demos",
+    "triggers": "Trigger",
+    "version": "Version",
+    "trigger_manual": "Manuell",
+    "trigger_cron": "Cron",
+    "trigger_webhook": "Webhook",
+    "trigger_startup": "Beim Start",
+    "add_trigger": "Trigger hinzufügen",
+    "remove_trigger": "Trigger entfernen",
+    "all_triggers_added": "Alle Trigger-Typen hinzugefügt"
+  },
   "variables_manager": {
     "key_placeholder": "z.B. API_URL",
     "value_placeholder": "z.B. https://api.example.com"

@@ -1,0 +1,46 @@
+{
+  "scrapes": [
+    {
+      "id": "my-first-scrape",
+      "metadata": {
+        "description": "Mein erstes Scrape — liest den Seitentitel aus",
+        "version": "1.0.0",
+        "author": "gh:@DennaGherlyn",
+        "triggers": [
+          {
+            "type": "manual"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "name": "Titel auslesen",
+          "actions": [
+            {
+              "name": "navigate",
+              "action": "navigate",
+              "params": {
+                "url": "https://example.com"
+              }
+            },
+            {
+              "name": "title",
+              "action": "extract",
+              "params": {
+                "selector": "h1"
+              }
+            },
+            {
+              "name": "logTitle",
+              "action": "logger",
+              "params": {
+                "message": "Gefundener Titel: {{previousData.title}}",
+                "level": "log"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -222,6 +222,7 @@ export class JsonEditorComponent implements OnInit, OnDestroy {
   @Input() readOnly = true;
   @Input() showMinimap = false;
   @Input() fileName = 'config.jsonc';
+  @Input() schema: any = null;
 
   @Output() dataChange = new EventEmitter<unknown>();
   @Output() validationError = new EventEmitter<string | null>();
@@ -383,6 +384,9 @@ export class JsonEditorComponent implements OnInit, OnDestroy {
       this.isEditing.set(false);
     });
 
+    // Configure JSON schema validation
+    this.configureSchemaValidation();
+
     // Setup resize observer
     this.resizeObserver = new ResizeObserver(() => {
       this.editor?.layout();
@@ -391,6 +395,35 @@ export class JsonEditorComponent implements OnInit, OnDestroy {
 
     // Mark editor as ready - this triggers the theme effect
     this.editorReady.set(true);
+  }
+
+  /**
+   * Configures Monaco JSON diagnostics with the provided schema
+   */
+  private configureSchemaValidation() {
+    if (!this.schema) return;
+
+    try {
+      // Access jsonDefaults via any cast - Monaco is loaded dynamically via CDN
+      // and the type declarations mark this as deprecated, but it works at runtime
+      const jsonLanguage = (monaco.languages as any).json;
+      if (jsonLanguage?.jsonDefaults?.setDiagnosticsOptions) {
+        jsonLanguage.jsonDefaults.setDiagnosticsOptions({
+          validate: true,
+          schemas: [
+            {
+              uri: 'scrape-dojo://scrapes.schema.json',
+              fileMatch: ['*'],
+              schema: this.schema,
+            },
+          ],
+          allowComments: true,
+          trailingCommas: 'warning',
+        });
+      }
+    } catch (e) {
+      console.warn('Failed to configure JSON schema validation:', e);
+    }
   }
 
   private validateJson() {

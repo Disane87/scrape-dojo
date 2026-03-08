@@ -42,9 +42,13 @@ export class WorkflowHeaderComponent {
   scheduleEnabled = input<boolean>(false);
   nextScheduledRun = input<number | null>(null);
 
+  isCustom = input<boolean>(false);
+
   run = output<void>();
   stop = output<void>();
   openSchedule = output<void>();
+  exportWorkflow = output<void>();
+  deleteWorkflow = output<void>();
 
   /** Check if workflow is disabled (explicitly or no triggers) */
   isDisabled = computed(() => {
@@ -113,6 +117,14 @@ export class WorkflowHeaderComponent {
   openScheduleModal(): void {
     if (!this.canSchedule()) return;
     this.openSchedule.emit();
+  }
+
+  onExport(): void {
+    this.exportWorkflow.emit();
+  }
+
+  onDelete(): void {
+    this.deleteWorkflow.emit();
   }
 
   formatNextRun(): string {

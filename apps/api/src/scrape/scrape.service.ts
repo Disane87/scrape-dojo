@@ -202,7 +202,7 @@ export class ScrapeService implements OnModuleInit, OnModuleDestroy {
       if (fs.existsSync(sitesPath)) {
         this.sitesWatcher = fs.watch(
           sitesPath,
-          { recursive: false },
+          { recursive: true },
           (eventType, filename) => {
             if (
               filename &&

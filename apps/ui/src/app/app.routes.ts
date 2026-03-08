@@ -54,6 +54,10 @@ const loadStatusModal = () =>
   import('./components/status-modal/status-modal').then(
     (m) => m.StatusModalComponent,
   );
+const loadWorkflowEditorModal = () =>
+  import('./components/workflow-editor-modal/workflow-editor-modal').then(
+    (m) => m.WorkflowEditorModalComponent,
+  );
 
 export const appRoutes: Route[] = [
   // Auth Routes (public)
@@ -189,6 +193,12 @@ export const appRoutes: Route[] = [
     path: 'status',
     outlet: 'modal',
     loadComponent: loadStatusModal,
+    canActivate: [authGuard],
+  },
+  {
+    path: 'workflow-editor',
+    outlet: 'modal',
+    loadComponent: loadWorkflowEditorModal,
     canActivate: [authGuard],
   },
 

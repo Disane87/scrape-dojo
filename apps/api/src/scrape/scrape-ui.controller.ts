@@ -10,15 +10,21 @@ import {
   Param,
   Query,
   Delete,
+  NotFoundException,
 } from '@nestjs/common';
 import { Response } from 'express';
+import * as fs from 'fs';
+import * as path from 'path';
+import { parse } from 'comment-json';
 import { ScrapeService } from './scrape.service';
 import { ScrapeEventsService } from './scrape-events.service';
 import { SchedulerService } from './scheduler.service';
 import { DatabaseService } from '../database/database.service';
 import { AuthorResolverService } from './author-resolver.service';
+import { ScrapeConfigService } from './services/scrape-config.service';
 import { Observable, map } from 'rxjs';
 import * as jsonata from 'jsonata';
+import { Scrape, Scrapes } from './types/scrape.interface';
 
 interface MessageEvent {
   data: string;
@@ -39,6 +45,7 @@ export class ScrapeUIController {
     private schedulerService: SchedulerService,
     private databaseService: DatabaseService,
     private authorResolverService: AuthorResolverService,
+    private configService: ScrapeConfigService,
   ) {}
 
   @Get('scrapes')
@@ -74,6 +81,8 @@ export class ScrapeUIController {
             id: scrape.id,
             stepsCount: scrape.steps?.length || 0,
             metadata: resolvedMetadata,
+            source:
+              this.configService.getWorkflowSource(scrape.id) ?? 'builtin',
             lastRun,
           };
         }),
@@ -145,24 +154,20 @@ export class ScrapeUIController {
 
   @Get('scrapes/:id')
   async getScrapeById(@Param('id') id: string) {
-    try {
-      const definitions = this.scrapeService.getScrapeDefinitions();
-      const scrape = definitions.find((s) => s.id === id);
-      if (!scrape) {
-        throw new Error(`Scrape with id ${id} not found`);
-      }
-
-      // Resolve dynamic options for select variables
-      if (scrape.metadata?.variables) {
-        scrape.metadata.variables = await this.resolveVariableOptions(
-          scrape.metadata.variables,
-        );
-      }
-
-      return scrape;
-    } catch (error) {
-      throw new Error(`Failed to load scrape: ${error.message}`);
+    const definitions = this.scrapeService.getScrapeDefinitions();
+    const scrape = definitions.find((s) => s.id === id);
+    if (!scrape) {
+      throw new NotFoundException(`Scrape with id ${id} not found`);
     }
+
+    // Resolve dynamic options for select variables
+    if (scrape.metadata?.variables) {
+      scrape.metadata.variables = await this.resolveVariableOptions(
+        scrape.metadata.variables,
+      );
+    }
+
+    return scrape;
   }
 
   @Post('run/:scrapeId')
@@ -789,5 +794,286 @@ export class ScrapeUIController {
   @Get('scheduler/status')
   getSchedulerStatus() {
     return this.schedulerService.getStatus();
+  }
+
+  // ============ Workflow CRUD Endpoints ============
+
+  /**
+   * JSON Schema für Workflow-Konfigurationen abrufen
+   */
+  @Get('schema')
+  getSchema(@Res() res: Response) {
+    const schemaPath = path.join(
+      process.cwd(),
+      'config',
+      'scrapes.schema.json',
+    );
+    if (!fs.existsSync(schemaPath)) {
+      res.status(HttpStatus.NOT_FOUND).json({ error: 'Schema not found' });
+      return;
+    }
+    const schema = JSON.parse(fs.readFileSync(schemaPath, 'utf-8'));
+    res.status(HttpStatus.OK).json(schema);
+  }
+
+  /**
+   * Neuen Custom-Workflow erstellen
+   */
+  @Post('scrapes')
+  async createScrape(@Body() body: Scrape, @Res() res: Response) {
+    try {
+      if (!body.id || !body.steps) {
+        res.status(HttpStatus.BAD_REQUEST).json({
+          error: 'Invalid workflow',
+          message: 'Workflow must have an "id" and "steps" array',
+        });
+        return;
+      }
+
+      // Check for duplicate ID
+      const existing = this.scrapeService
+        .getScrapeDefinitions()
+        .find((s) => s.id === body.id);
+      if (existing) {
+        res.status(HttpStatus.CONFLICT).json({
+          error: 'Duplicate ID',
+          message: `A workflow with id "${body.id}" already exists`,
+        });
+        return;
+      }
+
+      this.configService.saveCustomWorkflow(body);
+      await this.scrapeService.reloadScrapeDefinitions();
+
+      res.status(HttpStatus.CREATED).json(body);
+    } catch (error) {
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        error: 'Failed to create workflow',
+        message: error.message,
+      });
+    }
+  }
+
+  /**
+   * Custom-Workflow aktualisieren (nur für custom workflows)
+   */
+  @Put('scrapes/:id')
+  async updateScrape(
+    @Param('id') id: string,
+    @Body() body: Scrape,
+    @Res() res: Response,
+  ) {
+    try {
+      const source = this.configService.getWorkflowSource(id);
+      if (source === 'builtin') {
+        res.status(HttpStatus.FORBIDDEN).json({
+          error: 'Read-only workflow',
+          message: 'Built-in workflows cannot be modified',
+        });
+        return;
+      }
+
+      if (!source) {
+        res.status(HttpStatus.NOT_FOUND).json({
+          error: 'Workflow not found',
+          message: `Workflow with id "${id}" not found`,
+        });
+        return;
+      }
+
+      this.configService.updateCustomWorkflow(id, body);
+      await this.scrapeService.reloadScrapeDefinitions();
+
+      res.status(HttpStatus.OK).json(body);
+    } catch (error) {
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        error: 'Failed to update workflow',
+        message: error.message,
+      });
+    }
+  }
+
+  /**
+   * Custom-Workflow löschen (nur für custom workflows)
+   */
+  @Delete('scrapes/:id')
+  async deleteScrape(@Param('id') id: string, @Res() res: Response) {
+    try {
+      const source = this.configService.getWorkflowSource(id);
+      if (source === 'builtin') {
+        res.status(HttpStatus.FORBIDDEN).json({
+          error: 'Read-only workflow',
+          message: 'Built-in workflows cannot be deleted',
+        });
+        return;
+      }
+
+      if (!source) {
+        res.status(HttpStatus.NOT_FOUND).json({
+          error: 'Workflow not found',
+          message: `Workflow with id "${id}" not found`,
+        });
+        return;
+      }
+
+      this.configService.deleteCustomWorkflow(id);
+      await this.scrapeService.reloadScrapeDefinitions();
+
+      res.status(HttpStatus.OK).json({ success: true });
+    } catch (error) {
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        error: 'Failed to delete workflow',
+        message: error.message,
+      });
+    }
+  }
+
+  /**
+   * Workflow als JSONC exportieren (Download)
+   */
+  @Get('scrapes/:id/export')
+  exportScrape(@Param('id') id: string, @Res() res: Response) {
+    try {
+      const content = this.configService.getWorkflowFileContent(id);
+      if (!content) {
+        res.status(HttpStatus.NOT_FOUND).json({
+          error: 'Workflow not found',
+          message: `Workflow with id "${id}" not found`,
+        });
+        return;
+      }
+
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${id}.jsonc"`,
+      );
+      res.status(HttpStatus.OK).send(content);
+    } catch (error) {
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        error: 'Failed to export workflow',
+        message: error.message,
+      });
+    }
+  }
+
+  /**
+   * Workflow aus JSONC importieren
+   */
+  @Post('scrapes/import')
+  async importScrape(@Body() body: any, @Res() res: Response) {
+    try {
+      let content: string | undefined;
+      let scrapes: Scrape[] | undefined;
+
+      // Accept either raw JSONC string or parsed JSON object
+      if (typeof body === 'string') {
+        content = body;
+      } else if (body && typeof body === 'object') {
+        // Already parsed - handle both formats
+        if (Array.isArray(body)) {
+          scrapes = body as Scrape[];
+        } else if (body.scrapes && Array.isArray(body.scrapes)) {
+          scrapes = body.scrapes as Scrape[];
+        } else if (body.id && body.steps) {
+          scrapes = [body as Scrape];
+        } else if (body.content && typeof body.content === 'string') {
+          content = body.content;
+        } else {
+          res.status(HttpStatus.BAD_REQUEST).json({
+            error: 'Invalid import format',
+            message:
+              'Expected a workflow object, an array of workflows, or an object with "scrapes" array',
+          });
+          return;
+        }
+      } else {
+        res.status(HttpStatus.BAD_REQUEST).json({
+          error: 'Invalid import format',
+          message: 'Request body is empty or invalid',
+        });
+        return;
+      }
+
+      // Parse JSONC content if needed
+      if (!scrapes && content) {
+        try {
+          const parsed = parse(content, null, true);
+          if (Array.isArray(parsed)) {
+            scrapes = parsed as unknown as Scrape[];
+          } else if (
+            parsed &&
+            typeof parsed === 'object' &&
+            'scrapes' in (parsed as any)
+          ) {
+            scrapes = (parsed as unknown as Scrapes)
+              .scrapes as unknown as Scrape[];
+          } else if (
+            parsed &&
+            typeof parsed === 'object' &&
+            'id' in (parsed as any)
+          ) {
+            scrapes = [parsed as unknown as Scrape];
+          } else {
+            res.status(HttpStatus.BAD_REQUEST).json({
+              error: 'Invalid import format',
+              message: 'Could not parse workflow from the provided content',
+            });
+            return;
+          }
+        } catch (parseError) {
+          res.status(HttpStatus.BAD_REQUEST).json({
+            error: 'Parse error',
+            message: `Invalid JSONC: ${parseError.message}`,
+          });
+          return;
+        }
+      }
+
+      if (!scrapes) {
+        res.status(HttpStatus.BAD_REQUEST).json({
+          error: 'Invalid import format',
+          message: 'No workflow data found in the request',
+        });
+        return;
+      }
+
+      // Validate and import each scrape
+      const existingIds = new Set(
+        this.scrapeService.getScrapeDefinitions().map((s) => s.id),
+      );
+      const imported: string[] = [];
+      const conflicts: string[] = [];
+
+      for (const scrape of scrapes) {
+        if (!scrape.id || !scrape.steps) {
+          continue;
+        }
+
+        if (existingIds.has(scrape.id)) {
+          conflicts.push(scrape.id);
+          continue;
+        }
+
+        this.configService.saveCustomWorkflow(scrape);
+        imported.push(scrape.id);
+        existingIds.add(scrape.id);
+      }
+
+      if (imported.length > 0) {
+        await this.scrapeService.reloadScrapeDefinitions();
+      }
+
+      res.status(HttpStatus.OK).json({
+        success: true,
+        imported,
+        conflicts,
+      });
+    } catch (error) {
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        error: 'Failed to import workflow',
+        message: error.message,
+      });
+    }
   }
 }

@@ -134,6 +134,42 @@ export class ScrapeService {
     });
   }
 
+  // ============ Workflow CRUD ============
+
+  getSchema(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/schema`);
+  }
+
+  createScrape(scrape: Scrape): Observable<Scrape> {
+    return this.http.post<Scrape>(`${this.apiUrl}/scrapes`, scrape);
+  }
+
+  updateScrape(id: string, scrape: Scrape): Observable<Scrape> {
+    return this.http.put<Scrape>(`${this.apiUrl}/scrapes/${id}`, scrape);
+  }
+
+  deleteScrape(id: string): Observable<{ success: boolean }> {
+    return this.http.delete<{ success: boolean }>(
+      `${this.apiUrl}/scrapes/${id}`,
+    );
+  }
+
+  exportScrape(id: string): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/scrapes/${id}/export`, {
+      responseType: 'blob',
+    });
+  }
+
+  importScrape(
+    content: any,
+  ): Observable<{ success: boolean; imported: string[]; conflicts: string[] }> {
+    return this.http.post<{
+      success: boolean;
+      imported: string[];
+      conflicts: string[];
+    }>(`${this.apiUrl}/scrapes/import`, content);
+  }
+
   // ============ Schedule Management ============
 
   /**

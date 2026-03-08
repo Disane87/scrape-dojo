@@ -46,6 +46,14 @@ import {
 } from '../../components/run-dialog/run-dialog';
 import { WorkflowVariablesComponent } from '../../components/workflow-variables/workflow-variables.component';
 import { NotificationModalComponent } from '../../components/notification-modal/notification-modal';
+import {
+  VersionBumpDialogComponent,
+  VersionBumpResult,
+} from '../../components/version-bump-dialog/version-bump-dialog';
+import {
+  WorkflowMetadataFormComponent,
+  MetadataChange,
+} from '../../components/workflow-metadata-form/workflow-metadata-form';
 import { environment } from '../../../environments/environment';
 import 'iconify-icon';
 
@@ -67,6 +75,8 @@ import 'iconify-icon';
     OtpModalComponent,
     WorkflowVariablesComponent,
     NotificationModalComponent,
+    VersionBumpDialogComponent,
+    WorkflowMetadataFormComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './dashboard.html',
@@ -111,6 +121,30 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // App info
   appVersion = environment.version;
   gitCommit = environment.gitCommit;
+
+  // Schema for JSON editor validation
+  schema = signal<any>(null);
+
+  // Version bump dialog state
+  showVersionBump = signal(false);
+  pendingWorkflowData = signal<any>(null);
+
+  // Metadata form state (pending changes before save)
+  pendingMetadata = signal<MetadataChange | null>(null);
+
+  // Steps data for JSON editor (extracted from definition)
+  editorSteps = computed(() => {
+    const def = this.selectedScrapeDefinition();
+    return def?.steps || [];
+  });
+
+  // Whether the currently selected workflow is editable (custom)
+  isCustomWorkflow = computed(() => {
+    const scrapeId = this.selectedScrape();
+    if (!scrapeId) return false;
+    const scrape = this.scrapes().find((s) => s.id === scrapeId);
+    return scrape?.source === 'custom';
+  });
 
   // Computed values
   // Aufgelöste Metadaten aus der scrapes-Liste (mit Author-Info)
@@ -166,6 +200,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // Scrapes werden jetzt beim App-Start geladen via AppDataService
     this.loadStoredLogs();
     this.loadRunHistory();
+    this.loadSchema();
 
     this.eventsService.events$
       .pipe(takeUntil(this.destroy$))
@@ -655,6 +690,166 @@ export class DashboardComponent implements OnInit, OnDestroy {
       default:
         return 'text-dojo-text-muted';
     }
+  }
+
+  // ============ Workflow CRUD ============
+
+  private loadSchema(): void {
+    this.scrapeService
+      .getSchema()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (schema) => this.schema.set(schema),
+        error: (err) => console.warn('Failed to load schema:', err),
+      });
+  }
+
+  onMetadataChange(change: MetadataChange): void {
+    this.pendingMetadata.set(change);
+  }
+
+  onWorkflowSave(steps: any): void {
+    const id = this.selectedScrape();
+    if (!id || !this.isCustomWorkflow()) return;
+
+    // Merge metadata (from form or current definition) with steps from editor
+    const def = this.selectedScrapeDefinition();
+    const metaChange = this.pendingMetadata();
+    const merged = {
+      ...def,
+      id: metaChange?.id || id,
+      metadata: metaChange?.metadata || def?.metadata || {},
+      steps,
+    };
+
+    // Store pending data and show version bump dialog
+    this.pendingWorkflowData.set(merged);
+    this.showVersionBump.set(true);
+  }
+
+  /** Get current version from the selected workflow definition */
+  currentWorkflowVersion = computed(() => {
+    const def = this.selectedScrapeDefinition();
+    return def?.metadata?.version || '0.0.0';
+  });
+
+  onVersionBumpResult(result: VersionBumpResult): void {
+    this.showVersionBump.set(false);
+
+    if (!result.confirmed) {
+      this.pendingWorkflowData.set(null);
+      return;
+    }
+
+    const id = this.selectedScrape();
+    const data = this.pendingWorkflowData();
+    if (!id || !data) return;
+
+    // Apply new version to the workflow data
+    if (data.metadata) {
+      data.metadata.version = result.newVersion;
+    } else {
+      data.metadata = { version: result.newVersion };
+    }
+
+    this.scrapeService
+      .updateScrape(id, data)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: async () => {
+          this.selectedScrapeDefinition.set(data);
+          await this.store.scrapes.load();
+          this.pendingWorkflowData.set(null);
+        },
+        error: (err) => console.error('Failed to save workflow:', err),
+      });
+  }
+
+  onWorkflowExport(): void {
+    const id = this.selectedScrape();
+    if (!id) return;
+
+    this.scrapeService
+      .exportScrape(id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (blob) => {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `${id}.jsonc`;
+          a.click();
+          URL.revokeObjectURL(url);
+        },
+        error: (err) => console.error('Failed to export workflow:', err),
+      });
+  }
+
+  onWorkflowDelete(): void {
+    const id = this.selectedScrape();
+    if (!id || !this.isCustomWorkflow()) return;
+
+    this.scrapeService
+      .deleteScrape(id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: async () => {
+          // Clear selection immediately to prevent stale requests
+          this.selectedScrape.set(null);
+          this.selectedScrapeDefinition.set(null);
+          this.router.navigate(['/']);
+          // Reload after navigation to avoid fetching deleted scrape
+          await this.store.scrapes.load();
+        },
+        error: (err) => console.error('Failed to delete workflow:', err),
+      });
+  }
+
+  onWorkflowImport(file: File): void {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const content = reader.result as string;
+      // Send raw content to API for JSONC parsing (supports comments)
+      this.scrapeService
+        .importScrape({ content })
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: async (result) => {
+            if (result.imported.length > 0) {
+              // Reload scrapes, then select the first imported workflow
+              await this.store.scrapes.load();
+              this.selectScrape(result.imported[0]);
+            }
+            if (result.conflicts.length > 0) {
+              this.notificationService.showFromBackend({
+                notificationId: `import-conflict-${Date.now()}`,
+                scrapeId: '__system__',
+                type: 'warning',
+                title: 'Import: Konflikte',
+                message: `Workflows bereits vorhanden: ${result.conflicts.join(', ')}`,
+                autoDismiss: 5000,
+              });
+            }
+          },
+          error: (err) => {
+            const message =
+              err.error?.message || err.message || 'Import fehlgeschlagen';
+            this.notificationService.showFromBackend({
+              notificationId: `import-error-${Date.now()}`,
+              scrapeId: '__system__',
+              type: 'error',
+              title: 'Import fehlgeschlagen',
+              message,
+              autoDismiss: 5000,
+            });
+          },
+        });
+    };
+    reader.readAsText(file);
+  }
+
+  openCreateWorkflow(): void {
+    this.router.navigate([{ outlets: { modal: ['workflow-editor'] } }]);
   }
 
   /**

@@ -3,6 +3,7 @@ import { ApiService } from './api.service';
 import { interval, switchMap, catchError, of, startWith, map } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ScrapeEventsService } from './scrape-events.service';
+import { environment } from '../../environments/environment';
 
 export interface HealthStatus {
   status: 'ok' | 'degraded' | 'error';
@@ -49,8 +50,8 @@ export class HealthService {
   private api = inject(ApiService);
   private eventsService = inject(ScrapeEventsService);
 
-  // Frontend version (aus environment oder build)
-  private readonly frontendVersion = '1.0.0'; // TODO: aus environment injizieren
+  // Frontend version aus environment (wird durch pnpm update:version gesetzt)
+  private readonly frontendVersion = environment.version;
 
   // Polling-Intervall in Millisekunden (10 Sekunden)
   private readonly healthCheckInterval = 10000;

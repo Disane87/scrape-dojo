@@ -42,7 +42,7 @@
     "generate:openapi": "powershell -ExecutionPolicy Bypass -File ./scripts/generate-openapi.ps1",
     "docs:openapi": "pnpm generate:openapi && cd apps/docs && pnpm docusaurus clean-api-docs all && pnpm docusaurus gen-api-docs all",
     "update:version": "node ./scripts/update-version.js",
-    "prebuild": "pnpm update:version",
+    "prebuild": "pnpm update:version && pnpm create:schema",
     "graph": "nx graph",
     "affected": "nx affected",
     "affected:build": "nx affected -t build",

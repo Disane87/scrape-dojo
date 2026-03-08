@@ -1,31 +1,50 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
-import { parse } from 'comment-json';
+import { parse, stringify } from 'comment-json';
 import { Scrape, Scrapes } from '../types/scrape.interface';
+
+export type WorkflowSource = 'builtin' | 'custom';
+
+export interface ScrapeWithSource extends Scrape {
+  _source: WorkflowSource;
+}
 
 @Injectable()
 export class ScrapeConfigService {
   private readonly logger = new Logger(ScrapeConfigService.name);
   private readonly sitesPath = path.join(process.cwd(), 'config', 'sites');
+  private readonly customSitesPath = path.join(
+    process.cwd(),
+    'config',
+    'sites',
+    'custom',
+  );
+
+  /** Maps scrape ID to its source (builtin or custom) */
+  private sourceMap = new Map<string, WorkflowSource>();
 
   /**
    * Lädt alle Scrape-Definitionen aus dem sites-Verzeichnis
    */
   loadScrapeDefinitions(): Scrape[] {
     let allScrapes: Scrape[] = [];
+    this.sourceMap.clear();
 
     if (!fs.existsSync(this.sitesPath)) {
       this.logger.debug(`📁 Sites directory does not exist: ${this.sitesPath}`);
       return allScrapes;
     }
 
+    // Load builtin workflows (top-level files in config/sites/)
     const siteFiles = this.getSiteFiles();
-
     for (const siteFile of siteFiles) {
       try {
         const scrapes = this.loadSiteFile(siteFile);
         if (scrapes.length > 0) {
+          for (const scrape of scrapes) {
+            this.sourceMap.set(scrape.id, 'builtin');
+          }
           allScrapes = [...allScrapes, ...scrapes];
           this.logger.debug(
             `📄 Loaded ${scrapes.length} scrapes from: ${siteFile}`,
@@ -41,6 +60,33 @@ export class ScrapeConfigService {
       }
     }
 
+    // Load custom workflows (config/sites/custom/)
+    if (fs.existsSync(this.customSitesPath)) {
+      const customFiles = this.getCustomSiteFiles();
+      for (const customFile of customFiles) {
+        try {
+          const scrapes = this.loadCustomSiteFile(customFile);
+          if (scrapes.length > 0) {
+            for (const scrape of scrapes) {
+              this.sourceMap.set(scrape.id, 'custom');
+            }
+            allScrapes = [...allScrapes, ...scrapes];
+            this.logger.debug(
+              `📄 Loaded ${scrapes.length} custom scrapes from: custom/${customFile}`,
+            );
+          }
+        } catch (error) {
+          const formatted = this.formatSiteConfigError(
+            `custom/${customFile}`,
+            error,
+          );
+          this.logger.warn(
+            `⚠️ Failed to parse custom site config ${customFile}: ${formatted}`,
+          );
+        }
+      }
+    }
+
     this.validateScrapeIds(allScrapes);
     this.logger.log(`🎯 Total loaded scrapes: ${allScrapes.length}`);
 
@@ -48,18 +94,121 @@ export class ScrapeConfigService {
   }
 
   /**
-   * Lädt eine einzelne Site-Config-Datei
+   * Returns the source of a workflow by its ID
+   */
+  getWorkflowSource(id: string): WorkflowSource | null {
+    return this.sourceMap.get(id) ?? null;
+  }
+
+  /**
+   * Checks if a workflow is a custom (user-created) workflow
+   */
+  isCustomWorkflow(id: string): boolean {
+    return this.sourceMap.get(id) === 'custom';
+  }
+
+  /**
+   * Saves a new custom workflow to config/sites/custom/{id}.jsonc
+   */
+  saveCustomWorkflow(scrape: Scrape): string {
+    this.ensureCustomSitesDirectory();
+    const fileName = `${this.sanitizeFileName(scrape.id)}.jsonc`;
+    const filePath = path.join(this.customSitesPath, fileName);
+
+    if (fs.existsSync(filePath)) {
+      throw new Error(`Custom workflow file already exists: ${fileName}`);
+    }
+
+    const content = stringify({ scrapes: [scrape] }, null, 2);
+    fs.writeFileSync(filePath, content, 'utf-8');
+    this.logger.log(`📝 Saved custom workflow: ${fileName}`);
+    return fileName;
+  }
+
+  /**
+   * Updates an existing custom workflow
+   */
+  updateCustomWorkflow(id: string, scrape: Scrape): void {
+    const filePath = this.findCustomWorkflowFile(id);
+    if (!filePath) {
+      throw new Error(`Custom workflow file not found for: ${id}`);
+    }
+
+    const content = stringify({ scrapes: [{ ...scrape, id }] }, null, 2);
+    fs.writeFileSync(filePath, content, 'utf-8');
+    this.logger.log(`📝 Updated custom workflow: ${id}`);
+  }
+
+  /**
+   * Deletes a custom workflow file
+   */
+  deleteCustomWorkflow(id: string): boolean {
+    const filePath = this.findCustomWorkflowFile(id);
+    if (!filePath) {
+      return false;
+    }
+
+    fs.unlinkSync(filePath);
+    this.sourceMap.delete(id);
+    this.logger.log(`🗑️ Deleted custom workflow: ${id}`);
+    return true;
+  }
+
+  /**
+   * Reads the raw JSONC content of a workflow file for export
+   */
+  getWorkflowFileContent(id: string): string | null {
+    // Check custom first
+    const customPath = this.findCustomWorkflowFile(id);
+    if (customPath) {
+      return fs.readFileSync(customPath, 'utf-8');
+    }
+
+    // Check builtin files
+    const siteFiles = this.getSiteFiles();
+    for (const siteFile of siteFiles) {
+      try {
+        const scrapes = this.loadSiteFile(siteFile);
+        const match = scrapes.find((s) => s.id === id);
+        if (match) {
+          // Return just the single scrape as JSONC
+          return stringify({ scrapes: [match] }, null, 2);
+        }
+      } catch {
+        // Skip
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Lädt eine einzelne Site-Config-Datei (builtin)
    */
   private loadSiteFile(fileName: string): Scrape[] {
     const filePath = path.join(this.sitesPath, fileName);
+    return this.parseScrapeFile(filePath, fileName);
+  }
+
+  /**
+   * Lädt eine einzelne Custom-Config-Datei
+   */
+  private loadCustomSiteFile(fileName: string): Scrape[] {
+    const filePath = path.join(this.customSitesPath, fileName);
+    return this.parseScrapeFile(filePath, `custom/${fileName}`);
+  }
+
+  /**
+   * Parses a scrape config file and returns the scrapes
+   */
+  private parseScrapeFile(filePath: string, displayName: string): Scrape[] {
     const fileContent = fs.readFileSync(filePath, 'utf-8');
     let parsed: unknown;
     try {
       parsed = parse(fileContent, null, true);
     } catch (error) {
-      // Re-throw with context; caller will log a detailed message.
       (error as any).filePath = filePath;
-      (error as any).fileName = fileName;
+      (error as any).fileName = displayName;
       (error as any).fileContent = fileContent;
       throw error;
     }
@@ -73,7 +222,7 @@ export class ScrapeConfigService {
       const scrapes = (parsed as unknown as Scrapes).scrapes as unknown;
       if (!Array.isArray(scrapes)) {
         this.logger.warn(
-          `⚠️ Invalid site config structure in ${fileName}: "scrapes" is not an array`,
+          `⚠️ Invalid site config structure in ${displayName}: "scrapes" is not an array`,
         );
         return [];
       }
@@ -81,7 +230,7 @@ export class ScrapeConfigService {
     }
 
     this.logger.warn(
-      `⚠️ Invalid site config structure in ${fileName}: expected an array or an object with "scrapes"`,
+      `⚠️ Invalid site config structure in ${displayName}: expected an array or an object with "scrapes"`,
     );
     return [];
   }
@@ -97,7 +246,6 @@ export class ScrapeConfigService {
     const content =
       typeof err?.fileContent === 'string' ? err.fileContent : undefined;
 
-    // Try to extract a position/line/column from common parse error shapes.
     const line = this.coerceNumber(err?.line ?? err?.lineNumber);
     const column = this.coerceNumber(err?.column ?? err?.col);
     const position = this.coerceNumber(err?.position ?? err?.pos ?? err?.index);
@@ -148,7 +296,7 @@ export class ScrapeConfigService {
     const lines = before.split(/\r\n|\r|\n/);
     const resolvedLine = lines.length;
     const lastLine = lines[lines.length - 1] ?? '';
-    const resolvedColumn = lastLine.length + 1; // 1-based
+    const resolvedColumn = lastLine.length + 1;
 
     return { line: resolvedLine, column: resolvedColumn };
   }
@@ -157,7 +305,6 @@ export class ScrapeConfigService {
     const lines = content.split(/\r\n|\r|\n/);
     const idx = Math.max(0, Math.min(lineNumber - 1, lines.length - 1));
     const line = lines[idx] ?? '';
-    // Limit length so logs stay readable.
     const trimmed = line.length > 240 ? `${line.slice(0, 237)}...` : line;
     return trimmed;
   }
@@ -168,13 +315,64 @@ export class ScrapeConfigService {
   }
 
   /**
-   * Holt alle JSON/JSONC-Dateien aus dem sites-Verzeichnis
+   * Holt alle JSON/JSONC-Dateien aus dem sites-Verzeichnis (top-level only)
    */
   private getSiteFiles(): string[] {
     return fs
       .readdirSync(this.sitesPath)
+      .filter(
+        (file) =>
+          (file.endsWith('.json') || file.endsWith('.jsonc')) &&
+          fs.statSync(path.join(this.sitesPath, file)).isFile(),
+      )
+      .sort();
+  }
+
+  /**
+   * Holt alle JSON/JSONC-Dateien aus dem custom-Verzeichnis
+   */
+  private getCustomSiteFiles(): string[] {
+    if (!fs.existsSync(this.customSitesPath)) return [];
+    return fs
+      .readdirSync(this.customSitesPath)
       .filter((file) => file.endsWith('.json') || file.endsWith('.jsonc'))
       .sort();
+  }
+
+  /**
+   * Finds the file path of a custom workflow by its ID
+   */
+  private findCustomWorkflowFile(id: string): string | null {
+    if (!fs.existsSync(this.customSitesPath)) return null;
+
+    const sanitized = this.sanitizeFileName(id);
+    // Check exact match first
+    for (const ext of ['.jsonc', '.json']) {
+      const filePath = path.join(this.customSitesPath, `${sanitized}${ext}`);
+      if (fs.existsSync(filePath)) return filePath;
+    }
+
+    // Fallback: scan files for matching ID
+    const files = this.getCustomSiteFiles();
+    for (const file of files) {
+      try {
+        const scrapes = this.loadCustomSiteFile(file);
+        if (scrapes.some((s) => s.id === id)) {
+          return path.join(this.customSitesPath, file);
+        }
+      } catch {
+        // Skip
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Sanitizes a string for use as a filename
+   */
+  private sanitizeFileName(name: string): string {
+    return name.replace(/[^a-zA-Z0-9_-]/g, '-');
   }
 
   /**
@@ -207,6 +405,13 @@ export class ScrapeConfigService {
   }
 
   /**
+   * Gibt den Pfad zum custom-Verzeichnis zurück
+   */
+  getCustomSitesPath(): string {
+    return this.customSitesPath;
+  }
+
+  /**
    * Erstellt das sites-Verzeichnis, falls es nicht existiert
    */
   ensureSitesDirectory(): void {
@@ -215,6 +420,17 @@ export class ScrapeConfigService {
       this.logger.debug('📂 Sites directory created successfully.');
     } else {
       this.logger.debug('📁 Sites directory already exists.');
+    }
+    this.ensureCustomSitesDirectory();
+  }
+
+  /**
+   * Erstellt das custom-Verzeichnis, falls es nicht existiert
+   */
+  private ensureCustomSitesDirectory(): void {
+    if (!fs.existsSync(this.customSitesPath)) {
+      fs.mkdirSync(this.customSitesPath, { recursive: true });
+      this.logger.debug('📂 Custom sites directory created successfully.');
     }
   }
 }

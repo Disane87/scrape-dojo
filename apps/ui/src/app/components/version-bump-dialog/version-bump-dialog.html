@@ -1,0 +1,85 @@
+<app-modal
+  [isOpen]="isOpen()"
+  [title]="'workflow_editor.version_bump' | transloco"
+  [size]="'sm'"
+  [showFooter]="true"
+  (closed)="cancel()"
+>
+  <div class="space-y-4">
+    <p class="text-sm text-dojo-text-muted">
+      {{ 'workflow_editor.version_bump_description' | transloco }}
+    </p>
+
+    <!-- Change type selection -->
+    <div class="space-y-2">
+      @for (type of changeTypes; track type.value) {
+      <button
+        class="w-full flex items-center gap-3 p-3 rounded-lg border transition-all text-left"
+        [class]="
+                    selectedType() === type.value
+                        ? 'border-dojo-accent bg-dojo-accent/10 text-dojo-text'
+                        : 'border-dojo-border hover:border-dojo-accent/50 text-dojo-text-muted hover:text-dojo-text'
+                "
+        (click)="selectedType.set(type.value)"
+      >
+        <iconify-icon
+          [icon]="type.icon"
+          class="w-5 h-5 shrink-0"
+          [class.text-dojo-accent]="selectedType() === type.value"
+        ></iconify-icon>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-medium">{{ type.labelKey | transloco }}</div>
+          <div class="text-xs text-dojo-text-muted">
+            {{ type.descKey | transloco }}
+          </div>
+        </div>
+        <div
+          class="w-4 h-4 rounded-full border-2 shrink-0 flex items-center justify-center"
+          [class]="
+                        selectedType() === type.value
+                            ? 'border-dojo-accent'
+                            : 'border-dojo-border'
+                    "
+        >
+          @if (selectedType() === type.value) {
+          <div class="w-2 h-2 rounded-full bg-dojo-accent"></div>
+          }
+        </div>
+      </button>
+      }
+    </div>
+
+    <!-- Version preview -->
+    <div
+      class="flex items-center justify-between p-3 rounded-lg bg-dojo-surface border border-dojo-border"
+    >
+      <div class="text-sm">
+        <span class="text-dojo-text-muted">
+          {{ 'workflow_editor.current_version' | transloco }}:
+        </span>
+        <span class="ml-1 font-mono">v{{ currentVersion() }}</span>
+      </div>
+      <iconify-icon
+        icon="lucide:arrow-right"
+        class="w-4 h-4 text-dojo-text-muted"
+      ></iconify-icon>
+      <div class="text-sm">
+        <span class="text-dojo-text-muted">
+          {{ 'workflow_editor.new_version' | transloco }}:
+        </span>
+        <span class="ml-1 font-mono font-semibold text-dojo-accent">
+          v{{ newVersion() }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div modal-footer class="flex justify-end gap-2">
+    <app-button variant="secondary" (clicked)="cancel()">
+      {{ 'common.cancel' | transloco }}
+    </app-button>
+    <app-button variant="primary" (clicked)="confirm()">
+      {{ 'common.save' | transloco }}
+    </app-button>
+  </div>
+</app-modal>

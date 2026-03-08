@@ -40,6 +40,8 @@ export class WorkflowSidebarComponent {
   gitCommit = input<string>('');
 
   scrapeSelected = output<string>();
+  createWorkflow = output<void>();
+  importWorkflow = output<File>();
 
   /** Track which categories are collapsed */
   private collapsedCategories = signal<Set<string>>(new Set());
@@ -136,5 +138,17 @@ export class WorkflowSidebarComponent {
 
   selectScrape(id: string): void {
     this.scrapeSelected.emit(id);
+  }
+
+  onCreateWorkflow(): void {
+    this.createWorkflow.emit();
+  }
+
+  onImportFile(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.importWorkflow.emit(input.files[0]);
+      input.value = '';
+    }
   }
 }

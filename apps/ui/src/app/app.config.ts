@@ -14,6 +14,7 @@ import { LanguageService } from './services/language.service';
 import { provideTransloco, TranslocoService } from '@jsverse/transloco';
 import { TranslocoHttpLoader } from './transloco-loader';
 import { authInterceptor } from './auth';
+import { noCacheInterceptor } from './interceptors/no-cache.interceptor';
 import { ThemeAuthBridgeService } from './services/theme-auth-bridge.service';
 import 'iconify-icon';
 
@@ -21,7 +22,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(appRoutes),
-    provideHttpClient(withInterceptors([authInterceptor])),
+    provideHttpClient(withInterceptors([noCacheInterceptor, authInterceptor])),
     provideTransloco({
       config: {
         availableLangs: ['en', 'de'],

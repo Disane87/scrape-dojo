@@ -440,6 +440,46 @@
   "workflow_sidebar": {
     "filter_workflows": "Filter workflows"
   },
+  "workflow_editor": {
+    "create_workflow": "Create Workflow",
+    "edit_workflow": "Edit Workflow",
+    "import_workflow": "Import Workflow",
+    "export_workflow": "Export Workflow",
+    "delete_workflow": "Delete Workflow",
+    "delete_confirm": "Are you sure you want to delete this workflow? This action cannot be undone.",
+    "builtin_readonly": "Built-in workflows are read-only",
+    "custom": "Custom",
+    "import_success": "Workflow imported successfully",
+    "import_error": "Failed to import workflow",
+    "id_conflict": "A workflow with this ID already exists",
+    "save_success": "Workflow saved successfully",
+    "version_bump": "Version Update",
+    "version_bump_description": "What type of change is this?",
+    "current_version": "Current version",
+    "new_version": "New version",
+    "change_type_major": "Breaking Change",
+    "change_type_major_desc": "Incompatible changes to the workflow structure",
+    "change_type_minor": "Feature",
+    "change_type_minor_desc": "New functionality, backward compatible",
+    "change_type_patch": "Fix",
+    "change_type_patch_desc": "Bug fixes and minor adjustments"
+  },
+  "workflow_metadata": {
+    "id": "Workflow ID",
+    "description": "Description",
+    "description_placeholder": "What does this workflow do?",
+    "category": "Category",
+    "category_placeholder": "e.g. E-Commerce, Demos",
+    "triggers": "Triggers",
+    "version": "Version",
+    "trigger_manual": "Manual",
+    "trigger_cron": "Cron",
+    "trigger_webhook": "Webhook",
+    "trigger_startup": "Startup",
+    "add_trigger": "Add trigger",
+    "remove_trigger": "Remove trigger",
+    "all_triggers_added": "All trigger types added"
+  },
   "variables_manager": {
     "key_placeholder": "z.B. API_URL",
     "value_placeholder": "z.B. https://api.example.com"

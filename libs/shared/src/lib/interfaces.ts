@@ -5,7 +5,13 @@
 // ==========================================
 
 /** Category for grouping actions in the UI */
-export type ActionCategory = 'navigation' | 'interaction' | 'extraction' | 'flow' | 'utility' | 'data';
+export type ActionCategory =
+  | 'navigation'
+  | 'interaction'
+  | 'extraction'
+  | 'flow'
+  | 'utility'
+  | 'data';
 
 /** Metadata for an action - defined in each action class */
 export interface ActionMetadata {
@@ -105,6 +111,8 @@ export interface ScrapeListItem {
   id: string;
   stepsCount: number;
   metadata?: ScrapeMetadataResolved;
+  /** Whether this workflow is a built-in (shipped) or user-created one */
+  source?: 'builtin' | 'custom';
   lastRun?: {
     status: 'running' | 'completed' | 'failed';
     startTime: number;
@@ -228,10 +236,10 @@ export interface LoopIteration {
 
 // OTP Request
 export interface OtpAlternative {
-  id: string;        // z.B. "whatsapp", "passkey"
-  label: string;     // z.B. "Code an WhatsApp senden"
-  selector: string;  // CSS-Selektor des Buttons auf der Seite
-  icon?: string;     // Iconify icon name, z.B. "logos:whatsapp-icon"
+  id: string; // z.B. "whatsapp", "passkey"
+  label: string; // z.B. "Code an WhatsApp senden"
+  selector: string; // CSS-Selektor des Buttons auf der Seite
+  icon?: string; // Iconify icon name, z.B. "logos:whatsapp-icon"
 }
 
 export interface OtpRequest {
@@ -272,7 +280,14 @@ export interface NotificationRequest {
 // ==========================================
 
 /** Variable types supported in workflows */
-export type WorkflowVariableType = 'string' | 'password' | 'number' | 'boolean' | 'email' | 'url' | 'select';
+export type WorkflowVariableType =
+  | 'string'
+  | 'password'
+  | 'number'
+  | 'boolean'
+  | 'email'
+  | 'url'
+  | 'select';
 
 /** A variable that a workflow can request */
 export interface WorkflowVariable {
@@ -420,7 +435,11 @@ export interface StartupTrigger extends BaseTrigger {
   delay?: number;
 }
 
-export type WorkflowTrigger = ManualTrigger | CronTrigger | WebhookTrigger | StartupTrigger;
+export type WorkflowTrigger =
+  | ManualTrigger
+  | CronTrigger
+  | WebhookTrigger
+  | StartupTrigger;
 
 // ==========================================
 // Extended Scrape Definition
@@ -429,7 +448,7 @@ export type WorkflowTrigger = ManualTrigger | CronTrigger | WebhookTrigger | Sta
 export interface ScrapeMetadata {
   description?: string;
   version?: string;
-  /** 
+  /**
    * Author in one of these formats:
    * - "gh:@username" - GitHub user
    * - "email@example.com" - Email (Gravatar)
