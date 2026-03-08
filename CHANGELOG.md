@@ -1,3 +1,9 @@
+## [1.7.2](https://github.com/disane87/scrape-dojo/compare/v1.7.1...v1.7.2) (2026-03-08)
+
+### fix
+
+- **🐳 docker:** use env vars for Docker sandbox detection (#53) ([](https://github.com/disane87/scrape-dojo/commit/48593b542a482ce58b6c272bf7d22d0fa64fff9a)), closes [#53](https://github.com/disane87/scrape-dojo/issues/53)
+
 ## [1.7.1](https://github.com/disane87/scrape-dojo/compare/v1.7.0...v1.7.1) (2026-03-08)
 
 ### fix
