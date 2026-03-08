@@ -1,3 +1,11 @@
+## [1.7.0](https://github.com/disane87/scrape-dojo/compare/v1.6.0...v1.7.0) (2026-03-08)
+
+- Delete config/.secrets.key ([](https://github.com/disane87/scrape-dojo/commit/5ce4bc0031dc67efd123839182a07c38cd9de43f))
+
+### feat
+
+- **📔 docs:** add robots.txt with sitemap reference ([](https://github.com/disane87/scrape-dojo/commit/7cc70890cf55de2218e42f96d4a67b7743f01b89))
+
 ## [1.6.0](https://github.com/disane87/scrape-dojo/compare/v1.5.2...v1.6.0) (2026-03-07)
 
 ### fix
