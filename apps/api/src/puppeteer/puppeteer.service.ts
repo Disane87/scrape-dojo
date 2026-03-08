@@ -31,8 +31,15 @@ export class PuppeteerService implements OnModuleDestroy {
   constructor() {
     // Hier kannst du die gewünschten Argumente anpassen
     this.debug = false;
-    this.inDocker = false;
+    this.inDocker = process.env.DOCKER_ENV === 'true';
     this.arguments = [];
+
+    if (this.inDocker) {
+      this.arguments.push('--no-sandbox', '--disable-setuid-sandbox');
+      this.logger.log(
+        '🐳 Docker environment detected, disabling Chrome sandbox',
+      );
+    }
   }
 
   async onModuleDestroy() {

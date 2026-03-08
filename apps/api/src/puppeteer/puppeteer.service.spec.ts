@@ -40,6 +40,35 @@ describe('PuppeteerService', () => {
     expect(service).toBeDefined();
   });
 
+  describe('Docker environment detection', () => {
+    it('should add --no-sandbox args when DOCKER_ENV is true', () => {
+      const originalDockerEnv = process.env.DOCKER_ENV;
+      process.env.DOCKER_ENV = 'true';
+
+      const dockerService = new PuppeteerService();
+      const args = (dockerService as any).arguments;
+
+      expect(args).toContain('--no-sandbox');
+      expect(args).toContain('--disable-setuid-sandbox');
+      expect((dockerService as any).inDocker).toBe(true);
+
+      process.env.DOCKER_ENV = originalDockerEnv;
+    });
+
+    it('should not add sandbox args when DOCKER_ENV is not set', () => {
+      const originalDockerEnv = process.env.DOCKER_ENV;
+      delete process.env.DOCKER_ENV;
+
+      const nonDockerService = new PuppeteerService();
+      const args = (nonDockerService as any).arguments;
+
+      expect(args).not.toContain('--no-sandbox');
+      expect((nonDockerService as any).inDocker).toBe(false);
+
+      process.env.DOCKER_ENV = originalDockerEnv;
+    });
+  });
+
   describe('abort / resetAbort / isAborted', () => {
     it('should not be aborted initially', () => {
       expect(service.isAborted).toBe(false);
