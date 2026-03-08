@@ -64,5 +64,24 @@ touch /home/pptruser/app/logs/api.stdout.log \
       /home/pptruser/app/logs/nginx.stderr.log
 chown pptruser:pptruser /home/pptruser/app/logs/*.log
 
+# Seed default config files into mounted volume (won't overwrite existing)
+CONFIG_DIR="/home/pptruser/app/config"
+DEFAULTS_DIR="/home/pptruser/app/config-defaults"
+if [ -d "$DEFAULTS_DIR" ]; then
+    echo "Seeding default config files..."
+    cp -rn "$DEFAULTS_DIR"/. "$CONFIG_DIR"/
+    chown -R pptruser:pptruser "$CONFIG_DIR"
+fi
+
+# Remove stale Chrome lock files from browser-data volume
+# These are symlinks containing the old container hostname — use -e OR -L to catch broken symlinks
+BROWSER_DATA="/home/pptruser/app/browser-data"
+for lockfile in SingletonLock SingletonSocket SingletonCookie; do
+    if [ -e "$BROWSER_DATA/$lockfile" ] || [ -L "$BROWSER_DATA/$lockfile" ]; then
+        echo "Removing stale Chrome lock file: $lockfile"
+        rm -f "$BROWSER_DATA/$lockfile"
+    fi
+done
+
 echo "Starting services..."
 exec "$@"
