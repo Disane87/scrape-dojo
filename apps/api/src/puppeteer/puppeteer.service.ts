@@ -31,7 +31,9 @@ export class PuppeteerService implements OnModuleDestroy {
   constructor() {
     // Hier kannst du die gewünschten Argumente anpassen
     this.debug = false;
-    this.inDocker = process.env.DOCKER_ENV === 'true';
+    this.inDocker =
+      process.env.DOCKER_ENV === 'true' ||
+      process.env.SCRAPE_DOJO_DOCKER_ENV === 'true';
     this.arguments = [];
 
     if (this.inDocker) {

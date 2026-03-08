@@ -43,7 +43,9 @@ describe('PuppeteerService', () => {
   describe('Docker environment detection', () => {
     it('should add --no-sandbox args when DOCKER_ENV is true', () => {
       const originalDockerEnv = process.env.DOCKER_ENV;
+      const originalScrapeDojoDockerEnv = process.env.SCRAPE_DOJO_DOCKER_ENV;
       process.env.DOCKER_ENV = 'true';
+      delete process.env.SCRAPE_DOJO_DOCKER_ENV;
 
       const dockerService = new PuppeteerService();
       const args = (dockerService as any).arguments;
@@ -53,11 +55,31 @@ describe('PuppeteerService', () => {
       expect((dockerService as any).inDocker).toBe(true);
 
       process.env.DOCKER_ENV = originalDockerEnv;
+      process.env.SCRAPE_DOJO_DOCKER_ENV = originalScrapeDojoDockerEnv;
     });
 
-    it('should not add sandbox args when DOCKER_ENV is not set', () => {
+    it('should add --no-sandbox args when SCRAPE_DOJO_DOCKER_ENV is true', () => {
       const originalDockerEnv = process.env.DOCKER_ENV;
+      const originalScrapeDojoDockerEnv = process.env.SCRAPE_DOJO_DOCKER_ENV;
       delete process.env.DOCKER_ENV;
+      process.env.SCRAPE_DOJO_DOCKER_ENV = 'true';
+
+      const dockerService = new PuppeteerService();
+      const args = (dockerService as any).arguments;
+
+      expect(args).toContain('--no-sandbox');
+      expect(args).toContain('--disable-setuid-sandbox');
+      expect((dockerService as any).inDocker).toBe(true);
+
+      process.env.DOCKER_ENV = originalDockerEnv;
+      process.env.SCRAPE_DOJO_DOCKER_ENV = originalScrapeDojoDockerEnv;
+    });
+
+    it('should not add sandbox args when neither Docker env var is set', () => {
+      const originalDockerEnv = process.env.DOCKER_ENV;
+      const originalScrapeDojoDockerEnv = process.env.SCRAPE_DOJO_DOCKER_ENV;
+      delete process.env.DOCKER_ENV;
+      delete process.env.SCRAPE_DOJO_DOCKER_ENV;
 
       const nonDockerService = new PuppeteerService();
       const args = (nonDockerService as any).arguments;
@@ -66,6 +88,7 @@ describe('PuppeteerService', () => {
       expect((nonDockerService as any).inDocker).toBe(false);
 
       process.env.DOCKER_ENV = originalDockerEnv;
+      process.env.SCRAPE_DOJO_DOCKER_ENV = originalScrapeDojoDockerEnv;
     });
   });
 
