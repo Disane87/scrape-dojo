@@ -1,3 +1,13 @@
+## [1.9.0](https://github.com/disane87/scrape-dojo/compare/v1.8.0...v1.9.0) (2026-03-09)
+
+### 🚀 Features
+
+- **🎨 ui:** add separate changelog modal with markdown rendering ([fe4dac3](https://github.com/disane87/scrape-dojo/commit/fe4dac33c2a2c377ca8b4b94d70597bb3fdb10c4)), closes [#56](https://github.com/disane87/scrape-dojo/issues/56)
+
+### 🛠️ Fixes
+
+- **🏷️ release:** restore section emojis and commit hash in changelog ([3e0ddb3](https://github.com/disane87/scrape-dojo/commit/3e0ddb33fb7eb0bf238d0908745a5ed9017f0eb3)), closes [#56](https://github.com/disane87/scrape-dojo/issues/56)
+
 ## [1.8.0](https://github.com/disane87/scrape-dojo/compare/v1.7.2...v1.8.0) (2026-03-09)
 
 ### feat
