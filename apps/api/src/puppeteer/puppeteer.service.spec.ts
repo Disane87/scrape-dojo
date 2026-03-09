@@ -40,6 +40,57 @@ describe('PuppeteerService', () => {
     expect(service).toBeDefined();
   });
 
+  describe('proxy configuration', () => {
+    it('should add --proxy-server arg when SCRAPE_DOJO_PROXY_URL is set', () => {
+      process.env.SCRAPE_DOJO_PROXY_URL = 'http://proxy:8080';
+      const proxyService = new PuppeteerService();
+      expect((proxyService as any).arguments).toContain(
+        '--proxy-server=http://proxy:8080',
+      );
+      delete process.env.SCRAPE_DOJO_PROXY_URL;
+    });
+
+    it('should not add --proxy-server arg when SCRAPE_DOJO_PROXY_URL is not set', () => {
+      delete process.env.SCRAPE_DOJO_PROXY_URL;
+      const proxyService = new PuppeteerService();
+      const hasProxyArg = (proxyService as any).arguments.some((arg: string) =>
+        arg.startsWith('--proxy-server='),
+      );
+      expect(hasProxyArg).toBe(false);
+    });
+
+    it('should support socks5 proxy URLs', () => {
+      process.env.SCRAPE_DOJO_PROXY_URL = 'socks5://proxy:1080';
+      const proxyService = new PuppeteerService();
+      expect((proxyService as any).arguments).toContain(
+        '--proxy-server=socks5://proxy:1080',
+      );
+      delete process.env.SCRAPE_DOJO_PROXY_URL;
+    });
+  });
+
+  describe('maskProxyUrl', () => {
+    it('should mask credentials in proxy URL', () => {
+      const result = (service as any).maskProxyUrl(
+        'http://user:pass@proxy:8080',
+      );
+      expect(result).not.toContain('user');
+      expect(result).not.toContain('pass');
+      expect(result).toContain('***');
+      expect(result).toContain('proxy:8080');
+    });
+
+    it('should not mask URL without credentials', () => {
+      const result = (service as any).maskProxyUrl('http://proxy:8080');
+      expect(result).toBe('http://proxy:8080');
+    });
+
+    it('should return *** for invalid URLs', () => {
+      const result = (service as any).maskProxyUrl('not-a-url');
+      expect(result).toBe('***');
+    });
+  });
+
   describe('abort / resetAbort / isAborted', () => {
     it('should not be aborted initially', () => {
       expect(service.isAborted).toBe(false);

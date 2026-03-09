@@ -47,6 +47,31 @@ export class PuppeteerService implements OnModuleDestroy {
         '🐳 Docker environment detected, disabling Chrome sandbox',
       );
     }
+
+    const proxyUrl = process.env.SCRAPE_DOJO_PROXY_URL;
+    if (proxyUrl) {
+      this.arguments.push(`--proxy-server=${proxyUrl}`);
+      this.logger.log(`🌐 Proxy configured: ${this.maskProxyUrl(proxyUrl)}`);
+    }
+  }
+
+  /**
+   * Masks credentials in a proxy URL to avoid leaking sensitive information in logs.
+   * Example: http://user:pass@proxy:8080 -> http://***@proxy:8080
+   */
+  private maskProxyUrl(url: string): string {
+    try {
+      const parsed = new URL(url);
+      if (parsed.username || parsed.password) {
+        parsed.username = '***';
+        parsed.password = '';
+        return parsed.toString();
+      }
+      return url;
+    } catch {
+      // If URL parsing fails, mask the whole thing to be safe
+      return '***';
+    }
   }
 
   async onModuleDestroy() {
