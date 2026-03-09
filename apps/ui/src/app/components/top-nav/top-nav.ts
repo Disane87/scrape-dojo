@@ -35,4 +35,8 @@ export class TopNavComponent {
   openSettings(): void {
     this.router.navigate([{ outlets: { modal: ['settings-modal'] } }]);
   }
+
+  openChangelog(): void {
+    this.router.navigate([{ outlets: { modal: ['changelog'] } }]);
+  }
 }

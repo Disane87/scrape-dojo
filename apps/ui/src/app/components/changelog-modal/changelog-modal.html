@@ -1,0 +1,23 @@
+<app-modal
+  [isOpen]="isOpen()"
+  [title]="'changelog.title' | transloco"
+  icon="file-text"
+  size="lg"
+  (closed)="close()"
+>
+  <div class="max-h-[70vh] overflow-y-auto pr-1">
+    @if (changelogHtml()) {
+    <div class="changelog-content" [innerHTML]="changelogHtml()"></div>
+    } @else {
+    <div class="text-center py-8">
+      <iconify-icon
+        icon="lucide:file-text"
+        class="w-12 h-12 text-dojo-text-muted/30 mx-auto mb-3"
+      ></iconify-icon>
+      <p class="text-dojo-text-muted text-sm">
+        {{ 'changelog.empty' | transloco }}
+      </p>
+    </div>
+    }
+  </div>
+</app-modal>

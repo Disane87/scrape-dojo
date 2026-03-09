@@ -54,6 +54,10 @@ const loadStatusModal = () =>
   import('./components/status-modal/status-modal').then(
     (m) => m.StatusModalComponent,
   );
+const loadChangelogModal = () =>
+  import('./components/changelog-modal/changelog-modal').then(
+    (m) => m.ChangelogModalComponent,
+  );
 
 export const appRoutes: Route[] = [
   // Auth Routes (public)
@@ -189,6 +193,12 @@ export const appRoutes: Route[] = [
     path: 'status',
     outlet: 'modal',
     loadComponent: loadStatusModal,
+    canActivate: [authGuard],
+  },
+  {
+    path: 'changelog',
+    outlet: 'modal',
+    loadComponent: loadChangelogModal,
     canActivate: [authGuard],
   },
 

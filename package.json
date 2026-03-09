@@ -81,6 +81,7 @@
     "iconify-icon": "^3.0.2",
     "jsonata": "^2.0.5",
     "jsonc-parser": "^3.3.1",
+    "marked": "^17.0.4",
     "monaco-editor": "^0.55.1",
     "ngx-monaco-editor-v2": "^20.3.0",
     "openid-client": "^6.8.1",

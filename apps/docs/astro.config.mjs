@@ -96,6 +96,10 @@ export default defineConfig({
                   },
                   autogenerate: { directory: 'developer' },
               },
+              {
+                  label: '📋 Changelog',
+                  slug: 'changelog',
+              },
           ],
       }),
 	],

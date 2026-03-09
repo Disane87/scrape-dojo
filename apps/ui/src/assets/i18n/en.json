@@ -211,6 +211,7 @@
     "status": "Status",
     "api_docs": "API Docs",
     "github": "GitHub",
+    "changelog": "Changelog",
     "user_menu": "User menu",
     "avatar": "Avatar",
     "settings": "Settings",
@@ -372,6 +373,10 @@
     "refresh": "Refresh",
     "changelog": "Changelog",
     "no_changelog": "No changelog available"
+  },
+  "changelog": {
+    "title": "Changelog",
+    "empty": "No changelog available"
   },
   "json_editor": {
     "unsaved_changes": "Unsaved changes",

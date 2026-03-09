@@ -180,6 +180,15 @@ import 'iconify-icon';
                         <span>{{ 'common.github' | transloco }}</span>
                     </a>
 
+                    <button
+                        type="button"
+                        (click)="openChangelog()"
+                        class="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-dojo-text hover:bg-dojo-surface-2 transition"
+                    >
+                        <iconify-icon icon="mdi:text-box-outline" class="text-lg text-dojo-accent"></iconify-icon>
+                        <span>{{ 'common.changelog' | transloco }}</span>
+                    </button>
+
                     <div class="h-px bg-dojo-border my-1"></div>
 
                     @if (authService.isAdmin()) {
@@ -235,6 +244,7 @@ export class UserMenuComponent {
   showApiDocs = output<void>();
   showStatus = output<void>();
   showSettings = output<void>();
+  showChangelog = output<void>();
 
   private readonly menu = viewChild<ElementRef<HTMLDetailsElement>>('menu');
 
@@ -287,6 +297,11 @@ export class UserMenuComponent {
   openSettings(): void {
     this.closeMenu();
     this.showSettings.emit();
+  }
+
+  openChangelog(): void {
+    this.closeMenu();
+    this.showChangelog.emit();
   }
 
   cycleTheme(): void {

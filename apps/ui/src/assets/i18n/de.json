@@ -218,6 +218,7 @@
     "refresh": "Aktualisieren",
     "api_docs": "API Docs",
     "github": "GitHub",
+    "changelog": "Changelog",
     "user_menu": "Benutzermenü",
     "avatar": "Avatar",
     "settings": "Einstellungen",
@@ -379,6 +380,10 @@
     "refresh": "Aktualisieren",
     "changelog": "Changelog",
     "no_changelog": "Kein Changelog verfügbar"
+  },
+  "changelog": {
+    "title": "Changelog",
+    "empty": "Kein Changelog verfügbar"
   },
   "json_editor": {
     "unsaved_changes": "Ungespeicherte Änderungen",
