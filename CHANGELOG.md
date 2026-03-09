@@ -1,3 +1,11 @@
+## [1.10.0](https://github.com/disane87/scrape-dojo/compare/v1.9.0...v1.10.0) (2026-03-09)
+
+### 🚀 Features
+
+- **🎨 ui:** add docs link to sidebar version footer ([0e3ad82](https://github.com/disane87/scrape-dojo/commit/0e3ad82ee4df836f985d58e71559347da279cf90)), closes [#56](https://github.com/disane87/scrape-dojo/issues/56)
+- **🎨 ui:** add docs link to user menu and status modal footer ([76471f3](https://github.com/disane87/scrape-dojo/commit/76471f37d8ae3ee22b6ea1795af6147d81d06dfc)), closes [#56](https://github.com/disane87/scrape-dojo/issues/56)
+- **🎨 ui:** show version, commit hash and docs link in status modal footer ([5a5bc7d](https://github.com/disane87/scrape-dojo/commit/5a5bc7d7d6f5b5d036e8b7ba4f6ddccb87f338ef)), closes [#56](https://github.com/disane87/scrape-dojo/issues/56)
+
 ## [1.9.0](https://github.com/disane87/scrape-dojo/compare/v1.8.0...v1.9.0) (2026-03-09)
 
 ### 🚀 Features
