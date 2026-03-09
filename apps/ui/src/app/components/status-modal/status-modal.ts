@@ -12,6 +12,7 @@ import { ModalComponent } from '../shared';
 import { HealthService } from '../../services/health.service';
 import { LanguageService } from '../../services/language.service';
 import { TranslocoModule } from '@jsverse/transloco';
+import { environment } from '../../../environments/environment';
 import 'iconify-icon';
 
 @Component({
@@ -67,6 +68,9 @@ export class StatusModalComponent implements OnInit {
     if (!variables) return [];
     return Object.entries(variables).sort((a, b) => a[0].localeCompare(b[0]));
   });
+
+  uiVersion = environment.version;
+  gitCommit = environment.gitCommit;
 
   docsUrl(): string {
     const lang = this.languageService.getLanguage();
