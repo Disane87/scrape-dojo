@@ -1,4 +1,5 @@
 import { vi } from 'vitest';
+import { of, throwError } from 'rxjs';
 
 const mockAuthService: any = {
   getAccessToken: vi.fn(),
@@ -109,26 +110,26 @@ describe('Auth Guards', () => {
 
   describe('setupGuard', () => {
     it('should return true when setup is required', async () => {
-      mockAuthService.checkSetupRequired.mockReturnValue({
-        toPromise: () => Promise.resolve({ required: true }),
-      });
+      mockAuthService.checkSetupRequired.mockReturnValue(
+        of({ required: true }),
+      );
       const result = await setupGuard(mockRoute, mockState);
       expect(result).toBe(true);
     });
 
     it('should redirect to login when setup not required', async () => {
-      mockAuthService.checkSetupRequired.mockReturnValue({
-        toPromise: () => Promise.resolve({ required: false }),
-      });
+      mockAuthService.checkSetupRequired.mockReturnValue(
+        of({ required: false }),
+      );
       const result = await setupGuard(mockRoute, mockState);
       expect(result).toBe(false);
       expect(mockRouter.navigate).toHaveBeenCalledWith(['/login']);
     });
 
     it('should redirect to login on error', async () => {
-      mockAuthService.checkSetupRequired.mockReturnValue({
-        toPromise: () => Promise.reject(new Error('Network error')),
-      });
+      mockAuthService.checkSetupRequired.mockReturnValue(
+        throwError(() => new Error('Network error')),
+      );
       const result = await setupGuard(mockRoute, mockState);
       expect(result).toBe(false);
       expect(mockRouter.navigate).toHaveBeenCalledWith(['/login']);

@@ -5,6 +5,7 @@ import {
   inject,
   isDevMode,
 } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { appRoutes } from './app.routes';
@@ -46,7 +47,7 @@ export const appConfig: ApplicationConfig = {
           // Set the language first
           const initialLang = languageService.getLanguage();
           // Wait for the translation to load before app starts
-          return translocoService.load(initialLang).toPromise();
+          return firstValueFrom(translocoService.load(initialLang));
         };
       },
       multi: true,

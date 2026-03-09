@@ -5,6 +5,7 @@ import {
   ActivatedRouteSnapshot,
   RouterStateSnapshot,
 } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 
 /**
@@ -78,7 +79,7 @@ export const setupGuard: CanActivateFn = async () => {
   const router = inject(Router);
 
   try {
-    const status = await authService.checkSetupRequired().toPromise();
+    const status = await firstValueFrom(authService.checkSetupRequired());
     if (status?.required) {
       return true;
     }

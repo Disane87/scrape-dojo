@@ -25,6 +25,7 @@ import {
   AlertComponent,
 } from '../shared';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { firstValueFrom } from 'rxjs';
 import 'iconify-icon';
 
 @Component({
@@ -134,9 +135,9 @@ export class ScheduleModalComponent implements OnInit {
     console.log(`📅 Loading schedule for: ${scrapeId}`);
 
     try {
-      const schedule = await this.scrapeService
-        .getSchedule(scrapeId)
-        .toPromise();
+      const schedule = await firstValueFrom(
+        this.scrapeService.getSchedule(scrapeId),
+      );
       console.log(`📅 Schedule loaded:`, schedule);
 
       if (schedule) {
@@ -181,14 +182,14 @@ export class ScheduleModalComponent implements OnInit {
     this.error.set(null);
 
     try {
-      const schedule = await this.scrapeService
-        .updateSchedule(scrapeId, {
+      const schedule = await firstValueFrom(
+        this.scrapeService.updateSchedule(scrapeId, {
           manualEnabled: this.manualEnabled(),
           scheduleEnabled: this.scheduleEnabled(),
           cronExpression: this.scheduleEnabled() ? this.cronExpression() : null,
           timezone: this.timezone(),
-        })
-        .toPromise();
+        }),
+      );
 
       if (schedule) {
         this.saved.emit(schedule);

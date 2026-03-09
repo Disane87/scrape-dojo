@@ -148,7 +148,7 @@ export class HealthService {
    */
   async checkHealth(): Promise<HealthStatus | null> {
     try {
-      const health = await this.api.get<HealthStatus>('health').toPromise();
+      const health = await firstValueFrom(this.api.get<HealthStatus>('health'));
       return health ?? null;
     } catch {
       return null;
