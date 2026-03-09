@@ -1,3 +1,15 @@
+## [1.10.1](https://github.com/disane87/scrape-dojo/compare/v1.10.0...v1.10.1) (2026-03-09)
+
+### 🛠️ Fixes
+
+- **🖥️ api:** redact variable values in debug log output ([3d2f121](https://github.com/disane87/scrape-dojo/commit/3d2f1217452b63f53cd8abd5834f16b75ea9e096)), closes [#54](https://github.com/disane87/scrape-dojo/issues/54)
+- **🖥️ api:** respect SCRAPE_DOJO_NODE_ENV for puppeteer headless mode ([670eb2e](https://github.com/disane87/scrape-dojo/commit/670eb2e1d6d930bca97dc01d39be980f01e24cc8)), closes [#33](https://github.com/disane87/scrape-dojo/issues/33)
+
+### ♻️ Refactor
+
+- **🎨 ui:** replace deprecated toPromise with firstValueFrom ([8f14a36](https://github.com/disane87/scrape-dojo/commit/8f14a36eb64bafbd909d19e1aaf2f48f081778d1)), closes [#26](https://github.com/disane87/scrape-dojo/issues/26)
+- **🖥️ api:** replace console.log with NestJS Logger in action registry ([c64785b](https://github.com/disane87/scrape-dojo/commit/c64785bceeaaf7328e45211c103471ba4a4d10f8)), closes [#31](https://github.com/disane87/scrape-dojo/issues/31)
+
 ## [1.10.0](https://github.com/disane87/scrape-dojo/compare/v1.9.0...v1.10.0) (2026-03-09)
 
 ### 🚀 Features
