@@ -1,3 +1,9 @@
+## [1.8.0](https://github.com/disane87/scrape-dojo/compare/v1.7.2...v1.8.0) (2026-03-09)
+
+### feat
+
+- **🎨 ui:** add version injection and changelog display (#56) ([](https://github.com/disane87/scrape-dojo/commit/f4643d620800cba67c4a7d47ce568d5a83104e4b)), closes [#56](https://github.com/disane87/scrape-dojo/issues/56)
+
 ## [1.7.2](https://github.com/disane87/scrape-dojo/compare/v1.7.1...v1.7.2) (2026-03-08)
 
 ### fix
