@@ -132,13 +132,10 @@ export class ScheduleModalComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
 
-    console.log(`📅 Loading schedule for: ${scrapeId}`);
-
     try {
       const schedule = await firstValueFrom(
         this.scrapeService.getSchedule(scrapeId),
       );
-      console.log(`📅 Schedule loaded:`, schedule);
 
       if (schedule) {
         this.manualEnabled.set(schedule.manualEnabled);
@@ -147,10 +144,6 @@ export class ScheduleModalComponent implements OnInit {
         this.timezone.set(schedule.timezone || 'Europe/Berlin');
         this.lastScheduledRun.set(schedule.lastScheduledRun);
         this.nextScheduledRun.set(schedule.nextScheduledRun);
-
-        console.log(
-          `📅 Schedule state set - scheduleEnabled: ${schedule.scheduleEnabled}, cronExpression: ${schedule.cronExpression}`,
-        );
 
         this.originalState = {
           manualEnabled: schedule.manualEnabled,
@@ -161,7 +154,7 @@ export class ScheduleModalComponent implements OnInit {
         this.hasChanges.set(false);
       }
     } catch (err: any) {
-      console.error(`📅 Error loading schedule:`, err);
+      console.error('Error loading schedule:', err);
       this.error.set(
         err.message || this.transloco.translate('common.load_failed'),
       );

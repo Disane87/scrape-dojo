@@ -67,7 +67,7 @@ export class FilesService {
           }
         },
         error: (error) => {
-          console.error('❌ Download error:', error);
+          console.error('Download error:', error);
           alert(`Fehler beim Herunterladen der Datei: ${error.message}`);
         },
       });

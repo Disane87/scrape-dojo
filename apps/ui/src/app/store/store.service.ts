@@ -46,8 +46,6 @@ export class StoreService {
       this.hasInitialized = false;
       this.isInitializing = false;
     });
-
-    console.log('🏪 StoreService initialized');
   }
 
   /**
@@ -61,11 +59,8 @@ export class StoreService {
 
     // Skip initialization until the stored session has been validated.
     if (!this.authService.isSessionValidated()) {
-      console.log('⏭️ Skipping store initialization - session not validated');
       return;
     }
-
-    console.log('🚀 Initializing stores...');
 
     this.isInitializing = true;
 
@@ -76,10 +71,9 @@ export class StoreService {
         this.variables.load(),
       ]);
 
-      console.log('✅ All stores initialized');
       this.hasInitialized = true;
     } catch (error) {
-      console.error('❌ Store initialization failed:', error);
+      console.error('Store initialization failed:', error);
     } finally {
       this.isInitializing = false;
     }

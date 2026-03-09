@@ -40,16 +40,14 @@ export abstract class EntityStore<T extends Entity> {
   readonly count = computed(() => this._entities().length);
   readonly isEmpty = computed(() => this._entities().length === 0);
 
-  constructor(protected config: EntityStoreConfig<T>) {
-    console.log(`📦 ${config.storeName} initialized`);
-  }
+  constructor(protected config: EntityStoreConfig<T>) {}
 
   /**
    * Alle Entities vom Server laden
    */
   async load(): Promise<void> {
     if (!this.config.loadFn) {
-      console.warn(`⚠️ ${this.config.storeName}: No loadFn configured`);
+      console.warn(`${this.config.storeName}: No loadFn configured`);
       return;
     }
 
@@ -59,13 +57,10 @@ export abstract class EntityStore<T extends Entity> {
     try {
       const entities = await this.config.loadFn();
       this._entities.set(entities);
-      console.log(
-        `✅ ${this.config.storeName} loaded: ${entities.length} items`,
-      );
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
       this._error.set(errorMsg);
-      console.error(`❌ ${this.config.storeName} load failed:`, errorMsg);
+      console.error(`${this.config.storeName} load failed:`, errorMsg);
     } finally {
       this._loading.set(false);
     }
@@ -90,7 +85,6 @@ export abstract class EntityStore<T extends Entity> {
    */
   add(entity: T): void {
     this._entities.update((entities) => [entity, ...entities]);
-    console.log(`➕ ${this.config.storeName}: Added ${entity.id}`);
   }
 
   /**
@@ -100,7 +94,6 @@ export abstract class EntityStore<T extends Entity> {
     this._entities.update((entities) =>
       entities.map((e) => (e.id === id ? { ...e, ...updates } : e)),
     );
-    console.log(`🔄 ${this.config.storeName}: Updated ${id}`);
   }
 
   /**
@@ -110,7 +103,6 @@ export abstract class EntityStore<T extends Entity> {
     this._entities.update((entities) =>
       entities.map((e) => (e.id === id ? updater(e) : e)),
     );
-    console.log(`🔄 ${this.config.storeName}: Updated ${id} (custom)`);
   }
 
   /**
@@ -118,7 +110,6 @@ export abstract class EntityStore<T extends Entity> {
    */
   remove(id: string): void {
     this._entities.update((entities) => entities.filter((e) => e.id !== id));
-    console.log(`🗑️ ${this.config.storeName}: Removed ${id}`);
   }
 
   /**
@@ -126,7 +117,6 @@ export abstract class EntityStore<T extends Entity> {
    */
   clear(): void {
     this._entities.set([]);
-    console.log(`🧹 ${this.config.storeName}: Cleared`);
   }
 
   /**

@@ -46,18 +46,12 @@ export class AppDataService {
   async initialize(): Promise<void> {
     // Skip initialization until the stored session has been validated.
     if (!this.authService.isSessionValidated()) {
-      console.log(
-        '⏭️ Skipping app data initialization - session not validated',
-      );
       return;
     }
 
     if (this._initialized()) {
-      console.log('⚡ ActionMetadata already initialized, skipping...');
       return;
     }
-
-    console.log('🚀 Loading action metadata...');
 
     try {
       const actionMetadata = await firstValueFrom(
@@ -67,19 +61,15 @@ export class AppDataService {
       this._actionMetadata.set(actionMetadata);
       this._initialized.set(true);
 
-      console.log(
-        `✅ Action metadata loaded: ${Object.keys(actionMetadata).length} actions`,
-      );
-
       // Lade Runs um laufende Jobs zu erkennen
       // Dies passiert asynchron im Hintergrund
       this.runsStore
         .load()
         .catch((err) =>
-          console.error('❌ Failed to load runs for reconnection:', err),
+          console.error('Failed to load runs for reconnection:', err),
         );
     } catch (error) {
-      console.error('❌ Failed to load action metadata:', error);
+      console.error('Failed to load action metadata:', error);
       this._initialized.set(true);
     }
   }

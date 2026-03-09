@@ -85,10 +85,6 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
       });
 
       if (isDuplicate) {
-        console.log(
-          `⚠️ Artifact already exists, skipping:`,
-          artifact.title || artifact.name,
-        );
         return run;
       }
 
@@ -125,11 +121,8 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
     );
 
     if (runningRuns.length === 0) {
-      console.log('✅ No running jobs to reconnect');
       return;
     }
-
-    console.log(`🔄 Reconnecting ${runningRuns.length} running job(s)...`);
 
     for (const run of runningRuns) {
       try {
@@ -143,10 +136,6 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
 
         // Wenn immer noch running, aktualisiere auch Scrape-Status
         if (updatedRun.status === 'running') {
-          console.log(
-            `✅ Reconnected to running job: ${run.id} (${run.scrapeId})`,
-          );
-
           // Aktualisiere Scrape-Status auf "running"
           this.scrapesStore.update(updatedRun.scrapeId, {
             lastRun: {
@@ -156,10 +145,6 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
             },
           } as any);
         } else {
-          console.log(
-            `ℹ️ Job ${run.id} is no longer running (${updatedRun.status})`,
-          );
-
           // Aktualisiere Scrape mit finalem Status
           this.scrapesStore.update(updatedRun.scrapeId, {
             lastRun: {
@@ -171,7 +156,7 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
           } as any);
         }
       } catch (error) {
-        console.error(`❌ Failed to reconnect job ${run.id}:`, error);
+        console.error(`Failed to reconnect job ${run.id}:`, error);
       }
     }
   }
@@ -249,7 +234,6 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
       };
 
       this.add(newRun);
-      console.log('➕ New run added to store:', event.runId);
     }
   }
 
@@ -279,8 +263,6 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
       error: event.error,
     }));
 
-    console.log(`✅ Run ${event.runId} ${status}`);
-
     // Nach erfolgreichem Abschluss: Lade Debug-Daten und Artifacts
     if (status === 'success' && event.scrapeId) {
       this.loadRunData(event.runId, event.scrapeId);
@@ -299,7 +281,6 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
       );
       if (debugData) {
         this.cacheDebugData(runId, debugData);
-        console.log(`📊 Debug data loaded for run ${runId}`);
       }
 
       // Artifacts laden
@@ -308,10 +289,9 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
       )) as any[];
       if (artifacts && artifacts.length > 0) {
         this.cacheArtifacts(runId, artifacts);
-        console.log(`📦 ${artifacts.length} artifacts loaded for run ${runId}`);
       }
     } catch (error) {
-      console.warn(`⚠️ Failed to load run data for ${runId}:`, error);
+      console.warn(`Failed to load run data for ${runId}:`, error);
     }
   }
 
@@ -441,7 +421,7 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
    */
   private handleLoopIteration(runId: string, event: ScrapeEvent): void {
     if (!event.loopName) {
-      console.warn('⚠️ Loop iteration event without loopName:', event);
+      console.warn('Loop iteration event without loopName:', event);
       return;
     }
 
@@ -452,23 +432,11 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
     const loopPath = event.loopPath || [];
     const iterationStatus = event.status || 'running';
 
-    console.log('🔄 Store: Loop iteration:', {
-      loopName,
-      loopIndex,
-      loopTotal,
-      loopValue,
-      loopPath,
-      iterationStatus,
-      runId,
-    });
-
     const run = this.entities().find((r) => r.id === runId);
     if (!run) {
-      console.error('❌ Run not found for loop iteration:', runId);
+      console.error('Run not found for loop iteration:', runId);
       return;
     }
-
-    console.log('📊 Current run:', run);
 
     this.updateWith(runId, (run) => ({
       ...run,
@@ -486,10 +454,6 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
         ),
       })),
     }));
-
-    // Log updated run
-    const updatedRun = this.entities().find((r) => r.id === runId);
-    console.log('✅ Updated run:', updatedRun);
   }
 
   /**
@@ -505,13 +469,6 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
     currentDepth: number = 0,
     iterationStatus: string = 'running',
   ): RunActionItem[] {
-    console.log(
-      `🔍 updateActionsWithLoopIteration: depth=${currentDepth}, loopName="${loopName}", status=${iterationStatus}, loopPath=`,
-      loopPath,
-      'actions count=',
-      actions.length,
-    );
-
     // Map status to UI status
     const uiStatus =
       iterationStatus === 'completed'
@@ -523,21 +480,13 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
     return actions.map((action) => {
       // Ziel-Loop gefunden
       if (currentDepth === loopPath.length && action.name === loopName) {
-        console.log(
-          `🎯 Found target loop: ${loopName}, actionType: ${action.actionType}, status: ${iterationStatus}`,
-        );
-
         const iterations = [...(action.loopIterations || [])];
-        console.log(`📝 Current iterations:`, iterations);
 
         // Existierende Iteration aktualisieren
         const existingIdx = iterations.findIndex(
           (it) => it.index === loopIndex,
         );
         if (existingIdx >= 0) {
-          console.log(
-            `✏️ Updating existing iteration at index ${existingIdx} to status: ${uiStatus}`,
-          );
           iterations[existingIdx] = {
             ...iterations[existingIdx],
             status: uiStatus as 'running' | 'success' | 'failed',
@@ -553,9 +502,6 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
           if (iterations.length > 0) {
             const lastIdx = iterations.length - 1;
             if (iterations[lastIdx].status === 'running') {
-              console.log(
-                `✅ Completing previous iteration at index ${lastIdx}`,
-              );
               iterations[lastIdx] = {
                 ...iterations[lastIdx],
                 status: 'success',
@@ -572,9 +518,6 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
               loopIterations: na.actionType === 'loop' ? [] : undefined,
             })) || [];
 
-          console.log(
-            `➕ Adding new iteration ${loopIndex}/${loopTotal}, value: ${loopValue}`,
-          );
           iterations.push({
             index: loopIndex,
             value: loopValue,
@@ -591,8 +534,6 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
           loopCurrent: loopIndex + 1,
         };
 
-        console.log(`🔄 Updated action:`, updatedAction);
-
         return updatedAction;
       }
 
@@ -601,7 +542,6 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
         currentDepth < loopPath.length &&
         action.name === loopPath[currentDepth].name
       ) {
-        console.log(`🔗 Traversing parent loop: ${action.name}`);
         const parentIterationIndex = loopPath[currentDepth].index;
 
         const updatedNestedActions = this.updateActionsWithLoopIteration(

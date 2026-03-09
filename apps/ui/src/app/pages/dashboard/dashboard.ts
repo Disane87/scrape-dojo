@@ -365,12 +365,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const definition = this.selectedScrapeDefinition();
     if (!id || this.isRunning()) return;
 
-    console.log('🚀 runScrape called for:', id);
-    console.log('📋 Definition:', definition);
-
     // Prüfe ob Variablen definiert sind
     const variables = definition?.metadata?.variables || [];
-    console.log('📊 Variables found:', variables);
 
     if (variables.length > 0) {
       // Zeige Run-Dialog für Variablen-Eingabe via Auxiliary Route
@@ -527,7 +523,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     // Config-Reload (Scrapes neu laden)
     if (event.type === 'config-reload') {
-      console.log('🔄 Config files changed, reloading stores...');
       this.store.reload();
       this.notificationService.showFromBackend({
         notificationId: `config-reload-${Date.now()}`,

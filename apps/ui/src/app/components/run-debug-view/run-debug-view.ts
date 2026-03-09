@@ -173,17 +173,10 @@ export class RunDebugViewComponent implements AfterViewInit, OnDestroy {
     effect(() => {
       const currentRun = this.run();
       const isViewerReady = this.monacoLoaded() || this.monacoFailed();
-      console.log('🔍 Debug view effect:', {
-        runId: currentRun?.id,
-        isViewerReady,
-        lastLoaded: this.lastLoadedRunId,
-      });
-
       if (currentRun && isViewerReady) {
         // Nur laden wenn es ein anderer Run ist
         if (this.lastLoadedRunId !== currentRun.id) {
           this.lastLoadedRunId = currentRun.id;
-          console.log('📊 Loading debug data for run:', currentRun.id);
           this.loadDebugData(currentRun);
         }
       }
@@ -198,7 +191,7 @@ export class RunDebugViewComponent implements AfterViewInit, OnDestroy {
       this.monacoLoaded.set(!!this.editor);
     } catch (error) {
       console.warn(
-        '⚠️ Monaco could not be loaded, falling back to plain text viewer.',
+        'Monaco could not be loaded, falling back to plain text viewer.',
         error,
       );
       this.monacoFailed.set(true);
@@ -277,7 +270,6 @@ export class RunDebugViewComponent implements AfterViewInit, OnDestroy {
     // Prüfe ob Debug-Daten bereits gecacht sind
     const cachedDebugData = this.store.runs.getDebugData(run.id);
     if (cachedDebugData) {
-      console.log('📦 Using cached debug data for run', run.id);
       this.displayDebugData(cachedDebugData);
 
       // Artifacts separat laden
@@ -314,15 +306,8 @@ export class RunDebugViewComponent implements AfterViewInit, OnDestroy {
     // Prüfe ob bereits Artifacts im Store gecacht sind
     const cachedArtifacts = this.store.runs.getArtifacts(runId);
     if (cachedArtifacts.length > 0) {
-      console.log(
-        '📦 Using cached artifacts for run',
-        runId,
-        cachedArtifacts.length,
-      );
       return; // Artifacts sind bereits im Store, computed Signal wird sie anzeigen
     }
-
-    console.log('📥 Loading artifacts for run', runId);
 
     // Lade Artifacts vom Server und speichere im Store
     this.scrapeService
@@ -333,13 +318,6 @@ export class RunDebugViewComponent implements AfterViewInit, OnDestroy {
           if (artifacts && artifacts.length > 0) {
             // Cache artifacts im Store - das computed Signal reagiert automatisch
             this.store.runs.cacheArtifacts(runId, artifacts);
-            console.log(
-              '📥 Loaded and cached artifacts for run',
-              runId,
-              artifacts.length,
-            );
-          } else {
-            console.log('📭 No artifacts found for run', runId);
           }
         },
         error: (err) => {

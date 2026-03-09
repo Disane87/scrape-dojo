@@ -104,14 +104,12 @@ export class AuthService {
    * Load OIDC configuration
    */
   loadOidcConfig(): void {
-    console.log('[AuthService] Loading OIDC config...');
     this.http.get<OidcConfig>('/api/auth/oidc/config').subscribe({
       next: (config) => {
-        console.log('[AuthService] OIDC config loaded:', config);
         this._oidcConfig.set(config);
       },
       error: (err) => {
-        console.error('[AuthService] OIDC config error:', err);
+        console.error('Failed to load OIDC config:', err);
         this._oidcConfig.set({ enabled: false, name: '' });
       },
     });

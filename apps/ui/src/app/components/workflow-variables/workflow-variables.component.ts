@@ -152,7 +152,6 @@ export class WorkflowVariablesComponent {
             description: data.description?.trim(),
           },
         );
-        console.log('Variable updated:', updated);
         // Store direkt aktualisieren statt kompletten Reload
         this.store.variables.update(updated.id, updated);
       } else {
@@ -163,7 +162,6 @@ export class WorkflowVariablesComponent {
           scope: 'workflow',
           workflowId: this.workflowId(),
         });
-        console.log('Variable created:', created);
         // Neue Variable direkt zum Store hinzufügen
         this.store.variables.add(created as any);
       }

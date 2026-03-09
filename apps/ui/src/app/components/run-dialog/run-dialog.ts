@@ -127,21 +127,14 @@ export class RunDialogComponent implements OnInit {
           // Load variables from Router state (passed from Dashboard)
           // Note: getCurrentNavigation() is null after navigation completes, use window.history.state
           const state = window.history.state as any;
-          console.log('🔍 Router state:', state);
 
           if (state?.variables) {
-            console.log(
-              '📋 Loading variables from router state:',
-              state.variables,
-            );
             this.variables.set(state.variables);
             this.workflowName.set(state.workflowName || id);
 
             // Now load and merge with DB variables
             this.loadAndMergeVariables();
             this.loadSecrets();
-          } else {
-            console.warn('⚠️ No variables in router state');
           }
         }
       });
@@ -158,8 +151,6 @@ export class RunDialogComponent implements OnInit {
 
     // Hole DB-Variablen für diesen Workflow
     const dbVariables = this.store.variables.getByWorkflow(id);
-    console.log('📊 DB Variables for workflow:', id, dbVariables);
-    console.log('📋 Workflow definitions:', vars);
 
     // Initialisiere Werte mit defaults aus Definitionen
     const values: Record<string, any> = {};
@@ -211,14 +202,14 @@ export class RunDialogComponent implements OnInit {
 
           if (!secret) {
             // Secret nicht gefunden - markiere als fehlend
-            console.warn(`⚠️ Secret not found: ${v.secretRef}`);
+            console.warn(`Secret not found: ${v.secretRef}`);
             lookup[v.name] = `⚠️ Missing: ${v.secretRef}`;
             if (v.required) {
               missingSecrets.push(v.secretRef);
             }
           } else if (secret.isEmpty) {
             // Secret existiert aber ist leer
-            console.warn(`⚠️ Secret is empty: ${secret.name}`, secret);
+            console.warn(`Secret is empty: ${secret.name}`);
             lookup[v.name] = `⚠️ Empty: ${secret.name}`;
             if (v.required) {
               missingSecrets.push(v.secretRef);
@@ -235,7 +226,7 @@ export class RunDialogComponent implements OnInit {
 
       // Log missing required secrets
       if (missingSecrets.length > 0) {
-        console.warn('⚠️ Missing required secrets:', missingSecrets);
+        console.warn('Missing required secrets:', missingSecrets);
       }
     } catch (err: any) {
       console.error('Failed to load secrets:', err);
