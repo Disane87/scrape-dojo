@@ -1,4 +1,7 @@
+import { Logger } from '@nestjs/common';
 import { ActionMetadata } from '../types/action-metadata.types';
+
+const logger = new Logger('ActionRegistry');
 
 // Typ zur Speicherung der registrierten Aktion und ihres Namens
 export interface RegisteredAction {
@@ -42,7 +45,7 @@ export function Action(name: string, options: ActionDecoratorOptions) {
 
     // Füge die Aktion zur Liste der registrierten Aktionen hinzu
     registeredActions.push({ name, actionClass: constructor, metadata });
-    console.log(`✓ Action registered: ${name} (${options.displayName})`);
+    logger.debug(`Action registered: ${name} (${options.displayName})`);
   };
 }
 
