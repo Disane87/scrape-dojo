@@ -12,6 +12,25 @@ const scopeEmojis = {
   release: '🏷️',
 };
 
+const typeMap = {
+  feat: '🚀 Features',
+  fix: '🛠️ Fixes',
+  perf: '⚡ Performance',
+  revert: '🔙 Reverts',
+  docs: '📔 Docs',
+  style: '💎 Styles',
+  refactor: '♻️ Refactor',
+  test: '🧪 Tests',
+  build: '📦 Build',
+  ci: '🤖 CI',
+};
+
+const types = Object.entries(typeMap).map(([type, section]) => ({
+  type,
+  section,
+}));
+types.push({ type: 'chore', section: '🔧 Chore', hidden: true });
+
 module.exports = {
   branches: ['main'],
   tagFormat: 'v${version}',
@@ -26,27 +45,30 @@ module.exports = {
       '@semantic-release/release-notes-generator',
       {
         preset: 'conventionalcommits',
-        presetConfig: {
-          types: [
-            { type: 'feat', section: '🚀 Features' },
-            { type: 'fix', section: '🛠️ Fixes' },
-            { type: 'perf', section: '⚡ Performance' },
-            { type: 'revert', section: '🔙 Reverts' },
-            { type: 'docs', section: '📔 Docs' },
-            { type: 'style', section: '💎 Styles' },
-            { type: 'refactor', section: '♻️ Refactor' },
-            { type: 'test', section: '🧪 Tests' },
-            { type: 'build', section: '📦 Build' },
-            { type: 'ci', section: '🤖 CI' },
-            { type: 'chore', section: '🔧 Chore', hidden: true },
-          ],
-        },
+        presetConfig: { types },
         writerOpts: {
           transform: (commit) => {
             const result = { ...commit };
+
+            // Set shortHash for commit link display
+            if (result.hash) {
+              result.shortHash = result.hash.substring(0, 7);
+            }
+
+            // Map type to section header (replaces preset default transform)
+            if (result.type && typeMap[result.type]) {
+              result.type = typeMap[result.type];
+            } else if (result.type === 'chore') {
+              return false;
+            } else if (!result.type) {
+              return false;
+            }
+
+            // Add emoji prefix to scope
             if (result.scope && scopeEmojis[result.scope]) {
               result.scope = `${scopeEmojis[result.scope]} ${result.scope}`;
             }
+
             return result;
           },
         },
