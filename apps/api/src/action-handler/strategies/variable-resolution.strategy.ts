@@ -39,8 +39,11 @@ export class VariableResolutionStrategy {
       );
     }
 
+    const redactedMap = Object.fromEntries(
+      Object.keys(variablesMap).map((key) => [key, '***']),
+    );
     this.logger.debug(
-      `🔧 Final variables map: ${JSON.stringify(variablesMap)}`,
+      `🔧 Final variables map (values redacted): ${JSON.stringify(redactedMap)}`,
     );
     return variablesMap;
   }
