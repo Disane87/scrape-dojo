@@ -1,5 +1,6 @@
 import { Injectable, NgZone, inject } from '@angular/core';
-import { Subject } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { Subject, firstValueFrom } from 'rxjs';
 import { ScrapeEvent } from '@scrape-dojo/shared';
 import { NotificationService } from './notification.service';
 import { AuthService } from '../auth/services/auth.service';
@@ -8,6 +9,7 @@ import { AuthService } from '../auth/services/auth.service';
   providedIn: 'root',
 })
 export class ScrapeEventsService {
+  private http = inject(HttpClient);
   private ngZone = inject(NgZone);
   private notificationService = inject(NotificationService);
   private authService = inject(AuthService);
@@ -38,40 +40,67 @@ export class ScrapeEventsService {
     // Request notification permission on connect
     this.notificationService.requestPermission();
 
-    this.ngZone.runOutsideAngular(() => {
-      const url = `/api/events?access_token=${encodeURIComponent(token)}`;
-      this.eventSource = new EventSource(url);
-      this.connecting = false;
+    // Exchange the JWT for a short-lived, opaque SSE ticket so the real
+    // token never appears in a URL (query string, server logs, browser history).
+    firstValueFrom(this.http.post<{ ticket: string }>('/api/events/ticket', {}))
+      .then((res) => {
+        this.ngZone.runOutsideAngular(() => {
+          const url = `/api/events?ticket=${encodeURIComponent(res.ticket)}`;
+          this.eventSource = new EventSource(url);
+          this.connecting = false;
 
-      this.eventSource.onopen = () => {
-        this.retryCount = 0;
-      };
+          this.eventSource.onopen = () => {
+            this.retryCount = 0;
+          };
 
-      this.eventSource.onmessage = (event) => {
-        this.ngZone.run(() => {
-          try {
-            const data = JSON.parse(event.data) as ScrapeEvent;
-            this.eventsSubject.next(data);
+          this.eventSource.onmessage = (event) => {
+            this.ngZone.run(() => {
+              try {
+                const data = JSON.parse(event.data) as ScrapeEvent;
+                this.eventsSubject.next(data);
 
-            // Send browser notifications for key events
-            this.handleNotification(data);
-          } catch (e) {
-            console.error('Failed to parse SSE event:', e);
-          }
+                // Send browser notifications for key events
+                this.handleNotification(data);
+              } catch (e) {
+                console.error('Failed to parse SSE event:', e);
+              }
+            });
+          };
+
+          this.eventSource.onerror = () => {
+            this.closeEventSource();
+
+            if (this.retryCount >= this.maxRetries) {
+              console.error(
+                `SSE: max retries (${this.maxRetries}) reached, giving up`,
+              );
+              return;
+            }
+
+            // Exponential backoff: 3s, 6s, 12s, 24s, 30s (capped)
+            const delay = Math.min(
+              this.baseRetryDelay * Math.pow(2, this.retryCount),
+              this.maxRetryDelay,
+            );
+            this.retryCount++;
+
+            this.retryTimeout = setTimeout(() => {
+              this.retryTimeout = null;
+              if (this.authService.getAccessToken()) {
+                this.connect();
+              }
+            }, delay);
+          };
         });
-      };
-
-      this.eventSource.onerror = () => {
-        this.closeEventSource();
+      })
+      .catch(() => {
+        // Ticket request failed (e.g. 401) — treat like an SSE connection error
+        this.connecting = false;
 
         if (this.retryCount >= this.maxRetries) {
-          console.error(
-            `SSE: max retries (${this.maxRetries}) reached, giving up`,
-          );
           return;
         }
 
-        // Exponential backoff: 3s, 6s, 12s, 24s, 30s (capped)
         const delay = Math.min(
           this.baseRetryDelay * Math.pow(2, this.retryCount),
           this.maxRetryDelay,
@@ -84,8 +113,7 @@ export class ScrapeEventsService {
             this.connect();
           }
         }, delay);
-      };
-    });
+      });
   }
 
   /**

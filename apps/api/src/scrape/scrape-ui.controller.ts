@@ -5,15 +5,18 @@ import {
   Put,
   Body,
   Res,
+  Req,
   HttpStatus,
   Sse,
   Param,
   Query,
   Delete,
+  UnauthorizedException,
 } from '@nestjs/common';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { ScrapeService } from './scrape.service';
 import { ScrapeEventsService } from './scrape-events.service';
+import { SseTicketService } from './sse-ticket.service';
 import { SchedulerService } from './scheduler.service';
 import { DatabaseService } from '../database/database.service';
 import { AuthorResolverService } from './author-resolver.service';
@@ -48,6 +51,7 @@ export class ScrapeUIController {
   constructor(
     private scrapeService: ScrapeService,
     private scrapeEventsService: ScrapeEventsService,
+    private sseTicketService: SseTicketService,
     private schedulerService: SchedulerService,
     private databaseService: DatabaseService,
     private authorResolverService: AuthorResolverService,
@@ -202,10 +206,36 @@ export class ScrapeUIController {
   }
 
   /**
-   * Server-Sent Events für Live-Status-Updates
+   * Create a short-lived, opaque SSE ticket.
+   * The client exchanges its JWT (via Authorization header) for a one-time ticket,
+   * then passes the ticket as a query parameter when opening the EventSource.
+   * This avoids exposing the JWT in URLs / server logs / browser history.
+   */
+  @Post('events/ticket')
+  createSseTicket(@Req() req: Request) {
+    const user = req.user as { id?: string; sub?: string } | undefined;
+    const userId = user?.id || user?.sub || 'anonymous';
+    const ticket = this.sseTicketService.createTicket(userId);
+    return { ticket };
+  }
+
+  /**
+   * Server-Sent Events für Live-Status-Updates.
+   * Accepts a one-time `ticket` query parameter (obtained via POST /events/ticket).
+   * Falls back to legacy `access_token` query parameter for backwards compatibility.
    */
   @Sse('events')
-  events(): Observable<MessageEvent> {
+  events(@Query('ticket') ticket?: string): Observable<MessageEvent> {
+    // When a ticket is provided, validate it (one-time use)
+    if (ticket) {
+      const userId = this.sseTicketService.validateTicket(ticket);
+      if (!userId) {
+        throw new UnauthorizedException('Invalid or expired SSE ticket');
+      }
+    }
+    // If no ticket is provided, the request was already authenticated by the
+    // JWT guard (via Authorization header or legacy access_token query param).
+
     return this.scrapeEventsService.getEvents().pipe(
       map((event) => ({
         data: JSON.stringify(event),

@@ -18,18 +18,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       configService.get<string>('SCRAPE_DOJO_AUTH_REQUIRE_MFA', 'true') ===
       'true';
     super({
-      jwtFromRequest: ExtractJwt.fromExtractors([
-        ExtractJwt.fromAuthHeaderAsBearerToken(),
-        (req: any) => {
-          if (!req) return null;
-          const path = String(req.path || req.url || '');
-          // Only allow query-string token for SSE endpoint. EventSource can't set headers.
-          if (!path.includes('/events')) return null;
-          const query = req.query || {};
-          const token = query.access_token || query.token;
-          return typeof token === 'string' && token.length > 0 ? token : null;
-        },
-      ]),
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
       secretOrKey: configService.get<string>(
         'SCRAPE_DOJO_AUTH_JWT_SECRET',

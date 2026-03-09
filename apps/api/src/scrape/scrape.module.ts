@@ -20,6 +20,7 @@ import { ScrapeValidationService } from './services/scrape-validation.service';
 import { ActionFactory } from '../action-handler/factories/action.factory';
 import { VariableResolutionStrategy } from '../action-handler/strategies/variable-resolution.strategy';
 import { ActionExecutionStrategy } from '../action-handler/strategies/action-execution.strategy';
+import { SseTicketService } from './sse-ticket.service';
 import { ScrapeLogger } from '../_logger/scrape-logger.service';
 
 @Module({
@@ -46,12 +47,14 @@ import { ScrapeLogger } from '../_logger/scrape-logger.service';
     VariableResolutionStrategy,
     ActionExecutionStrategy,
     ScrapeLogger,
+    SseTicketService,
   ],
   exports: [
     ScrapeService,
     ScrapeEventsService,
     AuthorResolverService,
     SchedulerService,
+    SseTicketService,
   ],
 })
 export class ScrapeModule {}

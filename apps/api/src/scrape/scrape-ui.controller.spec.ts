@@ -1,9 +1,10 @@
 import { vi } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
-import { HttpStatus } from '@nestjs/common';
+import { HttpStatus, UnauthorizedException } from '@nestjs/common';
 import { ScrapeUIController } from './scrape-ui.controller';
 import { ScrapeService } from './scrape.service';
 import { ScrapeEventsService } from './scrape-events.service';
+import { SseTicketService } from './sse-ticket.service';
 import { SchedulerService } from './scheduler.service';
 import { DatabaseService } from '../database/database.service';
 import { AuthorResolverService } from './author-resolver.service';
@@ -13,6 +14,7 @@ describe('ScrapeUIController', () => {
   let controller: ScrapeUIController;
   let mockScrapeService: any;
   let mockScrapeEventsService: any;
+  let mockSseTicketService: any;
   let mockSchedulerService: any;
   let mockDatabaseService: any;
   let mockAuthorResolverService: any;
@@ -45,6 +47,11 @@ describe('ScrapeUIController', () => {
       submitOtp: vi.fn(),
       clearWorkflowEventsForRun: vi.fn(),
       clearWorkflowEventsForScrape: vi.fn(),
+    };
+
+    mockSseTicketService = {
+      createTicket: vi.fn().mockReturnValue('test-ticket-uuid'),
+      validateTicket: vi.fn().mockReturnValue('user-1'),
     };
 
     mockSchedulerService = {
@@ -94,6 +101,7 @@ describe('ScrapeUIController', () => {
       providers: [
         { provide: ScrapeService, useValue: mockScrapeService },
         { provide: ScrapeEventsService, useValue: mockScrapeEventsService },
+        { provide: SseTicketService, useValue: mockSseTicketService },
         { provide: SchedulerService, useValue: mockSchedulerService },
         { provide: DatabaseService, useValue: mockDatabaseService },
         { provide: AuthorResolverService, useValue: mockAuthorResolverService },
@@ -369,6 +377,39 @@ describe('ScrapeUIController', () => {
     });
   });
 
+  // ============ POST /events/ticket ============
+
+  describe('createSseTicket', () => {
+    it('should return a ticket for authenticated user', () => {
+      const req = { user: { id: 'user-1' } } as any;
+
+      const result = controller.createSseTicket(req);
+
+      expect(result).toEqual({ ticket: 'test-ticket-uuid' });
+      expect(mockSseTicketService.createTicket).toHaveBeenCalledWith('user-1');
+    });
+
+    it('should fall back to sub if id is not present', () => {
+      const req = { user: { sub: 'user-sub' } } as any;
+
+      controller.createSseTicket(req);
+
+      expect(mockSseTicketService.createTicket).toHaveBeenCalledWith(
+        'user-sub',
+      );
+    });
+
+    it('should use anonymous if no user info', () => {
+      const req = { user: undefined } as any;
+
+      controller.createSseTicket(req);
+
+      expect(mockSseTicketService.createTicket).toHaveBeenCalledWith(
+        'anonymous',
+      );
+    });
+  });
+
   // ============ SSE /events ============
 
   describe('events', () => {
@@ -382,6 +423,40 @@ describe('ScrapeUIController', () => {
         obs.subscribe((event) => resolve(event));
       });
       expect(result.data).toBe(JSON.stringify({ type: 'test-event' }));
+    });
+
+    it('should validate ticket when provided', async () => {
+      mockScrapeEventsService.getEvents.mockReturnValue(
+        of({ type: 'test-event' }),
+      );
+
+      const obs = controller.events('valid-ticket');
+
+      expect(mockSseTicketService.validateTicket).toHaveBeenCalledWith(
+        'valid-ticket',
+      );
+      const result = await new Promise<any>((resolve) => {
+        obs.subscribe((event) => resolve(event));
+      });
+      expect(result.data).toBe(JSON.stringify({ type: 'test-event' }));
+    });
+
+    it('should throw UnauthorizedException for invalid ticket', () => {
+      mockSseTicketService.validateTicket.mockReturnValue(null);
+
+      expect(() => controller.events('invalid-ticket')).toThrow(
+        UnauthorizedException,
+      );
+    });
+
+    it('should not validate ticket when not provided', async () => {
+      mockScrapeEventsService.getEvents.mockReturnValue(
+        of({ type: 'test-event' }),
+      );
+
+      controller.events(undefined);
+
+      expect(mockSseTicketService.validateTicket).not.toHaveBeenCalled();
     });
   });
 
