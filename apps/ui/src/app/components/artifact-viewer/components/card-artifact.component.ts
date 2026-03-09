@@ -6,7 +6,6 @@ import {
   inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { BaseArtifactComponent } from './base-artifact.component';
 import { FilesService } from '../../../services/files.service';
 
@@ -25,7 +24,7 @@ import { FilesService } from '../../../services/files.service';
             [class.border-b]="!$last"
             [class.border-dojo-border]="!$last"
           >
-            <div [innerHTML]="getSafeHtml(item)" class="flush-card"></div>
+            <div [innerHTML]="getHtml(item)" class="flush-card"></div>
           </div>
         }
       </div>
@@ -36,7 +35,7 @@ import { FilesService } from '../../../services/files.service';
           <div
             class="bg-dojo-surface-2 border border-dojo-border rounded-lg hover:border-dojo-accent transition-colors"
           >
-            <div [innerHTML]="getSafeHtml(item)"></div>
+            <div [innerHTML]="getHtml(item)"></div>
           </div>
         }
       </div>
@@ -60,7 +59,7 @@ export class CardArtifactComponent
 {
   private filesService = inject(FilesService);
   private elementRef = inject(ElementRef);
-  private sanitizer = inject(DomSanitizer);
+
   private clickHandler: ((event: Event) => void) | null = null;
 
   ngAfterViewInit(): void {
@@ -117,9 +116,8 @@ export class CardArtifactComponent
     return Array.isArray(data) ? data : [data];
   }
 
-  getSafeHtml(item: any): SafeHtml {
-    const template = this.renderCardTemplate(item);
-    return this.sanitizer.bypassSecurityTrustHtml(template);
+  getHtml(item: any): string {
+    return this.renderCardTemplate(item);
   }
 
   renderCardTemplate(item: any): string {
