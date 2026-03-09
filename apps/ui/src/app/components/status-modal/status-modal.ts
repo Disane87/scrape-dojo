@@ -10,6 +10,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ModalComponent } from '../shared';
 import { HealthService } from '../../services/health.service';
+import { LanguageService } from '../../services/language.service';
 import { TranslocoModule } from '@jsverse/transloco';
 import 'iconify-icon';
 
@@ -22,6 +23,7 @@ import 'iconify-icon';
 })
 export class StatusModalComponent implements OnInit {
   private healthService = inject(HealthService);
+  private languageService = inject(LanguageService);
   private router = inject(Router);
 
   isOpen = signal(true); // Always true for auxiliary route
@@ -65,6 +67,11 @@ export class StatusModalComponent implements OnInit {
     if (!variables) return [];
     return Object.entries(variables).sort((a, b) => a[0].localeCompare(b[0]));
   });
+
+  docsUrl(): string {
+    const lang = this.languageService.getLanguage();
+    return `https://scrape-dojo.com/${lang}/user-guide/`;
+  }
 
   async refresh(): Promise<void> {
     await this.healthService.checkHealth();

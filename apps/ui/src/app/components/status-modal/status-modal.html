@@ -274,11 +274,22 @@
 
   <!-- Footer -->
   <div modal-footer class="flex justify-between items-center w-full">
-    <span class="text-dojo-text-muted text-xs flex items-center gap-1.5">
-      <iconify-icon icon="lucide:clock" class="w-3 h-3"></iconify-icon>
-      {{ 'status_modal.last_checked' | transloco }}: {{
-      systemStatus().api.lastChecked | date:'HH:mm:ss' }}
-    </span>
+    <div class="flex items-center gap-3">
+      <span class="text-dojo-text-muted text-xs flex items-center gap-1.5">
+        <iconify-icon icon="lucide:clock" class="w-3 h-3"></iconify-icon>
+        {{ 'status_modal.last_checked' | transloco }}: {{
+        systemStatus().api.lastChecked | date:'HH:mm:ss' }}
+      </span>
+      <a
+        [href]="docsUrl()"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-dojo-accent text-xs flex items-center gap-1 hover:underline"
+      >
+        <iconify-icon icon="lucide:book-open" class="w-3 h-3"></iconify-icon>
+        {{ 'common.docs' | transloco }}
+      </a>
+    </div>
     <button
       (click)="refresh()"
       class="px-3 py-1.5 bg-dojo-accent hover:bg-dojo-accent/80 text-white rounded-md text-xs font-medium transition-colors flex items-center gap-1.5"

@@ -170,6 +170,17 @@ import 'iconify-icon';
                     </button>
 
                     <a
+                        [href]="docsUrl()"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        (click)="closeMenu()"
+                        class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-dojo-text hover:bg-dojo-surface-2 transition"
+                    >
+                        <iconify-icon icon="mdi:book-open-variant" class="text-lg text-dojo-accent"></iconify-icon>
+                        <span>{{ 'common.docs' | transloco }}</span>
+                    </a>
+
+                    <a
                         href="https://github.com/disane87/scrape-dojo"
                         target="_blank"
                         rel="noopener noreferrer"
@@ -302,6 +313,11 @@ export class UserMenuComponent {
   openChangelog(): void {
     this.closeMenu();
     this.showChangelog.emit();
+  }
+
+  docsUrl(): string {
+    const lang = this.currentLanguage();
+    return `https://scrape-dojo.com/${lang}/user-guide/`;
   }
 
   cycleTheme(): void {
