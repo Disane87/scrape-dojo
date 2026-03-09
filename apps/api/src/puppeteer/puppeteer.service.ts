@@ -173,7 +173,10 @@ export class PuppeteerService implements OnModuleDestroy {
     this.logger.log(`🍪 Using persistent browser data from: ${userDataDir}`);
 
     return (await puppeteerExtra.launch({
-      headless: this.inDocker || process.env.NODE_ENV === 'production',
+      headless:
+        this.inDocker ||
+        process.env.SCRAPE_DOJO_NODE_ENV === 'production' ||
+        process.env.NODE_ENV === 'production',
       args: this.arguments,
       dumpio: false,
       devtools: this.debug,
