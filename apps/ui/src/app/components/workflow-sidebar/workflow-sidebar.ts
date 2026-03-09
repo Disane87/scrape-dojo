@@ -1,6 +1,7 @@
 import {
   Component,
   computed,
+  inject,
   input,
   output,
   signal,
@@ -10,6 +11,7 @@ import { CommonModule } from '@angular/common';
 import { ScrapeListItem } from '@scrape-dojo/shared';
 import { ScrapeIconComponent } from '../scrape-icon/scrape-icon.component';
 import { TranslocoModule } from '@jsverse/transloco';
+import { LanguageService } from '../../services/language.service';
 import { RelativeTimePipe } from '../../pipes/relative-time.pipe';
 import 'iconify-icon';
 
@@ -34,6 +36,8 @@ const UNCATEGORIZED_KEY = '__uncategorized__';
   templateUrl: './workflow-sidebar.html',
 })
 export class WorkflowSidebarComponent {
+  private languageService = inject(LanguageService);
+
   scrapes = input.required<ScrapeListItem[]>();
   selectedScrape = input<string | null>(null);
   appVersion = input<string>('');
@@ -132,6 +136,11 @@ export class WorkflowSidebarComponent {
       return 'Kein Trigger konfiguriert';
     }
     return '';
+  }
+
+  docsUrl(): string {
+    const lang = this.languageService.getLanguage();
+    return `https://scrape-dojo.com/${lang}/user-guide/`;
   }
 
   selectScrape(id: string): void {
