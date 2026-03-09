@@ -147,6 +147,19 @@ export class HealthController {
     };
   }
 
+  @Get('changelog')
+  changelog(): { changelog: string } {
+    try {
+      const changelogPath = path.join(process.cwd(), 'CHANGELOG.md');
+      if (fs.existsSync(changelogPath)) {
+        return { changelog: fs.readFileSync(changelogPath, 'utf-8') };
+      }
+    } catch {
+      this.logger.warn('Could not read CHANGELOG.md');
+    }
+    return { changelog: '' };
+  }
+
   @Get('live')
   liveness() {
     return { status: 'ok' };

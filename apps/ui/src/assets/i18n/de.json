@@ -376,7 +376,9 @@
     "usage": "Auslastung",
     "environment_variables": "Umgebungsvariablen",
     "last_checked": "Zuletzt geprüft",
-    "refresh": "Aktualisieren"
+    "refresh": "Aktualisieren",
+    "changelog": "Changelog",
+    "no_changelog": "Kein Changelog verfügbar"
   },
   "json_editor": {
     "unsaved_changes": "Ungespeicherte Änderungen",

@@ -1,198 +1,357 @@
-<app-modal [isOpen]="isOpen()" [title]="'status.title' | transloco" icon="activity" size="md" (closed)="close()">
-    <div class="space-y-4">
-        <!-- Service Status Cards - Kompakter -->
-        <div class="grid grid-cols-3 gap-3">
-            <!-- API Status -->
-            <div class="bg-dojo-bg/50 rounded-lg p-3 border border-dojo-border/50">
-                <div class="flex items-center gap-2 mb-1">
-                    @if (apiOnline()) {
-                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                    } @else {
-                    <span class="w-2 h-2 rounded-full bg-red-500"></span>
-                    }
-                    <span class="text-dojo-text-muted text-xs font-medium uppercase tracking-wide">{{ 'status_modal.api'
-                        | transloco }}</span>
-                </div>
-                <div class="text-lg font-bold text-dojo-text">v{{ apiVersion() }}</div>
-                <div class="text-xs mt-1" [class]="apiOnline() ? 'text-green-400' : 'text-red-400'">
-                    {{ apiOnline() ? ('status_modal.online' | transloco) : ('status_modal.offline' | transloco) }}
-                </div>
-            </div>
-
-            <!-- SSE Status -->
-            <div class="bg-dojo-bg/50 rounded-lg p-3 border border-dojo-border/50">
-                <div class="flex items-center gap-2 mb-1">
-                    @if (systemStatus().sse.connected) {
-                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                    } @else {
-                    <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
-                    }
-                    <span class="text-dojo-text-muted text-xs font-medium uppercase tracking-wide">{{ 'status_modal.sse'
-                        | transloco }}</span>
-                </div>
-                <div class="text-dojo-text text-lg font-bold">{{ 'status_modal.events' | transloco }}</div>
-                <div class="text-xs mt-1" [class]="systemStatus().sse.connected ? 'text-green-400' : 'text-yellow-400'">
-                    {{ systemStatus().sse.connected ? ('status.connected' | transloco) : ('status.reconnecting' |
-                    transloco) }}
-                </div>
-            </div>
-
-            <!-- Frontend Status -->
-            <div class="bg-dojo-bg/50 rounded-lg p-3 border border-dojo-border/50">
-                <div class="flex items-center gap-2 mb-1">
-                    <span class="w-2 h-2 rounded-full bg-green-500"></span>
-                    <span class="text-dojo-text-muted text-xs font-medium uppercase tracking-wide">{{ 'status_modal.ui' | transloco }}</span>
-                </div>
-                <div class="text-dojo-text text-lg font-bold">v{{ systemStatus().frontend.version }}</div>
-                <div class="text-green-400 text-xs mt-1">{{ 'status_modal.active' | transloco }}</div>
-            </div>
+<app-modal
+  [isOpen]="isOpen()"
+  [title]="'status.title' | transloco"
+  icon="activity"
+  size="md"
+  (closed)="close()"
+>
+  <div class="space-y-4">
+    <!-- Service Status Cards - Kompakter -->
+    <div class="grid grid-cols-3 gap-3">
+      <!-- API Status -->
+      <div class="bg-dojo-bg/50 rounded-lg p-3 border border-dojo-border/50">
+        <div class="flex items-center gap-2 mb-1">
+          @if (apiOnline()) {
+          <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+          } @else {
+          <span class="w-2 h-2 rounded-full bg-red-500"></span>
+          }
+          <span
+            class="text-dojo-text-muted text-xs font-medium uppercase tracking-wide"
+            >{{ 'status_modal.api' | transloco }}</span
+          >
         </div>
-
-        @if (systemStatus().api.health) {
-        <!-- Environment & Runtime Combined -->
-        <div class="bg-dojo-bg/50 rounded-lg border border-dojo-border/50 overflow-hidden">
-            <!-- Environment Header -->
-            <div class="px-4 py-2 border-b border-dojo-border/50 bg-dojo-surface/30">
-                <div class="flex items-center gap-2 text-dojo-text text-sm font-semibold">
-                    <iconify-icon icon="lucide:server" class="w-4 h-4 text-dojo-text-muted"></iconify-icon>
-                    {{ 'status_modal.environment' | transloco }}
-                </div>
-            </div>
-
-            <!-- Environment Grid -->
-            <div class="p-4 grid grid-cols-4 gap-4 text-center">
-                <div>
-                    <div class="text-dojo-text-muted text-[10px] uppercase tracking-wider mb-1">{{ 'status_modal.nodejs' | transloco }}</div>
-                    <div class="text-dojo-text text-sm font-mono font-medium">
-                        {{ systemStatus().api.health?.environment?.nodeVersion }}
-                    </div>
-                </div>
-                <div>
-                    <div class="text-dojo-text-muted text-[10px] uppercase tracking-wider mb-1">{{
-                        'status_modal.platform' | transloco }}</div>
-                    <div class="text-dojo-text text-sm font-mono font-medium">
-                        {{ systemStatus().api.health?.environment?.platform }}/{{
-                        systemStatus().api.health?.environment?.arch }}
-                    </div>
-                </div>
-                <div>
-                    <div class="text-dojo-text-muted text-[10px] uppercase tracking-wider mb-1">{{ 'status_modal.mode' |
-                        transloco }}</div>
-                    <div class="text-dojo-text text-sm font-mono font-medium capitalize">
-                        {{ systemStatus().api.health?.environment?.nodeEnv }}
-                    </div>
-                </div>
-                <div>
-                    <div class="text-dojo-text-muted text-[10px] uppercase tracking-wider mb-1">{{
-                        'status_modal.container' | transloco }}</div>
-                    @if (isDocker()) {
-                    <div class="flex items-center justify-center gap-1">
-                        <iconify-icon icon="lucide:box" class="w-3.5 h-3.5 text-blue-400"></iconify-icon>
-                        <span class="text-blue-400 text-sm font-medium">{{ 'status_modal.docker' | transloco }}</span>
-                    </div>
-                    } @else {
-                    <div class="text-dojo-text-muted text-sm font-medium">{{ 'status_modal.native' | transloco }}</div>
-                    }
-                </div>
-            </div>
+        <div class="text-lg font-bold text-dojo-text">v{{ apiVersion() }}</div>
+        <div
+          class="text-xs mt-1"
+          [class]="apiOnline() ? 'text-green-400' : 'text-red-400'"
+        >
+          {{ apiOnline() ? ('status_modal.online' | transloco) :
+          ('status_modal.offline' | transloco) }}
         </div>
+      </div>
 
-        <!-- Runtime Info -->
-        <div class="bg-dojo-bg/50 rounded-lg border border-dojo-border/50 overflow-hidden">
-            <!-- Runtime Header -->
-            <div class="px-4 py-2 border-b border-dojo-border/50 bg-dojo-surface/30">
-                <div class="flex items-center gap-2 text-dojo-text text-sm font-semibold">
-                    <iconify-icon icon="lucide:activity" class="w-4 h-4 text-dojo-text-muted"></iconify-icon>
-                    {{ 'status_modal.runtime' | transloco }}
-                </div>
-            </div>
-
-            <!-- Runtime Content -->
-            <div class="p-4">
-                <div class="grid grid-cols-3 gap-4">
-                    <div class="text-center">
-                        <div class="text-dojo-text-muted text-[10px] uppercase tracking-wider mb-1">{{
-                            'status_modal.uptime' | transloco }}</div>
-                        <div class="text-dojo-text text-sm font-mono font-medium">{{ formattedUptime() }}</div>
-                    </div>
-                    @if (memoryUsage()) {
-                    <div class="text-center">
-                        <div class="text-dojo-text-muted text-[10px] uppercase tracking-wider mb-1">{{
-                            'status_modal.heap' | transloco }}</div>
-                        <div class="text-dojo-text text-sm font-mono font-medium">
-                            {{ memoryUsage()?.used }} / {{ memoryUsage()?.total }} MB
-                        </div>
-                    </div>
-                    <div>
-                        <div class="text-dojo-text-muted text-[10px] uppercase tracking-wider mb-1 text-center">{{
-                            'status_modal.usage' | transloco }}
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <div class="flex-1 h-2 bg-dojo-border/50 rounded-full overflow-hidden">
-                                <div class="h-full rounded-full transition-all duration-500"
-                                    [class]="memoryUsage()!.percentage > 80 ? 'bg-red-500' : memoryUsage()!.percentage > 60 ? 'bg-yellow-500' : 'bg-green-500'"
-                                    [style.width.%]="memoryUsage()?.percentage"></div>
-                            </div>
-                            <span class="text-xs font-mono font-medium min-w-[3rem] text-right"
-                                [class]="memoryUsage()!.percentage > 80 ? 'text-red-400' : memoryUsage()!.percentage > 60 ? 'text-yellow-400' : 'text-green-400'">{{
-                                memoryUsage()?.percentage }}%</span>
-                        </div>
-                    </div>
-                    }
-                </div>
-            </div>
+      <!-- SSE Status -->
+      <div class="bg-dojo-bg/50 rounded-lg p-3 border border-dojo-border/50">
+        <div class="flex items-center gap-2 mb-1">
+          @if (systemStatus().sse.connected) {
+          <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+          } @else {
+          <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
+          }
+          <span
+            class="text-dojo-text-muted text-xs font-medium uppercase tracking-wide"
+            >{{ 'status_modal.sse' | transloco }}</span
+          >
         </div>
+        <div class="text-dojo-text text-lg font-bold">
+          {{ 'status_modal.events' | transloco }}
+        </div>
+        <div
+          class="text-xs mt-1"
+          [class]="systemStatus().sse.connected ? 'text-green-400' : 'text-yellow-400'"
+        >
+          {{ systemStatus().sse.connected ? ('status.connected' | transloco) :
+          ('status.reconnecting' | transloco) }}
+        </div>
+      </div>
 
-        <!-- Environment Variables -->
-        @if (systemStatus().api.health?.environment.variables) {
-        <div class="bg-dojo-bg/50 rounded-lg border border-dojo-border/50 overflow-hidden">
-            <!-- Header -->
-            <div class="px-4 py-2 border-b border-dojo-border/50 bg-dojo-surface/30">
-                <div class="flex items-center gap-2 text-dojo-text text-sm font-semibold">
-                    <iconify-icon icon="lucide:settings" class="w-4 h-4 text-dojo-text-muted"></iconify-icon>
-                    {{ 'status_modal.environment_variables' | transloco }}
-                </div>
+      <!-- Frontend Status -->
+      <div class="bg-dojo-bg/50 rounded-lg p-3 border border-dojo-border/50">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="w-2 h-2 rounded-full bg-green-500"></span>
+          <span
+            class="text-dojo-text-muted text-xs font-medium uppercase tracking-wide"
+            >{{ 'status_modal.ui' | transloco }}</span
+          >
+        </div>
+        <div class="text-dojo-text text-lg font-bold">
+          v{{ systemStatus().frontend.version }}
+        </div>
+        <div class="text-green-400 text-xs mt-1">
+          {{ 'status_modal.active' | transloco }}
+        </div>
+      </div>
+    </div>
+
+    @if (systemStatus().api.health) {
+    <!-- Environment & Runtime Combined -->
+    <div
+      class="bg-dojo-bg/50 rounded-lg border border-dojo-border/50 overflow-hidden"
+    >
+      <!-- Environment Header -->
+      <div class="px-4 py-2 border-b border-dojo-border/50 bg-dojo-surface/30">
+        <div
+          class="flex items-center gap-2 text-dojo-text text-sm font-semibold"
+        >
+          <iconify-icon
+            icon="lucide:server"
+            class="w-4 h-4 text-dojo-text-muted"
+          ></iconify-icon>
+          {{ 'status_modal.environment' | transloco }}
+        </div>
+      </div>
+
+      <!-- Environment Grid -->
+      <div class="p-4 grid grid-cols-4 gap-4 text-center">
+        <div>
+          <div
+            class="text-dojo-text-muted text-[10px] uppercase tracking-wider mb-1"
+          >
+            {{ 'status_modal.nodejs' | transloco }}
+          </div>
+          <div class="text-dojo-text text-sm font-mono font-medium">
+            {{ systemStatus().api.health?.environment?.nodeVersion }}
+          </div>
+        </div>
+        <div>
+          <div
+            class="text-dojo-text-muted text-[10px] uppercase tracking-wider mb-1"
+          >
+            {{ 'status_modal.platform' | transloco }}
+          </div>
+          <div class="text-dojo-text text-sm font-mono font-medium">
+            {{ systemStatus().api.health?.environment?.platform }}/{{
+            systemStatus().api.health?.environment?.arch }}
+          </div>
+        </div>
+        <div>
+          <div
+            class="text-dojo-text-muted text-[10px] uppercase tracking-wider mb-1"
+          >
+            {{ 'status_modal.mode' | transloco }}
+          </div>
+          <div class="text-dojo-text text-sm font-mono font-medium capitalize">
+            {{ systemStatus().api.health?.environment?.nodeEnv }}
+          </div>
+        </div>
+        <div>
+          <div
+            class="text-dojo-text-muted text-[10px] uppercase tracking-wider mb-1"
+          >
+            {{ 'status_modal.container' | transloco }}
+          </div>
+          @if (isDocker()) {
+          <div class="flex items-center justify-center gap-1">
+            <iconify-icon
+              icon="lucide:box"
+              class="w-3.5 h-3.5 text-blue-400"
+            ></iconify-icon>
+            <span class="text-blue-400 text-sm font-medium"
+              >{{ 'status_modal.docker' | transloco }}</span
+            >
+          </div>
+          } @else {
+          <div class="text-dojo-text-muted text-sm font-medium">
+            {{ 'status_modal.native' | transloco }}
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Runtime Info -->
+    <div
+      class="bg-dojo-bg/50 rounded-lg border border-dojo-border/50 overflow-hidden"
+    >
+      <!-- Runtime Header -->
+      <div class="px-4 py-2 border-b border-dojo-border/50 bg-dojo-surface/30">
+        <div
+          class="flex items-center gap-2 text-dojo-text text-sm font-semibold"
+        >
+          <iconify-icon
+            icon="lucide:activity"
+            class="w-4 h-4 text-dojo-text-muted"
+          ></iconify-icon>
+          {{ 'status_modal.runtime' | transloco }}
+        </div>
+      </div>
+
+      <!-- Runtime Content -->
+      <div class="p-4">
+        <div class="grid grid-cols-3 gap-4">
+          <div class="text-center">
+            <div
+              class="text-dojo-text-muted text-[10px] uppercase tracking-wider mb-1"
+            >
+              {{ 'status_modal.uptime' | transloco }}
             </div>
-
-            <!-- Variables List -->
-            <div class="p-4 space-y-2">
-                @for (entry of envEntries(); track entry[0]) {
+            <div class="text-dojo-text text-sm font-mono font-medium">
+              {{ formattedUptime() }}
+            </div>
+          </div>
+          @if (memoryUsage()) {
+          <div class="text-center">
+            <div
+              class="text-dojo-text-muted text-[10px] uppercase tracking-wider mb-1"
+            >
+              {{ 'status_modal.heap' | transloco }}
+            </div>
+            <div class="text-dojo-text text-sm font-mono font-medium">
+              {{ memoryUsage()?.used }} / {{ memoryUsage()?.total }} MB
+            </div>
+          </div>
+          <div>
+            <div
+              class="text-dojo-text-muted text-[10px] uppercase tracking-wider mb-1 text-center"
+            >
+              {{ 'status_modal.usage' | transloco }}
+            </div>
+            <div class="flex items-center gap-2">
+              <div
+                class="flex-1 h-2 bg-dojo-border/50 rounded-full overflow-hidden"
+              >
                 <div
-                    class="flex items-center justify-between py-1.5 px-2 rounded hover:bg-dojo-surface/30 transition-colors">
-                    <span class="text-dojo-text-muted text-xs font-medium font-mono">{{ entry[0] }}</span>
-                    <span class="text-dojo-text text-xs font-mono bg-dojo-surface px-2 py-0.5 rounded">{{ entry[1]
-                        }}</span>
-                </div>
-                }
+                  class="h-full rounded-full transition-all duration-500"
+                  [class]="memoryUsage()!.percentage > 80 ? 'bg-red-500' : memoryUsage()!.percentage > 60 ? 'bg-yellow-500' : 'bg-green-500'"
+                  [style.width.%]="memoryUsage()?.percentage"
+                ></div>
+              </div>
+              <span
+                class="text-xs font-mono font-medium min-w-[3rem] text-right"
+                [class]="memoryUsage()!.percentage > 80 ? 'text-red-400' : memoryUsage()!.percentage > 60 ? 'text-yellow-400' : 'text-green-400'"
+                >{{ memoryUsage()?.percentage }}%</span
+              >
             </div>
+          </div>
+          }
         </div>
-        }
-        }
-
-        <!-- Error Display -->
-        @if (systemStatus().api.error) {
-        <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-3">
-            <div class="flex items-center gap-2 text-red-400 text-sm">
-                <iconify-icon icon="lucide:alert-circle" class="w-4 h-4"></iconify-icon>
-                <span class="font-semibold">{{ 'status_modal.connection_error' | transloco }}</span>
-            </div>
-            <p class="text-red-300 text-xs mt-2 font-mono break-all">
-                {{ systemStatus().api.error }}
-            </p>
-        </div>
-        }
+      </div>
     </div>
 
-    <!-- Footer -->
-    <div modal-footer class="flex justify-between items-center w-full">
-        <span class="text-dojo-text-muted text-xs flex items-center gap-1.5">
-            <iconify-icon icon="lucide:clock" class="w-3 h-3"></iconify-icon>
-            {{ 'status_modal.last_checked' | transloco }}: {{ systemStatus().api.lastChecked | date:'HH:mm:ss' }}
-        </span>
-        <button (click)="refresh()"
-            class="px-3 py-1.5 bg-dojo-accent hover:bg-dojo-accent/80 text-white rounded-md text-xs font-medium transition-colors flex items-center gap-1.5">
-            <iconify-icon icon="lucide:refresh-cw" class="w-3.5 h-3.5"></iconify-icon>
-            {{ 'status_modal.refresh' | transloco }}
-        </button>
+    <!-- Environment Variables -->
+    @if (systemStatus().api.health?.environment.variables) {
+    <div
+      class="bg-dojo-bg/50 rounded-lg border border-dojo-border/50 overflow-hidden"
+    >
+      <!-- Header -->
+      <div class="px-4 py-2 border-b border-dojo-border/50 bg-dojo-surface/30">
+        <div
+          class="flex items-center gap-2 text-dojo-text text-sm font-semibold"
+        >
+          <iconify-icon
+            icon="lucide:settings"
+            class="w-4 h-4 text-dojo-text-muted"
+          ></iconify-icon>
+          {{ 'status_modal.environment_variables' | transloco }}
+        </div>
+      </div>
+
+      <!-- Variables List -->
+      <div class="p-4 space-y-2">
+        @for (entry of envEntries(); track entry[0]) {
+        <div
+          class="flex items-center justify-between py-1.5 px-2 rounded hover:bg-dojo-surface/30 transition-colors"
+        >
+          <span class="text-dojo-text-muted text-xs font-medium font-mono"
+            >{{ entry[0] }}</span
+          >
+          <span
+            class="text-dojo-text text-xs font-mono bg-dojo-surface px-2 py-0.5 rounded"
+            >{{ entry[1] }}</span
+          >
+        </div>
+        }
+      </div>
     </div>
+    } }
+
+    <!-- Changelog Section -->
+    <div
+      class="bg-dojo-bg/50 rounded-lg border border-dojo-border/50 overflow-hidden"
+    >
+      <!-- Changelog Header -->
+      <button
+        type="button"
+        (click)="toggleChangelog()"
+        class="w-full px-4 py-2 border-b border-dojo-border/50 bg-dojo-surface/30 flex items-center justify-between cursor-pointer hover:bg-dojo-surface/50 transition-colors"
+      >
+        <div
+          class="flex items-center gap-2 text-dojo-text text-sm font-semibold"
+        >
+          <iconify-icon
+            icon="lucide:file-text"
+            class="w-4 h-4 text-dojo-text-muted"
+          ></iconify-icon>
+          {{ 'status_modal.changelog' | transloco }}
+        </div>
+        <iconify-icon
+          [icon]="showChangelog() ? 'lucide:chevron-up' : 'lucide:chevron-down'"
+          class="w-4 h-4 text-dojo-text-muted"
+        ></iconify-icon>
+      </button>
+
+      @if (showChangelog()) {
+      <div class="max-h-64 overflow-y-auto p-4 space-y-4">
+        @for (entry of changelogEntries(); track entry.version) {
+        <div>
+          <div class="flex items-center gap-2 mb-2">
+            <a
+              [href]="entry.url"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-dojo-accent hover:underline text-sm font-semibold font-mono"
+            >
+              v{{ entry.version }}
+            </a>
+            <span class="text-dojo-text-muted text-xs">{{ entry.date }}</span>
+          </div>
+          @for (section of entry.sections; track section.type) {
+          <div class="mb-1.5">
+            <span
+              class="text-dojo-text-muted text-xs font-medium uppercase tracking-wider"
+              >{{ section.type }}</span
+            >
+            <ul class="mt-1 space-y-0.5">
+              @for (item of section.items; track item) {
+              <li
+                class="text-dojo-text text-xs pl-3 relative before:content-['·'] before:absolute before:left-0 before:text-dojo-text-muted"
+              >
+                {{ item }}
+              </li>
+              }
+            </ul>
+          </div>
+          }
+        </div>
+        } @empty {
+        <p class="text-dojo-text-muted text-xs">
+          {{ 'status_modal.no_changelog' | transloco }}
+        </p>
+        }
+      </div>
+      }
+    </div>
+
+    <!-- Error Display -->
+    @if (systemStatus().api.error) {
+    <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-3">
+      <div class="flex items-center gap-2 text-red-400 text-sm">
+        <iconify-icon icon="lucide:alert-circle" class="w-4 h-4"></iconify-icon>
+        <span class="font-semibold"
+          >{{ 'status_modal.connection_error' | transloco }}</span
+        >
+      </div>
+      <p class="text-red-300 text-xs mt-2 font-mono break-all">
+        {{ systemStatus().api.error }}
+      </p>
+    </div>
+    }
+  </div>
+
+  <!-- Footer -->
+  <div modal-footer class="flex justify-between items-center w-full">
+    <span class="text-dojo-text-muted text-xs flex items-center gap-1.5">
+      <iconify-icon icon="lucide:clock" class="w-3 h-3"></iconify-icon>
+      {{ 'status_modal.last_checked' | transloco }}: {{
+      systemStatus().api.lastChecked | date:'HH:mm:ss' }}
+    </span>
+    <button
+      (click)="refresh()"
+      class="px-3 py-1.5 bg-dojo-accent hover:bg-dojo-accent/80 text-white rounded-md text-xs font-medium transition-colors flex items-center gap-1.5"
+    >
+      <iconify-icon icon="lucide:refresh-cw" class="w-3.5 h-3.5"></iconify-icon>
+      {{ 'status_modal.refresh' | transloco }}
+    </button>
+  </div>
 </app-modal>

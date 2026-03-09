@@ -1,8 +1,17 @@
-import { Injectable, inject, computed } from '@angular/core';
+import { Injectable, inject, computed, signal } from '@angular/core';
 import { ApiService } from './api.service';
-import { interval, switchMap, catchError, of, startWith, map } from 'rxjs';
+import {
+  interval,
+  switchMap,
+  catchError,
+  of,
+  startWith,
+  map,
+  firstValueFrom,
+} from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ScrapeEventsService } from './scrape-events.service';
+import { environment } from '../../environments/environment';
 
 export interface HealthStatus {
   status: 'ok' | 'degraded' | 'error';
@@ -49,8 +58,8 @@ export class HealthService {
   private api = inject(ApiService);
   private eventsService = inject(ScrapeEventsService);
 
-  // Frontend version (aus environment oder build)
-  private readonly frontendVersion = '1.0.0'; // TODO: aus environment injizieren
+  // Frontend version aus build-time environment
+  private readonly frontendVersion = environment.version;
 
   // Polling-Intervall in Millisekunden (10 Sekunden)
   private readonly healthCheckInterval = 10000;
@@ -116,6 +125,23 @@ export class HealthService {
   isDocker = computed(
     () => this.systemStatus().api.health?.environment.isDocker ?? false,
   );
+
+  // Changelog
+  changelog = signal('');
+
+  /**
+   * Lädt das Changelog vom Backend
+   */
+  async loadChangelog(): Promise<void> {
+    try {
+      const result = await firstValueFrom(
+        this.api.get<{ changelog: string }>('health/changelog'),
+      );
+      this.changelog.set(result?.changelog ?? '');
+    } catch {
+      this.changelog.set('');
+    }
+  }
 
   /**
    * Manuell Health Check triggern

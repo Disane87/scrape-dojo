@@ -3,7 +3,7 @@
 
 export const environment = {
   production: false,
-  version: 'undefined',
-  gitCommit: '7fc5c8b',
+  version: '1.7.2',
+  gitCommit: 'df9643b',
   defaultLanguage: (globalThis as any).DEFAULT_LANGUAGE || null,
 };
