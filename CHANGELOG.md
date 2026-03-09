@@ -1,3 +1,20 @@
+## [1.11.0](https://github.com/disane87/scrape-dojo/compare/v1.10.1...v1.11.0) (2026-03-09)
+
+### 🚀 Features
+
+- **🖥️ api:** add browser proxy support via SCRAPE_DOJO_PROXY_URL ([0841545](https://github.com/disane87/scrape-dojo/commit/08415455a63dd1ebd1c5c32e5eab86830a350f3a)), closes [#32](https://github.com/disane87/scrape-dojo/issues/32)
+
+### 🛠️ Fixes
+
+- **🎨 ui:** remove bypassSecurityTrustHtml to prevent XSS in card artifacts ([da3b2aa](https://github.com/disane87/scrape-dojo/commit/da3b2aaaaa013eeefc0301ef0fe2494cc1fbcd88)), closes [#25](https://github.com/disane87/scrape-dojo/issues/25)
+- **🖥️ api:** use hash-based dedup key for artifact extraction ([d0aa063](https://github.com/disane87/scrape-dojo/commit/d0aa0636db37efc359582afd01472376c18591dc)), closes [#29](https://github.com/disane87/scrape-dojo/issues/29)
+- **🖥️ api:** use one-time SSE tickets instead of JWT in query params ([17081d6](https://github.com/disane87/scrape-dojo/commit/17081d631c22d3ec3467a6fbc8b244de6f776132)), closes [#55](https://github.com/disane87/scrape-dojo/issues/55)
+
+### ♻️ Refactor
+
+- **🎨 ui:** remove debug console.log calls from services and components ([3c5e570](https://github.com/disane87/scrape-dojo/commit/3c5e57047d7ffdf9c1930648e8ee499161f8c0da)), closes [#28](https://github.com/disane87/scrape-dojo/issues/28)
+- **🖥️ api:** replace string-based BreakLoop with typed BreakLoopError ([b3d6cfe](https://github.com/disane87/scrape-dojo/commit/b3d6cfee80ca3e0110af18d4c7a2df78f6ae192a)), closes [#30](https://github.com/disane87/scrape-dojo/issues/30)
+
 ## [1.10.1](https://github.com/disane87/scrape-dojo/compare/v1.10.0...v1.10.1) (2026-03-09)
 
 ### 🛠️ Fixes
