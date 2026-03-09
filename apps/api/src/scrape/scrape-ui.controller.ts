@@ -20,6 +20,18 @@ import { AuthorResolverService } from './author-resolver.service';
 import { Observable, map } from 'rxjs';
 import * as jsonata from 'jsonata';
 
+/**
+ * Simple djb2 string hash for artifact deduplication.
+ * Returns a base-36 encoded hash string.
+ */
+function simpleHash(str: string): string {
+  let hash = 5381;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) + hash + str.charCodeAt(i)) & 0xffffffff;
+  }
+  return hash.toString(36);
+}
+
 interface MessageEvent {
   data: string;
 }
@@ -476,15 +488,21 @@ export class ScrapeUIController {
           ].includes(obj.type)
         ) {
           // Create content hash for deduplication
-          const contentKey = JSON.stringify({
-            type: obj.type,
-            title: obj.title,
-            template: obj.template,
-            dataStr:
+          let contentKey: string;
+          try {
+            const keyParts = [
+              obj.type,
+              obj.title,
+              obj.template,
               typeof obj.data === 'string'
                 ? obj.data
                 : JSON.stringify(obj.data),
-          });
+            ];
+            contentKey = simpleHash(keyParts.join('|'));
+          } catch {
+            // Fallback for cyclic references or other stringify failures
+            contentKey = `${obj.type}|${obj.title}|fallback-${Date.now()}`;
+          }
 
           if (!seenContent.has(contentKey)) {
             seenContent.add(contentKey);
