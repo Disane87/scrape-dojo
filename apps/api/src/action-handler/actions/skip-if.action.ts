@@ -1,6 +1,7 @@
 import { BaseAction } from './bases/base.action';
 import { Action } from '../_decorators/action.decorator';
 import { getValueFromPath } from './_helpers/get-value-from-path.helper';
+import { BreakLoopError } from '../errors/break-loop.error';
 
 export type SkipIfParams = {
   /** Key in previousData dessen Wert geprüft wird */
@@ -72,9 +73,7 @@ export class SkipIfAction extends BaseAction<SkipIfParams> {
           `🛑 Breaking loop: condition "${condition}" = ${conditionValue}`;
         this.logger.log(logMessage);
         // Wirf BreakLoop Error mit Anzahl der Ebenen
-        const error = new Error('BreakLoop');
-        (error as any).breakLevels = breakLevels;
-        throw error;
+        throw new BreakLoopError(breakLevels);
       } else {
         const logMessage =
           message ||

@@ -1,5 +1,6 @@
 import { vi } from 'vitest';
 import { ScrapeExecutionService } from './scrape-execution.service';
+import { BreakLoopError } from '../../action-handler/errors/break-loop.error';
 
 // Mock ScrapeLogger to avoid console noise
 vi.mock('../../_logger/scrape-logger.service', () => {
@@ -359,9 +360,9 @@ describe('ScrapeExecutionService', () => {
       );
     });
 
-    it('should handle BreakLoop error from action gracefully', async () => {
+    it('should handle BreakLoopError from action gracefully', async () => {
       mockActionHandlerService.handleAction.mockRejectedValue(
-        new Error('BreakLoop'),
+        new BreakLoopError(),
       );
       const scrape = createScrape();
 

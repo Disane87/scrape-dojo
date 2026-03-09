@@ -1,6 +1,7 @@
 import { vi } from 'vitest';
 import { SkipIfAction } from './skip-if.action';
 import { createActionInstance } from 'src/_test/test-utils';
+import { BreakLoopError } from '../errors/break-loop.error';
 
 describe('SkipIfAction', () => {
   let action: SkipIfAction;
@@ -44,7 +45,7 @@ describe('SkipIfAction', () => {
       expect((action as any).data.skipCurrentIteration).toBe(true);
     });
 
-    it('should throw BreakLoop with breakLevels when breakLoop is true', async () => {
+    it('should throw BreakLoopError with breakLevels when breakLoop is true', async () => {
       action.params = {
         condition: 'myFlag',
         breakLoop: true,
@@ -56,6 +57,7 @@ describe('SkipIfAction', () => {
         await action.run();
         expect.fail('Should have thrown');
       } catch (e) {
+        expect(e).toBeInstanceOf(BreakLoopError);
         expect(e.message).toBe('BreakLoop');
         expect(e.breakLevels).toBe(2);
       }
@@ -69,6 +71,7 @@ describe('SkipIfAction', () => {
         await action.run();
         expect.fail('Should have thrown');
       } catch (e) {
+        expect(e).toBeInstanceOf(BreakLoopError);
         expect(e.message).toBe('BreakLoop');
         expect(e.breakLevels).toBe(1);
       }

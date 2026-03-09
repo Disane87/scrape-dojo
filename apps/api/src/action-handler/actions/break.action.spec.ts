@@ -1,6 +1,7 @@
 import { vi } from 'vitest';
 import { BreakAction } from './break.action';
 import { createActionInstance } from 'src/_test/test-utils';
+import { BreakLoopError } from '../errors/break-loop.error';
 
 describe('BreakAction', () => {
   let action: BreakAction;
@@ -18,11 +19,11 @@ describe('BreakAction', () => {
   });
 
   describe('run', () => {
-    it('should throw BreakLoop when condition evaluates to true', async () => {
+    it('should throw BreakLoopError when condition evaluates to true', async () => {
       action.params = { condition: '$boolean(true)' } as any;
       (action as any).previousData = new Map();
 
-      await expect(action.run()).rejects.toThrow('BreakLoop');
+      await expect(action.run()).rejects.toThrow(BreakLoopError);
       expect((action as any).logger.warn).toHaveBeenCalled();
     });
 
@@ -37,7 +38,7 @@ describe('BreakAction', () => {
       action.params = { condition: 'previousData.myKey = "hello"' } as any;
       (action as any).previousData = new Map([['myKey', 'hello']]);
 
-      await expect(action.run()).rejects.toThrow('BreakLoop');
+      await expect(action.run()).rejects.toThrow(BreakLoopError);
     });
 
     it('should evaluate condition against storedData', async () => {
@@ -45,7 +46,7 @@ describe('BreakAction', () => {
       (action as any).previousData = new Map();
       (action as any).storedData = { counter: 10 };
 
-      await expect(action.run()).rejects.toThrow('BreakLoop');
+      await expect(action.run()).rejects.toThrow(BreakLoopError);
     });
 
     it('should throw original error when JSONata expression is invalid', async () => {

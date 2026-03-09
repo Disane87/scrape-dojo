@@ -1,6 +1,7 @@
 import { vi } from 'vitest';
 import { CatchEverythingFilter } from './catch-all.filter';
 import { HttpException, HttpStatus, ArgumentsHost } from '@nestjs/common';
+import { BreakLoopError } from '../action-handler/errors/break-loop.error';
 
 describe('CatchEverythingFilter', () => {
   let filter: CatchEverythingFilter;
@@ -76,8 +77,8 @@ describe('CatchEverythingFilter', () => {
     expect(mockHttpAdapter.reply).not.toHaveBeenCalled();
   });
 
-  it('should not reply for BreakLoop exceptions', () => {
-    const exception = new Error('BreakLoop');
+  it('should not reply for BreakLoopError exceptions', () => {
+    const exception = new BreakLoopError();
     filter.catch(exception, mockHost);
     expect(mockHttpAdapter.reply).not.toHaveBeenCalled();
   });

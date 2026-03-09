@@ -1,5 +1,6 @@
 import { BaseAction } from './bases/base.action';
 import { Action } from '../_decorators/action.decorator';
+import { BreakLoopError } from '../errors/break-loop.error';
 
 @Action('break', {
   displayName: 'Break',
@@ -27,7 +28,7 @@ export class BreakAction extends BaseAction<{ condition: string }> {
     // Evaluiere die Bedingung (True/Falsy-Wert)
     if (await this.evaluateCondition(this.params.condition, conditionData)) {
       this.logger.warn(`Break condition met: ${this.params.condition}`);
-      throw new Error('BreakLoop'); // Spezielle Ausnahme, um den Loop zu beenden
+      throw new BreakLoopError(); // Spezielle Ausnahme, um den Loop zu beenden
     }
   }
 

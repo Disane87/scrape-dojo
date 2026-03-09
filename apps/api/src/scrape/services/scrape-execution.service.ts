@@ -16,6 +16,7 @@ import {
   ActionFailedEvent,
 } from '../../events/domain-events';
 import { ScrapeLogger } from '../../_logger/scrape-logger.service';
+import { BreakLoopError } from '../../action-handler/errors/break-loop.error';
 
 @Injectable()
 export class ScrapeExecutionService {
@@ -365,7 +366,7 @@ export class ScrapeExecutionService {
     runId: string,
   ): Promise<void> {
     // Break-Loop ist kein echter Fehler
-    if (error.message === 'BreakLoop') {
+    if (error instanceof BreakLoopError) {
       this.logger.warn(
         `Exiting scrape because of break on action "${actionName}"`,
       );

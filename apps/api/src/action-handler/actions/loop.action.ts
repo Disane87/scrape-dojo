@@ -6,6 +6,7 @@ import { ActionHandlerService } from '../action-handler.service';
 import { Action } from '../_decorators/action.decorator';
 import { ScrapeActionData } from '../../scrape/types/scrape-action-data.interface';
 import { PuppeteerService } from '../../puppeteer/puppeteer.service';
+import { BreakLoopError } from '../errors/break-loop.error';
 
 export type LoopActionParams = {
   elementKey: string;
@@ -184,19 +185,15 @@ export class LoopAction extends BaseAction<LoopActionParams> {
             result: null,
           });
 
-          if (errorMessage === 'BreakLoop') {
-            const breakLevels = (error as any).breakLevels || 1;
-
-            if (breakLevels > 1) {
+          if (error instanceof BreakLoopError) {
+            if (error.breakLevels > 1) {
               // Reduziere die Ebenen und wirf weiter an äußere Loop
               this.logger.warn(
-                `🛑 Breaking loop "${this.name}" (${breakLevels - 1} more levels to break)`,
+                `🛑 Breaking loop "${this.name}" (${error.breakLevels - 1} more levels to break)`,
               );
               iterationData.status = 'broken';
               iterations.push(iterationData);
-              const newError = new Error('BreakLoop');
-              (newError as any).breakLevels = breakLevels - 1;
-              throw newError;
+              throw new BreakLoopError(error.breakLevels - 1);
             } else {
               // Letzte Ebene - beende nur diese Loop
               this.logger.warn(`🛑 Breaking loop "${this.name}"`);

@@ -6,6 +6,7 @@ vi.mock('../../_decorators/action.decorator', () => ({
 }));
 
 import { LoopAction } from './loop.action';
+import { BreakLoopError } from '../errors/break-loop.error';
 
 describe('LoopAction', () => {
   let action: LoopAction;
@@ -146,7 +147,7 @@ describe('LoopAction', () => {
 
       mockHandleAction
         .mockResolvedValueOnce(undefined) // first iteration succeeds
-        .mockRejectedValueOnce(new Error('BreakLoop')); // second iteration breaks
+        .mockRejectedValueOnce(new BreakLoopError()); // second iteration breaks
 
       const result = await action.run();
 
@@ -168,11 +169,10 @@ describe('LoopAction', () => {
         previousData,
       );
 
-      const breakError = new Error('BreakLoop');
-      (breakError as any).breakLevels = 2;
+      const breakError = new BreakLoopError(2);
       mockHandleAction.mockRejectedValueOnce(breakError);
 
-      await expect(action.run()).rejects.toThrow('BreakLoop');
+      await expect(action.run()).rejects.toThrow(BreakLoopError);
     });
 
     it('should handle skipCurrentIteration flag', async () => {

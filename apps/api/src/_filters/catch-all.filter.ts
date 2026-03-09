@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
 import { randomUUID } from 'crypto';
+import { BreakLoopError } from '../action-handler/errors/break-loop.error';
 
 @Catch()
 export class CatchEverythingFilter implements ExceptionFilter {
@@ -70,7 +71,7 @@ export class CatchEverythingFilter implements ExceptionFilter {
       responseBody.stack = (exception as any)?.stack;
     }
 
-    if (!((exception as any)?.message === 'BreakLoop')) {
+    if (!(exception instanceof BreakLoopError)) {
       // 401 errors are expected auth failures - log as warning without stack trace
       if (httpStatus === HttpStatus.UNAUTHORIZED) {
         this.logger.warn(
