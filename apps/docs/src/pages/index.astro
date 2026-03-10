@@ -1162,7 +1162,7 @@ try {
             'footer.copy': '\u00a9 ' + new Date().getFullYear() + ' Scrape Dojo. MIT License. Free forever.',
         };
 
-        // 1. Detect language and persist
+        // 1. Detect language (localStorage only if user explicitly switched)
         var stored = localStorage.getItem('scrape-dojo-lang');
         var lang;
         if (stored) {
@@ -1170,7 +1170,6 @@ try {
         } else {
             var bl = (navigator.language || '').split('-')[0].toLowerCase();
             lang = (bl === 'de') ? 'de' : 'en';
-            localStorage.setItem('scrape-dojo-lang', lang);
         }
         window.__sdLang = lang;
         window.__sdEN = EN;

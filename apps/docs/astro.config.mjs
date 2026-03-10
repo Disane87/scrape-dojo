@@ -54,8 +54,8 @@ export default defineConfig({
           head: [
               {
                   tag: 'script',
-                  content: `document.addEventListener('DOMContentLoaded',()=>{const a=document.querySelector('.site-title');if(a)a.href='/';});
-(function(){var p=location.pathname;if(p==='/'||p==='/index.html')return;var s=localStorage.getItem('scrape-dojo-lang');var lang=s||(navigator.language||'').split('-')[0].toLowerCase();if(lang!=='de')lang='en';if(lang==='en'&&p.startsWith('/de/')){location.replace(p.replace('/de/','/en/'));}else if(lang==='de'&&p.startsWith('/en/')){location.replace(p.replace('/en/','/de/'));}})();`,
+                  content: `document.addEventListener('DOMContentLoaded',()=>{const a=document.querySelector('.site-title');if(a)a.href='/';var sel=document.querySelector('starlight-lang-select select');if(sel){sel.addEventListener('change',function(){var v=this.value;var lang=v.match(/^\\/(de|en)\\//);if(lang)localStorage.setItem('scrape-dojo-lang',lang[1]);});}});
+(function(){var p=location.pathname;if(p==='/'||p==='/index.html')return;var s=localStorage.getItem('scrape-dojo-lang');var lang=s||((navigator.language||'').split('-')[0].toLowerCase()==='de'?'de':'en');if(lang==='en'&&p.startsWith('/de/')){location.replace(p.replace('/de/','/en/'));}else if(lang==='de'&&p.startsWith('/en/')){location.replace(p.replace('/en/','/de/'));}})();`,
               },
               ...(isProd ? [{
                   tag: 'script',
