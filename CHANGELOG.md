@@ -1,3 +1,16 @@
+## [1.11.1](https://github.com/disane87/scrape-dojo/compare/v1.11.0...v1.11.1) (2026-03-10)
+
+### 🛠️ Fixes
+
+- improve language detection and storage logic in index page ([6cf0885](https://github.com/disane87/scrape-dojo/commit/6cf08852178d611b82f032184a7199823dafd3b2))
+- update overflow styles in auth components and global styles for better scrolling behavior ([b81ba34](https://github.com/disane87/scrape-dojo/commit/b81ba349042548c147a3c9f39e005603cbbe7edd)), closes [#69](https://github.com/disane87/scrape-dojo/issues/69)
+
+### 📔 Docs
+
+- **📔 docs:** add required env vars to Docker deployment examples ([b768ab5](https://github.com/disane87/scrape-dojo/commit/b768ab5771f42dc75b1b1381444a592a198ac5c0)), closes [#68](https://github.com/disane87/scrape-dojo/issues/68)
+- add required env vars to quickstart guide and README ([190742a](https://github.com/disane87/scrape-dojo/commit/190742a1332e3538a0d872020bf4c7c51305940e)), closes [#68](https://github.com/disane87/scrape-dojo/issues/68)
+- update artifacts documentation to include links and file support in descriptions ([97283d8](https://github.com/disane87/scrape-dojo/commit/97283d8309c24c633af5072128ef5d5fec7ddc09))
+
 ## [1.11.0](https://github.com/disane87/scrape-dojo/compare/v1.10.1...v1.11.0) (2026-03-09)
 
 ### 🚀 Features
