@@ -20,7 +20,29 @@ Here you'll find the complete reference of all environment variables in Scrape D
 | `SCRAPE_DOJO_TRUST_PROXY`  | `1`                     | Reverse proxy trust level                                 |
 | `SCRAPE_DOJO_CORS_ORIGIN`  | —                       | CORS origins (comma-separated)                            |
 | `SCRAPE_DOJO_FRONTEND_URL` | `http://localhost:4200` | Frontend URL for OIDC redirects                           |
+| `SCRAPE_DOJO_PROXY_URL`    | —                       | Browser proxy URL for all scraping requests (see below)   |
 | `EXPORT_OPENAPI`           | `false`                 | Export OpenAPI spec on startup                            |
+
+### Browser Proxy
+
+If your scrapes need to go through a proxy — for example to bypass geo-restrictions, rotate IPs, or route traffic through a corporate network — set `SCRAPE_DOJO_PROXY_URL`. The proxy applies to **all** browser requests made by Puppeteer.
+
+Supported formats:
+
+```bash
+# HTTP proxy
+SCRAPE_DOJO_PROXY_URL=http://proxy.example.com:8080
+
+# HTTP proxy with authentication
+SCRAPE_DOJO_PROXY_URL=http://user:password@proxy.example.com:8080
+
+# SOCKS5 proxy
+SCRAPE_DOJO_PROXY_URL=socks5://proxy.example.com:1080
+```
+
+<Aside type="tip">
+  Proxy credentials are automatically masked in the application logs, so your username and password won't appear in plain text.
+</Aside>
 
 ## Database
 

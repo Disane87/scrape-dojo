@@ -113,6 +113,16 @@ Key env vars (see `.env.example` for full list):
 - `SCRAPE_DOJO_AUTH_ENABLED` — Toggles authentication globally
 - `SCRAPE_DOJO_PORT` — API port (default 3000)
 
+## Documentation Requirements
+
+**All user-facing features, environment variables, and configuration changes MUST be documented** in both the Astro docs (`apps/docs/`) and the README before merging. This includes:
+
+- New or changed environment variables → add to `environment-variables.mdx` (EN + DE) and `.env.example`
+- New features or behaviors → add/update the relevant guide pages (EN + DE)
+- Include practical code/config examples so end users understand what happens
+- **Target audience**: Primarily end users (self-hosters, NAS users), developers second
+- Both languages (EN + DE) must always be kept in sync
+
 ## Docker
 
 Multi-stage builds in `apps/api/Dockerfile` (based on puppeteer image with Chrome) and `apps/ui/Dockerfile` (nginx:alpine). Orchestrated via `docker-compose.yml`. Persistent volumes: `./data`, `./downloads`, `./logs`, `./config`, `./browser-data`.
