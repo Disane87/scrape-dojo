@@ -24,7 +24,7 @@ import 'iconify-icon';
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   template: `
     <div
-      class="min-h-screen flex items-center justify-center bg-linear-to-br from-dojo-bg via-dojo-surface to-dojo-bg px-4 py-8 relative overflow-hidden text-dojo-text"
+      class="min-h-screen flex items-center justify-center bg-linear-to-br from-dojo-bg via-dojo-surface to-dojo-bg px-4 py-8 relative overflow-y-auto text-dojo-text"
     >
       <div class="absolute inset-0 overflow-hidden pointer-events-none">
         <div
