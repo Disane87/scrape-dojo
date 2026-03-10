@@ -70,6 +70,8 @@ services:
       - '8080:80'
     environment:
       - SCRAPE_DOJO_ENCRYPTION_KEY=your_generated_key_here
+      - SCRAPE_DOJO_AUTH_JWT_SECRET=your_random_jwt_secret_here
+      - SCRAPE_DOJO_AUTH_REFRESH_TOKEN_SECRET=your_random_refresh_secret_here
       - DB_TYPE=sqlite
     volumes:
       - ./data:/home/pptruser/app/data

@@ -69,7 +69,12 @@ Docker ist der einfachste Weg, Scrape Dojo zum Laufen zu bringen. Kein Node.js n
        ports:
          - '8080:80'
        environment:
+         # Pflicht: verschluesselt Secrets in der Datenbank
          - SCRAPE_DOJO_ENCRYPTION_KEY=dein_generierter_key_hier
+         # Pflicht: JWT-Signatur-Secret (muss in Produktion geaendert werden!)
+         - SCRAPE_DOJO_AUTH_JWT_SECRET=dein_zufaelliges_jwt_secret_hier
+         # Empfohlen: separates Secret fuer Refresh-Tokens
+         - SCRAPE_DOJO_AUTH_REFRESH_TOKEN_SECRET=dein_zufaelliges_refresh_secret_hier
          - DB_TYPE=sqlite
          - DB_SYNCHRONIZE=true
        volumes:
@@ -80,6 +85,13 @@ Docker ist der einfachste Weg, Scrape Dojo zum Laufen zu bringen. Kein Node.js n
          - ./browser-data:/home/pptruser/app/browser-data
        restart: unless-stopped
    ```
+
+   <Aside type="caution" title="Pflicht-Secrets">
+     `SCRAPE_DOJO_ENCRYPTION_KEY` und `SCRAPE_DOJO_AUTH_JWT_SECRET` sind **Pflicht** fuer das Docker-Image (das im Produktionsmodus laeuft). Der Container startet ohne diese Werte nicht. Generiere fuer beide zufaellige Werte, z.B. mit:
+     ```bash
+     node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+     ```
+   </Aside>
 
    <Aside type="caution" title="DB_SYNCHRONIZE">
      `DB_SYNCHRONIZE=true` **muss** beim allerersten Start gesetzt sein, damit die Datenbanktabellen automatisch erstellt werden.
