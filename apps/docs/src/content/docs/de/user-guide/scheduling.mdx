@@ -186,7 +186,11 @@ Beachte bei der Zeitzone die Sommerzeit! `0 9 * * *` mit `timezone: "UTC"` ist i
 
 ## 🪝 Webhook-Trigger
 
-Der Webhook-Trigger ermöglicht das Starten von Scrapes durch externe HTTP-Requests:
+<Aside type="caution">
+  Der Webhook-Trigger ist derzeit **geplant, aber noch nicht implementiert**. Der Trigger-Typ existiert im Konfigurationsschema, aber es gibt noch keinen API-Endpoint zum Empfangen von Webhook-Aufrufen. Dieser Abschnitt beschreibt das geplante Verhalten.
+</Aside>
+
+Der Webhook-Trigger wird das Starten von Scrapes durch externe HTTP-Requests ermöglichen:
 
 ```jsonc
 {
@@ -194,16 +198,15 @@ Der Webhook-Trigger ermöglicht das Starten von Scrapes durch externe HTTP-Reque
     "triggers": [
       {
         "type": "webhook",
-        "config": {
-          "webhookSecret": "mein-geheimer-token"
-        }
+        "secret": "mein-geheimer-token",
+        "methods": ["POST"]
       }
     ]
   }
 }
 ```
 
-Aufruf:
+Geplanter Aufruf:
 
 ```bash
 curl -X POST http://localhost:3000/api/webhooks/{scrapeId} \

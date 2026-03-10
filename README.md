@@ -73,6 +73,7 @@ services:
       - SCRAPE_DOJO_AUTH_JWT_SECRET=your_random_jwt_secret_here
       - SCRAPE_DOJO_AUTH_REFRESH_TOKEN_SECRET=your_random_refresh_secret_here
       - DB_TYPE=sqlite
+      # - SCRAPE_DOJO_PROXY_URL=http://proxy:8080  # Optional: route scrapes through a proxy
     volumes:
       - ./data:/home/pptruser/app/data
       - ./downloads:/home/pptruser/app/downloads

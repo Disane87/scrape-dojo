@@ -186,7 +186,11 @@ Watch out for daylight saving time! `0 9 * * *` with `timezone: "UTC"` is 10:00 
 
 ## 🪝 Webhook Trigger
 
-The webhook trigger lets you start scrapes through external HTTP requests:
+<Aside type="caution">
+  The webhook trigger is currently **planned but not yet implemented**. The trigger type exists in the configuration schema, but there is no API endpoint to receive webhook calls yet. This section describes the planned behavior.
+</Aside>
+
+The webhook trigger will let you start scrapes through external HTTP requests:
 
 ```jsonc
 {
@@ -194,16 +198,15 @@ The webhook trigger lets you start scrapes through external HTTP requests:
     "triggers": [
       {
         "type": "webhook",
-        "config": {
-          "webhookSecret": "my-secret-token"
-        }
+        "secret": "my-secret-token",
+        "methods": ["POST"]
       }
     ]
   }
 }
 ```
 
-Invocation:
+Planned invocation:
 
 ```bash
 curl -X POST http://localhost:3000/api/webhooks/{scrapeId} \

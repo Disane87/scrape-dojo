@@ -76,7 +76,7 @@ The metadata describes your scrape and configures its behavior. All fields are o
 | `version` | `string` | Version number (e.g., `"1.0.0"`) |
 | `author` | `string` | Author of the scrape (various formats, see below) |
 | `email` | `string` | Author's email address |
-| `icon` | `string` | Icon name for the UI (Iconify/Lucide, e.g., `"Globe"`, `"ShoppingCart"`) |
+| `icon` | `string` | Icon for the UI (multiple providers, see below) |
 | `tags` | `string[]` | Tags for filtering and categorization |
 | `category` | `string` | Category for sidebar grouping in the UI |
 | `disabled` | `boolean` | If `true`, the scrape cannot be started |
@@ -102,6 +102,38 @@ The `author` field supports various formats. Scrape Dojo resolves them automatic
     // "author": "max@example.com",
     // "author": "https://example.com/avatar.jpg",
     // "author": "John Doe",
+  }
+}
+```
+
+### 🎨 Icon Formats
+
+The `icon` field supports multiple providers. Scrape Dojo automatically resolves the icon URL and adapts to dark/light mode:
+
+| Format | Example | Source |
+|--------|---------|--------|
+| **selfh.st** | `"selfhst:amazon"` | [selfh.st icons](https://github.com/selfhst/icons) — icons for self-hosted apps |
+| **Dashboard Icons** | `"dbi:amazon"` | [dashboard-icons](https://github.com/homarr-labs/dashboard-icons) — Homarr icons |
+| **Lucide** | `"lucide:globe"` | [Lucide](https://lucide.dev/) — open-source SVG icons |
+| **Direct URL** | `"https://example.com/icon.png"` | Any image URL |
+| **Legacy** | `"amazon"` | Treated as `selfhst:amazon` |
+
+You can optionally specify a variant (`:dark` or `:light`). Without a variant, the icon automatically adapts to the current theme:
+
+```jsonc
+{
+  "metadata": {
+    // Auto dark/light switching
+    "icon": "selfhst:amazon",
+
+    // Force dark variant
+    // "icon": "selfhst:amazon:dark",
+
+    // Lucide icon
+    // "icon": "lucide:shopping-cart",
+
+    // Direct URL
+    // "icon": "https://example.com/my-icon.png"
   }
 }
 ```
@@ -396,6 +428,14 @@ Scrape Dojo watches the `config/sites/` folder for changes. When you edit, add, 
 <Aside type="tip">
 You never need to restart the application when working on configs. Just save, and the UI updates automatically via SSE.
 </Aside>
+
+If the file watcher doesn't pick up your changes (e.g., in some Docker or NFS setups), you can manually trigger a reload via the API:
+
+```bash
+POST /api/scrapes/reload
+```
+
+This re-reads all config files from `config/sites/` and updates the UI.
 
 ## 📚 What's Next
 

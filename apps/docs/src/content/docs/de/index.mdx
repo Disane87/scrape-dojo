@@ -1,0 +1,121 @@
+---
+title: Willkommen bei Scrape Dojo
+description: Deklaratives Web-Scraping-Framework -- flexibel, leistungsstark, self-hosted
+template: splash
+hero:
+  tagline: Beschreibe Web-Scraping-Workflows in JSON statt Code. 25+ Actions, Templates, Scheduling und Echtzeit-Monitoring -- alles self-hosted.
+  actions:
+    - text: Schnellstart
+      link: /de/getting-started/quickstart/
+      icon: right-arrow
+      variant: primary
+    - text: Beispiele
+      link: /de/examples/
+      icon: open-book
+    - text: GitHub
+      link: https://github.com/disane87/scrape-dojo
+      icon: external
+    - text: Sponsor
+      link: https://github.com/sponsors/Disane87
+      icon: heart
+---
+
+import { Card, CardGrid, Aside, LinkCard } from '@astrojs/starlight/components';
+
+## So funktioniert's
+
+Anstatt hunderte Zeilen Puppeteer-Code zu schreiben, beschreibst du deinen Workflow deklarativ:
+
+```jsonc
+{
+  "scrapes": [{
+    "id": "rechnungen-download",
+    "metadata": {
+      "description": "Rechnungen automatisch herunterladen",
+      "triggers": [{ "type": "cron" }]
+    },
+    "steps": [{
+      "name": "Login und Download",
+      "actions": [
+        { "name": "open", "action": "navigate",
+          "params": { "url": "https://portal.example.com/login" } },
+        { "name": "email", "action": "type",
+          "params": { "selector": "#email", "text": "{{variables.email}}", "pressEnter": false } },
+        { "name": "password", "action": "type",
+          "params": { "selector": "#password", "text": "{{variables.password}}", "pressEnter": true } },
+        { "name": "rechnungen", "action": "extractAll",
+          "params": { "selector": ".invoice-link", "property": "href" } },
+        { "name": "downloadLoop", "action": "loop",
+          "params": {
+            "elementKey": "rechnungen",
+            "actions": [
+              { "name": "dl", "action": "download",
+                "params": {
+                  "url": "{{currentData.downloadLoop.value}}",
+                  "path": "./rechnungen",
+                  "filename": "rechnung-{{currentData.downloadLoop.index}}.pdf"
+                }}
+            ]
+          }}
+      ]
+    }]
+  }]
+}
+```
+
+Secrets werden mit AES-256-CBC verschlüsselt, die UI zeigt den Fortschritt live via SSE, und Cron-Scheduling führt Jobs automatisch aus.
+
+## Kernfeatures
+
+<CardGrid>
+  <Card title="JSONC-Konfiguration" icon="seti:json">
+    Workflows als JSON mit Kommentaren. Schema-Validierung, Hot Reload, kein Code nötig.
+  </Card>
+  <Card title="25+ Actions" icon="puzzle">
+    Navigate, Click, Type, Extract, Loop, Transform, Download, Screenshot, Notify und mehr.
+  </Card>
+  <Card title="Templates und Transforms" icon="setting">
+    Handlebars für String-Interpolation, JSONata für Datentransformationen, 13 Custom Helpers.
+  </Card>
+  <Card title="Cron-Scheduling" icon="rocket">
+    Automatische Ausführung via Cron mit Zeitzonen-Support. Plus Webhook- und Startup-Trigger.
+  </Card>
+  <Card title="Echtzeit-Monitoring" icon="laptop">
+    Angular 21 UI mit Live-Status via SSE, Run-Historie, Debug-Daten und Artefakt-Anzeige.
+  </Card>
+  <Card title="Sicherheit" icon="shield">
+    AES-256-CBC Secrets, JWT Auth, OIDC/SSO, MFA/TOTP, API Keys. Auth optional deaktivierbar.
+  </Card>
+  <Card title="Multi-Datenbank" icon="document">
+    SQLite (Standard), PostgreSQL oder MySQL via TypeORM. Docker-ready mit persistenten Volumes.
+  </Card>
+  <Card title="Erweiterbar" icon="add-document">
+    Eigene Actions in TypeScript erstellen. Factory Pattern, Auto-Registrierung, voller Puppeteer-Zugriff.
+  </Card>
+</CardGrid>
+
+## Typische Anwendungsfälle
+
+<CardGrid>
+  <LinkCard title="Rechnungen herunterladen" description="PDFs automatisch aus Portalen sammeln, Duplikate erkennen, monatlich via Cron ausführen." href="/de/examples/" />
+  <LinkCard title="Preise überwachen" description="Produktdaten extrahieren, mit JSONata transformieren, strukturiert speichern und vergleichen." href="/de/examples/" />
+  <LinkCard title="Login-Flows automatisieren" description="Mehrstufige Logins mit verschlüsselten Zugangsdaten, OTP-Handling und Session-Management." href="/de/user-guide/actions/" />
+  <LinkCard title="Daten aggregieren" description="Von mehreren Quellen scrapen, mit Loops und Transforms konsolidieren, persistent speichern." href="/de/user-guide/actions/" />
+</CardGrid>
+
+<Aside type="caution" title="Verantwortungsvoller Einsatz">
+Scrape Dojo automatisiert echte Browser-Interaktionen. Bitte respektiere die Nutzungsbedingungen von Websites, robots.txt, Rate Limits und Datenschutzgesetze (DSGVO).
+</Aside>
+
+<Aside type="note" title="AI-Aided Development (AIAD)">
+Dieses Projekt nutzt offen KI-unterstützte Entwicklung (z.B. [Claude Code](https://claude.ai/code)), um Workflows zu beschleunigen, die Code-Qualität zu verbessern und mehr Entwicklungs-Momentum zu gewinnen. Aller KI-generierter Code wird **von Menschen überprüft und freigegeben** — dies ist kein Vibe-Coding-Projekt, sondern ein bewusster Ansatz, ein nützliches Produkt zu entwickeln und gleichzeitig die Grenzen, Vorteile und Trade-offs KI-unterstützter Entwicklung zu erforschen.
+</Aside>
+
+## Nächste Schritte
+
+<CardGrid>
+  <LinkCard title="Schnellstart" description="Scrape Dojo in 5 Minuten aufsetzen -- Docker oder Source." href="/de/getting-started/quickstart/" />
+  <LinkCard title="Konfigurationsformat" description="JSONC-Struktur, Metadata, Variablen, Trigger." href="/de/user-guide/config-format/" />
+  <LinkCard title="Actions-Referenz" description="Alle 25+ Actions mit Parametern und Beispielen." href="/de/user-guide/actions/" />
+  <LinkCard title="Architektur" description="Tech-Stack, NestJS-Module, Ausführungsablauf." href="/de/developer/" />
+</CardGrid>

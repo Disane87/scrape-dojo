@@ -76,7 +76,7 @@ Die Metadata beschreibt dein Scrape und konfiguriert sein Verhalten. Alle Felder
 | `version` | `string` | Versionsnummer (z.B. `"1.0.0"`) |
 | `author` | `string` | Autor des Scrapes (verschiedene Formate, siehe unten) |
 | `email` | `string` | E-Mail-Adresse des Autors |
-| `icon` | `string` | Icon-Name für die UI (Iconify/Lucide, z.B. `"Globe"`, `"ShoppingCart"`) |
+| `icon` | `string` | Icon für die UI (mehrere Provider, siehe unten) |
 | `tags` | `string[]` | Tags zum Filtern und Kategorisieren |
 | `category` | `string` | Kategorie für die Sidebar-Gruppierung in der UI |
 | `disabled` | `boolean` | Wenn `true`, kann das Scrape nicht ausgeführt werden |
@@ -102,6 +102,38 @@ Das `author`-Feld unterstützt verschiedene Formate. Scrape Dojo löst sie autom
     // "author": "max@example.com",
     // "author": "https://example.com/avatar.jpg",
     // "author": "Max Mustermann",
+  }
+}
+```
+
+### 🎨 Icon-Formate
+
+Das `icon`-Feld unterstützt mehrere Provider. Scrape Dojo löst die Icon-URL automatisch auf und passt sich an Dark/Light-Modus an:
+
+| Format | Beispiel | Quelle |
+|--------|----------|--------|
+| **selfh.st** | `"selfhst:amazon"` | [selfh.st Icons](https://github.com/selfhst/icons) — Icons für Self-Hosted-Apps |
+| **Dashboard Icons** | `"dbi:amazon"` | [dashboard-icons](https://github.com/homarr-labs/dashboard-icons) — Homarr Icons |
+| **Lucide** | `"lucide:globe"` | [Lucide](https://lucide.dev/) — Open-Source SVG-Icons |
+| **Direkte URL** | `"https://example.com/icon.png"` | Beliebige Bild-URL |
+| **Legacy** | `"amazon"` | Wird als `selfhst:amazon` behandelt |
+
+Optional kannst du eine Variante angeben (`:dark` oder `:light`). Ohne Variante passt sich das Icon automatisch an das aktuelle Theme an:
+
+```jsonc
+{
+  "metadata": {
+    // Automatischer Dark/Light-Wechsel
+    "icon": "selfhst:amazon",
+
+    // Dark-Variante erzwingen
+    // "icon": "selfhst:amazon:dark",
+
+    // Lucide Icon
+    // "icon": "lucide:shopping-cart",
+
+    // Direkte URL
+    // "icon": "https://example.com/my-icon.png"
   }
 }
 ```
@@ -396,6 +428,14 @@ Scrape Dojo überwacht den `config/sites/`-Ordner auf Änderungen. Wenn du eine 
 <Aside type="tip">
 Du musst die Anwendung also nie neu starten, wenn du an Configs arbeitest. Einfach speichern, und die UI aktualisiert sich automatisch via SSE.
 </Aside>
+
+Falls der File-Watcher deine Änderungen nicht erkennt (z.B. bei manchen Docker- oder NFS-Setups), kannst du das Neuladen manuell über die API auslösen:
+
+```bash
+POST /api/scrapes/reload
+```
+
+Damit werden alle Config-Dateien aus `config/sites/` neu eingelesen und die UI aktualisiert.
 
 ## 📚 Weiter geht's
 
