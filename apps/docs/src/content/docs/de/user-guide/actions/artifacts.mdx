@@ -1,105 +1,464 @@
 ---
 title: artifacts
-description: Zeige Ergebnisse als Tabellen, JSON, Karten oder Bilder an
+description: Zeige Ergebnisse als Tabellen, JSON, Karten, Bilder, Links oder Dateien an
 sidebar:
   order: 42
 ---
 
-import { Aside } from '@astrojs/starlight/components';
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 
-Mit `artifacts` machst du deine Scrape-Ergebnisse sichtbar — als Tabelle, JSON-Viewer, Karte oder Bild, direkt im UI. Das ist mega nützlich zum Debuggen, aber auch für hübsche Dashboards und Berichte. Der Typ wird automatisch erkannt, du kannst ihn aber auch manuell setzen.
+Mit der `artifacts`-Action machst du deine Scrape-Ergebnisse sichtbar — direkt im UI, während der Scrape läuft oder danach in der Run-Historie. Artifacts sind visuelle Darstellungen deiner extrahierten Daten. Du kannst Tabellen, JSON-Viewer, Karten mit eigenem HTML-Template, Bilder, Links, Datei-Downloads oder einfachen Text anzeigen.
+
+Das ist nicht nur mega nützlich zum **Debuggen** (du siehst sofort, was dein Scrape extrahiert hat), sondern auch für **Dashboards und Berichte** — z.B. eine Produkttabelle oder Preisübersicht, die du nach jedem Lauf direkt im Browser checkst.
 
 ## ⚙️ Parameter
 
-| Parameter | Typ | Pflicht | Beschreibung |
-|-----------|-----|---------|--------------|
-| `data` | `any` | Ja | Die anzuzeigenden Daten (unterstützt Handlebars-Templates) |
-| `type` | `string` | Nein | Darstellungstyp: `auto`, `json`, `table`, `text`, `file`, `image`, `link`, `card` (Standard: `auto`) |
-| `title` | `string` | Nein | Titel des Artifacts |
-| `description` | `string` | Nein | Beschreibung unter dem Titel |
-| `template` | `string` | Nein | Handlebars-Template für den `card`-Typ |
-| `flush` | `boolean` | Nein | Kompakte Listen-Darstellung für Karten |
+| Parameter | Typ | Pflicht | Default | Beschreibung |
+|-----------|-----|---------|---------|--------------|
+| `data` | `any` | Ja | — | Die anzuzeigenden Daten. Unterstützt Handlebars-Templates wie `{{previousData.meineVariable}}`. |
+| `type` | `string` | Nein | `auto` | Darstellungstyp: `auto`, `json`, `table`, `text`, `file`, `image`, `link`, `card`. |
+| `title` | `string` | Nein | — | Titel des Artifacts, wird als Überschrift angezeigt. |
+| `description` | `string` | Nein | — | Untertitel/Beschreibung unter dem Titel. |
+| `template` | `string` | Nein | — | Handlebars-Template für den `card`-Typ (HTML mit Platzhaltern). |
+| `flush` | `boolean` | Nein | `false` | Kompakte Listen-Darstellung für Karten (ohne Abstände/Rahmen zwischen Einträgen). |
 
-### 🔍 Auto-Erkennung
+---
 
-Wenn `type` auf `auto` steht (Standard), wird der beste Darstellungstyp automatisch ermittelt:
+## 🎨 Darstellungstypen im Detail
 
-| Daten | Erkannter Typ |
-|-------|--------------|
-| Array von Objekten | `table` |
-| Objekt | `json` |
-| String mit Bild-Endung (`.png`, `.jpg`, …) | `image` |
-| String mit URL (`https://…`) | `link` |
-| String (JSON-parsebar) | `json` |
-| Sonstiger String | `text` |
+### `table` — Tabelle
 
-## 💡 Beispiele
+Zeigt ein Array von Objekten als HTML-Tabelle mit Spaltenköpfen an. Jeder Schlüssel des ersten Objekts wird zur Spaltenüberschrift.
 
-**Tabellen-Artifact:**
+**Wann verwenden:** Wenn du strukturierte Daten wie Produktlisten, Suchergebnisse oder extrahierte Datensätze anzeigen willst.
 
+**Erwartete Datenstruktur:**
+```json
+[
+  { "name": "Produkt A", "preis": "29,99 €", "verfügbar": true },
+  { "name": "Produkt B", "preis": "49,99 €", "verfügbar": false }
+]
+```
+
+**Features:**
+- Spaltenköpfe werden automatisch aus den Objekt-Schlüsseln generiert
+- Horizontales Scrollen bei vielen Spalten
+- Dateipfade in Zellen werden automatisch als Download-Button angezeigt
+- `null`/`undefined`-Werte werden als `-` dargestellt
+- Verschachtelte Objekte werden als JSON-String angezeigt
+
+**Beispiel:**
 ```jsonc
 {
-  "name": "showProducts",
+  "name": "produktTabelle",
   "action": "artifacts",
   "params": {
     "data": "{{previousData.products}}",
-    "title": "Gefundene Produkte",
-    "description": "Alle extrahierten Produktdaten"
+    "type": "table",
+    "title": "Extrahierte Produkte",
+    "description": "Alle gefundenen Produkte mit Preis und Verfügbarkeit"
   }
 }
 ```
 
-Wenn `products` ein Array von Objekten ist, wird automatisch eine Tabelle gerendert.
+---
 
-**JSON-Artifact:**
+### `json` — JSON-Viewer
 
+Zeigt beliebige Daten als formatiertes, eingerücktes JSON in einem Code-Block an.
+
+**Wann verwenden:** Zum Debuggen von API-Responses, komplexen verschachtelten Objekten oder wenn du die rohe Datenstruktur sehen willst.
+
+**Erwartete Datenstruktur:** Beliebig — Objekte, Arrays, Strings, Zahlen. Alles wird mit `JSON.stringify(data, null, 2)` formatiert.
+
+**Beispiel:**
 ```jsonc
 {
-  "name": "showRawData",
+  "name": "rawResponse",
   "action": "artifacts",
   "params": {
     "data": "{{previousData.apiResponse}}",
     "type": "json",
-    "title": "API Response"
+    "title": "API Response (Debug)"
   }
 }
 ```
 
-**Karte mit Handlebars-Template:**
+---
 
+### `card` — Karte mit HTML-Template
+
+Rendert Daten als individuelle Karten mit einem Handlebars-HTML-Template. Ideal für visuell ansprechende Darstellungen einzelner Datensätze.
+
+**Wann verwenden:** Wenn du Daten in einem eigenen Layout darstellen willst — z.B. Produktkarten mit Bild, Titel und Preis, oder Kontaktkarten.
+
+**Wie es funktioniert:**
+1. Du definierst ein `template` mit HTML und Handlebars-Platzhaltern (`{{feldname}}`)
+2. Das Template wird **im Backend** mit den Daten aus `data` gerendert (via Handlebars)
+3. Das gerenderte HTML wird als Karte im UI angezeigt
+
+**Bei Arrays:** Wenn `data` ein Array ist, wird für **jedes Element** eine eigene Karte erzeugt.
+
+**Beispiel — Einzelne Karte:**
 ```jsonc
 {
-  "name": "showProductCard",
+  "name": "produktKarte",
   "action": "artifacts",
   "params": {
     "data": "{{previousData.product}}",
     "type": "card",
     "title": "Produktdetails",
-    "template": "<h3>{{name}}</h3><p>Preis: {{price}} €</p><p>{{description}}</p>"
+    "template": "<div class='p-4'><h3 class='text-lg font-bold'>{{name}}</h3><p class='text-sm text-gray-500'>{{kategorie}}</p><p class='text-xl font-bold mt-2'>{{preis}} €</p></div>"
   }
 }
 ```
 
-Das `template` wird mit den Daten aus `data` gerendert — du hast also direkten Zugriff auf die Felder des Objekts.
+**Beispiel — Mehrere Karten aus einem Array:**
+```jsonc
+{
+  "name": "alleProdukte",
+  "action": "artifacts",
+  "params": {
+    "data": "{{previousData.products}}",
+    "type": "card",
+    "title": "Produktübersicht",
+    "template": "<div class='p-3 flex justify-between'><span>{{name}}</span><span class='font-bold'>{{preis}} €</span></div>"
+  }
+}
+```
 
-**Bild-Artifact:**
+**Flush-Modus:** Mit `flush: true` werden Karten als kompakte Liste ohne Abstände gerendert — ideal für lange Listen:
 
 ```jsonc
 {
-  "name": "showScreenshot",
+  "name": "kompakteListe",
+  "action": "artifacts",
+  "params": {
+    "data": "{{previousData.items}}",
+    "type": "card",
+    "flush": true,
+    "template": "<div class='px-3 py-2 flex justify-between'><span>{{titel}}</span><span>{{status}}</span></div>"
+  }
+}
+```
+
+**Download-Buttons in Karten:** Du kannst in deinem Template `data-download`-Attribute verwenden, um Download-Buttons einzubauen. Klicks auf Elemente mit diesem Attribut lösen automatisch einen Datei-Download aus:
+
+```html
+<button data-download="{{dateipfad}}">Herunterladen</button>
+```
+
+<Aside type="tip">
+Du kannst im `template` beliebiges HTML verwenden, inklusive Tailwind-CSS-Klassen — die Karten werden innerhalb des Scrape-Dojo-UIs gerendert, das Tailwind bereits geladen hat.
+</Aside>
+
+---
+
+### `image` — Bild
+
+Zeigt ein Bild an, das über eine URL oder einen lokalen Dateipfad referenziert wird.
+
+**Wann verwenden:** Nach einer `screenshot`-Action oder wenn du Bilder von Webseiten extrahiert hast.
+
+**Erwartete Daten:** Ein String mit einer Bild-URL oder einem Pfad, der auf `.png`, `.jpg`, `.jpeg`, `.gif` oder `.svg` endet.
+
+**Beispiel:**
+```jsonc
+{
+  "name": "seitenScreenshot",
   "action": "artifacts",
   "params": {
     "data": "{{previousData.screenshotPath}}",
     "type": "image",
-    "title": "Screenshot der Seite"
+    "title": "Screenshot der Startseite"
   }
 }
 ```
 
-<Aside type="tip">
-Nutze `flush: true` bei Karten, um eine kompakte Listen-Darstellung zu bekommen — ideal wenn du viele kleine Karten hintereinander anzeigen willst.
-</Aside>
+---
+
+### `link` — Link
+
+Zeigt eine klickbare URL an, die in einem neuen Tab geöffnet wird.
+
+**Wann verwenden:** Wenn du gefundene URLs anzeigen willst — z.B. eine extrahierte Weiterleitungs-URL oder einen Download-Link.
+
+**Erwartete Daten:** Ein String mit einer URL (z.B. `https://example.com`).
+
+**Beispiel:**
+```jsonc
+{
+  "name": "gefundenerLink",
+  "action": "artifacts",
+  "params": {
+    "data": "{{previousData.downloadUrl}}",
+    "type": "link",
+    "title": "Download-Link",
+    "description": "Klicke hier, um die Datei herunterzuladen"
+  }
+}
+```
+
+---
+
+### `file` — Datei
+
+Zeigt einen Dateinamen mit Download-Button an. Der Benutzer kann die Datei direkt aus dem UI herunterladen.
+
+**Wann verwenden:** Nach einer `download`-Action oder wenn du einen Dateipfad hast, den der Benutzer herunterladen soll.
+
+**Erwartete Daten:** Ein String mit einem Dateipfad (z.B. `/downloads/report.pdf`).
+
+**Beispiel:**
+```jsonc
+{
+  "name": "heruntergeladeneDatei",
+  "action": "artifacts",
+  "params": {
+    "data": "{{previousData.downloadedFile}}",
+    "type": "file",
+    "title": "Exportierte Daten",
+    "description": "CSV-Export der Suchergebnisse"
+  }
+}
+```
 
 <Aside type="note">
-Artifacts werden in Echtzeit ans UI gesendet. Du siehst sie sofort in den Run-Details, während der Scrape noch läuft.
+PDF-Dateien (`.pdf`) werden bei der Auto-Erkennung als `file`-Typ erkannt, nicht als `image`. Bilder (`.png`, `.jpg`, `.gif`, `.svg`) werden als `image`-Typ erkannt.
+</Aside>
+
+---
+
+### `text` — Einfacher Text
+
+Zeigt einen einfachen Textstring an — ohne Formatierung oder Syntaxhervorhebung.
+
+**Wann verwenden:** Für Statusmeldungen, einfache Ergebnisse oder alles, was keine spezielle Darstellung braucht.
+
+**Erwartete Daten:** Ein beliebiger Wert — Strings, Zahlen, Booleans werden als Text dargestellt.
+
+**Beispiel:**
+```jsonc
+{
+  "name": "statusMeldung",
+  "action": "artifacts",
+  "params": {
+    "data": "Scrape abgeschlossen: {{previousData.count}} Einträge gefunden",
+    "type": "text",
+    "title": "Ergebnis"
+  }
+}
+```
+
+---
+
+## 🔍 Auto-Erkennung
+
+Wenn du `type` weglässt oder auf `auto` setzt (Standard), wird der passende Darstellungstyp automatisch ermittelt. Die Erkennung läuft in dieser Reihenfolge ab:
+
+| Priorität | Daten | Erkannter Typ |
+|-----------|-------|--------------|
+| 1 | `null` oder `undefined` | `text` |
+| 2 | String mit Bild-Endung (`.png`, `.jpg`, `.jpeg`, `.gif`, `.svg`) | `image` |
+| 3 | String mit PDF-Endung (`.pdf`) | `file` |
+| 4 | String mit URL-Prefix (`http://` oder `https://`) | `link` |
+| 5 | String, der als JSON parsebar ist | `json` |
+| 6 | Sonstiger String | `text` |
+| 7 | Array von Objekten (mindestens 1 Element, erstes ist ein Objekt) | `table` |
+| 8 | Array von Primitiven oder leeres Array | `json` |
+| 9 | Objekt (kein Array) | `json` |
+| 10 | Zahlen, Booleans, alles andere | `text` |
+
+<Aside type="tip">
+In den meisten Fällen reicht `auto` völlig aus. Setze `type` nur manuell, wenn die Auto-Erkennung nicht das gewünschte Ergebnis liefert — z.B. wenn du eine URL als `text` statt als `link` anzeigen willst.
+</Aside>
+
+---
+
+## 🔄 Echtzeit-Updates via SSE
+
+Artifacts werden in **Echtzeit** an die UI gesendet, noch während der Scrape läuft. So funktioniert der Datenfluss:
+
+1. **Action wird ausgeführt** — Die `artifacts`-Action erzeugt ein `DisplayArtifact`-Objekt
+2. **SSE-Event** — Das Ergebnis wird als `action-complete`-Event über Server-Sent Events gesendet
+3. **UI empfängt** — Der `RunsStore` im Frontend fängt das Event ab und cached das Artifact (mit Deduplizierung)
+4. **Anzeige** — Der `ArtifactViewer` rendert das Artifact sofort im entsprechenden Typ
+
+Das bedeutet: Du siehst Tabellen, Bilder und Karten **live**, während der Scrape noch weitere Actions abarbeitet.
+
+---
+
+## 💾 Persistenz & API
+
+Artifacts werden nach dem Run in der Datenbank gespeichert und können über die API abgerufen werden:
+
+```
+GET /api/runs/{runId}/artifacts
+```
+
+Die Response enthält ein Array aller Artifacts des Runs:
+
+```json
+[
+  {
+    "type": "table",
+    "title": "Gefundene Produkte",
+    "data": [
+      { "name": "Produkt A", "preis": "29,99 €" }
+    ],
+    "metadata": {
+      "itemCount": 1,
+      "dataType": "object",
+      "timestamp": 1710000000000
+    }
+  }
+]
+```
+
+### Metadata-Felder
+
+Jedes Artifact enthält automatisch generierte Metadaten:
+
+| Feld | Beschreibung |
+|------|-------------|
+| `itemCount` | Anzahl der Elemente (bei Arrays: Länge, bei Objekten: Anzahl der Keys) |
+| `dataType` | JavaScript-Typ der Daten (`string`, `object`, `number`, etc.) |
+| `timestamp` | Unix-Timestamp der Erzeugung in Millisekunden |
+
+---
+
+## 💡 Praxisbeispiele
+
+### 📊 Kompletter Scrape mit Tabellen-Output
+
+Ein typisches Szenario: Eine Webseite mit einer Produktliste scrapen und die Ergebnisse als Tabelle anzeigen.
+
+```jsonc
+{
+  "name": "Produktliste scrapen",
+  "url": "https://shop.example.com",
+  "actions": [
+    {
+      "name": "navigieren",
+      "action": "navigate",
+      "params": { "url": "https://shop.example.com/produkte" }
+    },
+    {
+      "name": "produkteDaten",
+      "action": "extractAll",
+      "params": {
+        "selector": ".product-card",
+        "fields": {
+          "name": ".product-title",
+          "preis": ".product-price",
+          "bewertung": ".product-rating"
+        }
+      }
+    },
+    {
+      // Ergebnisse als Tabelle anzeigen
+      "name": "zeigeProdukte",
+      "action": "artifacts",
+      "params": {
+        "data": "{{previousData.produkteDaten}}",
+        "title": "Alle Produkte",
+        "description": "{{previousData.produkteDaten.length}} Produkte gefunden"
+      }
+    }
+  ]
+}
+```
+
+### 🃏 Dashboard mit mehreren Artifacts
+
+Du kannst mehrere `artifacts`-Actions nacheinander verwenden, um ein Mini-Dashboard zu bauen:
+
+```jsonc
+{
+  "actions": [
+    // ... (Daten extrahieren) ...
+    {
+      "name": "zusammenfassung",
+      "action": "artifacts",
+      "params": {
+        "data": "Scrape abgeschlossen. {{previousData.total}} Einträge verarbeitet.",
+        "type": "text",
+        "title": "Status"
+      }
+    },
+    {
+      "name": "datenTabelle",
+      "action": "artifacts",
+      "params": {
+        "data": "{{previousData.results}}",
+        "type": "table",
+        "title": "Ergebnisse"
+      }
+    },
+    {
+      "name": "screenshot",
+      "action": "screenshot",
+      "params": { "fullPage": true }
+    },
+    {
+      "name": "zeigeScreenshot",
+      "action": "artifacts",
+      "params": {
+        "data": "{{previousData.screenshot}}",
+        "type": "image",
+        "title": "Seiten-Screenshot"
+      }
+    }
+  ]
+}
+```
+
+### 🔁 Artifacts in Loops
+
+In einer `loop`-Action kannst du Artifacts verwenden, um den Fortschritt zu visualisieren. Beachte dabei, dass Artifacts **dedupliziert** werden — wenn du in jedem Loop-Durchlauf ein Artifact mit denselben Daten erzeugst, wird es nur einmal angezeigt.
+
+```jsonc
+{
+  "name": "seiten",
+  "action": "loop",
+  "params": {
+    "selector": ".pagination a",
+    "actions": [
+      {
+        "name": "seitenDaten",
+        "action": "extractAll",
+        "params": { "selector": ".item", "fields": { "titel": "h2", "link": "a@href" } }
+      },
+      {
+        "name": "zeigeSeitenDaten",
+        "action": "artifacts",
+        "params": {
+          "data": "{{previousData.seitenDaten}}",
+          "type": "table",
+          "title": "Seite {{loopIndex}}"
+        }
+      }
+    ]
+  }
+}
+```
+
+---
+
+## ❓ Häufige Fragen
+
+**Kann ich Artifacts ohne `title` verwenden?**
+Ja. Titel und Beschreibung sind optional. Ohne Titel wird nur der Inhalt angezeigt — ohne Überschrift.
+
+**Was passiert, wenn `data` leer oder `null` ist?**
+Das Artifact wird trotzdem erzeugt und als `text`-Typ mit leerem Inhalt angezeigt.
+
+**Kann ich HTML in `data` verwenden (ohne `card`-Typ)?**
+Nein. Nur der `card`-Typ rendert HTML aus dem `template`-Parameter. Bei allen anderen Typen werden die Daten escaped und als reiner Text/JSON angezeigt.
+
+**Wie viele Artifacts kann ein Run haben?**
+Es gibt kein festes Limit. Bedenke aber, dass sehr viele Artifacts die Ladezeit der Run-Details-Seite erhöhen können.
+
+<Aside type="caution">
+Achte darauf, keine sensiblen Daten (Passwörter, API-Keys, etc.) in Artifacts anzuzeigen. Artifacts werden in der Datenbank gespeichert und sind für jeden Benutzer sichtbar, der Zugriff auf die Run-Historie hat.
 </Aside>
