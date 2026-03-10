@@ -76,6 +76,8 @@ services:
       - PGID=1000
       - UMASK=022
       - SCRAPE_DOJO_ENCRYPTION_KEY=${SCRAPE_DOJO_ENCRYPTION_KEY}
+      - SCRAPE_DOJO_AUTH_JWT_SECRET=${SCRAPE_DOJO_AUTH_JWT_SECRET}
+      - SCRAPE_DOJO_AUTH_REFRESH_TOKEN_SECRET=${SCRAPE_DOJO_AUTH_REFRESH_TOKEN_SECRET}
     volumes:
       - ./data:/home/pptruser/app/data
       - ./downloads:/home/pptruser/app/downloads
@@ -98,6 +100,8 @@ services:
       - PGID=100
       - UMASK=002
       - SCRAPE_DOJO_ENCRYPTION_KEY=${SCRAPE_DOJO_ENCRYPTION_KEY}
+      - SCRAPE_DOJO_AUTH_JWT_SECRET=${SCRAPE_DOJO_AUTH_JWT_SECRET}
+      - SCRAPE_DOJO_AUTH_REFRESH_TOKEN_SECRET=${SCRAPE_DOJO_AUTH_REFRESH_TOKEN_SECRET}
     volumes:
       - /mnt/user/appdata/scrape-dojo/data:/home/pptruser/app/data
       - /mnt/user/appdata/scrape-dojo/downloads:/home/pptruser/app/downloads
@@ -125,6 +129,8 @@ services:
       - PGID=100
       - UMASK=002
       - SCRAPE_DOJO_ENCRYPTION_KEY=${SCRAPE_DOJO_ENCRYPTION_KEY}
+      - SCRAPE_DOJO_AUTH_JWT_SECRET=${SCRAPE_DOJO_AUTH_JWT_SECRET}
+      - SCRAPE_DOJO_AUTH_REFRESH_TOKEN_SECRET=${SCRAPE_DOJO_AUTH_REFRESH_TOKEN_SECRET}
     volumes:
       - /volume1/docker/scrape-dojo/data:/home/pptruser/app/data
       - /volume1/docker/scrape-dojo/downloads:/home/pptruser/app/downloads
