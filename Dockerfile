@@ -27,6 +27,11 @@ COPY apps ./apps
 COPY libs ./libs
 COPY config ./config
 
+# Update UI environment.ts with version from package.json + git commit hash
+# (prebuild hook doesn't run with direct nx commands)
+ARG GIT_COMMIT=unknown
+RUN GIT_COMMIT=${GIT_COMMIT} pnpm update:version
+
 # Build API and UI (daemon disabled to avoid SQLite issues in Docker)
 RUN NX_DAEMON=false pnpm nx build api --configuration=production --verbose && \
     NX_DAEMON=false pnpm nx build ui --configuration=production --verbose

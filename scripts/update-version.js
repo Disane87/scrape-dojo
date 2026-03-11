@@ -22,12 +22,14 @@ const packageJson = JSON.parse(
 );
 const version = packageJson.version || 'unknown';
 
-// Get current git commit hash
-let gitCommit = 'unknown';
-try {
-  gitCommit = execSync('git rev-parse --short HEAD').toString().trim();
-} catch {
-  console.warn('Could not determine git commit hash');
+// Get current git commit hash (env var takes precedence for Docker/CI builds)
+let gitCommit = process.env.GIT_COMMIT || 'unknown';
+if (gitCommit === 'unknown') {
+  try {
+    gitCommit = execSync('git rev-parse --short HEAD').toString().trim();
+  } catch {
+    console.warn('Could not determine git commit hash');
+  }
 }
 
 const content = `// This file contains build-time information
