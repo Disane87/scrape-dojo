@@ -79,3 +79,4 @@ config/stored-data.json
 .claude/
 .playwright-mcp/
 worktrees
+config/sites/test

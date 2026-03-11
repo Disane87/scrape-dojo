@@ -1,0 +1,54 @@
+[
+    {
+        "id": "my-first-scrape",
+        "metadata": {
+            "description": "My first scrape configuration to test the system.",
+            "version": "1.0.0",
+            "category": "Demo",
+            "author": "gh:@DennaGherlyn",
+            "triggers": [
+                {
+                    "type": "manual"
+                }
+            ]
+        },
+        "steps": [
+            {
+                "name": "Extract Title",
+                "actions": [
+                    {
+                        "name": "navigate",
+                        "action": "navigate",
+                        "params": {
+                            "url": "https://example.com"
+                        }
+                    },
+                    {
+                        "name": "title",
+                        "action": "extract",
+                        "params": {
+                            "selector": "h1"
+                        }
+                    },
+                    {
+                        "name": "logTitle",
+                        "action": "logger",
+                        "params": {
+                            "message": "Found title: {{previousData.title}}",
+                            "level": "log"
+                        }
+                    },
+                    {
+                        "name": "showTitle",
+                        "action": "artifacts",
+                        "params": {
+                            "data": "{{previousData.title}}",
+                            "type": "text",
+                            "title": "Extracted Page Title"
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+]
