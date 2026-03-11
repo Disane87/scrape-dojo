@@ -1,3 +1,18 @@
+## [1.11.2](https://github.com/disane87/scrape-dojo/compare/v1.11.1...v1.11.2) (2026-03-11)
+
+### 🛠️ Fixes
+
+- **🎨 ui:** center timeline node on vertical line in workflow history ([c93235f](https://github.com/disane87/scrape-dojo/commit/c93235fb7de0c379acb47f02b435a01652de6efb))
+- **🎨 ui:** fix template rendering bugs in secrets manager and run dialog ([6f1373a](https://github.com/disane87/scrape-dojo/commit/6f1373a6b6456e1d832b473edfbdd4a3eff7c11c))
+- **🎨 ui:** use single route definition to prevent component recreation on tab/run switch ([be8d4c9](https://github.com/disane87/scrape-dojo/commit/be8d4c99288e1863c890b411515bc1f6ce63d967)), closes [#55](https://github.com/disane87/scrape-dojo/issues/55) [#70](https://github.com/disane87/scrape-dojo/issues/70)
+- **🐳 docker:** run update-version before UI build to fix stale version display ([f0217ae](https://github.com/disane87/scrape-dojo/commit/f0217ae0341454a82967c240cb7fd9eca5f2a5d6))
+- **🖥️ api:** add @Public() to SSE events endpoint to fix 401 errors ([811ae80](https://github.com/disane87/scrape-dojo/commit/811ae80db66c96e68dac92085585deeffcf89a0a)), closes [#55](https://github.com/disane87/scrape-dojo/issues/55) [#70](https://github.com/disane87/scrape-dojo/issues/70)
+
+### 📔 Docs
+
+- add documentation requirements for user-facing features and environment variables ([e7eabda](https://github.com/disane87/scrape-dojo/commit/e7eabdacdeb49718dde53f5305594dd135857fe2))
+- update README and user guide with icon formats and webhook trigger status ([60ab489](https://github.com/disane87/scrape-dojo/commit/60ab489547bdac0dcab61b826b43b892317684cb))
+
 ## [1.11.1](https://github.com/disane87/scrape-dojo/compare/v1.11.0...v1.11.1) (2026-03-10)
 
 ### 🛠️ Fixes
