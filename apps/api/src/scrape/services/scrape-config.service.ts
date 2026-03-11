@@ -48,10 +48,11 @@ export class ScrapeConfigService {
   }
 
   /**
-   * Lädt eine einzelne Site-Config-Datei
+   * Lädt eine einzelne Site-Config-Datei.
+   * @param relativePath Pfad relativ zum sites-Verzeichnis (z.B. "e-commerce/amazon.jsonc")
    */
-  private loadSiteFile(fileName: string): Scrape[] {
-    const filePath = path.join(this.sitesPath, fileName);
+  private loadSiteFile(relativePath: string): Scrape[] {
+    const filePath = path.join(this.sitesPath, relativePath);
     const fileContent = fs.readFileSync(filePath, 'utf-8');
     let parsed: unknown;
     try {
@@ -59,31 +60,46 @@ export class ScrapeConfigService {
     } catch (error) {
       // Re-throw with context; caller will log a detailed message.
       (error as any).filePath = filePath;
-      (error as any).fileName = fileName;
+      (error as any).fileName = relativePath;
       (error as any).fileContent = fileContent;
       throw error;
     }
 
     // Unterstütze sowohl direktes Array als auch Objekt mit scrapes-Property
+    let scrapes: Scrape[];
     if (Array.isArray(parsed)) {
-      return parsed as unknown as Scrape[];
-    }
-
-    if (parsed && typeof parsed === 'object' && 'scrapes' in parsed) {
-      const scrapes = (parsed as unknown as Scrapes).scrapes as unknown;
-      if (!Array.isArray(scrapes)) {
+      scrapes = parsed as unknown as Scrape[];
+    } else if (parsed && typeof parsed === 'object' && 'scrapes' in parsed) {
+      const inner = (parsed as unknown as Scrapes).scrapes as unknown;
+      if (!Array.isArray(inner)) {
         this.logger.warn(
-          `⚠️ Invalid site config structure in ${fileName}: "scrapes" is not an array`,
+          `⚠️ Invalid site config structure in ${relativePath}: "scrapes" is not an array`,
         );
         return [];
       }
-      return scrapes as Scrape[];
+      scrapes = inner as Scrape[];
+    } else {
+      this.logger.warn(
+        `⚠️ Invalid site config structure in ${relativePath}: expected an array or an object with "scrapes"`,
+      );
+      return [];
     }
 
-    this.logger.warn(
-      `⚠️ Invalid site config structure in ${fileName}: expected an array or an object with "scrapes"`,
-    );
-    return [];
+    // Ordnername als Kategorie verwenden, falls die Config keine eigene definiert
+    const dirName = path.dirname(relativePath);
+    if (dirName !== '.') {
+      const category = dirName.split(path.sep).join(' / ');
+      for (const scrape of scrapes) {
+        if (!scrape.metadata) {
+          scrape.metadata = {} as Scrape['metadata'];
+        }
+        if (!scrape.metadata.category) {
+          scrape.metadata.category = category;
+        }
+      }
+    }
+
+    return scrapes;
   }
 
   private formatSiteConfigError(fileName: string, error: unknown): string {
@@ -168,13 +184,38 @@ export class ScrapeConfigService {
   }
 
   /**
-   * Holt alle JSON/JSONC-Dateien aus dem sites-Verzeichnis
+   * Holt alle JSON/JSONC-Dateien rekursiv aus dem sites-Verzeichnis.
+   * Gibt relative Pfade zurück (z.B. "e-commerce/amazon.jsonc").
    */
   private getSiteFiles(): string[] {
-    return fs
-      .readdirSync(this.sitesPath)
-      .filter((file) => file.endsWith('.json') || file.endsWith('.jsonc'))
-      .sort();
+    const results: string[] = [];
+    this.collectSiteFiles(this.sitesPath, '', results);
+    return results.sort();
+  }
+
+  private collectSiteFiles(
+    basePath: string,
+    relativeTo: string,
+    results: string[],
+  ): void {
+    const entries = fs.readdirSync(basePath, { withFileTypes: true });
+    for (const entry of entries) {
+      const relPath = relativeTo
+        ? path.join(relativeTo, entry.name)
+        : entry.name;
+      if (entry.isDirectory()) {
+        this.collectSiteFiles(
+          path.join(basePath, entry.name),
+          relPath,
+          results,
+        );
+      } else if (
+        entry.name.endsWith('.json') ||
+        entry.name.endsWith('.jsonc')
+      ) {
+        results.push(relPath);
+      }
+    }
   }
 
   /**

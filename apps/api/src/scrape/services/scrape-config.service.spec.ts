@@ -8,6 +8,22 @@ vi.mock('comment-json', () => ({
   parse: (text: string) => JSON.parse(text),
 }));
 
+/** Helper to create mock Dirent objects */
+function mockDirent(name: string, isDir = false): fs.Dirent {
+  return {
+    name,
+    isDirectory: () => isDir,
+    isFile: () => !isDir,
+    isBlockDevice: () => false,
+    isCharacterDevice: () => false,
+    isFIFO: () => false,
+    isSocket: () => false,
+    isSymbolicLink: () => false,
+    path: '',
+    parentPath: '',
+  } as fs.Dirent;
+}
+
 describe('ScrapeConfigService', () => {
   let service: ScrapeConfigService;
 
@@ -29,7 +45,9 @@ describe('ScrapeConfigService', () => {
 
     it('should load scrapes from JSON files', () => {
       vi.mocked(fs.existsSync).mockReturnValue(true);
-      vi.mocked(fs.readdirSync).mockReturnValue(['test.json'] as any);
+      vi.mocked(fs.readdirSync).mockReturnValue([
+        mockDirent('test.json'),
+      ] as any);
       vi.mocked(fs.readFileSync).mockReturnValue(
         JSON.stringify([{ id: 'test-1', metadata: {}, steps: [] }]),
       );
@@ -41,7 +59,9 @@ describe('ScrapeConfigService', () => {
 
     it('should load scrapes from object with scrapes property', () => {
       vi.mocked(fs.existsSync).mockReturnValue(true);
-      vi.mocked(fs.readdirSync).mockReturnValue(['test.jsonc'] as any);
+      vi.mocked(fs.readdirSync).mockReturnValue([
+        mockDirent('test.jsonc'),
+      ] as any);
       vi.mocked(fs.readFileSync).mockReturnValue(
         JSON.stringify({ scrapes: [{ id: 's1', metadata: {}, steps: [] }] }),
       );
@@ -52,7 +72,9 @@ describe('ScrapeConfigService', () => {
 
     it('should skip files with invalid structure', () => {
       vi.mocked(fs.existsSync).mockReturnValue(true);
-      vi.mocked(fs.readdirSync).mockReturnValue(['bad.json'] as any);
+      vi.mocked(fs.readdirSync).mockReturnValue([
+        mockDirent('bad.json'),
+      ] as any);
       vi.mocked(fs.readFileSync).mockReturnValue(
         JSON.stringify({ notScrapes: true }),
       );
@@ -63,7 +85,9 @@ describe('ScrapeConfigService', () => {
 
     it('should handle parse errors gracefully', () => {
       vi.mocked(fs.existsSync).mockReturnValue(true);
-      vi.mocked(fs.readdirSync).mockReturnValue(['invalid.json'] as any);
+      vi.mocked(fs.readdirSync).mockReturnValue([
+        mockDirent('invalid.json'),
+      ] as any);
       vi.mocked(fs.readFileSync).mockReturnValue('not valid json {{{');
 
       const result = service.loadScrapeDefinitions();
@@ -73,10 +97,10 @@ describe('ScrapeConfigService', () => {
     it('should filter only .json and .jsonc files', () => {
       vi.mocked(fs.existsSync).mockReturnValue(true);
       vi.mocked(fs.readdirSync).mockReturnValue([
-        'a.json',
-        'b.jsonc',
-        'c.txt',
-        'd.yaml',
+        mockDirent('a.json'),
+        mockDirent('b.jsonc'),
+        mockDirent('c.txt'),
+        mockDirent('d.yaml'),
       ] as any);
       vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify([]));
 
@@ -86,7 +110,9 @@ describe('ScrapeConfigService', () => {
 
     it('should handle files that return empty scrapes array', () => {
       vi.mocked(fs.existsSync).mockReturnValue(true);
-      vi.mocked(fs.readdirSync).mockReturnValue(['empty.json'] as any);
+      vi.mocked(fs.readdirSync).mockReturnValue([
+        mockDirent('empty.json'),
+      ] as any);
       vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify([]));
 
       const result = service.loadScrapeDefinitions();
@@ -95,7 +121,9 @@ describe('ScrapeConfigService', () => {
 
     it('should handle scrapes property that is not an array', () => {
       vi.mocked(fs.existsSync).mockReturnValue(true);
-      vi.mocked(fs.readdirSync).mockReturnValue(['bad-scrapes.json'] as any);
+      vi.mocked(fs.readdirSync).mockReturnValue([
+        mockDirent('bad-scrapes.json'),
+      ] as any);
       vi.mocked(fs.readFileSync).mockReturnValue(
         JSON.stringify({ scrapes: 'not-an-array' }),
       );
@@ -106,7 +134,10 @@ describe('ScrapeConfigService', () => {
 
     it('should merge scrapes from multiple files', () => {
       vi.mocked(fs.existsSync).mockReturnValue(true);
-      vi.mocked(fs.readdirSync).mockReturnValue(['a.json', 'b.json'] as any);
+      vi.mocked(fs.readdirSync).mockReturnValue([
+        mockDirent('a.json'),
+        mockDirent('b.json'),
+      ] as any);
       vi.mocked(fs.readFileSync)
         .mockReturnValueOnce(JSON.stringify([{ id: 'scrape-1', steps: [] }]))
         .mockReturnValueOnce(JSON.stringify([{ id: 'scrape-2', steps: [] }]));
@@ -119,7 +150,9 @@ describe('ScrapeConfigService', () => {
 
     it('should warn about duplicate scrape IDs', () => {
       vi.mocked(fs.existsSync).mockReturnValue(true);
-      vi.mocked(fs.readdirSync).mockReturnValue(['dupes.json'] as any);
+      vi.mocked(fs.readdirSync).mockReturnValue([
+        mockDirent('dupes.json'),
+      ] as any);
       vi.mocked(fs.readFileSync).mockReturnValue(
         JSON.stringify([
           { id: 'dup', steps: [] },
@@ -134,7 +167,10 @@ describe('ScrapeConfigService', () => {
 
     it('should sort files alphabetically', () => {
       vi.mocked(fs.existsSync).mockReturnValue(true);
-      vi.mocked(fs.readdirSync).mockReturnValue(['z.json', 'a.json'] as any);
+      vi.mocked(fs.readdirSync).mockReturnValue([
+        mockDirent('z.json'),
+        mockDirent('a.json'),
+      ] as any);
       vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify([]));
 
       service.loadScrapeDefinitions();
@@ -143,6 +179,69 @@ describe('ScrapeConfigService', () => {
       const calls = vi.mocked(fs.readFileSync).mock.calls;
       expect(calls[0][0]).toContain('a.json');
       expect(calls[1][0]).toContain('z.json');
+    });
+
+    it('should recursively load scrapes from subdirectories', () => {
+      vi.mocked(fs.existsSync).mockReturnValue(true);
+      vi.mocked(fs.readdirSync)
+        .mockReturnValueOnce([
+          mockDirent('root.json'),
+          mockDirent('e-commerce', true),
+        ] as any)
+        .mockReturnValueOnce([mockDirent('amazon.json')] as any);
+      vi.mocked(fs.readFileSync)
+        .mockReturnValueOnce(
+          JSON.stringify([{ id: 'scrape-a', metadata: {}, steps: [] }]),
+        )
+        .mockReturnValueOnce(
+          JSON.stringify([{ id: 'scrape-b', metadata: {}, steps: [] }]),
+        );
+
+      const result = service.loadScrapeDefinitions();
+      expect(result).toHaveLength(2);
+    });
+
+    it('should use folder name as category when not defined in config', () => {
+      vi.mocked(fs.existsSync).mockReturnValue(true);
+      vi.mocked(fs.readdirSync)
+        .mockReturnValueOnce([mockDirent('shopping', true)] as any)
+        .mockReturnValueOnce([mockDirent('store.json')] as any);
+      vi.mocked(fs.readFileSync).mockReturnValue(
+        JSON.stringify([{ id: 'store-1', metadata: {}, steps: [] }]),
+      );
+
+      const result = service.loadScrapeDefinitions();
+      expect(result).toHaveLength(1);
+      expect(result[0].metadata.category).toBe('shopping');
+    });
+
+    it('should not override existing category from config', () => {
+      vi.mocked(fs.existsSync).mockReturnValue(true);
+      vi.mocked(fs.readdirSync)
+        .mockReturnValueOnce([mockDirent('shopping', true)] as any)
+        .mockReturnValueOnce([mockDirent('store.json')] as any);
+      vi.mocked(fs.readFileSync).mockReturnValue(
+        JSON.stringify([
+          { id: 'store-1', metadata: { category: 'Custom' }, steps: [] },
+        ]),
+      );
+
+      const result = service.loadScrapeDefinitions();
+      expect(result[0].metadata.category).toBe('Custom');
+    });
+
+    it('should use nested folder path as category', () => {
+      vi.mocked(fs.existsSync).mockReturnValue(true);
+      vi.mocked(fs.readdirSync)
+        .mockReturnValueOnce([mockDirent('shopping', true)] as any)
+        .mockReturnValueOnce([mockDirent('europe', true)] as any)
+        .mockReturnValueOnce([mockDirent('store.json')] as any);
+      vi.mocked(fs.readFileSync).mockReturnValue(
+        JSON.stringify([{ id: 'store-eu', metadata: {}, steps: [] }]),
+      );
+
+      const result = service.loadScrapeDefinitions();
+      expect(result[0].metadata.category).toBe('shopping / europe');
     });
   });
 
