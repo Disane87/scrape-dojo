@@ -1,3 +1,9 @@
+## [1.12.0](https://github.com/disane87/scrape-dojo/compare/v1.11.2...v1.12.0) (2026-03-11)
+
+### 🚀 Features
+
+- **🕷️ scrape:** recursively load config files from subdirectories ([ba1e050](https://github.com/disane87/scrape-dojo/commit/ba1e0503d952be54a4eceb2cbfb756454c0e29bb))
+
 ## [1.11.2](https://github.com/disane87/scrape-dojo/compare/v1.11.1...v1.11.2) (2026-03-11)
 
 ### 🛠️ Fixes
