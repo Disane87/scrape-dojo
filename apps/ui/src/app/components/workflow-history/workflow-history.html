@@ -102,13 +102,13 @@
             <!-- Timeline Container -->
             <div class="relative pl-10 pr-5 py-5">
                 <!-- Vertical Timeline Line -->
-                <div class="absolute left-8 top-5 bottom-5 w-0.5 bg-dojo-border-muted"></div>
+                <div class="absolute left-9.75 top-5 bottom-5 w-0.5 bg-dojo-border-muted"></div>
 
                 @for (step of run.steps; track step.name; let stepIdx = $index; let isLast = $last) {
                 <div class="relative mb-4 last:mb-0">
                     <!-- Step Timeline Node -->
                     <div
-                        class="absolute -left-2 top-2.5 w-5 h-5 rounded-full flex items-center justify-center z-10 ring-2 ring-dojo-bg shadow-sm"
+                        class="absolute -left-2.5 top-2.5 w-5 h-5 rounded-full flex items-center justify-center z-10 ring-2 ring-dojo-bg shadow-sm"
                         [class]="step.status === 'success' ? 'bg-dojo-success-strong' : 
                                  step.status === 'failed' ? 'bg-dojo-danger-strong' : 
                                  step.status === 'running' ? 'bg-dojo-warning-strong' : 'bg-dojo-border-muted'"
