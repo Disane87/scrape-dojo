@@ -26,6 +26,7 @@ COPY .postcssrc.json ./
 COPY apps ./apps
 COPY libs ./libs
 COPY config ./config
+COPY scripts ./scripts
 
 # Update UI environment.ts with version from package.json + git commit hash
 # (prebuild hook doesn't run with direct nx commands)
