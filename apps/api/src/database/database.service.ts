@@ -717,44 +717,34 @@ export class DatabaseService implements OnModuleInit {
           };
 
           // Add loop data if available
-          if (action.loopData) {
+          if (action.loopData && action.loopData !== 'null') {
             try {
-              this.logger.debug(
-                `🔍 Parsing loopData for action ${action.actionName}: ${action.loopData.substring(0, 200)}...`,
-              );
               let loopData = JSON.parse(action.loopData);
 
               // Handle double-stringified JSON (legacy data)
               if (typeof loopData === 'string') {
-                this.logger.debug(
-                  `🔄 Detected double-stringified loopData, parsing again...`,
-                );
                 loopData = JSON.parse(loopData);
               }
 
-              this.logger.debug(`✅ Parsed loopData:`, {
-                iterations: loopData.iterations?.length,
-                total: loopData.total,
-                current: loopData.current,
-              });
-              actionDto.loopIterations = loopData.iterations;
-              actionDto.loopTotal = loopData.total;
-              actionDto.loopCurrent = loopData.current;
+              if (loopData && typeof loopData === 'object') {
+                actionDto.loopIterations = loopData.iterations;
+                actionDto.loopTotal = loopData.total;
+                actionDto.loopCurrent = loopData.current;
 
-              // Map status in child actions of iterations
-              if (
-                actionDto.loopIterations &&
-                Array.isArray(actionDto.loopIterations)
-              ) {
-                actionDto.loopIterations = actionDto.loopIterations.map(
-                  (iteration: any) => ({
-                    ...iteration,
-                    childActions: mapChildActionsStatus(iteration.childActions),
-                  }),
-                );
-                this.logger.debug(
-                  `🔄 Mapped ${actionDto.loopIterations.length} iterations with childActions`,
-                );
+                // Map status in child actions of iterations
+                if (
+                  actionDto.loopIterations &&
+                  Array.isArray(actionDto.loopIterations)
+                ) {
+                  actionDto.loopIterations = actionDto.loopIterations.map(
+                    (iteration: any) => ({
+                      ...iteration,
+                      childActions: mapChildActionsStatus(
+                        iteration.childActions,
+                      ),
+                    }),
+                  );
+                }
               }
             } catch (error) {
               this.logger.warn(
