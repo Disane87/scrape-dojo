@@ -1,0 +1,45 @@
+name: Dependabot Auto-Merge
+
+on:
+  pull_request:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  auto-merge:
+    name: Auto-Merge Dependabot
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+
+    steps:
+      - name: Fetch Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Auto-approve & merge patch/minor npm updates
+        if: >-
+          steps.metadata.outputs.package-ecosystem == 'npm_and_yarn' &&
+          (steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
+           steps.metadata.outputs.update-type == 'version-update:semver-minor')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr review "${{ github.event.pull_request.number }}" --repo "${{ github.repository }}" --approve \
+            --body "Auto-approved (Dependabot ${{ steps.metadata.outputs.update-type }})"
+          gh pr merge "${{ github.event.pull_request.number }}" --repo "${{ github.repository }}" --squash --auto
+
+      - name: Auto-approve & merge GitHub Actions updates
+        if: steps.metadata.outputs.package-ecosystem == 'github_actions'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr review "${{ github.event.pull_request.number }}" --repo "${{ github.repository }}" --approve \
+            --body "Auto-approved (GitHub Actions update)"
+          gh pr merge "${{ github.event.pull_request.number }}" --repo "${{ github.repository }}" --squash --auto
