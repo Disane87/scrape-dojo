@@ -101,21 +101,11 @@ export const appRoutes: Route[] = [
   },
   {
     path: 'jobs/:jobId',
-    loadComponent: loadDashboard,
-    canActivate: [authGuard],
+    redirectTo: 'jobs/:jobId/history',
+    pathMatch: 'full',
   },
   {
     path: 'jobs/:jobId/:tab',
-    loadComponent: loadDashboard,
-    canActivate: [authGuard],
-  },
-  {
-    path: 'jobs/:jobId/runs/:runId',
-    loadComponent: loadDashboard,
-    canActivate: [authGuard],
-  },
-  {
-    path: 'jobs/:jobId/:tab/runs/:runId',
     loadComponent: loadDashboard,
     canActivate: [authGuard],
   },

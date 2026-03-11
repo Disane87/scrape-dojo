@@ -182,12 +182,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
       if (params['tab']) {
         this.setActiveTab(params['tab'] as TabType);
       }
-      if (params['runId']) {
-        this.selectedRunId.set(params['runId']);
-      } else {
-        this.selectedRunId.set(null);
-      }
     });
+
+    // RunId aus Query-Parametern
+    this.route.queryParams
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((queryParams) => {
+        if (queryParams['runId']) {
+          this.selectedRunId.set(queryParams['runId']);
+        } else {
+          this.selectedRunId.set(null);
+        }
+      });
   }
 
   ngOnDestroy(): void {
@@ -270,17 +276,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     tab?: TabType,
     runId?: string | null,
   ): void {
-    const parts = ['/jobs', jobId];
+    const parts = ['/jobs', jobId, tab || 'history'];
 
-    if (tab && tab !== 'history') {
-      parts.push(tab);
-    }
-
-    if (runId) {
-      parts.push('runs', runId);
-    }
-
-    this.router.navigate(parts, { replaceUrl: false });
+    this.router.navigate(parts, {
+      replaceUrl: false,
+      queryParams: { runId: runId || null },
+    });
   }
 
   private loadSchedule(id: string): void {
