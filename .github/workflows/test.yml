@@ -10,6 +10,7 @@ on:
 env:
   NX_CLOUD_ACCESS_TOKEN: ''
   NX_NO_CLOUD: 'true'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   test-api:
@@ -25,7 +26,7 @@ jobs:
           version: 10
 
       - name: Setup Node 22
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: 'pnpm'
@@ -34,13 +35,15 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Run API tests with coverage
-        run: pnpm nx test api --coverage --skip-nx-cache --verbose
+        run: cd apps/api && npx vitest run --coverage
 
       - name: Upload API coverage artifacts
         uses: actions/upload-artifact@v7
+        if: always()
         with:
           name: api-coverage
           path: coverage/apps/api
+          if-no-files-found: ignore
 
   test-ui:
     name: Test UI
@@ -55,7 +58,7 @@ jobs:
           version: 10
 
       - name: Setup Node 22
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: 'pnpm'
@@ -68,6 +71,8 @@ jobs:
 
       - name: Upload UI coverage artifacts
         uses: actions/upload-artifact@v7
+        if: always()
         with:
           name: ui-coverage
           path: coverage/apps/ui
+          if-no-files-found: ignore
