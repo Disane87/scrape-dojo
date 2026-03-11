@@ -14,7 +14,7 @@
                 </div>
                 <div>
                     <h3 class="text-lg font-semibold text-dojo-text">{{ 'workflow.run_title' | transloco }}</h3>
-                    <p class="text-sm text-dojo-text-muted">{{ workflowName || workflowId }}</p>
+                    <p class="text-sm text-dojo-text-muted">{{ workflowName() || workflowId() }}</p>
                 </div>
             </div>
             <button
