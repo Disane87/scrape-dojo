@@ -20,6 +20,7 @@ import { SseTicketService } from './sse-ticket.service';
 import { SchedulerService } from './scheduler.service';
 import { DatabaseService } from '../database/database.service';
 import { AuthorResolverService } from './author-resolver.service';
+import { Public } from '../auth/decorators/public.decorator';
 import { Observable, map } from 'rxjs';
 import * as jsonata from 'jsonata';
 
@@ -221,20 +222,23 @@ export class ScrapeUIController {
 
   /**
    * Server-Sent Events für Live-Status-Updates.
-   * Accepts a one-time `ticket` query parameter (obtained via POST /events/ticket).
-   * Falls back to legacy `access_token` query parameter for backwards compatibility.
+   * Marked @Public() because EventSource cannot send Authorization headers.
+   * Authentication is handled via a one-time ticket (obtained via POST /events/ticket).
    */
+  @Public()
   @Sse('events')
   events(@Query('ticket') ticket?: string): Observable<MessageEvent> {
-    // When a ticket is provided, validate it (one-time use)
-    if (ticket) {
-      const userId = this.sseTicketService.validateTicket(ticket);
-      if (!userId) {
-        throw new UnauthorizedException('Invalid or expired SSE ticket');
-      }
+    // Ticket is required — the endpoint is @Public() so the JWT guard won't run.
+    // Without a valid ticket, reject immediately.
+    if (!ticket) {
+      throw new UnauthorizedException(
+        'SSE ticket required. Obtain one via POST /api/events/ticket',
+      );
     }
-    // If no ticket is provided, the request was already authenticated by the
-    // JWT guard (via Authorization header or legacy access_token query param).
+    const userId = this.sseTicketService.validateTicket(ticket);
+    if (!userId) {
+      throw new UnauthorizedException('Invalid or expired SSE ticket');
+    }
 
     return this.scrapeEventsService.getEvents().pipe(
       map((event) => ({

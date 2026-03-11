@@ -413,19 +413,7 @@ describe('ScrapeUIController', () => {
   // ============ SSE /events ============
 
   describe('events', () => {
-    it('should return an observable that emits stringified events', async () => {
-      mockScrapeEventsService.getEvents.mockReturnValue(
-        of({ type: 'test-event' }),
-      );
-
-      const obs = controller.events();
-      const result = await new Promise<any>((resolve) => {
-        obs.subscribe((event) => resolve(event));
-      });
-      expect(result.data).toBe(JSON.stringify({ type: 'test-event' }));
-    });
-
-    it('should validate ticket when provided', async () => {
+    it('should return an observable that emits stringified events with valid ticket', async () => {
       mockScrapeEventsService.getEvents.mockReturnValue(
         of({ type: 'test-event' }),
       );
@@ -449,13 +437,8 @@ describe('ScrapeUIController', () => {
       );
     });
 
-    it('should not validate ticket when not provided', async () => {
-      mockScrapeEventsService.getEvents.mockReturnValue(
-        of({ type: 'test-event' }),
-      );
-
-      controller.events(undefined);
-
+    it('should throw UnauthorizedException when no ticket provided', () => {
+      expect(() => controller.events(undefined)).toThrow(UnauthorizedException);
       expect(mockSseTicketService.validateTicket).not.toHaveBeenCalled();
     });
   });
