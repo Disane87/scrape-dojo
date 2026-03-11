@@ -1,3 +1,14 @@
+## [1.13.1](https://github.com/disane87/scrape-dojo/compare/v1.13.0...v1.13.1) (2026-03-11)
+
+### 🛠️ Fixes
+
+- **📌 deps:** update Angular to 21.1.6 and NestJS to 11.1.16 for security fixes ([2270c21](https://github.com/disane87/scrape-dojo/commit/2270c21bbdb875f1d9f6e5e6d4fa6d32c65b61af)), closes [#84](https://github.com/disane87/scrape-dojo/issues/84) [#85](https://github.com/disane87/scrape-dojo/issues/85) [#89](https://github.com/disane87/scrape-dojo/issues/89) [#90](https://github.com/disane87/scrape-dojo/issues/90) [#97](https://github.com/disane87/scrape-dojo/issues/97) [#37](https://github.com/disane87/scrape-dojo/issues/37)
+
+### 🤖 CI
+
+- **📌 deps:** add Dependabot auto-merge workflow for minor updates ([95b79ad](https://github.com/disane87/scrape-dojo/commit/95b79ad7a65456879235a91c4c3f6940551a70fe))
+- migrate GitHub Actions to Node.js 24 and fix CI annotations ([648fbb7](https://github.com/disane87/scrape-dojo/commit/648fbb7b14e150ec46761a54361a77eb2ff8aa8d))
+
 ## [1.13.0](https://github.com/disane87/scrape-dojo/compare/v1.12.0...v1.13.0) (2026-03-11)
 
 ### 🚀 Features
