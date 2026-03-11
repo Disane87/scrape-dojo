@@ -1,3 +1,14 @@
+## [1.13.0](https://github.com/disane87/scrape-dojo/compare/v1.12.0...v1.13.0) (2026-03-11)
+
+### 🚀 Features
+
+- **🕷️ scrape:** add initial scrape configuration for testing and remove obsolete order PDF scraper ([14bab2d](https://github.com/disane87/scrape-dojo/commit/14bab2d03c53ae78e653dbd43a1af2fe7e214f7b))
+
+### 🛠️ Fixes
+
+- **🐳 docker:** copy scripts directory into builder stage ([0116629](https://github.com/disane87/scrape-dojo/commit/0116629f586008acdf97d334112c023d7b322da7))
+- **🗄️ db:** handle null loopData when parsing run action details ([ce80865](https://github.com/disane87/scrape-dojo/commit/ce8086599e0926b1c62ab4dd5b78c8baf9f779d0))
+
 ## [1.12.0](https://github.com/disane87/scrape-dojo/compare/v1.11.2...v1.12.0) (2026-03-11)
 
 ### 🚀 Features
