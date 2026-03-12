@@ -6,6 +6,7 @@ import {
   inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { BaseArtifactComponent } from './base-artifact.component';
 import { FilesService } from '../../../services/files.service';
 
@@ -24,7 +25,7 @@ import { FilesService } from '../../../services/files.service';
             [class.border-b]="!$last"
             [class.border-dojo-border]="!$last"
           >
-            <div [innerHTML]="getHtml(item)" class="flush-card"></div>
+            <div [innerHTML]="getHtml(item, $index)" class="flush-card"></div>
           </div>
         }
       </div>
@@ -35,7 +36,7 @@ import { FilesService } from '../../../services/files.service';
           <div
             class="bg-dojo-surface-2 border border-dojo-border rounded-lg hover:border-dojo-accent transition-colors"
           >
-            <div [innerHTML]="getHtml(item)"></div>
+            <div [innerHTML]="getHtml(item, $index)"></div>
           </div>
         }
       </div>
@@ -59,6 +60,7 @@ export class CardArtifactComponent
 {
   private filesService = inject(FilesService);
   private elementRef = inject(ElementRef);
+  private sanitizer = inject(DomSanitizer);
 
   private clickHandler: ((event: Event) => void) | null = null;
 
@@ -116,17 +118,22 @@ export class CardArtifactComponent
     return Array.isArray(data) ? data : [data];
   }
 
-  getHtml(item: any): string {
-    return this.renderCardTemplate(item);
-  }
+  getHtml(item: any, index: number): SafeHtml {
+    let html: string;
 
-  renderCardTemplate(item: any): string {
-    const template = this.artifact().template;
-    if (!template) {
-      return `<pre class="text-xs">${JSON.stringify(item, null, 2)}</pre>`;
+    // Use per-item rendered HTML if available (array data with template)
+    const renderedItems = this.artifact().renderedItems;
+    if (renderedItems && renderedItems[index]) {
+      html = renderedItems[index];
+    } else {
+      // Fallback: single rendered template or JSON dump
+      const template = this.artifact().template;
+      html = template
+        ? template
+        : `<pre class="text-xs">${JSON.stringify(item, null, 2)}</pre>`;
     }
 
-    // Template wurde bereits im Backend gerendert, einfach zurückgeben
-    return template;
+    // Bypass sanitizer to preserve data-* attributes (template is backend-rendered)
+    return this.sanitizer.bypassSecurityTrustHtml(html);
   }
 }

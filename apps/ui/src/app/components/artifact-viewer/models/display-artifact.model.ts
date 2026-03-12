@@ -14,6 +14,7 @@ export interface DisplayArtifact {
   description?: string;
   data: any;
   template?: string; // Handlebars template for 'card' type
+  renderedItems?: string[]; // Per-item rendered HTML (for array data with template)
   flush?: boolean; // Compact list-style rendering for cards
   metadata?: {
     itemCount?: number;

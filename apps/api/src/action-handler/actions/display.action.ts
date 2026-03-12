@@ -26,6 +26,7 @@ export interface DisplayArtifact {
   description?: string;
   data: any;
   template?: string; // Handlebars template for 'card' type
+  renderedItems?: string[]; // Per-item rendered HTML (for array data with template)
   flush?: boolean; // Compact list-style rendering for cards
   metadata?: {
     itemCount?: number;
@@ -57,15 +58,20 @@ export class DisplayAction extends BaseAction<DisplayActionParams> {
 
     // If card type with template, render the template with data
     let renderedTemplate = template;
+    let renderedItems: string[] | undefined;
     if (detectedType === 'card' && template && data) {
-      this.logger.log(
-        `🎴 Rendering card template with data (type: ${typeof data}): ${JSON.stringify(data)}`,
-      );
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const Handlebars = require('handlebars');
       const templateFn = Handlebars.compile(template);
-      renderedTemplate = templateFn(data);
-      this.logger.debug(`🎴 Rendered template: ${renderedTemplate}`);
+
+      if (Array.isArray(data)) {
+        // Render template per item for arrays
+        this.logger.log(`🎴 Rendering card template for ${data.length} items`);
+        renderedItems = data.map((item) => templateFn(item));
+      } else {
+        this.logger.log(`🎴 Rendering card template with single item`);
+        renderedTemplate = templateFn(data);
+      }
     }
 
     const artifact: DisplayArtifact = {
@@ -74,6 +80,7 @@ export class DisplayAction extends BaseAction<DisplayActionParams> {
       description,
       data,
       template: renderedTemplate,
+      renderedItems,
       flush,
       metadata: {
         dataType: typeof data,
