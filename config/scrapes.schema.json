@@ -1,501 +1,487 @@
 {
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "definitions": {
-        "ActionName": {
-            "enum": [
-                "break",
-                "click",
-                "download",
-                "extract",
-                "extractAll",
-                "get",
-                "getAll",
-                "keyboardPress",
-                "logger",
-                "loop",
-                "navigate",
-                "screenshot",
-                "storeData",
-                "transform",
-                "type",
-                "wait",
-                "waitForOtp"
-            ],
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "ActionName": {
+      "enum": [
+        "artifacts",
+        "break",
+        "click",
+        "delay",
+        "download",
+        "extract",
+        "extractAll",
+        "fileExists",
+        "get",
+        "getAll",
+        "keyboardPress",
+        "logger",
+        "loop",
+        "navigate",
+        "notify",
+        "screenshot",
+        "skipIf",
+        "storeData",
+        "transform",
+        "type",
+        "waitForSelector",
+        "waitForOtp"
+      ],
+      "type": "string"
+    },
+    "Logger": {
+      "properties": {
+        "context": {
+          "type": "string"
+        },
+        "localInstance": {
+          "$ref": "#/definitions/LoggerService"
+        },
+        "localInstanceRef": {
+          "$ref": "#/definitions/LoggerService"
+        },
+        "options": {
+          "properties": {
+            "timestamp": {
+              "type": "boolean"
+            }
+          },
+          "type": "object"
+        },
+        "registerLocalInstanceRef": {}
+      },
+      "type": "object"
+    },
+    "LoggerService": {
+      "type": "object"
+    },
+    "Map<string,(code:string)=>void>": {
+      "properties": {
+        "__@toStringTag@442": {
+          "type": "string"
+        },
+        "size": {
+          "type": "number"
+        }
+      },
+      "type": "object"
+    },
+    "Observable<any>": {
+      "description": "A representation of any set of values over any amount of time. This is the most basic building block\nof RxJS.",
+      "properties": {
+        "operator": {
+          "$ref": "#/definitions/Operator<any,any>"
+        },
+        "source": {
+          "$ref": "#/definitions/Observable<any>"
+        }
+      },
+      "type": "object"
+    },
+    "Observer<ScrapeEvent>": {
+      "description": "An object interface that defines a set of callback functions a user can use to get\nnotified of any set of {@link Observable}\n{@link guide /glossary-and-semantics#notification notification} events.\n\nFor more info, please refer to {@link guide /observer this guide}.",
+      "properties": {
+        "complete": {
+          "description": "A callback function that gets called by the producer if and when it has no more\nvalues to provide (by calling `next` callback function). This means that no error\nhas happened. This callback can't be called more than one time, it can't be called\nif the `error` callback function have been called previously, nor it can't be called\nif the consumer has unsubscribed.\n\nFor more info, please refer to {@link guide /glossary-and-semantics#complete this guide}.",
+          "type": "object"
+        },
+        "error": {
+          "description": "A callback function that gets called by the producer if and when it encountered a\nproblem of any kind. The errored value will be provided through the `err` parameter.\nThis callback can't be called more than one time, it can't be called if the\n`complete` callback function have been called previously, nor it can't be called if\nthe consumer has unsubscribed.\n\nFor more info, please refer to {@link guide /glossary-and-semantics#error this guide}.",
+          "type": "object"
+        },
+        "next": {
+          "description": "A callback function that gets called by the producer during the subscription when\nthe producer \"has\" the `value`. It won't be called if `error` or `complete` callback\nfunctions have been called, nor after the consumer has unsubscribed.\n\nFor more info, please refer to {@link guide /glossary-and-semantics#next this guide}.",
+          "type": "object"
+        }
+      },
+      "type": "object"
+    },
+    "Observer<{requestId:string;code:string;}>": {
+      "description": "An object interface that defines a set of callback functions a user can use to get\nnotified of any set of {@link Observable}\n{@link guide /glossary-and-semantics#notification notification} events.\n\nFor more info, please refer to {@link guide /observer this guide}.",
+      "properties": {
+        "complete": {
+          "description": "A callback function that gets called by the producer if and when it has no more\nvalues to provide (by calling `next` callback function). This means that no error\nhas happened. This callback can't be called more than one time, it can't be called\nif the `error` callback function have been called previously, nor it can't be called\nif the consumer has unsubscribed.\n\nFor more info, please refer to {@link guide /glossary-and-semantics#complete this guide}.",
+          "type": "object"
+        },
+        "error": {
+          "description": "A callback function that gets called by the producer if and when it encountered a\nproblem of any kind. The errored value will be provided through the `err` parameter.\nThis callback can't be called more than one time, it can't be called if the\n`complete` callback function have been called previously, nor it can't be called if\nthe consumer has unsubscribed.\n\nFor more info, please refer to {@link guide /glossary-and-semantics#error this guide}.",
+          "type": "object"
+        },
+        "next": {
+          "description": "A callback function that gets called by the producer during the subscription when\nthe producer \"has\" the `value`. It won't be called if `error` or `complete` callback\nfunctions have been called, nor after the consumer has unsubscribed.\n\nFor more info, please refer to {@link guide /glossary-and-semantics#next this guide}.",
+          "type": "object"
+        }
+      },
+      "type": "object"
+    },
+    "Operator<any,ScrapeEvent>": {
+      "description": "*",
+      "type": "object"
+    },
+    "Operator<any,any>": {
+      "description": "*",
+      "type": "object"
+    },
+    "Operator<any,{requestId:string;code:string;}>": {
+      "description": "*",
+      "type": "object"
+    },
+    "Scrape": {
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Eindeutige ID des Scrapes"
+        },
+        "metadata": {
+          "$ref": "#/definitions/ScrapeMetadata",
+          "description": "Optionale Metadaten zum Scrape"
+        },
+        "steps": {
+          "items": {
+            "$ref": "#/definitions/ScrapeStep"
+          },
+          "type": "array"
+        }
+      },
+      "required": ["id", "steps"],
+      "type": "object"
+    },
+    "ScrapeMetadata": {
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Beschreibung des Scrapes"
+        },
+        "version": {
+          "type": "string",
+          "description": "Versionsnummer (z.B. 1.0.0)"
+        },
+        "author": {
+          "type": "string",
+          "description": "Autor des Scrapes. Formate: gh:@username (GitHub), email@example.com (Gravatar), https://... (Avatar-URL), oder Name"
+        },
+        "email": {
+          "type": "string",
+          "description": "E-Mail-Adresse des Autors (wird für Gravatar verwendet wenn author kein GitHub-User ist)"
+        },
+        "icon": {
+          "type": "string",
+          "description": "Icon im Format: selfhst:name[:variant], dbi:name[:variant], oder direkte URL"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
             "type": "string"
+          },
+          "description": "Tags zur Kategorisierung"
         },
-        "Logger": {
-            "properties": {
-                "context": {
-                    "type": "string"
-                },
-                "localInstance": {
-                    "$ref": "#/definitions/LoggerService"
-                },
-                "localInstanceRef": {
-                    "$ref": "#/definitions/LoggerService"
-                },
-                "options": {
-                    "properties": {
-                        "timestamp": {
-                            "type": "boolean"
-                        }
-                    },
-                    "type": "object"
-                },
-                "registerLocalInstanceRef": {}
-            },
-            "type": "object"
+        "variables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/WorkflowVariable"
+          },
+          "description": "Variablen die der Workflow benötigt (z.B. Credentials)"
         },
-        "LoggerService": {
-            "type": "object"
-        },
-        "Map<string,(code:string)=>void>": {
-            "properties": {
-                "__@toStringTag@442": {
-                    "type": "string"
-                },
-                "size": {
-                    "type": "number"
-                }
-            },
-            "type": "object"
-        },
-        "Observable<any>": {
-            "description": "A representation of any set of values over any amount of time. This is the most basic building block\nof RxJS.",
-            "properties": {
-                "operator": {
-                    "$ref": "#/definitions/Operator<any,any>"
-                },
-                "source": {
-                    "$ref": "#/definitions/Observable<any>"
-                }
-            },
-            "type": "object"
-        },
-        "Observer<ScrapeEvent>": {
-            "description": "An object interface that defines a set of callback functions a user can use to get\nnotified of any set of {@link Observable}\n{@link guide /glossary-and-semantics#notification notification} events.\n\nFor more info, please refer to {@link guide /observer this guide}.",
-            "properties": {
-                "complete": {
-                    "description": "A callback function that gets called by the producer if and when it has no more\nvalues to provide (by calling `next` callback function). This means that no error\nhas happened. This callback can't be called more than one time, it can't be called\nif the `error` callback function have been called previously, nor it can't be called\nif the consumer has unsubscribed.\n\nFor more info, please refer to {@link guide /glossary-and-semantics#complete this guide}.",
-                    "type": "object"
-                },
-                "error": {
-                    "description": "A callback function that gets called by the producer if and when it encountered a\nproblem of any kind. The errored value will be provided through the `err` parameter.\nThis callback can't be called more than one time, it can't be called if the\n`complete` callback function have been called previously, nor it can't be called if\nthe consumer has unsubscribed.\n\nFor more info, please refer to {@link guide /glossary-and-semantics#error this guide}.",
-                    "type": "object"
-                },
-                "next": {
-                    "description": "A callback function that gets called by the producer during the subscription when\nthe producer \"has\" the `value`. It won't be called if `error` or `complete` callback\nfunctions have been called, nor after the consumer has unsubscribed.\n\nFor more info, please refer to {@link guide /glossary-and-semantics#next this guide}.",
-                    "type": "object"
-                }
-            },
-            "type": "object"
-        },
-        "Observer<{requestId:string;code:string;}>": {
-            "description": "An object interface that defines a set of callback functions a user can use to get\nnotified of any set of {@link Observable}\n{@link guide /glossary-and-semantics#notification notification} events.\n\nFor more info, please refer to {@link guide /observer this guide}.",
-            "properties": {
-                "complete": {
-                    "description": "A callback function that gets called by the producer if and when it has no more\nvalues to provide (by calling `next` callback function). This means that no error\nhas happened. This callback can't be called more than one time, it can't be called\nif the `error` callback function have been called previously, nor it can't be called\nif the consumer has unsubscribed.\n\nFor more info, please refer to {@link guide /glossary-and-semantics#complete this guide}.",
-                    "type": "object"
-                },
-                "error": {
-                    "description": "A callback function that gets called by the producer if and when it encountered a\nproblem of any kind. The errored value will be provided through the `err` parameter.\nThis callback can't be called more than one time, it can't be called if the\n`complete` callback function have been called previously, nor it can't be called if\nthe consumer has unsubscribed.\n\nFor more info, please refer to {@link guide /glossary-and-semantics#error this guide}.",
-                    "type": "object"
-                },
-                "next": {
-                    "description": "A callback function that gets called by the producer during the subscription when\nthe producer \"has\" the `value`. It won't be called if `error` or `complete` callback\nfunctions have been called, nor after the consumer has unsubscribed.\n\nFor more info, please refer to {@link guide /glossary-and-semantics#next this guide}.",
-                    "type": "object"
-                }
-            },
-            "type": "object"
-        },
-        "Operator<any,ScrapeEvent>": {
-            "description": "*",
-            "type": "object"
-        },
-        "Operator<any,any>": {
-            "description": "*",
-            "type": "object"
-        },
-        "Operator<any,{requestId:string;code:string;}>": {
-            "description": "*",
-            "type": "object"
-        },
-        "Scrape": {
-            "properties": {
-                "id": {
-                    "type": "string",
-                    "description": "Eindeutige ID des Scrapes"
-                },
-                "metadata": {
-                    "$ref": "#/definitions/ScrapeMetadata",
-                    "description": "Optionale Metadaten zum Scrape"
-                },
-                "steps": {
-                    "items": {
-                        "$ref": "#/definitions/ScrapeStep"
-                    },
-                    "type": "array"
-                }
-            },
-            "required": [
-                "id",
-                "steps"
-            ],
-            "type": "object"
-        },
-        "ScrapeMetadata": {
-            "properties": {
-                "description": {
-                    "type": "string",
-                    "description": "Beschreibung des Scrapes"
-                },
-                "version": {
-                    "type": "string",
-                    "description": "Versionsnummer (z.B. 1.0.0)"
-                },
-                "author": {
-                    "type": "string",
-                    "description": "Autor des Scrapes. Formate: gh:@username (GitHub), email@example.com (Gravatar), https://... (Avatar-URL), oder Name"
-                },
-                "email": {
-                    "type": "string",
-                    "description": "E-Mail-Adresse des Autors (wird für Gravatar verwendet wenn author kein GitHub-User ist)"
-                },
-                "icon": {
-                    "type": "string",
-                    "description": "Icon im Format: selfhst:name[:variant], dbi:name[:variant], oder direkte URL"
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "description": "Tags zur Kategorisierung"
-                },
-                "variables": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/WorkflowVariable"
-                    },
-                    "description": "Variablen die der Workflow benötigt (z.B. Credentials)"
-                },
-                "triggers": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/WorkflowTrigger"
-                    },
-                    "description": "Trigger die den Workflow starten können"
-                }
-            },
-            "type": "object"
-        },
-        "WorkflowVariable": {
-            "properties": {
-                "name": {
-                    "type": "string",
-                    "description": "Eindeutiger Name der Variable (z.B. 'username', 'password')"
-                },
-                "label": {
-                    "type": "string",
-                    "description": "Anzeigename für die UI"
-                },
-                "description": {
-                    "type": "string",
-                    "description": "Beschreibung der Variable"
-                },
-                "type": {
-                    "type": "string",
-                    "enum": [
-                        "string",
-                        "password",
-                        "number",
-                        "boolean",
-                        "email",
-                        "url",
-                        "select"
-                    ],
-                    "description": "Datentyp der Variable"
-                },
-                "required": {
-                    "type": "boolean",
-                    "description": "Ob die Variable erforderlich ist"
-                },
-                "default": {
-                    "description": "Standardwert"
-                },
-                "options": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "value": {
-                                "type": "string"
-                            },
-                            "label": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "description": "Optionen für 'select' Typ"
-                },
-                "secretRef": {
-                    "type": "string",
-                    "description": "Referenz zu einem gespeicherten Secret (Name oder ID)"
-                },
-                "placeholder": {
-                    "type": "string",
-                    "description": "Platzhaltertext"
-                },
-                "pattern": {
-                    "type": "string",
-                    "description": "Validierungs-Pattern (RegEx)"
-                }
-            },
-            "required": [
-                "name",
-                "label",
-                "type"
-            ],
-            "type": "object"
-        },
-        "WorkflowTrigger": {
-            "oneOf": [
-                {
-                    "$ref": "#/definitions/ManualTrigger"
-                },
-                {
-                    "$ref": "#/definitions/CronTrigger"
-                },
-                {
-                    "$ref": "#/definitions/WebhookTrigger"
-                },
-                {
-                    "$ref": "#/definitions/StartupTrigger"
-                }
-            ]
-        },
-        "ManualTrigger": {
-            "properties": {
-                "type": {
-                    "const": "manual"
-                },
-                "enabled": {
-                    "type": "boolean"
-                }
-            },
-            "required": [
-                "type"
-            ],
-            "type": "object"
-        },
-        "CronTrigger": {
-            "properties": {
-                "type": {
-                    "const": "cron"
-                },
-                "enabled": {
-                    "type": "boolean"
-                },
-                "expression": {
-                    "type": "string",
-                    "description": "Cron-Ausdruck (z.B. '0 9 * * 1' für Montag 9 Uhr)"
-                },
-                "timezone": {
-                    "type": "string",
-                    "description": "Zeitzone (z.B. 'Europe/Berlin')"
-                },
-                "description": {
-                    "type": "string",
-                    "description": "Menschenlesbare Beschreibung"
-                }
-            },
-            "required": [
-                "type",
-                "expression"
-            ],
-            "type": "object"
-        },
-        "WebhookTrigger": {
-            "properties": {
-                "type": {
-                    "const": "webhook"
-                },
-                "enabled": {
-                    "type": "boolean"
-                },
-                "secret": {
-                    "type": "string",
-                    "description": "Geheimer Token zur Authentifizierung"
-                },
-                "methods": {
-                    "type": "array",
-                    "items": {
-                        "type": "string",
-                        "enum": [
-                            "GET",
-                            "POST"
-                        ]
-                    },
-                    "description": "Erlaubte HTTP-Methoden"
-                }
-            },
-            "required": [
-                "type"
-            ],
-            "type": "object"
-        },
-        "StartupTrigger": {
-            "properties": {
-                "type": {
-                    "const": "startup"
-                },
-                "enabled": {
-                    "type": "boolean"
-                },
-                "delay": {
-                    "type": "number",
-                    "description": "Verzögerung in ms vor dem Start"
-                }
-            },
-            "required": [
-                "type"
-            ],
-            "type": "object"
-        },
-        "ScrapeAction<unknown>": {
-            "properties": {
-                "action": {
-                    "$ref": "#/definitions/ActionName"
-                },
-                "data": {
-                    "properties": {
-                        "currentData": {
-                            "additionalProperties": {},
-                            "type": "object"
-                        },
-                        "scrapeEventsService": {
-                            "$ref": "#/definitions/ScrapeEventsService"
-                        },
-                        "scrapeId": {
-                            "type": "string"
-                        },
-                        "storedData": {
-                            "additionalProperties": {},
-                            "type": "object"
-                        }
-                    },
-                    "type": "object"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "params": {}
-            },
-            "type": "object"
-        },
-        "ScrapeEventsService": {
-            "properties": {
-                "eventSubject": {
-                    "$ref": "#/definitions/Subject<ScrapeEvent>"
-                },
-                "logger": {
-                    "$ref": "#/definitions/Logger"
-                },
-                "otpResponseSubject": {
-                    "$ref": "#/definitions/Subject<{requestId:string;code:string;}>"
-                },
-                "pendingOtpRequests": {
-                    "$ref": "#/definitions/Map<string,(code:string)=>void>"
-                }
-            },
-            "type": "object"
-        },
-        "ScrapeStep": {
-            "properties": {
-                "actions": {
-                    "items": {
-                        "$ref": "#/definitions/ScrapeAction<unknown>"
-                    },
-                    "type": "array"
-                },
-                "name": {
-                    "type": "string"
-                }
-            },
-            "type": "object"
-        },
-        "Subject<ScrapeEvent>": {
-            "description": "A Subject is a special type of Observable that allows values to be\nmulticasted to many Observers. Subjects are like EventEmitters.\n\nEvery Subject is an Observable and an Observer. You can subscribe to a\nSubject, and you can call next to feed values as well as error and complete.",
-            "properties": {
-                "closed": {
-                    "type": "boolean"
-                },
-                "currentObservers": {},
-                "hasError": {
-                    "type": "boolean"
-                },
-                "isStopped": {
-                    "type": "boolean"
-                },
-                "observed": {
-                    "type": "boolean"
-                },
-                "observers": {
-                    "items": {
-                        "$ref": "#/definitions/Observer<ScrapeEvent>"
-                    },
-                    "type": "array"
-                },
-                "operator": {
-                    "$ref": "#/definitions/Operator<any,ScrapeEvent>"
-                },
-                "source": {
-                    "$ref": "#/definitions/Observable<any>"
-                },
-                "thrownError": {}
-            },
-            "type": "object"
-        },
-        "Subject<{requestId:string;code:string;}>": {
-            "description": "A Subject is a special type of Observable that allows values to be\nmulticasted to many Observers. Subjects are like EventEmitters.\n\nEvery Subject is an Observable and an Observer. You can subscribe to a\nSubject, and you can call next to feed values as well as error and complete.",
-            "properties": {
-                "closed": {
-                    "type": "boolean"
-                },
-                "currentObservers": {},
-                "hasError": {
-                    "type": "boolean"
-                },
-                "isStopped": {
-                    "type": "boolean"
-                },
-                "observed": {
-                    "type": "boolean"
-                },
-                "observers": {
-                    "items": {
-                        "$ref": "#/definitions/Observer<{requestId:string;code:string;}>"
-                    },
-                    "type": "array"
-                },
-                "operator": {
-                    "$ref": "#/definitions/Operator<any,{requestId:string;code:string;}>"
-                },
-                "source": {
-                    "$ref": "#/definitions/Observable<any>"
-                },
-                "thrownError": {}
-            },
-            "type": "object"
+        "triggers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/WorkflowTrigger"
+          },
+          "description": "Trigger die den Workflow starten können"
         }
+      },
+      "type": "object"
     },
-    "properties": {
-        "scrapes": {
-            "items": {
-                "$ref": "#/definitions/Scrape"
-            },
-            "type": "array"
+    "WorkflowVariable": {
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Eindeutiger Name der Variable (z.B. 'username', 'password')"
+        },
+        "label": {
+          "type": "string",
+          "description": "Anzeigename für die UI"
+        },
+        "description": {
+          "type": "string",
+          "description": "Beschreibung der Variable"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "string",
+            "password",
+            "number",
+            "boolean",
+            "email",
+            "url",
+            "select"
+          ],
+          "description": "Datentyp der Variable"
+        },
+        "required": {
+          "type": "boolean",
+          "description": "Ob die Variable erforderlich ist"
+        },
+        "default": {
+          "description": "Standardwert"
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              }
+            }
+          },
+          "description": "Optionen für 'select' Typ"
+        },
+        "secretRef": {
+          "type": "string",
+          "description": "Referenz zu einem gespeicherten Secret (Name oder ID)"
+        },
+        "placeholder": {
+          "type": "string",
+          "description": "Platzhaltertext"
+        },
+        "pattern": {
+          "type": "string",
+          "description": "Validierungs-Pattern (RegEx)"
         }
+      },
+      "required": ["name", "label", "type"],
+      "type": "object"
     },
-    "type": "object"
+    "WorkflowTrigger": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/ManualTrigger"
+        },
+        {
+          "$ref": "#/definitions/CronTrigger"
+        },
+        {
+          "$ref": "#/definitions/WebhookTrigger"
+        },
+        {
+          "$ref": "#/definitions/StartupTrigger"
+        }
+      ]
+    },
+    "ManualTrigger": {
+      "properties": {
+        "type": {
+          "const": "manual"
+        },
+        "enabled": {
+          "type": "boolean"
+        }
+      },
+      "required": ["type"],
+      "type": "object"
+    },
+    "CronTrigger": {
+      "properties": {
+        "type": {
+          "const": "cron"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "expression": {
+          "type": "string",
+          "description": "Cron-Ausdruck (z.B. '0 9 * * 1' für Montag 9 Uhr)"
+        },
+        "timezone": {
+          "type": "string",
+          "description": "Zeitzone (z.B. 'Europe/Berlin')"
+        },
+        "description": {
+          "type": "string",
+          "description": "Menschenlesbare Beschreibung"
+        }
+      },
+      "required": ["type", "expression"],
+      "type": "object"
+    },
+    "WebhookTrigger": {
+      "properties": {
+        "type": {
+          "const": "webhook"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "secret": {
+          "type": "string",
+          "description": "Geheimer Token zur Authentifizierung"
+        },
+        "methods": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["GET", "POST"]
+          },
+          "description": "Erlaubte HTTP-Methoden"
+        }
+      },
+      "required": ["type"],
+      "type": "object"
+    },
+    "StartupTrigger": {
+      "properties": {
+        "type": {
+          "const": "startup"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "delay": {
+          "type": "number",
+          "description": "Verzögerung in ms vor dem Start"
+        }
+      },
+      "required": ["type"],
+      "type": "object"
+    },
+    "ScrapeAction<unknown>": {
+      "properties": {
+        "action": {
+          "$ref": "#/definitions/ActionName"
+        },
+        "data": {
+          "properties": {
+            "currentData": {
+              "additionalProperties": {},
+              "type": "object"
+            },
+            "scrapeEventsService": {
+              "$ref": "#/definitions/ScrapeEventsService"
+            },
+            "scrapeId": {
+              "type": "string"
+            },
+            "storedData": {
+              "additionalProperties": {},
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "name": {
+          "type": "string"
+        },
+        "params": {}
+      },
+      "type": "object"
+    },
+    "ScrapeEventsService": {
+      "properties": {
+        "eventSubject": {
+          "$ref": "#/definitions/Subject<ScrapeEvent>"
+        },
+        "logger": {
+          "$ref": "#/definitions/Logger"
+        },
+        "otpResponseSubject": {
+          "$ref": "#/definitions/Subject<{requestId:string;code:string;}>"
+        },
+        "pendingOtpRequests": {
+          "$ref": "#/definitions/Map<string,(code:string)=>void>"
+        }
+      },
+      "type": "object"
+    },
+    "ScrapeStep": {
+      "properties": {
+        "actions": {
+          "items": {
+            "$ref": "#/definitions/ScrapeAction<unknown>"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "Subject<ScrapeEvent>": {
+      "description": "A Subject is a special type of Observable that allows values to be\nmulticasted to many Observers. Subjects are like EventEmitters.\n\nEvery Subject is an Observable and an Observer. You can subscribe to a\nSubject, and you can call next to feed values as well as error and complete.",
+      "properties": {
+        "closed": {
+          "type": "boolean"
+        },
+        "currentObservers": {},
+        "hasError": {
+          "type": "boolean"
+        },
+        "isStopped": {
+          "type": "boolean"
+        },
+        "observed": {
+          "type": "boolean"
+        },
+        "observers": {
+          "items": {
+            "$ref": "#/definitions/Observer<ScrapeEvent>"
+          },
+          "type": "array"
+        },
+        "operator": {
+          "$ref": "#/definitions/Operator<any,ScrapeEvent>"
+        },
+        "source": {
+          "$ref": "#/definitions/Observable<any>"
+        },
+        "thrownError": {}
+      },
+      "type": "object"
+    },
+    "Subject<{requestId:string;code:string;}>": {
+      "description": "A Subject is a special type of Observable that allows values to be\nmulticasted to many Observers. Subjects are like EventEmitters.\n\nEvery Subject is an Observable and an Observer. You can subscribe to a\nSubject, and you can call next to feed values as well as error and complete.",
+      "properties": {
+        "closed": {
+          "type": "boolean"
+        },
+        "currentObservers": {},
+        "hasError": {
+          "type": "boolean"
+        },
+        "isStopped": {
+          "type": "boolean"
+        },
+        "observed": {
+          "type": "boolean"
+        },
+        "observers": {
+          "items": {
+            "$ref": "#/definitions/Observer<{requestId:string;code:string;}>"
+          },
+          "type": "array"
+        },
+        "operator": {
+          "$ref": "#/definitions/Operator<any,{requestId:string;code:string;}>"
+        },
+        "source": {
+          "$ref": "#/definitions/Observable<any>"
+        },
+        "thrownError": {}
+      },
+      "type": "object"
+    }
+  },
+  "properties": {
+    "scrapes": {
+      "items": {
+        "$ref": "#/definitions/Scrape"
+      },
+      "type": "array"
+    }
+  },
+  "type": "object"
 }
