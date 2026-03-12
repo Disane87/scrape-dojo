@@ -23,6 +23,32 @@ The best part: relative URLs are resolved automatically and files are neatly sor
 The `path` is automatically extended with a subfolder using the `scrapeId`. If you specify `./downloads` and your scrape is called `amazon-invoices`, the files end up in `./downloads/amazon-invoices/`.
 </Aside>
 
+## 📂 Folder Structure
+
+The download action automatically organizes files into subfolders based on the **scrapeId** (the filename of your `.jsonc` config without the extension). The `scrapeId` is inserted as a subfolder after the first "real" directory segment in your `path`.
+
+**How it works:**
+
+| `path` in config | scrapeId | Actual save path |
+|-------------------|----------|------------------|
+| `./downloads` | `amazon` | `./downloads/amazon/` |
+| `./documents` | `amazon` | `./documents/amazon/` |
+| `./downloads/invoices` | `amazon` | `./downloads/amazon/invoices/` |
+| `./data/files` | `my-scrape` | `./data/my-scrape/files/` |
+
+<Aside type="caution">
+Don't include the scrapeId in your `path` -- it's added automatically! If you set `path` to `./downloads/amazon` and your scrapeId is `amazon`, you'll end up with `./downloads/amazon/amazon/`.
+</Aside>
+
+**Example with Docker volume mapping:**
+
+If your `docker-compose.yml` maps `./downloads:/home/pptruser/app/downloads` and you have a scrape config `amazon.jsonc` with `"path": "./downloads"`, the files will be saved to:
+
+```
+./downloads/amazon/invoice-2025-01.pdf
+./downloads/amazon/invoice-2025-02.pdf
+```
+
 ## 🔗 URL Resolution
 
 The action is smart about handling URLs:

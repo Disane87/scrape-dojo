@@ -23,6 +23,32 @@ Das Beste: Relative URLs werden automatisch aufgelöst und die Dateien werden sa
 Der `path` wird automatisch um einen Unterordner mit der `scrapeId` erweitert. Wenn du `./downloads` angibst und dein Scrape `amazon-invoices` heißt, landen die Dateien in `./downloads/amazon-invoices/`.
 </Aside>
 
+## 📂 Ordnerstruktur
+
+Die Download-Action organisiert Dateien automatisch in Unterordner basierend auf der **scrapeId** (der Dateiname deiner `.jsonc`-Konfiguration ohne Endung). Die `scrapeId` wird als Unterordner nach dem ersten "echten" Verzeichnissegment in deinem `path` eingefügt.
+
+**So funktioniert's:**
+
+| `path` in Config | scrapeId | Tatsächlicher Speicherpfad |
+|-------------------|----------|---------------------------|
+| `./downloads` | `amazon` | `./downloads/amazon/` |
+| `./documents` | `amazon` | `./documents/amazon/` |
+| `./downloads/invoices` | `amazon` | `./downloads/amazon/invoices/` |
+| `./data/files` | `my-scrape` | `./data/my-scrape/files/` |
+
+<Aside type="caution">
+Verwende die scrapeId **nicht** nochmal in deinem `path` -- sie wird automatisch eingefügt! Wenn du `path` auf `./downloads/amazon` setzt und die scrapeId `amazon` ist, entsteht `./downloads/amazon/amazon/`.
+</Aside>
+
+**Beispiel mit Docker-Volume-Mapping:**
+
+Wenn deine `docker-compose.yml` das Mapping `./downloads:/home/pptruser/app/downloads` hat und du eine Scrape-Config `amazon.jsonc` mit `"path": "./downloads"` hast, werden die Dateien gespeichert unter:
+
+```
+./downloads/amazon/invoice-2025-01.pdf
+./downloads/amazon/invoice-2025-02.pdf
+```
+
 ## 🔗 URL-Auflösung
 
 Die Action ist schlau beim Umgang mit URLs:
