@@ -1,3 +1,25 @@
+## [1.14.0](https://github.com/disane87/scrape-dojo/compare/v1.13.2...v1.14.0) (2026-03-12)
+
+### 🚀 Features
+
+- **🎨 ui:** replace raw debug view with artifacts-only panel ([8d358d1](https://github.com/disane87/scrape-dojo/commit/8d358d17b9eea25e9dfaf2d507283b851fdaa00f))
+
+### 🛠️ Fixes
+
+- **🎨 ui:** enable scrolling in live logs panel ([a03d8ab](https://github.com/disane87/scrape-dojo/commit/a03d8ab58363479b1c0b3e87ebcbe5f279373482))
+- **🎨 ui:** fix live logs scrollbar by constraining height chain ([1e8b9a6](https://github.com/disane87/scrape-dojo/commit/1e8b9a656cedceecc6ab032e6728b2bbdc6ccc39))
+- **🎨 ui:** render card artifacts per item and fix download button ([b0587bc](https://github.com/disane87/scrape-dojo/commit/b0587bcc4c4cda91aeecd23fd611c9ce6a2c4fbb))
+- **🕷️ scrape:** accumulate invoice artifacts across loop iterations ([b4cc383](https://github.com/disane87/scrape-dojo/commit/b4cc38376bfa3da6544413f85c57248677e1ce6e))
+- **🕷️ scrape:** add missing actions to JSON schema ([b1e3277](https://github.com/disane87/scrape-dojo/commit/b1e3277421647dee2aa7c9e245cda359aeefb83c))
+- **🕷️ scrape:** fix duplicate amazon/ in invoice download path ([313fd60](https://github.com/disane87/scrape-dojo/commit/313fd60cb1c4524b65aed754778288019c1fec9b))
+- **🕷️ scrape:** remove month subdirectory from Amazon invoice path ([4d4b1c6](https://github.com/disane87/scrape-dojo/commit/4d4b1c631b6ffebff6440377510ce80350724745))
+- **🕷️ scrape:** save Amazon invoices flat in ./documents/amazon/ ([17ca2be](https://github.com/disane87/scrape-dojo/commit/17ca2be1cfa345c86d01d6a2c785fee60c70ac33))
+- **🖥️ api:** redact secrets from SSE event stream ([5859336](https://github.com/disane87/scrape-dojo/commit/5859336bbef7220d311e45743b35da9809f4aafd)), closes [#72](https://github.com/disane87/scrape-dojo/issues/72)
+
+### 📔 Docs
+
+- **📔 docs:** document download path folder structure with scrapeId ([cf4f105](https://github.com/disane87/scrape-dojo/commit/cf4f10564a12ea118bb061025a8a760cfa1a8283))
+
 ## [1.13.2](https://github.com/disane87/scrape-dojo/compare/v1.13.1...v1.13.2) (2026-03-12)
 
 ### 🛠️ Fixes
