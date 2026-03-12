@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ScrapeEventsService, ScrapeEvent } from './scrape-events.service';
+import { SecretRedactionService } from '../_logger/secret-redaction.service';
 import { firstValueFrom } from 'rxjs';
 
 describe('ScrapeEventsService', () => {
@@ -714,6 +715,135 @@ describe('ScrapeEventsService', () => {
 
       expect(received.length).toBe(1);
       sub.unsubscribe();
+    });
+  });
+
+  describe('secret redaction', () => {
+    let redactedService: ScrapeEventsService;
+    let redactionService: SecretRedactionService;
+
+    beforeEach(() => {
+      redactionService = new SecretRedactionService();
+      redactedService = new ScrapeEventsService(redactionService);
+    });
+
+    afterEach(() => {
+      redactedService.onModuleDestroy();
+    });
+
+    it('should redact secrets from emitted events', () => {
+      redactionService.registerSecret('my-secret-password');
+
+      const received: ScrapeEvent[] = [];
+      const sub = redactedService
+        .getEvents()
+        .subscribe((e) => received.push(e));
+
+      redactedService.emit({
+        type: 'log',
+        scrapeId: 'test',
+        logLevel: 'log',
+        message: 'Typing my-secret-password into field',
+      });
+
+      expect(received.length).toBe(1);
+      expect(received[0].message).toBe('Typing *** into field');
+      expect(received[0].message).not.toContain('my-secret-password');
+      sub.unsubscribe();
+    });
+
+    it('should redact secrets from action results', () => {
+      redactionService.registerSecret('user@example.com');
+
+      const received: ScrapeEvent[] = [];
+      const sub = redactedService
+        .getEvents()
+        .subscribe((e) => received.push(e));
+
+      redactedService.updateActionStatus(
+        'scrape-1',
+        'Login',
+        0,
+        'Extract email',
+        0,
+        'extract',
+        'completed',
+        undefined,
+        'run-1',
+        { email: 'user@example.com', name: 'John' },
+      );
+
+      expect(received[0].result).toEqual({ email: '***', name: 'John' });
+      sub.unsubscribe();
+    });
+
+    it('should redact secrets from scrapeStarted variables', () => {
+      redactionService.registerSecret('db-password-123');
+
+      const received: ScrapeEvent[] = [];
+      const sub = redactedService
+        .getEvents()
+        .subscribe((e) => received.push(e));
+
+      redactedService.scrapeStarted('test', 'run-1', {
+        runtime: { user: 'admin' },
+        database: { password: 'db-password-123' },
+        final: { user: 'admin', password: 'db-password-123' },
+      });
+
+      expect(received[0].variables!.database!.password).toBe('***');
+      expect(received[0].variables!.final!.password).toBe('***');
+      expect(received[0].variables!.runtime!.user).toBe('admin');
+      sub.unsubscribe();
+    });
+
+    it('should redact secrets from emitLog', () => {
+      redactionService.registerSecret('secret-token');
+
+      const received: ScrapeEvent[] = [];
+      const sub = redactedService
+        .getEvents()
+        .subscribe((e) => received.push(e));
+
+      redactedService.emitLog(
+        'log',
+        'Using token secret-token for auth',
+        'AuthService',
+      );
+
+      expect(received[0].message).toBe('Using token *** for auth');
+      sub.unsubscribe();
+    });
+
+    it('should not modify events when no secrets are registered', () => {
+      const received: ScrapeEvent[] = [];
+      const sub = redactedService
+        .getEvents()
+        .subscribe((e) => received.push(e));
+
+      redactedService.emit({
+        type: 'log',
+        scrapeId: 'test',
+        logLevel: 'log',
+        message: 'Normal message',
+      });
+
+      expect(received[0].message).toBe('Normal message');
+      sub.unsubscribe();
+    });
+
+    it('should also redact secrets in workflow events buffer', () => {
+      redactionService.registerSecret('secret-value');
+
+      redactedService.emit({
+        type: 'action-status',
+        scrapeId: 'test',
+        result: { data: 'contains secret-value here' },
+      });
+
+      const events = redactedService.getWorkflowEvents();
+      expect(events.length).toBe(1);
+      expect((events[0].result as any).data).toBe('contains *** here');
     });
   });
 });

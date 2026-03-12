@@ -1,14 +1,17 @@
 import {
   Injectable,
+  Inject,
   Logger,
   OnModuleInit,
   OnModuleDestroy,
+  Optional,
 } from '@nestjs/common';
 import { Subject, Observable } from 'rxjs';
 import { watch, FSWatcher } from 'node:fs';
 import { join } from 'path';
 import { existsSync, statSync } from 'fs';
 import type { Page } from 'puppeteer';
+import { SecretRedactionService } from '../_logger/secret-redaction.service';
 
 export type LogLevel = 'log' | 'error' | 'warn' | 'debug' | 'verbose';
 
@@ -98,6 +101,12 @@ export class ScrapeEventsService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(ScrapeEventsService.name);
 
   private eventSubject = new Subject<ScrapeEvent>();
+
+  constructor(
+    @Optional()
+    @Inject(SecretRedactionService)
+    private readonly secretRedaction?: SecretRedactionService,
+  ) {}
 
   private pendingOtpRequests = new Map<
     string,
@@ -256,9 +265,12 @@ export class ScrapeEventsService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
+    // Redact secrets from the event before sending to SSE clients
+    const redactedEvent = this.redactEvent(fullEvent);
+
     // Workflow-Events im Buffer speichern (für Reload-Persistenz)
     if (event.type !== 'log') {
-      this.workflowEventsBuffer.push(fullEvent);
+      this.workflowEventsBuffer.push(redactedEvent);
       // Buffer-Größe begrenzen
       if (this.workflowEventsBuffer.length > this.maxWorkflowEvents) {
         this.workflowEventsBuffer.shift();
@@ -267,7 +279,18 @@ export class ScrapeEventsService implements OnModuleInit, OnModuleDestroy {
         `📡 Event: ${event.type} - ${event.status || event.message || ''}`,
       );
     }
-    this.eventSubject.next(fullEvent);
+    this.eventSubject.next(redactedEvent);
+  }
+
+  /**
+   * Redact all secret values from a ScrapeEvent before broadcasting.
+   */
+  private redactEvent(event: ScrapeEvent): ScrapeEvent {
+    if (!this.secretRedaction?.hasSecrets()) {
+      return event;
+    }
+
+    return this.secretRedaction.redactObject(event);
   }
 
   /**
@@ -283,8 +306,11 @@ export class ScrapeEventsService implements OnModuleInit, OnModuleDestroy {
       timestamp: Date.now(),
     };
 
+    // Redact secrets before sending to SSE clients
+    const redactedEvent = this.redactEvent(logEvent);
+
     // An SSE-Clients senden (EventLogger hat bereits in Datei geschrieben)
-    this.eventSubject.next(logEvent);
+    this.eventSubject.next(redactedEvent);
   }
 
   /**
