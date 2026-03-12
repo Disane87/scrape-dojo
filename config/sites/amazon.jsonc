@@ -420,7 +420,7 @@
                                 "name": "orderDay",
                                 "params": {
                                   "previousDataKey": "orderDate",
-                                  "expression": "($d := $match($, /(\\d{1,2})/).groups[0]; $length($d) = 1 ? '0' & $d : $d)"
+                                  "expression": "($d := $string($match($, /(\\d{1,2})/)[0].groups[0]); $length($d) = 1 ? '0' & $d : $d)"
                                 }
                               },
                               // Reset orderId vor jedem Extract, damit bei fehlgeschlagenem optional-Extract
@@ -546,6 +546,14 @@
                                   "condition": "Wait for popover",
                                   "skipIfFalse": true,
                                   "message": "⏭️ Kein Rechnungs-Popover verfügbar (storniert oder digitaler Inhalt)"
+                                }
+                              },
+                              {
+                                // Reset invoice links vor jedem Extract, damit stale Werte aus vorherigen Bestellungen nicht wiederverwendet werden
+                                "action": "transform",
+                                "name": "Get invoice links",
+                                "params": {
+                                  "expression": "[]"
                                 }
                               },
                               {
