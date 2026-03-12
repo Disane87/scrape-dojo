@@ -630,7 +630,7 @@
                                       "params": {
                                         "url": "{{currentData.invoiceLoop.value}}",
                                         "filename": "{{previousData.invoiceKey}}.pdf",
-                                        "path": "./documents/amazon/{{previousData.orderYear}}/{{previousData.orderMonth}}"
+                                        "path": "./documents/amazon/{{previousData.orderYear}}"
                                       }
                                     },
                                     {
