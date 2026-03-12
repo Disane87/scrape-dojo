@@ -39,6 +39,7 @@
       <div
         class="flex-1 min-h-0 p-6"
         [class.overflow-auto]="activeTab() !== 'definition' && activeTab() !== 'visual' && activeTab() !== 'output'"
+        [class.overflow-hidden]="activeTab() === 'output'"
       >
         @switch (activeTab()) { @case ('history') {
         <div class="flex gap-4 h-full">
@@ -90,6 +91,7 @@
           class="h-full flex flex-col border border-dojo-border rounded-md overflow-hidden"
         >
           <app-log-viewer
+            class="flex-1 min-h-0"
             [logs]="liveOutput()"
             [title]="'workflow.tabs.logs' | transloco"
             [displayMode]="'all-events'"
