@@ -118,7 +118,10 @@
               "name": "needsEmailEntry",
               "action": "transform",
               "params": {
-                "previousDataKeys": ["emailFieldVisible", "passwordFieldVisible"],
+                "previousDataKeys": [
+                  "emailFieldVisible",
+                  "passwordFieldVisible"
+                ],
                 "expression": "emailFieldVisible ? (passwordFieldVisible ? 'false' : 'true') : 'false'"
               }
             },
@@ -266,15 +269,15 @@
                 "expression": "{ 'targetYear': var_targetYear, 'extractedYears': extractedYears, 'yearsToProcess': yearsToProcess, 'yearsToProcessFinal': yearsToProcessFinal, 'invalidYears': invalidYears }"
               }
             },
-            {
-              "action": "artifacts",
-              "name": "yearsSummary",
-              "params": {
-                "type": "json",
-                "title": "Amazon: Jahre",
-                "data": "{{previousData.yearsSummaryData}}"
-              }
-            },
+            // {
+            //   "action": "artifacts",
+            //   "name": "yearsSummary",
+            //   "params": {
+            //     "type": "json",
+            //     "title": "Amazon: Jahre",
+            //     "data": "{{previousData.yearsSummaryData}}"
+            //   }
+            // },
             {
               "action": "logger",
               "params": {
@@ -287,6 +290,14 @@
         {
           "name": "Process All Years",
           "actions": [
+            {
+              // Akkumulator für alle heruntergeladenen Rechnungen (für Artifact am Ende)
+              "action": "transform",
+              "name": "allDownloadedInvoices",
+              "params": {
+                "expression": "[]"
+              }
+            },
             {
               "action": "loop",
               "name": "yearLoop",
@@ -342,15 +353,15 @@
                       "expression": "($total := paginationConfig.totalPages; $start := paginationConfig.effectiveStartPage; $max := paginationConfig.effectiveMaxPages; $startIdx := $start - 1; $endIdx := $startIdx + $max - 1; $actualEnd := $endIdx < $total ? $endIdx : $total - 1; $startIdx > $actualEnd ? [0] : $append([$startIdx..$actualEnd], []))"
                     }
                   },
-                  {
-                    "action": "artifacts",
-                    "name": "paginationSummary",
-                    "params": {
-                      "type": "json",
-                      "title": "Amazon: Pagination",
-                      "data": "{{previousData.paginationConfig}}"
-                    }
-                  },
+                  // {
+                  //   "action": "artifacts",
+                  //   "name": "paginationSummary",
+                  //   "params": {
+                  //     "type": "json",
+                  //     "title": "Amazon: Pagination",
+                  //     "data": "{{previousData.paginationConfig}}"
+                  //   }
+                  // },
                   {
                     "action": "logger",
                     "params": {
@@ -648,14 +659,15 @@
                                       }
                                     },
                                     {
-                                      "action": "artifacts",
-                                      "name": "downloadedInvoiceArtifact",
+                                      // Append zum Akkumulator statt Artifact pro Iteration
+                                      "action": "transform",
+                                      "name": "allDownloadedInvoices",
                                       "params": {
-                                        "type": "card",
-                                        "flush": true,
-                                        "title": "Heruntergeladene Rechnungen",
-                                        "data": "{{previousData.downloadedInvoiceData}}",
-                                        "template": "<div class='flex items-center justify-between px-3 py-2'><div class='flex items-center gap-3'><div class='flex items-center justify-center w-8 h-8 rounded bg-green-500/10 text-green-400'><svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z'/><polyline points='14,2 14,8 20,8'/></svg></div><div><div class='text-sm font-medium text-white'>{{orderId}}</div><div class='text-xs text-gray-400'>{{orderDate}}</div></div></div><div class='text-xs text-gray-500 font-mono'>{{savedAs}}</div></div>"
+                                        "previousDataKeys": [
+                                          "allDownloadedInvoices",
+                                          "downloadedInvoiceData"
+                                        ],
+                                        "expression": "$append(allDownloadedInvoices, [downloadedInvoiceData])"
                                       }
                                     },
                                     {
@@ -751,6 +763,17 @@
                     }
                   }
                 ]
+              }
+            },
+            {
+              "action": "artifacts",
+              "name": "downloadedInvoiceArtifact",
+              "params": {
+                "type": "card",
+                "flush": true,
+                "title": "Heruntergeladene Rechnungen",
+                "data": "{{previousData.allDownloadedInvoices}}",
+                "template": "<div class='flex items-center justify-between px-3 py-2'><div class='flex items-center gap-3'><div class='flex items-center justify-center w-8 h-8 rounded bg-green-500/10 text-green-400'><svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z'/><polyline points='14,2 14,8 20,8'/></svg></div><div><div class='text-sm font-medium text-white'>{{orderId}}</div><div class='text-xs text-gray-400'>{{orderDate}}</div></div></div><div class='text-xs text-gray-500 font-mono'>{{savedAs}}</div></div>"
               }
             },
             {
