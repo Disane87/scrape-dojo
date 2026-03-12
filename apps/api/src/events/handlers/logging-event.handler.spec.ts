@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { LoggingEventHandler } from './logging-event.handler';
 import { EventBus } from '../event-bus';
+import { SecretRedactionService } from '../../_logger/secret-redaction.service';
 
 describe('LoggingEventHandler', () => {
   let handler: LoggingEventHandler;
@@ -8,7 +9,7 @@ describe('LoggingEventHandler', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [LoggingEventHandler, EventBus],
+      providers: [LoggingEventHandler, EventBus, SecretRedactionService],
     }).compile();
 
     handler = module.get<LoggingEventHandler>(LoggingEventHandler);

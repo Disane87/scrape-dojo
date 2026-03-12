@@ -103,7 +103,7 @@ describe('TypeAction', () => {
       expect(mockPage.$$).toHaveBeenCalledWith('#username');
     });
 
-    it('should mask password in log output', async () => {
+    it('should log text as-is (redaction handled by ScrapeLogger)', async () => {
       action.params = {
         selector: 'input[type="password"]',
         text: 'secret123',
@@ -116,14 +116,10 @@ describe('TypeAction', () => {
 
       await action.run();
 
+      // Text is logged directly — SecretRedactionService in ScrapeLogger handles redaction
       expect((action as any).logger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('********'),
+        expect.stringContaining('secret123'),
       );
-      // Should NOT contain the actual password in debug log
-      const debugCalls = (action as any).logger.debug.mock.calls
-        .map((c: any[]) => c[0])
-        .filter((msg: string) => msg.includes('Text:'));
-      expect(debugCalls[0]).not.toContain('secret123');
     });
 
     it('should press Enter when pressEnter is true', async () => {

@@ -1,5 +1,6 @@
 import { vi } from 'vitest';
 import { ScrapeLogger } from './scrape-logger.service';
+import { SecretRedactionService } from './secret-redaction.service';
 
 describe('ScrapeLogger', () => {
   let logger: ScrapeLogger;
@@ -76,5 +77,38 @@ describe('ScrapeLogger', () => {
     expect(mockEventsService.emit).toHaveBeenCalledWith(
       expect.objectContaining({ logLevel: 'verbose' }),
     );
+  });
+
+  describe('with SecretRedactionService', () => {
+    let redactionService: SecretRedactionService;
+
+    beforeEach(() => {
+      redactionService = new SecretRedactionService();
+      redactionService.registerSecret('my-secret-password');
+      logger = new ScrapeLogger(redactionService);
+      logger.setContext('TestContext');
+    });
+
+    it('should redact secrets in log messages', () => {
+      logger.setEventContext(mockEventsService, 'test-scrape', 'test-run');
+      logger.log('Typing password: my-secret-password');
+
+      expect(mockEventsService.emit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'Typing password: ***',
+        }),
+      );
+    });
+
+    it('should redact secrets in SSE events', () => {
+      logger.setEventContext(mockEventsService, 'test-scrape', 'test-run');
+      logger.error('Login failed with my-secret-password');
+
+      expect(mockEventsService.emit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'Login failed with ***',
+        }),
+      );
+    });
   });
 });

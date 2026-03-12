@@ -79,12 +79,8 @@ export class TypeAction extends BaseAction<TypeActionParams> {
       this.logger.debug(`✓ Condition met: ${this.params.condition}`);
     }
 
-    // Maskiere sensible Daten im Log
-    const maskedText = this.params.selector.includes('password')
-      ? '********'
-      : this.params.text;
     this.logger.log(`⌨️ Typing into: ${this.params.selector}`);
-    this.logger.debug(`📝 Text: "${maskedText}"`);
+    this.logger.debug(`📝 Text: "${this.params.text}"`);
 
     const target = await this.findFirstUsableElement(this.params.selector);
     await target.focus();

@@ -1,16 +1,28 @@
 import { vi } from 'vitest';
 import { ScrapeSecretsResolverService } from './scrape-secrets-resolver.service';
+import { SecretRedactionService } from '../../_logger/secret-redaction.service';
 
 describe('ScrapeSecretsResolverService', () => {
   let service: ScrapeSecretsResolverService;
   let mockSecretsService: any;
+  let mockRedactionService: SecretRedactionService;
 
   beforeEach(() => {
     mockSecretsService = {
       getSecretByName: vi.fn(),
       getSecretValue: vi.fn(),
     };
-    service = new ScrapeSecretsResolverService(mockSecretsService);
+    mockRedactionService = {
+      registerSecret: vi.fn(),
+      redact: vi.fn((msg) => msg),
+      redactObject: vi.fn((obj) => obj),
+      clear: vi.fn(),
+      hasSecrets: vi.fn(),
+    } as any;
+    service = new ScrapeSecretsResolverService(
+      mockSecretsService,
+      mockRedactionService,
+    );
     vi.clearAllMocks();
   });
 
@@ -114,6 +126,43 @@ describe('ScrapeSecretsResolverService', () => {
 
       await service.resolveSecretsForWorkflow(scrape, previousData);
       expect(previousData.has('var_pw')).toBe(false);
+    });
+
+    it('should register resolved secret for redaction', async () => {
+      const scrape = {
+        id: 'test',
+        metadata: {
+          variables: [{ name: 'password', secretRef: 'my-password' }],
+        },
+      } as any;
+      const previousData = new Map();
+
+      mockSecretsService.getSecretByName.mockResolvedValue({
+        id: 'secret-1',
+        name: 'my-password',
+      });
+      mockSecretsService.getSecretValue.mockResolvedValue('super-secret-123');
+
+      await service.resolveSecretsForWorkflow(scrape, previousData);
+      expect(mockRedactionService.registerSecret).toHaveBeenCalledWith(
+        'super-secret-123',
+      );
+    });
+
+    it('should register user-provided value for redaction when variable has secretRef', async () => {
+      const scrape = {
+        id: 'test',
+        metadata: {
+          variables: [{ name: 'user', secretRef: 'my-secret' }],
+        },
+      } as any;
+      const previousData = new Map([['var_user', 'user-provided-secret']]);
+
+      await service.resolveSecretsForWorkflow(scrape, previousData);
+      expect(mockRedactionService.registerSecret).toHaveBeenCalledWith(
+        'user-provided-secret',
+      );
+      expect(mockSecretsService.getSecretByName).not.toHaveBeenCalled();
     });
   });
 });

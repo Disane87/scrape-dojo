@@ -17,6 +17,7 @@ import { ScrapeSecretsResolverService } from './services/scrape-secrets-resolver
 import { ScrapeExecutionService } from './services/scrape-execution.service';
 import { ScrapeDataService } from './services/scrape-data.service';
 import { ScrapeValidationService } from './services/scrape-validation.service';
+import { SecretRedactionService } from '../_logger/secret-redaction.service';
 
 @Injectable()
 export class ScrapeService implements OnModuleInit, OnModuleDestroy {
@@ -36,6 +37,7 @@ export class ScrapeService implements OnModuleInit, OnModuleDestroy {
     private readonly executionService: ScrapeExecutionService,
     private readonly dataService: ScrapeDataService,
     private readonly validationService: ScrapeValidationService,
+    private readonly secretRedaction: SecretRedactionService,
   ) {}
 
   getScrapeDefinitions(): Scrape[] {
@@ -296,11 +298,14 @@ export class ScrapeService implements OnModuleInit, OnModuleDestroy {
     variables?: Record<string, any>,
   ): void {
     if (variables && Object.keys(variables).length > 0) {
+      const redactedVars = this.secretRedaction.redactObject(variables);
       this.logger.log(
-        `📝 Run-time variables received: ${JSON.stringify(variables)}`,
+        `📝 Run-time variables received: ${JSON.stringify(redactedVars)}`,
       );
     }
-    this.logger.debug(`Scrape definition: ${JSON.stringify(scrape)}`);
+    this.logger.debug(
+      `Scrape definition: ${this.secretRedaction.redact(JSON.stringify(scrape))}`,
+    );
     this.logger.log(`Scrape ID: ${scrape.id}, Run ID: ${runId}`);
   }
 }

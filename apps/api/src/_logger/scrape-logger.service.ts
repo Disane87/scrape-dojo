@@ -1,11 +1,13 @@
-import { Injectable, Scope, Logger } from '@nestjs/common';
+import { Inject, Injectable, Optional, Scope, Logger } from '@nestjs/common';
 import { ScrapeEventsService, LogLevel } from '../scrape/scrape-events.service';
+import { SecretRedactionService } from './secret-redaction.service';
 
 /**
  * Zentraler Logger-Service für die gesamte Anwendung
  * - Kombiniert NestJS Logger mit Event-Emission
  * - Unterstützt dynamische Kontexte
  * - Injectable als Singleton oder Transient
+ * - Redaktiert automatisch bekannte Secret-Werte
  */
 @Injectable({ scope: Scope.TRANSIENT })
 export class ScrapeLogger {
@@ -16,7 +18,11 @@ export class ScrapeLogger {
   private runId?: string;
   private indentLevel: number = 0;
 
-  constructor() {
+  constructor(
+    @Optional()
+    @Inject(SecretRedactionService)
+    private readonly secretRedaction?: SecretRedactionService,
+  ) {
     this.nestLogger = new Logger(this.currentContext);
   }
 
@@ -84,9 +90,14 @@ export class ScrapeLogger {
    * Interne Methode zum Loggen und Event-Emittieren
    */
   private emitLog(level: LogLevel, message: string): void {
+    // Redaktiere Secrets bevor sie geloggt oder via SSE gesendet werden
+    const redactedMessage = this.secretRedaction
+      ? this.secretRedaction.redact(message)
+      : message;
+
     // Füge Einrückung hinzu basierend auf Loop-Tiefe
     const indent = '  '.repeat(this.indentLevel);
-    const formattedMessage = indent + message;
+    const formattedMessage = indent + redactedMessage;
 
     // NestJS Logger aufrufen
     switch (level) {
@@ -112,7 +123,7 @@ export class ScrapeLogger {
         type: 'log',
         scrapeId: this.scrapeId,
         runId: this.runId,
-        message,
+        message: redactedMessage,
         logLevel: level,
         logContext: this.currentContext,
       });

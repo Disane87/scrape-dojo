@@ -10,6 +10,7 @@ import {
   ActionCompletedEvent,
   ActionFailedEvent,
 } from '../domain-events';
+import { SecretRedactionService } from '../../_logger/secret-redaction.service';
 
 /**
  * Event Handler für strukturiertes Logging
@@ -21,7 +22,10 @@ import {
 export class LoggingEventHandler {
   private readonly logger = new Logger(LoggingEventHandler.name);
 
-  constructor(private readonly eventBus: EventBus) {
+  constructor(
+    private readonly eventBus: EventBus,
+    private readonly secretRedaction: SecretRedactionService,
+  ) {
     this.subscribeToEvents();
   }
 
@@ -69,8 +73,9 @@ export class LoggingEventHandler {
    * Scrape Started Event Handler
    */
   private onScrapeStarted(event: ScrapeStartedEvent): void {
+    const redactedVars = this.secretRedaction.redactObject(event.variables);
     this.logger.log(
-      `🚀 Scrape started: ${event.scrapeId} | Run: ${event.runId} | Variables: ${JSON.stringify(event.variables)}`,
+      `🚀 Scrape started: ${event.scrapeId} | Run: ${event.runId} | Variables: ${JSON.stringify(redactedVars)}`,
     );
   }
 
@@ -124,7 +129,7 @@ export class LoggingEventHandler {
    */
   private onActionCompleted(event: ActionCompletedEvent): void {
     const resultPreview = event.result
-      ? ` | Result: ${JSON.stringify(event.result).substring(0, 100)}${JSON.stringify(event.result).length > 100 ? '...' : ''}`
+      ? ` | Result: ${this.secretRedaction.redact(JSON.stringify(event.result).substring(0, 100))}${JSON.stringify(event.result).length > 100 ? '...' : ''}`
       : '';
     this.logger.log(
       `    ✅ Action completed: ${event.actionName} (${event.actionType}) [${event.actionIndex}]${resultPreview}`,
@@ -136,7 +141,9 @@ export class LoggingEventHandler {
    */
   private onActionFailed(event: ActionFailedEvent): void {
     this.logger.error(
-      `    ❌ Action failed: ${event.actionName} (${event.actionType}) [${event.actionIndex}] | Error: ${event.error}`,
+      this.secretRedaction.redact(
+        `    ❌ Action failed: ${event.actionName} (${event.actionType}) [${event.actionIndex}] | Error: ${event.error}`,
+      ),
     );
   }
 }

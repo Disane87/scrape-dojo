@@ -16,11 +16,12 @@ import {
   ActionFailedEvent,
 } from '../../events/domain-events';
 import { ScrapeLogger } from '../../_logger/scrape-logger.service';
+import { SecretRedactionService } from '../../_logger/secret-redaction.service';
 import { BreakLoopError } from '../../action-handler/errors/break-loop.error';
 
 @Injectable()
 export class ScrapeExecutionService {
-  private readonly logger = new ScrapeLogger();
+  private readonly logger: ScrapeLogger;
 
   constructor(
     private readonly puppeteerService: PuppeteerService,
@@ -28,7 +29,10 @@ export class ScrapeExecutionService {
     private readonly scrapeEventsService: ScrapeEventsService,
     private readonly databaseService: DatabaseService,
     private readonly eventBus: EventBus,
-  ) {}
+    private readonly secretRedaction: SecretRedactionService,
+  ) {
+    this.logger = new ScrapeLogger(this.secretRedaction);
+  }
 
   /**
    * Führt einen Scrape aus
@@ -336,6 +340,7 @@ export class ScrapeExecutionService {
       storedData: storedData,
       scrapeEventsService: this.scrapeEventsService,
       databaseService: this.databaseService,
+      secretRedaction: this.secretRedaction,
       scrapeId: scrape.id,
       runId: runId,
       metadata: scrape.metadata,

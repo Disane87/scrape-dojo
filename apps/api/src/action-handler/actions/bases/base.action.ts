@@ -55,11 +55,11 @@ export abstract class BaseAction<TParams extends Record<string, any>>
       this.data = data;
     }
 
-    // ScrapeLogger mit Event-Support erstellen
+    // ScrapeLogger mit Event-Support und Secret-Redaktion erstellen
     const logContext = this.name
       ? `${this.constructor.name}|${this.name}`
       : this.constructor.name;
-    this.logger = new ScrapeLogger();
+    this.logger = new ScrapeLogger(this.data?.secretRedaction);
     this.logger.setContext(logContext);
     this.logger.setEventContext(
       this.data?.scrapeEventsService,

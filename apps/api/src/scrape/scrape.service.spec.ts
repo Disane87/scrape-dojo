@@ -10,6 +10,7 @@ import { ScrapeSecretsResolverService } from './services/scrape-secrets-resolver
 import { ScrapeExecutionService } from './services/scrape-execution.service';
 import { ScrapeDataService } from './services/scrape-data.service';
 import { ScrapeValidationService } from './services/scrape-validation.service';
+import { SecretRedactionService } from '../_logger/secret-redaction.service';
 import * as fs from 'fs';
 
 vi.mock('fs');
@@ -99,6 +100,7 @@ describe('ScrapeService', () => {
         { provide: ScrapeExecutionService, useValue: mockExecutionService },
         { provide: ScrapeDataService, useValue: mockDataService },
         { provide: ScrapeValidationService, useValue: mockValidationService },
+        SecretRedactionService,
       ],
     }).compile();
 

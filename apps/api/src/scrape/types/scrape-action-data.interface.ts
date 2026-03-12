@@ -1,5 +1,6 @@
 import { ScrapeEventsService } from '../scrape-events.service';
 import { DatabaseService } from '../../database/database.service';
+import { SecretRedactionService } from '../../_logger/secret-redaction.service';
 
 /** Metadata for notification icons */
 export interface ScrapeMetadataForNotify {
@@ -13,6 +14,7 @@ export type ScrapeActionData = {
   storedData: StoredData;
   scrapeEventsService?: ScrapeEventsService;
   databaseService?: DatabaseService;
+  secretRedaction?: SecretRedactionService;
   scrapeId?: string;
   runId?: string; // Eindeutige ID für jeden Scrape-Lauf
   skipCurrentIteration?: boolean; // Flag für skipIf Action um Loop-Iteration zu überspringen

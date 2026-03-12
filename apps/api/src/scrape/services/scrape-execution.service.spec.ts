@@ -76,12 +76,21 @@ describe('ScrapeExecutionService', () => {
       publish: vi.fn().mockResolvedValue(undefined),
     };
 
+    const mockSecretRedaction = {
+      registerSecret: vi.fn(),
+      redact: vi.fn((msg: string) => msg),
+      redactObject: vi.fn((obj: any) => obj),
+      clear: vi.fn(),
+      hasSecrets: vi.fn().mockReturnValue(false),
+    };
+
     service = new ScrapeExecutionService(
       mockPuppeteerService,
       mockActionHandlerService,
       mockScrapeEventsService,
       mockDatabaseService,
       mockEventBus,
+      mockSecretRedaction as any,
     );
   });
 

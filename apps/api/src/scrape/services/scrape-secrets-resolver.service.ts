@@ -1,12 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Scrape } from '../types/scrape.interface';
 import { SecretsService } from '../../secrets/secrets.service';
+import { SecretRedactionService } from '../../_logger/secret-redaction.service';
 
 @Injectable()
 export class ScrapeSecretsResolverService {
   private readonly logger = new Logger(ScrapeSecretsResolverService.name);
 
-  constructor(private readonly secretsService: SecretsService) {}
+  constructor(
+    private readonly secretsService: SecretsService,
+    private readonly secretRedactionService: SecretRedactionService,
+  ) {}
 
   /**
    * Löst Secrets aus Workflow-Variablen auf und speichert sie in previousData
@@ -26,6 +30,13 @@ export class ScrapeSecretsResolverService {
 
       // Skip wenn Variable bereits einen Wert hat (vom User eingegeben)
       if (this.hasExistingValue(previousData, varKey)) {
+        // Auch user-supplied Werte für Secret-Variablen redaktieren
+        if (variable.secretRef) {
+          const existingValue = previousData.get(varKey);
+          if (typeof existingValue === 'string') {
+            this.secretRedactionService.registerSecret(existingValue);
+          }
+        }
         this.logger.debug(
           `📝 Variable '${variable.name}' already has value from user input`,
         );
@@ -91,6 +102,7 @@ export class ScrapeSecretsResolverService {
       }
 
       previousData.set(varKey, secretValue);
+      this.secretRedactionService.registerSecret(secretValue);
       this.logger.debug(
         `🔐 Resolved secret '${secretRef}' → var_${variableName}`,
       );
