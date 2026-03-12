@@ -80,3 +80,4 @@ config/stored-data.json
 .playwright-mcp/
 worktrees
 config/sites/test
+.playwright-session.json

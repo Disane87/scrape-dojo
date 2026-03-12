@@ -126,3 +126,14 @@ Key env vars (see `.env.example` for full list):
 ## Docker
 
 Multi-stage builds in `apps/api/Dockerfile` (based on puppeteer image with Chrome) and `apps/ui/Dockerfile` (nginx:alpine). Orchestrated via `docker-compose.yml`. Persistent volumes: `./data`, `./downloads`, `./logs`, `./config`, `./browser-data`.
+
+## Plans
+
+Feature plans and roadmap items are stored in `.claude/plans/`. A central **PRD.md** in that directory describes the complete product technically.
+
+### Plan Management Rules
+
+- **Language**: All plans MUST be written in English
+- **Cross-reference**: When working on any task, always check plans for relevance. If work affects a plan, update it accordingly.
+- **Current state**: Plans must always reflect the current open/pending state. Remove or update implemented features.
+- **PRD**: Keep `PRD.md` updated — move features from "Planned" to "Current" when implemented.
