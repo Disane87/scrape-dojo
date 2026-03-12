@@ -24,6 +24,8 @@ export type WaitForOtpActionParams = {
   pressEnter?: boolean;
   /** Nachricht die dem Benutzer angezeigt wird */
   message?: string;
+  /** Optional: Bedingung die erfüllt sein muss (Handlebars-Template, z.B. "{{hasNoValue previousData.passwordField}}") */
+  condition?: string | boolean;
   /** Alternative Verifikationsmethoden (z.B. WhatsApp, Passkey) */
   alternatives?: WaitForOtpAlternativeParam[];
 };
@@ -45,6 +47,20 @@ export class WaitForOtpAction extends BaseAction<WaitForOtpActionParams> {
       pressEnter = true,
       message = 'Bitte gib den OTP-Code ein:',
     } = this.params;
+
+    // Prüfe optionale Bedingung
+    if (this.params.condition !== undefined) {
+      const conditionMet =
+        this.params.condition === true || this.params.condition === 'true';
+
+      if (!conditionMet) {
+        this.logger.log(
+          `⏭️ Skipping waitForOtp: condition not met (${this.params.condition})`,
+        );
+        return null;
+      }
+      this.logger.debug(`✓ Condition met: ${this.params.condition}`);
+    }
 
     // Prüfe ob OTP-Seite angezeigt wird (falls detectSelector angegeben).
     // Retry-Logik: Nach form-submits (z.B. Email + Enter) navigiert die Seite.

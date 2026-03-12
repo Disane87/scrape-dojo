@@ -29,6 +29,47 @@ describe('WaitForOtpAction', () => {
       expect(result).toBeNull();
     });
 
+    it('should skip when condition is not met', async () => {
+      action.params = {
+        selector: '#otp',
+        detectSelector: '#otp-page',
+        condition: 'false',
+      } as any;
+
+      const result = await action.run();
+
+      expect(result).toBeNull();
+      expect((action as any).page.waitForSelector).not.toHaveBeenCalled();
+    });
+
+    it('should proceed when condition is met', async () => {
+      action.params = {
+        selector: '#otp',
+        condition: 'true',
+      } as any;
+      (action as any).page.waitForSelector.mockRejectedValue(
+        new Error('Timeout'),
+      );
+
+      const result = await action.run();
+
+      // Proceeds past condition check, then fails on OTP input → null
+      expect(result).toBeNull();
+      expect((action as any).page.waitForSelector).toHaveBeenCalled();
+    });
+
+    it('should proceed when no condition is set', async () => {
+      action.params = { selector: '#otp' } as any;
+      (action as any).page.waitForSelector.mockRejectedValue(
+        new Error('Timeout'),
+      );
+
+      const result = await action.run();
+
+      expect(result).toBeNull();
+      expect((action as any).page.waitForSelector).toHaveBeenCalled();
+    });
+
     it('should return null when OTP input field not found', async () => {
       action.params = { selector: '#otp-input' } as any;
       (action as any).page.waitForSelector.mockRejectedValue(

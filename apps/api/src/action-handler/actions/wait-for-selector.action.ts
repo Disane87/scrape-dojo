@@ -6,7 +6,7 @@ export type WaitActionParams = {
   timeout?: number;
   optional?: boolean;
   /** Optional: Bedingung die erfüllt sein muss damit gewartet wird (Handlebars-Template) */
-  condition?: string;
+  condition?: string | boolean;
 };
 
 @Action('waitForSelector', {
@@ -20,7 +20,8 @@ export class WaitForSelectorAction extends BaseAction<WaitActionParams> {
   async run(): Promise<boolean> {
     // Prüfe optionale Bedingung
     if (this.params.condition !== undefined) {
-      const conditionMet = this.params.condition === 'true';
+      const conditionMet =
+        this.params.condition === true || this.params.condition === 'true';
 
       if (!conditionMet) {
         this.logger.log(

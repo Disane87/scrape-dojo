@@ -7,7 +7,7 @@ export type TypeActionParams = {
   text: string;
   pressEnter: boolean;
   /** Optional: Bedingung die erfüllt sein muss damit getippt wird (Handlebars-Template, z.B. "{{isDefined previousData.emailField}}") */
-  condition?: string;
+  condition?: string | boolean;
 };
 
 @Action('type', {
@@ -68,7 +68,8 @@ export class TypeAction extends BaseAction<TypeActionParams> {
     // Prüfe optionale Bedingung
     if (this.params.condition !== undefined) {
       // Condition ist bereits durch Handlebars aufgelöst (z.B. "true" oder "false")
-      const conditionMet = this.params.condition === 'true';
+      const conditionMet =
+        this.params.condition === true || this.params.condition === 'true';
 
       if (!conditionMet) {
         this.logger.log(

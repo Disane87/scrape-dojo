@@ -79,40 +79,76 @@
               }
             },
             {
+              "name": "clickAccountPicker",
+              "action": "click",
+              "params": {
+                "selector": "a.cvf-widget-btn-verify-account-switcher",
+                "optional": true,
+                "timeout": 3000
+              }
+            },
+            {
+              "name": "Wait for password after account pick",
+              "action": "waitForSelector",
+              "params": {
+                "selector": "#ap_password",
+                "timeout": 5000,
+                "optional": true
+              }
+            },
+            {
               "name": "passwordFieldVisible",
               "action": "extract",
               "params": {
-                "selector": "#ap_password, input[name='password'], input[type='password']",
+                "selector": "#ap_password",
                 "property": "tagName",
                 "optional": true
+              }
+            },
+            {
+              "name": "emailFieldVisible",
+              "action": "extract",
+              "params": {
+                "selector": "#ap_email, #ap_email_login, input[name='email']",
+                "property": "tagName",
+                "optional": true
+              }
+            },
+            {
+              "name": "needsEmailEntry",
+              "action": "transform",
+              "params": {
+                "previousDataKeys": ["emailFieldVisible", "passwordFieldVisible"],
+                "expression": "emailFieldVisible ? (passwordFieldVisible ? 'false' : 'true') : 'false'"
               }
             },
             {
               "name": "Type email",
               "action": "type",
               "params": {
-                "selector": "#ap_email, input[name='email'], input[type='email']",
+                "selector": "#ap_email, #ap_email_login, input[name='email']",
                 "text": "{{variables.email}}",
                 "pressEnter": true,
-                "condition": "{{hasNoValue previousData.passwordFieldVisible}}"
+                "condition": "{{previousData.needsEmailEntry}}"
               }
             },
             {
               "name": "Wait for CVF/OTP before password",
               "action": "waitForOtp",
               "params": {
-                "selector": "#cvf-input-code, input[name='code'], input[name='otpCode'], #auth-mfa-otpcode",
-                "detectSelector": "#cvf-input-code, input[name='code'], input[name='otpCode'], #auth-mfa-otpcode, form[action*='cvf'], form[action*='mfa']",
+                "selector": "#cvf-input-code, input[name='otpCode'], #auth-mfa-otpcode",
+                "detectSelector": "#cvf-input-code, input[name='otpCode'], #auth-mfa-otpcode, form[action*='cvf']",
                 "timeout": 120000,
                 "pressEnter": true,
-                "message": "🔐 Amazon Sicherheitscode eingeben (SMS/E-Mail/Authenticator):"
+                "message": "🔐 Amazon Sicherheitscode eingeben (SMS/E-Mail/Authenticator):",
+                "condition": "{{previousData.needsEmailEntry}}"
               }
             },
             {
               "name": "passwordFieldVisibleAfterOtp",
               "action": "extract",
               "params": {
-                "selector": "#ap_password, input[name='password'], input[type='password']",
+                "selector": "#ap_password",
                 "property": "tagName",
                 "optional": true
               }
@@ -121,7 +157,7 @@
               "name": "Wait for password input",
               "action": "waitForSelector",
               "params": {
-                "selector": "#ap_password, input[name='password'], input[type='password']",
+                "selector": "#ap_password",
                 "timeout": 10000,
                 "optional": true,
                 "condition": "{{hasValue previousData.passwordFieldVisibleAfterOtp}}"
@@ -131,7 +167,7 @@
               "name": "Type password",
               "action": "type",
               "params": {
-                "selector": "#ap_password, input[name='password'], input[type='password']",
+                "selector": "#ap_password",
                 "text": "{{variables.password}}",
                 "pressEnter": true,
                 "condition": "{{hasValue previousData.passwordFieldVisibleAfterOtp}}"
@@ -141,8 +177,8 @@
               "name": "Wait for MFA after password",
               "action": "waitForOtp",
               "params": {
-                "selector": "#cvf-input-code, input[name='code'], input[name='otpCode'], #auth-mfa-otpcode",
-                "detectSelector": "#cvf-input-code, input[name='code'], input[name='otpCode'], #auth-mfa-otpcode, form[action*='cvf'], form[action*='mfa']",
+                "selector": "#cvf-input-code, input[name='otpCode'], #auth-mfa-otpcode",
+                "detectSelector": "#cvf-input-code, input[name='otpCode'], #auth-mfa-otpcode, form[action*='cvf']",
                 "timeout": 120000,
                 "pressEnter": true,
                 "message": "🔐 Amazon MFA-Code eingeben (aus E-Mail oder Authenticator):"
@@ -474,7 +510,8 @@
                                 "params": {
                                   "element": "currentData.orderLoop.value",
                                   "selector": "span.a-declarative[data-action='a-popover'] a.a-link-normal, a[href*='/invoice/popover']",
-                                  "optional": true
+                                  "optional": true,
+                                  "timeout": 3000
                                 }
                               },
                               {

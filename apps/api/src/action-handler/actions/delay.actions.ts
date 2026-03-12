@@ -3,7 +3,7 @@ import { Action } from '../_decorators/action.decorator';
 
 export type DelayActionParams = {
   time: number;
-  condition?: string;
+  condition?: string | boolean;
 };
 
 @Action('delay', {
@@ -16,7 +16,8 @@ export type DelayActionParams = {
 export class Delay extends BaseAction<DelayActionParams> {
   async run(): Promise<void> {
     if (this.params.condition !== undefined) {
-      const conditionMet = this.params.condition === 'true';
+      const conditionMet =
+        this.params.condition === true || this.params.condition === 'true';
 
       if (!conditionMet) {
         this.logger.log(
