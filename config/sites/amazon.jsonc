@@ -416,6 +416,23 @@
                                 }
                               },
                               {
+                                "action": "transform",
+                                "name": "orderDay",
+                                "params": {
+                                  "previousDataKey": "orderDate",
+                                  "expression": "($d := $match($, /(\\d{1,2})/).groups[0]; $length($d) = 1 ? '0' & $d : $d)"
+                                }
+                              },
+                              // Reset orderId vor jedem Extract, damit bei fehlgeschlagenem optional-Extract
+                              // nicht der Wert der vorherigen Bestellung stehen bleibt
+                              {
+                                "action": "transform",
+                                "name": "orderId",
+                                "params": {
+                                  "expression": "''"
+                                }
+                              },
+                              {
                                 "action": "extract",
                                 "name": "orderId",
                                 "params": {
@@ -566,9 +583,12 @@
                                       "name": "invoiceKey",
                                       "params": {
                                         "previousDataKeys": [
-                                          "orderIdClean"
+                                          "orderIdClean",
+                                          "orderYear",
+                                          "orderMonth",
+                                          "orderDay"
                                         ],
-                                        "expression": "'amazon-invoice-' & orderIdClean & '-' & $string({{add currentData.invoiceLoop.index 1}})"
+                                        "expression": "orderYear & orderMonth & orderDay & '_amazon-invoice-' & orderIdClean & '-' & $string({{add currentData.invoiceLoop.index 1}})"
                                       }
                                     },
                                     {
