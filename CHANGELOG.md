@@ -1,3 +1,13 @@
+## [1.13.2](https://github.com/disane87/scrape-dojo/compare/v1.13.1...v1.13.2) (2026-03-12)
+
+### 🛠️ Fixes
+
+- **🕷️ scrape:** add date to invoice filenames and fix stale orderId bug ([f2c0d35](https://github.com/disane87/scrape-dojo/commit/f2c0d354ac98acbba3d02ec675b8e7809e224d6c))
+- **🕷️ scrape:** handle boolean conditions in action params and fix Amazon login flow ([e0e78ba](https://github.com/disane87/scrape-dojo/commit/e0e78ba277c2a93c78200183b55c8cfd1c8fa764))
+- **🕷️ scrape:** reset invoice links before extractAll to prevent stale data ([2d79575](https://github.com/disane87/scrape-dojo/commit/2d79575bb7ac57599170110c2ab4c135d82fc762)), closes [#56](https://github.com/disane87/scrape-dojo/issues/56)
+- **🕷️ scrape:** wait for actual download links before extractAll ([72dfb4a](https://github.com/disane87/scrape-dojo/commit/72dfb4a253becb260a4b2df5a80395cedf065437))
+- **🖥️ api:** redact secrets from logs and SSE events ([f02dc06](https://github.com/disane87/scrape-dojo/commit/f02dc067ea9d39269a180f051bce2785e757726f)), closes [#72](https://github.com/disane87/scrape-dojo/issues/72)
+
 ## [1.13.1](https://github.com/disane87/scrape-dojo/compare/v1.13.0...v1.13.1) (2026-03-11)
 
 ### 🛠️ Fixes
