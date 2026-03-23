@@ -51,7 +51,7 @@ RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
     pnpm install --prod --no-frozen-lockfile --ignore-scripts
 
 # Stage 3: Production - Puppeteer base with nginx
-FROM ghcr.io/puppeteer/puppeteer:23.11.1 AS production
+FROM ghcr.io/puppeteer/puppeteer:24.40.0 AS production
 
 # Switch to root for system package installation
 USER root
