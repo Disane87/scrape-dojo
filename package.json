@@ -76,7 +76,7 @@
     "cron-parser": "^5.4.0",
     "express-rate-limit": "^7.5.1",
     "fast-glob": "^3.3.3",
-    "handlebars": "^4.7.8",
+    "handlebars": "^4.7.9",
     "helmet": "^8.1.0",
     "iconify-icon": "^3.0.2",
     "jsonata": "^2.0.5",
