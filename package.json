@@ -98,7 +98,7 @@
     "sql.js": "^1.13.0",
     "tslib": "^2.3.0",
     "typeorm": "^0.3.28",
-    "uuid": "^13.0.0"
+    "uuid": "^14.0.0"
   },
   "devDependencies": {
     "@analogjs/vite-plugin-angular": "^2.2.0",
