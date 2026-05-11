@@ -5,7 +5,7 @@
 # ============================================
 
 # Stage 1: Build everything
-FROM node:22-slim AS builder
+FROM node:26-slim AS builder
 
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
@@ -38,7 +38,7 @@ RUN NX_DAEMON=false pnpm nx build api --configuration=production --verbose && \
     NX_DAEMON=false pnpm nx build ui --configuration=production --verbose
 
 # Stage 2: Production dependencies only (avoids unreliable pnpm prune)
-FROM node:22-slim AS prod-deps
+FROM node:26-slim AS prod-deps
 
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
