@@ -641,7 +641,7 @@
                                       "params": {
                                         "url": "{{currentData.invoiceLoop.value}}",
                                         "filename": "{{previousData.invoiceKey}}.pdf",
-                                        "path": "./documents"
+                                        "path": "./downloads"
                                       }
                                     },
                                     {

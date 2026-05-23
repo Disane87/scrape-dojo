@@ -51,7 +51,7 @@ export class DownloadAction extends BaseAction<DownloadActionParams> {
         const segments = normalizedPath.split('/').filter((s) => s !== '');
 
         if (segments.length > 0) {
-          // Finde den Root-Teil (z.B. "./documents" oder "documents" oder "C:/documents")
+          // Finde den Root-Teil (z.B. "./downloads" oder "downloads" oder "C:/downloads")
           const rootParts: string[] = [];
           let restParts: string[] = [];
 

@@ -32,12 +32,15 @@ The download action automatically organizes files into subfolders based on the *
 | `path` in config | scrapeId | Actual save path |
 |-------------------|----------|------------------|
 | `./downloads` | `amazon` | `./downloads/amazon/` |
-| `./documents` | `amazon` | `./documents/amazon/` |
 | `./downloads/invoices` | `amazon` | `./downloads/amazon/invoices/` |
 | `./data/files` | `my-scrape` | `./data/my-scrape/files/` |
 
 <Aside type="caution">
 Don't include the scrapeId in your `path` -- it's added automatically! If you set `path` to `./downloads/amazon` and your scrapeId is `amazon`, you'll end up with `./downloads/amazon/amazon/`.
+</Aside>
+
+<Aside type="caution">
+The default Docker setup only mounts `./downloads` as a volume. If you save files to a different path (e.g. `./documents`), they'll be written inside the container and lost when it restarts. Either use `./downloads` or add a matching volume mount in your `docker-compose.yml`.
 </Aside>
 
 **Example with Docker volume mapping:**
