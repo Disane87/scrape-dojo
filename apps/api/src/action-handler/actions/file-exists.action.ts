@@ -17,11 +17,11 @@ export type FileExistsParams = {
  *
  * @example
  * // Prüfe ob eine spezifische Datei existiert
- * { "path": "./documents/amazon/2024/invoice-123.pdf" }
+ * { "path": "./downloads/amazon/2024/invoice-123.pdf" }
  *
  * @example
  * // Prüfe ob eine Datei mit Pattern existiert
- * { "path": "./documents/amazon/2024", "pattern": "amazon-invoice-123-*.pdf" }
+ * { "path": "./downloads/amazon/2024", "pattern": "amazon-invoice-123-*.pdf" }
  */
 @Action('fileExists', {
   displayName: 'File Exists',

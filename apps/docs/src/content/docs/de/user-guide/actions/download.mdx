@@ -32,12 +32,15 @@ Die Download-Action organisiert Dateien automatisch in Unterordner basierend auf
 | `path` in Config | scrapeId | Tatsächlicher Speicherpfad |
 |-------------------|----------|---------------------------|
 | `./downloads` | `amazon` | `./downloads/amazon/` |
-| `./documents` | `amazon` | `./documents/amazon/` |
 | `./downloads/invoices` | `amazon` | `./downloads/amazon/invoices/` |
 | `./data/files` | `my-scrape` | `./data/my-scrape/files/` |
 
 <Aside type="caution">
 Verwende die scrapeId **nicht** nochmal in deinem `path` -- sie wird automatisch eingefügt! Wenn du `path` auf `./downloads/amazon` setzt und die scrapeId `amazon` ist, entsteht `./downloads/amazon/amazon/`.
+</Aside>
+
+<Aside type="caution">
+Im Standard-Docker-Setup ist nur `./downloads` als Volume gemountet. Wenn du in einen anderen Pfad speicherst (z.B. `./documents`), landen die Dateien innerhalb des Containers und gehen beim Neustart verloren. Verwende entweder `./downloads` oder ergänze ein passendes Volume-Mapping in deiner `docker-compose.yml`.
 </Aside>
 
 **Beispiel mit Docker-Volume-Mapping:**

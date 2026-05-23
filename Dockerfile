@@ -77,7 +77,6 @@ WORKDIR /home/pptruser/app
 # Create runtime directories
 RUN mkdir -p /home/pptruser/app/data \
     /home/pptruser/app/downloads \
-    /home/pptruser/app/documents \
     /home/pptruser/app/logs \
     /home/pptruser/app/browser-data \
     /home/pptruser/app/dist \
