@@ -1,5 +1,6 @@
 {
   "name": "@disane87/scrape-dojo",
+  "packageManager": "pnpm@10.30.0",
   "description": "Define your scrapes with JSON configurations, use dynamic templates, and automate web tasks!",
   "homepage": "https://github.com/disane87/scrape-dojo#readme",
   "license": "MIT",
