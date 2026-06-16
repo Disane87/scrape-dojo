@@ -1,3 +1,9 @@
+## [1.15.0](https://github.com/disane87/scrape-dojo/compare/v1.14.1...v1.15.0) (2026-06-16)
+
+### 🚀 Features
+
+- **🗄️ db:** bundle pg and mysql2 drivers + fix docker build (#114) ([f8b33f4](https://github.com/disane87/scrape-dojo/commit/f8b33f403a5c061860e2f438e5d60370b5abb9e0)), closes [#114](https://github.com/disane87/scrape-dojo/issues/114)
+
 ## [1.14.1](https://github.com/disane87/scrape-dojo/compare/v1.14.0...v1.14.1) (2026-06-16)
 
 ### 🛠️ Fixes
