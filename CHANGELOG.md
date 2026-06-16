@@ -1,3 +1,10 @@
+## [1.14.1](https://github.com/disane87/scrape-dojo/compare/v1.14.0...v1.14.1) (2026-06-16)
+
+### 🛠️ Fixes
+
+- **🔐 auth:** make Quick Start usable with MFA enabled by default ([ca6726a](https://github.com/disane87/scrape-dojo/commit/ca6726af0b8131823c9e8880c90c84d0f34b7d99)), closes [#112](https://github.com/disane87/scrape-dojo/issues/112)
+- **🕷️ scrape:** write example Amazon downloads to mounted ./downloads volume (#106) ([668fe95](https://github.com/disane87/scrape-dojo/commit/668fe959754d2e6490b7ebd880991676a46ef2ff)), closes [#106](https://github.com/disane87/scrape-dojo/issues/106)
+
 ## [1.14.0](https://github.com/disane87/scrape-dojo/compare/v1.13.2...v1.14.0) (2026-03-12)
 
 ### 🚀 Features
