@@ -7,7 +7,7 @@
 # Stage 1: Build everything
 FROM node:22-slim AS builder
 
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@10.30.0 --activate
 
 WORKDIR /app
 
@@ -15,8 +15,11 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 # Install ALL dependencies (needed for build)
+# --ignore-scripts: dependency build scripts aren't needed to compile the TS apps
+# (they were already skipped via ignoredBuiltDependencies). Newer pnpm exits 1 on
+# unapproved build scripts, so ignoring them keeps the install deterministic.
 RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
-    pnpm install --frozen-lockfile
+    pnpm install --frozen-lockfile --ignore-scripts
 
 # Copy workspace config and source files
 COPY nx.json tsconfig.json tsconfig.build.json ./
@@ -40,7 +43,7 @@ RUN NX_DAEMON=false pnpm nx build api --configuration=production --verbose && \
 # Stage 2: Production dependencies only (avoids unreliable pnpm prune)
 FROM node:22-slim AS prod-deps
 
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@10.30.0 --activate
 
 WORKDIR /app
 
