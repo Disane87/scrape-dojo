@@ -72,6 +72,9 @@ services:
       - SCRAPE_DOJO_ENCRYPTION_KEY=your_generated_key_here
       - SCRAPE_DOJO_AUTH_JWT_SECRET=your_random_jwt_secret_here
       - SCRAPE_DOJO_AUTH_REFRESH_TOKEN_SECRET=your_random_refresh_secret_here
+      # MFA is enabled by default — required, or the first signup fails with a 500:
+      - SCRAPE_DOJO_AUTH_MFA_ENCRYPTION_KEY=your_random_mfa_encryption_key_here
+      - SCRAPE_DOJO_AUTH_MFA_CHALLENGE_SECRET=your_random_mfa_challenge_secret_here
       - DB_TYPE=sqlite
       # - SCRAPE_DOJO_PROXY_URL=http://proxy:8080  # Optional: route scrapes through a proxy
     volumes:

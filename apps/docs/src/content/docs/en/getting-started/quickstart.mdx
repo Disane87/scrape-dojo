@@ -75,6 +75,10 @@ Docker is the easiest way to get Scrape Dojo up and running. No Node.js needed, 
          - SCRAPE_DOJO_AUTH_JWT_SECRET=your_random_jwt_secret_here
          # Recommended: separate secret for refresh tokens
          - SCRAPE_DOJO_AUTH_REFRESH_TOKEN_SECRET=your_random_refresh_secret_here
+         # Required: MFA is enabled by default — these encrypt/sign the TOTP setup.
+         # Without them, creating your first account fails with a 500 error.
+         - SCRAPE_DOJO_AUTH_MFA_ENCRYPTION_KEY=your_random_mfa_encryption_key_here
+         - SCRAPE_DOJO_AUTH_MFA_CHALLENGE_SECRET=your_random_mfa_challenge_secret_here
          - DB_TYPE=sqlite
          - DB_SYNCHRONIZE=true
        volumes:
@@ -87,10 +91,20 @@ Docker is the easiest way to get Scrape Dojo up and running. No Node.js needed, 
    ```
 
    <Aside type="caution" title="Required secrets">
-     `SCRAPE_DOJO_ENCRYPTION_KEY` and `SCRAPE_DOJO_AUTH_JWT_SECRET` are **mandatory** for the Docker image (which runs in production mode). The container will fail to start without them. Generate random values for both, e.g. with:
+     The Docker image runs in **production mode** with **MFA enabled by default**. These secrets are **mandatory** — without them the container fails to start or the first account creation fails with a 500 error:
+
+     - `SCRAPE_DOJO_ENCRYPTION_KEY` — encrypts your stored secrets
+     - `SCRAPE_DOJO_AUTH_JWT_SECRET` — signs access tokens
+     - `SCRAPE_DOJO_AUTH_REFRESH_TOKEN_SECRET` — signs refresh tokens
+     - `SCRAPE_DOJO_AUTH_MFA_ENCRYPTION_KEY` — encrypts the TOTP secret at rest
+     - `SCRAPE_DOJO_AUTH_MFA_CHALLENGE_SECRET` — signs the short-lived MFA challenge token
+
+     Generate a random value for **each** of them, e.g. with:
      ```bash
      node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
      ```
+
+     If you don't want MFA, you can instead set `SCRAPE_DOJO_AUTH_REQUIRE_MFA=false` — then the two `MFA` secrets are not needed.
    </Aside>
 
    <Aside type="caution" title="DB_SYNCHRONIZE">

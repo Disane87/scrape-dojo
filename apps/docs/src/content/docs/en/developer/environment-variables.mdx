@@ -93,11 +93,15 @@ SCRAPE_DOJO_PROXY_URL=socks5://proxy.example.com:1080
 
 ## MFA (Multi-Factor Authentication)
 
-| Variable                                | Default       | Description                                 |
-| --------------------------------------- | ------------- | ------------------------------------------- |
-| `SCRAPE_DOJO_AUTH_MFA_ISSUER`           | `Scrape Dojo` | Display name (issuer) in authenticator apps |
-| `SCRAPE_DOJO_AUTH_MFA_CHALLENGE_SECRET` | —             | Secret for challenge token signing          |
-| `SCRAPE_DOJO_AUTH_MFA_ENCRYPTION_KEY`   | —             | Encryption key for MFA secrets              |
+| Variable                                | Default       | Description                                                                       |
+| --------------------------------------- | ------------- | --------------------------------------------------------------------------------- |
+| `SCRAPE_DOJO_AUTH_MFA_ISSUER`           | `Scrape Dojo` | Display name (issuer) in authenticator apps                                       |
+| `SCRAPE_DOJO_AUTH_MFA_CHALLENGE_SECRET` | —             | **Required in production.** Signs the short-lived MFA challenge token             |
+| `SCRAPE_DOJO_AUTH_MFA_ENCRYPTION_KEY`   | —             | **Required in production.** Encrypts the TOTP secret at rest                       |
+
+<Aside type="caution" title="Required when MFA is enabled">
+  MFA is enabled by default (`SCRAPE_DOJO_AUTH_REQUIRE_MFA=true`). In production (the Docker image), `SCRAPE_DOJO_AUTH_MFA_ENCRYPTION_KEY` **must be set** — otherwise the first account creation fails at the TOTP setup step with a 500 error (`SCRAPE_DOJO_AUTH_MFA_ENCRYPTION_KEY must be set in production`). Set `SCRAPE_DOJO_AUTH_MFA_CHALLENGE_SECRET` too. If you don't want MFA, set `SCRAPE_DOJO_AUTH_REQUIRE_MFA=false`.
+</Aside>
 
 ## OIDC / SSO
 

@@ -345,6 +345,43 @@ export class UserService {
       throw new ConflictException('Initial admin already exists');
     }
 
+    // A user row with this email may already exist during the bootstrap window —
+    // e.g. a prior registration, or a setup attempt that persisted the row but then
+    // failed at the MFA step (issue #112). Inserting again would hit the DB UNIQUE
+    // constraint and surface a raw 500, leaving the user permanently locked out.
+    //
+    // SECURITY: we must NOT silently take over an arbitrary account just because no
+    // admin exists yet — otherwise, on an instance with open registration, anyone
+    // hitting the public /auth/setup endpoint could hijack another user's account and
+    // reset their credentials. So we only "adopt" the existing row when the caller
+    // proves ownership by supplying that account's current password, and we never
+    // touch an account that has already fully enrolled MFA (it must use normal login).
+    const existingUser = await this.findByEmail(dto.email);
+    if (existingUser) {
+      const ownsAccount =
+        !existingUser.mfaEnabled &&
+        !!existingUser.passwordHash &&
+        (await bcrypt.compare(dto.password, existingUser.passwordHash));
+
+      if (!ownsAccount) {
+        throw new ConflictException(
+          'An account with this email already exists',
+        );
+      }
+
+      // Ownership proven: promote this row to admin. Keep the (matching) password
+      // hash as-is and leave any non-enrolled MFA state to the normal setup flow.
+      existingUser.role = UserRole.ADMIN;
+      existingUser.isActive = true;
+      if (dto.username) existingUser.username = dto.username;
+      if (dto.displayName) existingUser.displayName = dto.displayName;
+      await this.userRepository.save(existingUser);
+      this.logger.log(
+        `Promoted existing user to initial admin: ${existingUser.email}`,
+      );
+      return existingUser;
+    }
+
     const passwordHash = await bcrypt.hash(dto.password, SALT_ROUNDS);
 
     const admin = this.userRepository.create({

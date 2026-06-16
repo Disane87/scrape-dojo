@@ -75,6 +75,10 @@ Docker ist der einfachste Weg, Scrape Dojo zum Laufen zu bringen. Kein Node.js n
          - SCRAPE_DOJO_AUTH_JWT_SECRET=dein_zufaelliges_jwt_secret_hier
          # Empfohlen: separates Secret fuer Refresh-Tokens
          - SCRAPE_DOJO_AUTH_REFRESH_TOKEN_SECRET=dein_zufaelliges_refresh_secret_hier
+         # Pflicht: MFA ist standardmaessig aktiv — diese ver-/entschluesseln das TOTP-Setup.
+         # Ohne sie schlaegt das Erstellen des ersten Accounts mit einem 500-Fehler fehl.
+         - SCRAPE_DOJO_AUTH_MFA_ENCRYPTION_KEY=dein_zufaelliges_mfa_encryption_key_hier
+         - SCRAPE_DOJO_AUTH_MFA_CHALLENGE_SECRET=dein_zufaelliges_mfa_challenge_secret_hier
          - DB_TYPE=sqlite
          - DB_SYNCHRONIZE=true
        volumes:
@@ -87,10 +91,20 @@ Docker ist der einfachste Weg, Scrape Dojo zum Laufen zu bringen. Kein Node.js n
    ```
 
    <Aside type="caution" title="Pflicht-Secrets">
-     `SCRAPE_DOJO_ENCRYPTION_KEY` und `SCRAPE_DOJO_AUTH_JWT_SECRET` sind **Pflicht** fuer das Docker-Image (das im Produktionsmodus laeuft). Der Container startet ohne diese Werte nicht. Generiere fuer beide zufaellige Werte, z.B. mit:
+     Das Docker-Image laeuft im **Produktionsmodus** mit **standardmaessig aktivierter MFA**. Diese Secrets sind **Pflicht** — ohne sie startet der Container nicht oder das Erstellen des ersten Accounts schlaegt mit einem 500-Fehler fehl:
+
+     - `SCRAPE_DOJO_ENCRYPTION_KEY` — verschluesselt deine gespeicherten Secrets
+     - `SCRAPE_DOJO_AUTH_JWT_SECRET` — signiert Access-Tokens
+     - `SCRAPE_DOJO_AUTH_REFRESH_TOKEN_SECRET` — signiert Refresh-Tokens
+     - `SCRAPE_DOJO_AUTH_MFA_ENCRYPTION_KEY` — verschluesselt das TOTP-Secret at rest
+     - `SCRAPE_DOJO_AUTH_MFA_CHALLENGE_SECRET` — signiert das kurzlebige MFA-Challenge-Token
+
+     Generiere fuer **jeden** dieser Werte einen zufaelligen Wert, z.B. mit:
      ```bash
      node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
      ```
+
+     Wenn du keine MFA moechtest, kannst du stattdessen `SCRAPE_DOJO_AUTH_REQUIRE_MFA=false` setzen — dann werden die beiden `MFA`-Secrets nicht benoetigt.
    </Aside>
 
    <Aside type="caution" title="DB_SYNCHRONIZE">

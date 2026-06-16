@@ -563,6 +563,7 @@ describe('UserService', () => {
   describe('createInitialAdmin', () => {
     it('should create admin when no admin exists', async () => {
       mockRepository.count.mockResolvedValue(0);
+      mockRepository.findOne.mockResolvedValue(null);
       mockRepository.create.mockReturnValue({
         ...mockUser,
         role: UserRole.ADMIN,
@@ -589,6 +590,77 @@ describe('UserService', () => {
           password: 'adminpassword',
         }),
       ).rejects.toThrow(ConflictException);
+    });
+
+    it('should adopt an existing user row as the admin during bootstrap when ownership is proven (issue #112)', async () => {
+      // No admin exists yet, but a row with this email is already present
+      // (e.g. a registration whose MFA setup failed). The caller proves ownership
+      // by supplying the existing account's password.
+      mockRepository.count.mockResolvedValue(0);
+      const passwordHash = await bcrypt.hash('adminpassword', 10);
+      const existing = {
+        ...mockUser,
+        email: 'admin@example.com',
+        role: UserRole.USER,
+        isActive: false,
+        mfaEnabled: false,
+        passwordHash,
+      };
+      mockRepository.findOne.mockResolvedValue(existing);
+      mockRepository.save.mockImplementation(async (u) => u);
+
+      const result = await service.createInitialAdmin({
+        email: 'admin@example.com',
+        password: 'adminpassword',
+        username: 'admin',
+      });
+
+      // Adopted the existing row instead of inserting a new one (no UNIQUE violation).
+      expect(mockRepository.create).not.toHaveBeenCalled();
+      expect(result.role).toEqual(UserRole.ADMIN);
+      expect(result.isActive).toBe(true);
+      // Existing (matching) password hash is preserved, not overwritten.
+      expect(result.passwordHash).toBe(passwordHash);
+    });
+
+    it('should refuse to adopt an existing account when the password does not match (no takeover)', async () => {
+      mockRepository.count.mockResolvedValue(0);
+      const passwordHash = await bcrypt.hash('the-real-password', 10);
+      mockRepository.findOne.mockResolvedValue({
+        ...mockUser,
+        email: 'victim@example.com',
+        role: UserRole.USER,
+        mfaEnabled: false,
+        passwordHash,
+      });
+
+      await expect(
+        service.createInitialAdmin({
+          email: 'victim@example.com',
+          password: 'attacker-guess',
+        }),
+      ).rejects.toThrow(ConflictException);
+      expect(mockRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('should refuse to adopt an account that has MFA fully enrolled', async () => {
+      mockRepository.count.mockResolvedValue(0);
+      const passwordHash = await bcrypt.hash('adminpassword', 10);
+      mockRepository.findOne.mockResolvedValue({
+        ...mockUser,
+        email: 'admin@example.com',
+        role: UserRole.USER,
+        mfaEnabled: true,
+        passwordHash,
+      });
+
+      await expect(
+        service.createInitialAdmin({
+          email: 'admin@example.com',
+          password: 'adminpassword',
+        }),
+      ).rejects.toThrow(ConflictException);
+      expect(mockRepository.save).not.toHaveBeenCalled();
     });
   });
 });
