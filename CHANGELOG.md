@@ -1,3 +1,9 @@
+## [1.15.1](https://github.com/disane87/scrape-dojo/compare/v1.15.0...v1.15.1) (2026-06-16)
+
+### 🛠️ Fixes
+
+- **🎨 ui:** align @angular packages to 21.2 to fix production build (#115) ([e2c98a5](https://github.com/disane87/scrape-dojo/commit/e2c98a554e8e23008b32c45ee9f06159581c8194)), closes [#115](https://github.com/disane87/scrape-dojo/issues/115)
+
 ## [1.15.0](https://github.com/disane87/scrape-dojo/compare/v1.14.1...v1.15.0) (2026-06-16)
 
 ### 🚀 Features
