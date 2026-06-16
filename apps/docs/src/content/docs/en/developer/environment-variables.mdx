@@ -64,6 +64,12 @@ SCRAPE_DOJO_PROXY_URL=socks5://proxy.example.com:1080
   Long-term, migrations will replace this behavior.
 </Aside>
 
+<Aside type="note">
+  All supported database drivers (SQLite, `mysql2` for MySQL/MariaDB and `pg` for PostgreSQL)
+  are bundled in the official Docker image. Just set `DB_TYPE` accordingly — no extra driver
+  installation or custom image build is required.
+</Aside>
+
 ## Encryption
 
 | Variable                     | Default   | Description                                                  |
