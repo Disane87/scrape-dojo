@@ -131,7 +131,7 @@
     "@nx/nest": "^22.3.3",
     "@nx/vite": "^22.3.3",
     "@nx/vitest": "^22.3.3",
-    "@nx/web": "22.3.3",
+    "@nx/web": "22.6.5",
     "@schematics/angular": "~21.0.0",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/commit-analyzer": "^13.0.1",
