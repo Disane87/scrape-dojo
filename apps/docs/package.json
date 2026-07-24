@@ -18,7 +18,7 @@
     "astro-mermaid": "^1.2.0",
     "iconify-icon": "^3.0.2",
     "mermaid": "^11.12.2",
-    "sharp": "^0.34.2",
+    "sharp": "^0.35.0",
     "tailwindcss": "^4.1.18"
   }
 }
