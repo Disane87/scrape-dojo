@@ -263,8 +263,10 @@ export class RunsStore extends EntityStore<RunHistoryItem> {
       error: event.error,
     }));
 
-    // Nach erfolgreichem Abschluss: Lade Debug-Daten und Artifacts
-    if (status === 'success' && event.scrapeId) {
+    // Debug-Daten und Artifacts laden — auch bei fehlgeschlagenen Runs.
+    // Vorher lief das nur bei status === 'success', also ausgerechnet dann
+    // nicht, wenn man die Daten zur Fehlersuche am dringendsten braucht.
+    if (event.scrapeId) {
       this.loadRunData(event.runId, event.scrapeId);
     }
   }
