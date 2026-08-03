@@ -1,0 +1,90 @@
+---
+title: webhook
+description: "Sende eine HTTP-Anfrage an einen externen Dienst"
+sidebar:
+  order: 55
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Manchmal muss ein Scrape der Außenwelt etwas mitteilen: "Ich bin fertig", "Ich habe 12 neue Rechnungen gefunden", "Der Login ist fehlgeschlagen". Die `webhook`-Action schickt eine HTTP-Anfrage an eine beliebige URL — einen Chat-Dienst, eine Hausautomatisierung, deine eigene API, alles was HTTP spricht.
+
+Anders als [`notify`](/de/user-guide/actions/notify/), das nur einen geöffneten Browser-Tab erreicht, kommt ein Webhook auch dann bei dir an, wenn niemand die Oberfläche ansieht. Genau deshalb ist es das richtige Werkzeug für geplante Läufe.
+
+## ⚙️ Parameter
+
+| Parameter | Typ | Pflicht | Beschreibung |
+|-----------|-----|---------|--------------|
+| `url` | `string` | Ja | Ziel-URL |
+| `method` | `string` | Nein | `GET`, `POST`, `PUT`, `PATCH` oder `DELETE` (Standard: `POST`) |
+| `headers` | `object` | Nein | Zusätzliche Header |
+| `body` | `object` \| `string` | Nein | Objekte werden als JSON gesendet, Strings unverändert. Bei `GET` und `DELETE` ignoriert |
+| `timeout` | `number` | Nein | Abbruch nach X Millisekunden (Standard: `15000`) |
+| `retries` | `number` | Nein | Wiederholungen bei Netzwerkfehlern und vorübergehenden Statuscodes (Standard: `2`) |
+| `retryDelay` | `number` | Nein | Wartezeit vor der ersten Wiederholung in ms, danach jeweils verdoppelt (Standard: `1000`) |
+| `failOnError` | `boolean` | Nein | Ganzen Scrape abbrechen, wenn die Anfrage endgültig scheitert (Standard: `false`) |
+
+### 🔁 Was wiederholt wird
+
+Netzwerkfehler und Zeitüberschreitungen werden wiederholt, ebenso die Statuscodes `408`, `429`, `500`, `502`, `503` und `504` — also die, die üblicherweise vorübergehend sind. Ein `400` oder `404` wird **nicht** wiederholt: Eine fehlerhafte Anfrage wird durch Wiederholen nicht richtig.
+
+## 💡 Beispiele
+
+**Die eigene API benachrichtigen, wenn ein Scrape fertig ist:**
+
+```jsonc
+{
+  "name": "reportDone",
+  "action": "webhook",
+  "params": {
+    "url": "https://example.com/api/scrape-finished",
+    "body": {
+      "scrape": "amazon",
+      "invoices": "{{storedData.amazon.downloadedInvoices}}"
+    }
+  }
+}
+```
+
+**An einen Dienst senden, der einen Token verlangt:**
+
+```jsonc
+{
+  "name": "pushMessage",
+  "action": "webhook",
+  "params": {
+    "url": "https://ntfy.sh/mein-thema",
+    "headers": { "Authorization": "Bearer {{variables.ntfyToken}}" },
+    "body": "Scrape fertig"
+  }
+}
+```
+
+**Etwas abrufen und die Antwort weiterverwenden:**
+
+```jsonc
+{
+  "name": "loadConfig",
+  "action": "webhook",
+  "params": {
+    "url": "https://example.com/api/settings",
+    "method": "GET",
+    "timeout": 5000
+  }
+}
+```
+
+Die ausgewertete Antwort steht späteren Actions über `previousData.loadConfig` zur Verfügung. JSON wird automatisch geparst, alles andere kommt als Text durch.
+
+<Aside type="tip" title="Tokens gehören nicht in die Konfigurationsdatei">
+Lege Zugangsdaten als **Secret** an und verweise mit `{{variables.meinToken}}` darauf, statt sie in die `.jsonc` zu schreiben. Header-Werte landen nie im Log, und URLs werden vor dem Loggen um ihren Query-String gekürzt — ein Token in einer Konfigurationsdatei bleibt aber ein Token in einer Konfigurationsdatei.
+</Aside>
+
+<Aside type="caution" title="Fehler sind standardmäßig still">
+Standardmäßig wird eine gescheiterte Anfrage protokolliert und der Scrape läuft weiter — eine verpasste Benachrichtigung soll keinen erfolgreichen Scrape wegwerfen. Ist die Anfrage wesentlich, setze `failOnError: true`.
+</Aside>
+
+## 🔗 Verwandt
+
+- [`telegram`](/de/user-guide/actions/telegram/) — Kurzform für Telegram-Nachrichten, baut auf dieser Action auf
+- [`notify`](/de/user-guide/actions/notify/) — Benachrichtigungen innerhalb der Oberfläche

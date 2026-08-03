@@ -1,0 +1,90 @@
+---
+title: webhook
+description: "Send an HTTP request to an external service"
+sidebar:
+  order: 55
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Sometimes a scrape needs to tell the outside world something: "I'm done", "I found 12 new invoices", "the login failed". The `webhook` action sends an HTTP request to any URL you like — a chat service, a home automation hub, your own API, whatever speaks HTTP.
+
+Unlike [`notify`](/en/user-guide/actions/notify/), which only reaches an open browser tab, a webhook reaches you even when nobody is watching the UI. That makes it the right tool for scheduled runs.
+
+## ⚙️ Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `url` | `string` | Yes | Target URL |
+| `method` | `string` | No | `GET`, `POST`, `PUT`, `PATCH` or `DELETE` (default: `POST`) |
+| `headers` | `object` | No | Additional request headers |
+| `body` | `object` \| `string` | No | Objects are sent as JSON, strings as-is. Ignored for `GET` and `DELETE` |
+| `timeout` | `number` | No | Abort after X milliseconds (default: `15000`) |
+| `retries` | `number` | No | Retries on network errors and transient statuses (default: `2`) |
+| `retryDelay` | `number` | No | Delay before the first retry in ms, doubled each time (default: `1000`) |
+| `failOnError` | `boolean` | No | Abort the whole scrape when the request ultimately fails (default: `false`) |
+
+### 🔁 What gets retried
+
+Network errors and timeouts are retried, as are the statuses `408`, `429`, `500`, `502`, `503` and `504` — the ones that are usually temporary. A `400` or `404` is not retried: repeating a malformed request does not make it valid.
+
+## 💡 Examples
+
+**Notify your own API when a scrape finishes:**
+
+```jsonc
+{
+  "name": "reportDone",
+  "action": "webhook",
+  "params": {
+    "url": "https://example.com/api/scrape-finished",
+    "body": {
+      "scrape": "amazon",
+      "invoices": "{{storedData.amazon.downloadedInvoices}}"
+    }
+  }
+}
+```
+
+**Send to a service that needs a token:**
+
+```jsonc
+{
+  "name": "pushMessage",
+  "action": "webhook",
+  "params": {
+    "url": "https://ntfy.sh/my-topic",
+    "headers": { "Authorization": "Bearer {{variables.ntfyToken}}" },
+    "body": "Scrape finished"
+  }
+}
+```
+
+**Fetch something and keep the answer:**
+
+```jsonc
+{
+  "name": "loadConfig",
+  "action": "webhook",
+  "params": {
+    "url": "https://example.com/api/settings",
+    "method": "GET",
+    "timeout": 5000
+  }
+}
+```
+
+The parsed response is available to later actions via `previousData.loadConfig`. JSON is parsed automatically; anything else is passed through as text.
+
+<Aside type="tip" title="Keep tokens out of the config file">
+Put credentials into a **secret** and reference it with `{{variables.myToken}}` instead of writing it into the `.jsonc`. Header values are never written to the log, and URLs are stripped of their query string before logging — but a token in a config file is still a token in a config file.
+</Aside>
+
+<Aside type="caution" title="Failures are silent by default">
+By default a failed request is logged and the scrape carries on, because a missed notification should not throw away a successful scrape. If the request is essential, set `failOnError: true`.
+</Aside>
+
+## 🔗 Related
+
+- [`telegram`](/en/user-guide/actions/telegram/) — a shorthand for Telegram messages, built on this action
+- [`notify`](/en/user-guide/actions/notify/) — notifications inside the user interface
