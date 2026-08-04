@@ -18,9 +18,36 @@ The best part: relative URLs are resolved automatically and files are neatly sor
 | `url` | `string` | Yes | The file URL. Supports absolute URLs, relative URLs, and `file://` paths. Handlebars templates supported. |
 | `path` | `string` | Yes | Target directory for the download (e.g. `./downloads/invoices`). |
 | `filename` | `string` | Yes | Filename for the saved file. Handlebars templates supported. |
+| `expectMagic` | `string` | No | Signature the file must start with, e.g. `%PDF`. If it does not match, nothing is written and the action returns `null`. |
 
 <Aside type="note">
 The `path` is automatically extended with a subfolder using the `scrapeId`. If you specify `./downloads` and your scrape is called `amazon-invoices`, the files end up in `./downloads/amazon-invoices/`.
+</Aside>
+
+## 🛡️ Verifying the file really is what you asked for
+
+When a session expires or a bot check kicks in, the other side often answers with **HTTP 200 and an HTML page**. Without a check that page is saved under the name you expected -- an `invoice.pdf` that actually contains `<!DOCTYPE html>`. Whatever processes the file downstream notices late, or not at all.
+
+Set `expectMagic` to the signature the file has to start with:
+
+```jsonc
+{
+  "action": "download",
+  "params": {
+    "url": "{{previousData.invoiceUrl}}",
+    "path": "./downloads",
+    "filename": "invoice-{{previousData.orderId}}.pdf",
+    "expectMagic": "%PDF"
+  }
+}
+```
+
+If the content does not start with `%PDF`, the file is **not written**, the action logs what it actually received, and returns `null` -- so a `skipIf` can react to it.
+
+Common signatures: `%PDF` (PDF), `PK` (ZIP, XLSX, DOCX), `\x89PNG` (PNG), `GIF8` (GIF).
+
+<Aside type="note">
+Without `expectMagic` nothing changes -- existing configs keep behaving exactly as before.
 </Aside>
 
 ## 📂 Folder Structure

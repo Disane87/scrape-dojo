@@ -13,6 +13,9 @@ vi.mock('fs', async (importOriginal) => {
     copyFileSync: vi.fn(),
     writeFileSync: vi.fn(),
     statSync: vi.fn().mockReturnValue({ size: 1024 }),
+    openSync: vi.fn().mockReturnValue(3),
+    readSync: vi.fn().mockReturnValue(0),
+    closeSync: vi.fn(),
   };
 });
 
@@ -46,6 +49,79 @@ describe('DownloadAction', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+  });
+
+  describe('expectMagic', () => {
+    function bytesOf(text: string) {
+      return Array.from(new Uint8Array(Buffer.from(text, 'latin1')));
+    }
+
+    it('writes the file when the remote content starts with the signature', async () => {
+      const action = createAction({
+        url: 'https://example.com/invoice.pdf',
+        path: './downloads',
+        filename: 'invoice.pdf',
+        expectMagic: '%PDF',
+      });
+      action.page.evaluate.mockResolvedValue(bytesOf('%PDF-1.7 …'));
+
+      const result = await action.run();
+
+      expect(result).toBeDefined();
+      expect(fs.writeFileSync).toHaveBeenCalled();
+    });
+
+    it('refuses to write an HTML error page served as a PDF', async () => {
+      const action = createAction({
+        url: 'https://example.com/invoice.pdf',
+        path: './downloads',
+        filename: 'invoice.pdf',
+        expectMagic: '%PDF',
+      });
+      action.page.evaluate.mockResolvedValue(bytesOf('<!DOCTYPE html><html>'));
+
+      const result = await action.run();
+
+      expect(result).toBeNull();
+      expect(fs.writeFileSync).not.toHaveBeenCalled();
+      expect(action.logger.error).toHaveBeenCalled();
+    });
+
+    it('leaves behaviour unchanged when expectMagic is not set', async () => {
+      const action = createAction({
+        url: 'https://example.com/invoice.pdf',
+        path: './downloads',
+        filename: 'invoice.pdf',
+      });
+      action.page.evaluate.mockResolvedValue(bytesOf('<!DOCTYPE html>'));
+
+      const result = await action.run();
+
+      expect(result).toBeDefined();
+      expect(fs.writeFileSync).toHaveBeenCalled();
+    });
+
+    it('does not copy a local file whose signature does not match', async () => {
+      const action = createAction({
+        url: 'file:///tmp/invoice.pdf',
+        path: './downloads',
+        filename: 'invoice.pdf',
+        expectMagic: '%PDF',
+      });
+      vi.mocked(fs.openSync).mockReturnValue(7 as never);
+      vi.mocked(fs.readSync).mockImplementation(((
+        _fd: number,
+        buffer: Buffer,
+      ) => {
+        Buffer.from('<htm', 'latin1').copy(buffer);
+        return 4;
+      }) as never);
+
+      const result = await action.run();
+
+      expect(result).toBeNull();
+      expect(fs.copyFileSync).not.toHaveBeenCalled();
+    });
   });
 
   it('should return null for empty filename', async () => {
