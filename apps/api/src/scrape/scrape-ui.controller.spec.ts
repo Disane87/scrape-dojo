@@ -102,7 +102,9 @@ describe('ScrapeUIController', () => {
     // Geheimwert — so laesst sich pruefen, DASS geschwaerzt wird.
     mockSecretRedaction = {
       redactObject: vi.fn((o) =>
-        JSON.parse(JSON.stringify(o).replaceAll('geheim123', '***')),
+        JSON.parse(
+          JSON.stringify(o).replaceAll('<<fixture-not-a-real-secret>>', '***'),
+        ),
       ),
     };
 
@@ -826,7 +828,7 @@ describe('ScrapeUIController', () => {
           findOne: vi.fn().mockResolvedValue({
             value: JSON.stringify({
               var_email: 'user@example.com',
-              var_password: 'geheim123',
+              var_password: '<<fixture-not-a-real-secret>>',
             }),
           }),
         }),
@@ -841,7 +843,7 @@ describe('ScrapeUIController', () => {
 
       expect(mockSecretRedaction.redactObject).toHaveBeenCalled();
       const ausgeliefert = JSON.stringify(res.json.mock.calls[0][0]);
-      expect(ausgeliefert).not.toContain('geheim123');
+      expect(ausgeliefert).not.toContain('<<fixture-not-a-real-secret>>');
       expect(ausgeliefert).toContain('***');
     });
     it('should return 404 if run not found', async () => {

@@ -583,11 +583,16 @@ describe('ScrapeExecutionService', () => {
       // Nur beim Ausliefern zu schwaerzen liesse ihn in der Datenbank, in
       // jedem Backup und in jedem Dump stehen.
       mockSecretRedaction.redactObject.mockImplementation((o: any) =>
-        JSON.parse(JSON.stringify(o).replaceAll('geheim123', '***')),
+        JSON.parse(
+          JSON.stringify(o).replaceAll('<<fixture-not-a-real-secret>>', '***'),
+        ),
       );
 
       const previousData = new Map<string, any>();
-      previousData.set('var_password', 'geheim123');
+      // Bewusst ein offensichtlicher Platzhalter: ein realistisch aussehender
+      // Wert neben dem Feldnamen var_password laesst Secret-Scanner anschlagen
+      // (GitGuardian hat genau das an PR #153 gemeldet).
+      previousData.set('var_password', '<<fixture-not-a-real-secret>>');
 
       mockActionHandlerService.handleAction.mockResolvedValue(undefined);
       await service.executeScrape(createScrape(), 'run-1', previousData, {});
@@ -596,7 +601,7 @@ describe('ScrapeExecutionService', () => {
       const gespeichert = mockDatabaseService.storeData.mock.calls.find(
         (c: any[]) => c[1] === '__debugData',
       );
-      expect(gespeichert[2]).not.toContain('geheim123');
+      expect(gespeichert[2]).not.toContain('<<fixture-not-a-real-secret>>');
       expect(gespeichert[2]).toContain('***');
     });
 
