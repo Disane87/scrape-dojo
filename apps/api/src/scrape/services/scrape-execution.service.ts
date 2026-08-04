@@ -84,7 +84,14 @@ export class ScrapeExecutionService {
       );
 
       // Build and save debug data
-      const debugData = this.buildDebugData(previousData);
+      // Redacted BEFORE persisting, not on the way out: the run's variables
+      // include resolved secrets, so an unredacted debugData writes login
+      // credentials to the database in plain text. Anything that later reads
+      // that row — the debug endpoint, a backup, a database dump — hands them
+      // out. Redacting only on read would leave the plaintext at rest.
+      const debugData = this.secretRedaction.redactObject(
+        this.buildDebugData(previousData),
+      );
       await this.databaseService.storeData(
         scrape.id,
         '__debugData',
