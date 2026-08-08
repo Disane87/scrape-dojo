@@ -174,7 +174,7 @@
     "jsdom": "^27.3.0",
     "lint-staged": "^16.3.2",
     "nodemon": "^3.1.7",
-    "nx": "22.7.2",
+    "nx": "22.7.7",
     "postcss": "^8.5.18",
     "prettier": "~3.6.2",
     "prism-react-renderer": "^2.4.1",
