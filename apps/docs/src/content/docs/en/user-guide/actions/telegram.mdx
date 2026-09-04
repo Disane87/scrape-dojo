@@ -1,0 +1,80 @@
+---
+title: telegram
+description: "Send a Telegram message via a bot"
+sidebar:
+  order: 56
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Sends a message to a Telegram chat through a bot. Useful for scheduled scrapes: you get told what happened without having to keep the user interface open.
+
+Under the hood this is the [`webhook`](/en/user-guide/actions/webhook/) action with the Telegram Bot API filled in for you — same retry behaviour, same timeouts, just less to type.
+
+## 🤖 Getting a bot
+
+1. Open a chat with [@BotFather](https://t.me/botfather) in Telegram and send `/newbot`
+2. You receive a token that looks like `123456789:AAE...`
+3. Write a message to your new bot so it is allowed to answer you
+4. Find your chat id — for example by opening `https://api.telegram.org/bot<TOKEN>/getUpdates` and looking for `"chat":{"id":...}`
+
+## ⚙️ Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `botToken` | `string` | Yes | Bot token from @BotFather |
+| `chatId` | `string` \| `number` | Yes | Target chat, e.g. `"123456789"` or `"@mychannel"` |
+| `message` | `string` | Yes | Message text |
+| `parseMode` | `string` | No | `MarkdownV2`, `HTML`, `Markdown` or `None` (default: `None`) |
+| `disableNotification` | `boolean` | No | Deliver silently, without a sound (default: `false`) |
+| `messageThreadId` | `number` | No | Topic id, for supergroups with topics enabled |
+| `timeout` | `number` | No | Abort after X milliseconds (default: `15000`) |
+| `retries` | `number` | No | Number of retries (default: `2`) |
+| `failOnError` | `boolean` | No | Abort the whole scrape when the message cannot be sent (default: `false`) |
+
+## 💡 Examples
+
+**Plain message:**
+
+```jsonc
+{
+  "name": "notifyDone",
+  "action": "telegram",
+  "params": {
+    "botToken": "{{variables.telegramToken}}",
+    "chatId": "123456789",
+    "message": "Amazon scrape finished — {{storedData.amazon.downloadedInvoices}} invoices"
+  }
+}
+```
+
+**Formatted, and silent at night:**
+
+```jsonc
+{
+  "name": "notifyDone",
+  "action": "telegram",
+  "params": {
+    "botToken": "{{variables.telegramToken}}",
+    "chatId": "123456789",
+    "message": "<b>Scrape finished</b>\nNo errors.",
+    "parseMode": "HTML",
+    "disableNotification": true
+  }
+}
+```
+
+<Aside type="tip" title="Store the token as a secret">
+Reference the token via `{{variables.telegramToken}}` and keep the value in a **secret**. The token is never written to the log — it is masked as `bot•••` — but it should not sit in a config file either.
+</Aside>
+
+<Aside type="caution" title="MarkdownV2 is strict">
+With `parseMode: "MarkdownV2"` Telegram requires characters such as `.`, `-`, `!` and `(` to be escaped. An unescaped character makes Telegram reject the message with `400`. If you do not need formatting, leave `parseMode` at `None` — that always works.
+</Aside>
+
+Messages longer than 4096 characters are truncated, since Telegram rejects anything longer. A warning is written to the log when that happens.
+
+## 🔗 Related
+
+- [`webhook`](/en/user-guide/actions/webhook/) — the general-purpose version, for any other service
+- [`notify`](/en/user-guide/actions/notify/) — notifications inside the user interface
