@@ -221,3 +221,9 @@ Made with ❤️ by [Marco Franke](https://github.com/Disane87)
 **[Documentation](https://scrape-dojo.com)** · **[Issues](https://github.com/Disane87/scrape-dojo/issues)** · **[Discussions](https://github.com/Disane87/scrape-dojo/discussions)**
 
 </div>
+
+---
+
+<p align="center">
+  Made by me at <a href="https://subthiel.eu/softwareentwicklung">Subthiel</a> — software development &amp; 3D printing
+</p>
