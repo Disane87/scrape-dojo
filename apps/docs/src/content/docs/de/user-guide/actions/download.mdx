@@ -18,9 +18,36 @@ Das Beste: Relative URLs werden automatisch aufgelöst und die Dateien werden sa
 | `url` | `string` | Ja | Die URL der Datei. Unterstützt absolute URLs, relative URLs und `file://`-Pfade. Handlebars-Templates möglich. |
 | `path` | `string` | Ja | Zielverzeichnis für den Download (z.B. `./downloads/invoices`). |
 | `filename` | `string` | Ja | Dateiname für die gespeicherte Datei. Handlebars-Templates möglich. |
+| `expectMagic` | `string` | Nein | Signatur, mit der die Datei beginnen muss, z.B. `%PDF`. Passt sie nicht, wird nichts geschrieben und die Aktion liefert `null`. |
 
 <Aside type="note">
 Der `path` wird automatisch um einen Unterordner mit der `scrapeId` erweitert. Wenn du `./downloads` angibst und dein Scrape `amazon-invoices` heißt, landen die Dateien in `./downloads/amazon-invoices/`.
+</Aside>
+
+## 🛡️ Prüfen, ob die Datei wirklich das ist, was du wolltest
+
+Läuft eine Sitzung ab oder greift eine Bot-Erkennung, antwortet die Gegenstelle oft mit **HTTP 200 und einer HTML-Seite**. Ohne Prüfung landet die unter dem erwarteten Namen -- eine `rechnung.pdf`, die in Wahrheit `<!DOCTYPE html>` enthält. Die nachgelagerte Verarbeitung merkt das spät oder gar nicht.
+
+Mit `expectMagic` gibst du an, womit die Datei beginnen muss:
+
+```jsonc
+{
+  "action": "download",
+  "params": {
+    "url": "{{previousData.invoiceUrl}}",
+    "path": "./downloads",
+    "filename": "rechnung-{{previousData.orderId}}.pdf",
+    "expectMagic": "%PDF"
+  }
+}
+```
+
+Beginnt der Inhalt nicht mit `%PDF`, wird die Datei **nicht geschrieben**, die Aktion protokolliert, was tatsächlich kam, und liefert `null` -- darauf kann ein `skipIf` reagieren.
+
+Übliche Signaturen: `%PDF` (PDF), `PK` (ZIP, XLSX, DOCX), `\x89PNG` (PNG), `GIF8` (GIF).
+
+<Aside type="note">
+Ohne `expectMagic` ändert sich nichts -- bestehende Konfigurationen verhalten sich exakt wie bisher.
 </Aside>
 
 ## 📂 Ordnerstruktur

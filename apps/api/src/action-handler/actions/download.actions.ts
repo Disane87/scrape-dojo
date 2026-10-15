@@ -9,6 +9,14 @@ export type DownloadActionParams = {
   url: string; // Die URL, die heruntergeladen werden soll
   path: string;
   filename: string;
+  /**
+   * Optional: Signatur, mit der die Datei beginnen muss, z. B. "%PDF".
+   *
+   * Ohne diesen Parameter aendert sich nichts. Ist er gesetzt und passt der
+   * Anfang nicht, wird die Datei NICHT geschrieben und die Aktion liefert
+   * null — statt eine Fehlerseite unter dem erwarteten Namen abzulegen.
+   */
+  expectMagic?: string;
 };
 
 @Action('download', {
@@ -156,6 +164,36 @@ export class DownloadAction extends BaseAction<DownloadActionParams> {
   /**
    * Kopiert eine lokale Datei (file:// URL)
    */
+  /**
+   * Prueft, ob der Dateianfang der erwarteten Signatur entspricht.
+   *
+   * Hintergrund: Laeuft eine Sitzung ab oder greift eine Bot-Erkennung, liefert
+   * die Gegenstelle HTTP 200 mit einer HTML-Seite. Die wurde bisher unter dem
+   * erwarteten Namen abgelegt — eine "Rechnung.pdf", die in Wahrheit
+   * "<!DOCTYPE html>" enthaelt. Nachgelagerte Verarbeitung merkt das erst spaet
+   * oder gar nicht.
+   */
+  private magicMatches(head: Buffer): boolean {
+    const expected = this.params.expectMagic;
+    if (!expected) {
+      return true;
+    }
+
+    const actual = head
+      .subarray(0, Buffer.byteLength(expected))
+      .toString('latin1');
+    if (actual === expected) {
+      return true;
+    }
+
+    this.logger.error(
+      `❌ ${this.params.filename}: expected content to start with ` +
+        `${JSON.stringify(expected)} but found ${JSON.stringify(actual)} — ` +
+        `file not written`,
+    );
+    return false;
+  }
+
   private async downloadLocalFile(
     url: string,
     fullPath: string,
@@ -176,6 +214,20 @@ export class DownloadAction extends BaseAction<DownloadActionParams> {
     if (!fs.existsSync(decodedPath)) {
       this.logger.error(`❌ Local file not found: ${decodedPath}`);
       return null;
+    }
+
+    if (this.params.expectMagic) {
+      const length = Buffer.byteLength(this.params.expectMagic);
+      const head = Buffer.alloc(length);
+      const fd = fs.openSync(decodedPath, 'r');
+      try {
+        fs.readSync(fd, head, 0, length, 0);
+      } finally {
+        fs.closeSync(fd);
+      }
+      if (!this.magicMatches(head)) {
+        return null;
+      }
     }
 
     // Kopiere die Datei
@@ -220,6 +272,9 @@ export class DownloadAction extends BaseAction<DownloadActionParams> {
     }
 
     const buffer = Buffer.from(fileBuffer);
+    if (!this.magicMatches(buffer)) {
+      return null;
+    }
     fs.writeFileSync(fullPath, buffer);
 
     const fileSizeKB = Math.round(buffer.length / 1024);
