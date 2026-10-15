@@ -617,7 +617,7 @@
                                         "previousDataKeys": [
                                           "invoiceKey"
                                         ],
-                                        "expression": "$contains('{{storedData.amazon.downloadedInvoices}}', invoiceKey)"
+                                        "expression": "$contains(',' & '{{storedData.amazon.downloadedInvoices}}' & ',', ',' & invoiceKey & ',')"
                                       }
                                     },
                                     {
@@ -716,7 +716,7 @@
                                   "previousDataKeys": [
                                     "firstDownloadedOrderId"
                                   ],
-                                  "expression": "firstDownloadedOrderId = null or firstDownloadedOrderId = undefined"
+                                  "expression": "$not($exists(firstDownloadedOrderId))"
                                 }
                               },
                               {
