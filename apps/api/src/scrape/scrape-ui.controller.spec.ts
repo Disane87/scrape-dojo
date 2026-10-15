@@ -8,6 +8,7 @@ import { SseTicketService } from './sse-ticket.service';
 import { SchedulerService } from './scheduler.service';
 import { DatabaseService } from '../database/database.service';
 import { AuthorResolverService } from './author-resolver.service';
+import { SecretRedactionService } from '../_logger/secret-redaction.service';
 import { of } from 'rxjs';
 
 describe('ScrapeUIController', () => {
@@ -18,6 +19,7 @@ describe('ScrapeUIController', () => {
   let mockSchedulerService: any;
   let mockDatabaseService: any;
   let mockAuthorResolverService: any;
+  let mockSecretRedaction: any;
 
   const createMockResponse = () => {
     const res: any = {
@@ -96,6 +98,16 @@ describe('ScrapeUIController', () => {
         .mockImplementation((meta) => Promise.resolve(meta || {})),
     };
 
+    // Gibt das Objekt unveraendert zurueck, ersetzt aber einen bekannten
+    // Geheimwert — so laesst sich pruefen, DASS geschwaerzt wird.
+    mockSecretRedaction = {
+      redactObject: vi.fn((o) =>
+        JSON.parse(
+          JSON.stringify(o).replaceAll('<<fixture-not-a-real-secret>>', '***'),
+        ),
+      ),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ScrapeUIController],
       providers: [
@@ -105,6 +117,10 @@ describe('ScrapeUIController', () => {
         { provide: SchedulerService, useValue: mockSchedulerService },
         { provide: DatabaseService, useValue: mockDatabaseService },
         { provide: AuthorResolverService, useValue: mockAuthorResolverService },
+        {
+          provide: SecretRedactionService,
+          useValue: mockSecretRedaction,
+        },
       ],
     }).compile();
 
@@ -803,6 +819,33 @@ describe('ScrapeUIController', () => {
   // ============ GET /runs/:runId/debug ============
 
   describe('getRunDebugData', () => {
+    it('does not hand out credentials stored in the debug data', async () => {
+      mockDatabaseService.getRun = vi
+        .fn()
+        .mockResolvedValue({ id: 'run-1', scrapeId: 'amazon' });
+      mockDatabaseService.dataSource = {
+        getRepository: vi.fn().mockReturnValue({
+          findOne: vi.fn().mockResolvedValue({
+            value: JSON.stringify({
+              var_email: 'user@example.com',
+              var_password: '<<fixture-not-a-real-secret>>',
+            }),
+          }),
+        }),
+      };
+
+      const res: any = {
+        status: vi.fn().mockReturnThis(),
+        json: vi.fn().mockReturnThis(),
+      };
+
+      await controller.getRunDebugData('run-1', res);
+
+      expect(mockSecretRedaction.redactObject).toHaveBeenCalled();
+      const ausgeliefert = JSON.stringify(res.json.mock.calls[0][0]);
+      expect(ausgeliefert).not.toContain('<<fixture-not-a-real-secret>>');
+      expect(ausgeliefert).toContain('***');
+    });
     it('should return 404 if run not found', async () => {
       const res = createMockResponse();
       mockDatabaseService.getRun.mockResolvedValue(null);
