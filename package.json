@@ -164,7 +164,7 @@
     "docusaurus-plugin-openapi-docs": "^4.5.1",
     "docusaurus-theme-openapi-docs": "^4.5.1",
     "eslint": "^8.57.0",
-    "eslint-config-prettier": "^9.0.0",
+    "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.0.0",
     "express": "^5.2.1",
     "happy-dom": "^20.8.3",
