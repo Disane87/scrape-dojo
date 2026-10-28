@@ -20,6 +20,7 @@ import { SseTicketService } from './sse-ticket.service';
 import { SchedulerService } from './scheduler.service';
 import { DatabaseService } from '../database/database.service';
 import { AuthorResolverService } from './author-resolver.service';
+import { SecretRedactionService } from '../_logger/secret-redaction.service';
 import { Public } from '../auth/decorators/public.decorator';
 import { Observable, map } from 'rxjs';
 import * as jsonata from 'jsonata';
@@ -56,6 +57,7 @@ export class ScrapeUIController {
     private schedulerService: SchedulerService,
     private databaseService: DatabaseService,
     private authorResolverService: AuthorResolverService,
+    private secretRedaction: SecretRedactionService,
   ) {}
 
   @Get('scrapes')
@@ -453,7 +455,12 @@ export class ScrapeUIController {
         return;
       }
 
-      const debugData = JSON.parse(debugDataEntry.value);
+      // Auch beim Ausliefern geschwaerzt — fuer Zeilen, die vor dem Fix
+      // an der Quelle geschrieben wurden. Wirkt nur, solange die Secrets
+      // in diesem Prozess registriert sind: Sicherheitsnetz, kein Ersatz.
+      const debugData = this.secretRedaction.redactObject(
+        JSON.parse(debugDataEntry.value),
+      );
       res.status(HttpStatus.OK).json(debugData);
     } catch (error) {
       res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
@@ -494,7 +501,12 @@ export class ScrapeUIController {
         return;
       }
 
-      const debugData = JSON.parse(debugDataEntry.value);
+      // Auch beim Ausliefern geschwaerzt — fuer Zeilen, die vor dem Fix
+      // an der Quelle geschrieben wurden. Wirkt nur, solange die Secrets
+      // in diesem Prozess registriert sind: Sicherheitsnetz, kein Ersatz.
+      const debugData = this.secretRedaction.redactObject(
+        JSON.parse(debugDataEntry.value),
+      );
 
       // Extract artifacts from debug data
       // Strategy: Only extract artifacts from the deepest loop level to avoid duplicates

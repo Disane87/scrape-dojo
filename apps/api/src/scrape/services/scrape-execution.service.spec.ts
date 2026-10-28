@@ -19,6 +19,7 @@ vi.mock('../../_logger/scrape-logger.service', () => {
 
 describe('ScrapeExecutionService', () => {
   let service: ScrapeExecutionService;
+  let mockSecretRedaction: any;
   let mockPuppeteerService: any;
   let mockActionHandlerService: any;
   let mockScrapeEventsService: any;
@@ -76,7 +77,7 @@ describe('ScrapeExecutionService', () => {
       publish: vi.fn().mockResolvedValue(undefined),
     };
 
-    const mockSecretRedaction = {
+    mockSecretRedaction = {
       registerSecret: vi.fn(),
       redact: vi.fn((msg: string) => msg),
       redactObject: vi.fn((obj: any) => obj),
@@ -575,6 +576,33 @@ describe('ScrapeExecutionService', () => {
         expect.any(String),
         'run-1',
       );
+    });
+
+    it('redacts the debug data before it reaches the database', async () => {
+      // Kern der Sache: der Klartext darf gar nicht erst gespeichert werden.
+      // Nur beim Ausliefern zu schwaerzen liesse ihn in der Datenbank, in
+      // jedem Backup und in jedem Dump stehen.
+      mockSecretRedaction.redactObject.mockImplementation((o: any) =>
+        JSON.parse(
+          JSON.stringify(o).replaceAll('<<fixture-not-a-real-secret>>', '***'),
+        ),
+      );
+
+      const previousData = new Map<string, any>();
+      // Bewusst ein offensichtlicher Platzhalter: ein realistisch aussehender
+      // Wert neben dem Feldnamen var_password laesst Secret-Scanner anschlagen
+      // (GitGuardian hat genau das an PR #153 gemeldet).
+      previousData.set('var_password', '<<fixture-not-a-real-secret>>');
+
+      mockActionHandlerService.handleAction.mockResolvedValue(undefined);
+      await service.executeScrape(createScrape(), 'run-1', previousData, {});
+
+      expect(mockSecretRedaction.redactObject).toHaveBeenCalled();
+      const gespeichert = mockDatabaseService.storeData.mock.calls.find(
+        (c: any[]) => c[1] === '__debugData',
+      );
+      expect(gespeichert[2]).not.toContain('<<fixture-not-a-real-secret>>');
+      expect(gespeichert[2]).toContain('***');
     });
 
     it('should build debug data summarizing loop results', async () => {
